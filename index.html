@@ -114,6 +114,25 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .pcl-corner{position:absolute;top:14px;left:16px;z-index:2;display:block;}
 .pcl-corner .pcl-mark{width:74px;height:74px;display:block;opacity:.92;transition:opacity .15s,transform .15s;}
 .pcl-corner:hover .pcl-mark{opacity:1;transform:translateY(-2px);}
+/* ── SPLASH / LOADING SCREEN ───────────────────────────────────────── */
+#splash{position:fixed;inset:0;z-index:2000;background:var(--black);
+  background-image:radial-gradient(rgba(174,133,62,.45) 1px,transparent 1px);background-size:28px 28px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px;
+  transition:opacity .55s ease;}
+#splash.hide{opacity:0;pointer-events:none;}
+#splash.gone{display:none;}
+.coin{width:158px;height:158px;position:relative;transform-style:preserve-3d;animation:coinflip 1.5s linear infinite;}
+@keyframes coinflip{from{transform:rotateY(0deg);}to{transform:rotateY(360deg);}}
+.coin .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.coin .face.back{transform:rotateY(180deg);}
+.coin .face.front svg{width:150px;height:auto;}
+.coin .face .pcl-mark{width:158px;height:158px;display:block;}
+.splash-text{font-family:var(--font);font-size:15px;letter-spacing:2.5px;text-transform:uppercase;color:var(--white);opacity:.75;}
+.splash-text b{color:var(--gold);font-weight:800;}
+.splash-bar{width:220px;height:4px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden;}
+.splash-bar i{display:block;height:100%;width:0;background:#fff;border-radius:4px;transition:width 5s linear;}
+#splash.go .splash-bar i{width:100%;}
+@media(prefers-reduced-motion:reduce){.coin{animation:none;}.coin .face.back{display:none;}}
 /* ── FOR TEACHERS link on home ─────────────────────────────────────── */
 .teacher-link{position:absolute;top:16px;right:18px;z-index:2;}
 .teacher-link button{background:rgba(57,57,57,.7);border:1px solid var(--gray);color:var(--gold);font-weight:700;letter-spacing:1.2px;text-transform:uppercase;font-size:12px;padding:10px 18px;border-radius:30px;cursor:pointer;transition:.15s;font-family:var(--font);}
@@ -443,6 +462,36 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 </style>
 </head>
 <body>
+
+<!-- ══ SPLASH / LOADING SCREEN ══════════════════════════════════════════ -->
+<div id="splash">
+  <div class="coin">
+    <div class="face front">
+      <svg viewBox="22 4 156 96" role="img" aria-label="CodeJump">
+        <rect x="66" y="8"  width="68" height="10" rx="2" fill="#ae853e"/>
+        <rect x="54" y="19" width="92" height="10" fill="#ae853e"/>
+        <rect x="46" y="30" width="108" height="8" fill="#ae853e"/>
+        <text x="100" y="27" font-family="Montserrat,sans-serif" font-weight="900" font-size="11" fill="#111111" text-anchor="middle" letter-spacing="3">CODE</text>
+        <text x="100" y="88" font-family="Montserrat,sans-serif" font-weight="900" font-size="56" fill="#ae853e" text-anchor="middle" letter-spacing="-2">JUMP</text>
+      </svg>
+    </div>
+    <div class="face back"><span class="pcl-mark" role="img" aria-label="Primary Coding League"></span></div>
+  </div>
+  <div class="splash-text"><b>CodeJump</b> &nbsp;by Primary Coding League</div>
+  <div class="splash-bar"><i></i></div>
+</div>
+<script>
+  (function(){
+    var dismissed=false;
+    function start(){var sp=document.getElementById('splash');if(!sp)return;requestAnimationFrame(()=>sp.classList.add('go'));}
+    function dismiss(){if(dismissed)return;dismissed=true;var sp=document.getElementById('splash');if(sp){sp.classList.add('hide');setTimeout(()=>sp.classList.add('gone'),700);}}
+    // Start the loading bar + 5s timer once the page is loaded
+    if(document.readyState==='complete')start();else window.addEventListener('load',start);
+    window.addEventListener('load',()=>setTimeout(dismiss,5000));
+    // Safety fallback so it can never get stuck
+    setTimeout(dismiss,7000);
+  })();
+</script>
 
 <!-- ══ HOME SCREEN ═══════════════════════════════════════════════════════ -->
 <div id="home">

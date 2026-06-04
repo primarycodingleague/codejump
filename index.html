@@ -769,7 +769,7 @@ document.getElementById('home-btn').onclick=()=>showHome();
 // CANVAS
 // ═══════════════════════════════════════════════════════════════════════
 const canvas=document.getElementById('gc');
-const ctx=canvas.getContext('2d');
+let ctx=canvas.getContext('2d');
 canvas.width=CW;canvas.height=CH;
 function resize(){const w=document.getElementById('cwrap');const s=Math.min((w.clientWidth-8)/CW,(w.clientHeight-8)/CH);canvas.style.width=(CW*s)+'px';canvas.style.height=(CH*s)+'px';if(blocklyWorkspace)Blockly.svgResize(blocklyWorkspace);}
 window.addEventListener('resize',resize);
@@ -1490,7 +1490,7 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];return t===T.PLATFORM||t===T.GRASS;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();score=0;lives=gameConfig.lives;camX=0;confetti=[];playing=true;hideOv();spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();score=0;lives=gameConfig.lives;camX=0;confetti=[];playing=true;hideOv();spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();}
 function stopPlay(){playing=false;}
 function findT(id){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===id)return{c,r};return{c:0,r:0};}
 function spawnPlayer(){const{c,r}=findT(T.START);player={x:c*TS+(TS-PW)/2,y:r*TS,vx:0,vy:0,onGround:false,onLadder:false,facingRight:true,dead:false,deadTimer:0,inv:0,standingMover:null};updateCam();}
@@ -1533,9 +1533,32 @@ function updateCam(){if(!player)return;const t=player.x-CW/2+PW/2;camX+=(t-camX)
 // ═══════════════════════════════════════════════════════════════════════
 // DRAW PLAY
 // ═══════════════════════════════════════════════════════════════════════
+// Static, non-animated tiles are baked into an offscreen layer ONCE per play
+// session and blitted each frame, instead of re-drawing every tile with
+// vector paths 60×/second. The level is exactly one screen wide (no scroll),
+// so this is a 1:1 background image.
+const bgLayer=document.createElement('canvas');bgLayer.width=CW;bgLayer.height=CH;
+const bgCtx=bgLayer.getContext('2d');
+const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START]);
+let dynTiles=[]; // animated/collectible tiles drawn each frame (gem, star, bounce, goal)
+function renderStaticLayer(){
+  const sk=getSkyColors();
+  bgCtx.clearRect(0,0,CW,CH);
+  const g=bgCtx.createLinearGradient(0,0,0,CH);g.addColorStop(0,sk[0]);g.addColorStop(1,sk[1]);
+  bgCtx.fillStyle=g;bgCtx.fillRect(0,0,CW,CH);
+  const old=ctx;ctx=bgCtx; // redirect tile drawing to the offscreen layer
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(STATIC_TILES.has(tid))drawTile(tid,c*TS,r*TS);}
+  ctx=old;
+  // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
+  dynTiles=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL)dynTiles.push({c,r,tid});}
+}
 function drawPlay(){
-  const t=th();ctx.fillStyle=skyGradient(ctx);ctx.fillRect(0,0,CW,CH);
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(!tid||tid===T.ENEMY||tid===T.MOVER)continue;if(tid===T.GEM||tid===T.STAR){const it=items.find(i=>i.c===c&&i.r===r);if(it&&it.got){if(it.pop>0)drawPop(c,r,it.pop,tid);continue;}}const px=c*TS-camX;if(px+TS<0||px>CW)continue;drawTile(tid,px,r*TS);}
+  const t=th();
+  ctx.drawImage(bgLayer,-camX,0); // sky + static tiles, pre-rendered
+  for(const cell of dynTiles){const{c,r,tid}=cell;
+    if(tid===T.GEM||tid===T.STAR){const it=items.find(i=>i.c===c&&i.r===r);if(it&&it.got){if(it.pop>0)drawPop(c,r,it.pop,tid);continue;}}
+    const px=c*TS-camX;if(px+TS<0||px>CW)continue;drawTile(tid,px,r*TS);}
   movers.forEach(m=>{const px=m.x-camX;if(px+m.w<0||px>CW)return;const t2=th();ctx.save();ctx.fillStyle=t2.mover;ctx.fillRect(px,m.y,m.w,m.h);ctx.fillStyle=t2.moverHi;ctx.fillRect(px,m.y,m.w,7);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(px,m.y+m.h-5,m.w,5);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(px+1,m.y+1,m.w-2,m.h-2);ctx.fillStyle='rgba(255,255,255,'+(.5+.5*Math.sin(tick*.08))+')';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(m.vx>0?'▶':'◀',px+m.w/2,m.y+m.h/2+5);ctx.restore();});
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   if(player&&(!player.dead||tick%6<3))drawPlayer();

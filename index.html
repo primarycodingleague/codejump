@@ -103,9 +103,9 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 }
 .qs-tip b{color:var(--gold);font-weight:700;opacity:1;}
 /* ── FOR TEACHERS link on home ─────────────────────────────────────── */
-.teacher-link{margin:38px auto 0;text-align:center;}
-.teacher-link button{background:none;border:1px solid var(--gray);color:var(--gold);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-size:12px;padding:12px 24px;border-radius:30px;cursor:pointer;transition:.15s;font-family:var(--font);}
-.teacher-link button:hover{border-color:var(--gold);}
+.teacher-link{position:absolute;top:16px;right:18px;z-index:2;}
+.teacher-link button{background:rgba(57,57,57,.7);border:1px solid var(--gray);color:var(--gold);font-weight:700;letter-spacing:1.2px;text-transform:uppercase;font-size:12px;padding:10px 18px;border-radius:30px;cursor:pointer;transition:.15s;font-family:var(--font);}
+.teacher-link button:hover{border-color:var(--gold);background:rgba(57,57,57,.95);}
 /* ── TEACHER HUB ───────────────────────────────────────────────────── */
 #teacher{position:fixed;inset:0;z-index:520;overflow-y:auto;background:var(--black);background-image:radial-gradient(rgba(174,133,62,.45) 1px,transparent 1px);background-size:28px 28px;padding-bottom:60px;}
 #teacher.hide{display:none;}
@@ -434,6 +434,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 
 <!-- ══ HOME SCREEN ═══════════════════════════════════════════════════════ -->
 <div id="home">
+  <div class="teacher-link"><button id="h-teacher">👩‍🏫 &nbsp;For Teachers →</button></div>
   <div class="home-logo">
     <svg class="home-logomark" viewBox="0 0 200 152" role="img" aria-label="CodeJump by Primary Coding League">
       <rect x="66" y="8"  width="68" height="10" rx="2" fill="#ffffff"/>
@@ -509,8 +510,6 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     </div>
     <div class="qs-tip">✨ New here? Tap <b>Start Building</b> or try a <b>Demo</b> above to jump straight in.</div>
   </div>
-
-  <div class="teacher-link"><button id="h-teacher">👩‍🏫 &nbsp;For Teachers →</button></div>
 
   <input type="file" id="file-input" accept=".codejump,.json,.html,text/html,application/json" style="display:none;">
 </div>

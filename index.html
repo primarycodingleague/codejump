@@ -102,6 +102,79 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
   color:var(--white);opacity:.7;letter-spacing:.3px;
 }
 .qs-tip b{color:var(--gold);font-weight:700;opacity:1;}
+/* ── FOR TEACHERS link on home ─────────────────────────────────────── */
+.teacher-link{margin:38px auto 0;text-align:center;}
+.teacher-link button{background:none;border:1px solid var(--gray);color:var(--gold);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-size:12px;padding:12px 24px;border-radius:30px;cursor:pointer;transition:.15s;font-family:var(--font);}
+.teacher-link button:hover{border-color:var(--gold);}
+/* ── TEACHER HUB ───────────────────────────────────────────────────── */
+#teacher{position:fixed;inset:0;z-index:520;overflow-y:auto;background:var(--black);background-image:radial-gradient(rgba(174,133,62,.45) 1px,transparent 1px);background-size:28px 28px;padding-bottom:60px;}
+#teacher.hide{display:none;}
+.th-screen{display:none;}.th-screen.on{display:block;}
+.th-wrap{max-width:1180px;margin:0 auto;padding:22px 18px 40px;}
+.th-bar{background:var(--dark);border-bottom:2px solid var(--gold);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:5;}
+.th-logo{font-weight:900;letter-spacing:1px;font-size:17px;}.th-logo .g{color:var(--gold);}
+.th-bar .lbl{opacity:.6;font-weight:700;letter-spacing:1px;font-size:12px;}
+.th-bar .spacer{flex:1;}
+.th-chip{border:1px solid var(--gray);border-radius:4px;padding:8px 13px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:transparent;transition:.15s;font-family:var(--font);}
+.th-chip:hover{border-color:var(--gold);color:var(--gold);}
+.th-chip.gold{background:var(--gold);color:#000;border-color:var(--gold);}
+.th-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.th-panel{background:var(--dark);border:1px solid var(--gray);border-radius:6px;padding:18px;}
+.th-panel h3{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.th-span3{grid-column:span 3;}
+.th-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;}
+.th-row:last-child{border-bottom:none;}.th-row .grow{flex:1;}.th-row.clk{cursor:pointer;}.th-row.clk:hover{color:var(--gold);}
+.th-tag{font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:20px;text-transform:uppercase;}
+.th-tag.done{background:rgba(107,203,119,.18);color:#9ee6a6;}
+.th-tag.now{background:rgba(174,133,62,.2);color:var(--gold);}
+.th-btn{display:block;width:100%;text-align:center;background:var(--gold);color:#000;font-weight:800;letter-spacing:1px;text-transform:uppercase;border:none;border-radius:4px;padding:11px;font-size:12px;margin-top:8px;font-family:var(--font);cursor:pointer;}
+.th-btn:hover{background:#c99a4a;}
+.th-btn.ghost{background:transparent;color:#fff;border:1px solid var(--gray);}
+.th-btn.ghost:hover{border-color:var(--gold);color:var(--gold);}
+.th-muted{opacity:.55;font-size:12px;line-height:1.5;}
+.th-lessons{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.th-lcard{background:#1e1e1e;border:1px solid var(--gray);border-radius:6px;padding:16px;cursor:pointer;transition:.15s;}
+.th-lcard:hover{border-color:var(--gold);transform:translateY(-3px);}
+.th-lcard .lnum{font-size:11px;color:var(--gold);font-weight:800;letter-spacing:1px;}
+.th-lcard .ltitle{font-size:15px;font-weight:800;margin:5px 0 8px;}
+.th-lcard .lobj{font-size:12px;opacity:.72;line-height:1.5;margin-bottom:10px;min-height:46px;}
+.th-openhint{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.th-back{background:none;border:1px solid var(--gray);color:#fff;border-radius:4px;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--font);cursor:pointer;}
+.th-back:hover{border-color:var(--gold);color:var(--gold);}
+.th-ldwrap{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;margin-top:18px;}
+.th-ld h2{font-size:22px;font-weight:900;margin:4px 0 10px;}
+.th-steps{margin:14px 0;counter-reset:s;padding:0;}
+.th-steps li{list-style:none;padding:9px 0 9px 38px;position:relative;font-size:13.5px;line-height:1.5;border-bottom:1px solid rgba(255,255,255,.07);}
+.th-steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:7px;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#000;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.th-keybox{background:#1a1a1a;border:1px solid var(--gold);border-radius:6px;padding:16px;margin-top:12px;font-size:13px;line-height:1.6;}
+.th-keybox h4{color:var(--gold);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.th-sheet{background:#fff;color:#000;border-radius:6px;padding:26px;font-size:13px;line-height:1.6;}
+.th-sheet .ks{color:var(--gold);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:1px;}
+.th-sheet h4{font-size:20px;font-weight:900;margin:2px 0 8px;color:#000;}
+.th-sheet p,.th-sheet b,.th-sheet li{color:#000;}
+.th-sheet ol{margin:10px 0 10px 20px;}.th-sheet li{margin:4px 0;}
+.th-sheet .drawbox{border:2px dashed #555;border-radius:6px;padding:22px 16px;margin-top:14px;min-height:300px;color:#000;text-align:center;font-weight:700;}
+.th-sheet .foot{margin-top:16px;border-top:1px solid #999;padding-top:10px;font-size:12px;color:#000;font-weight:600;display:flex;justify-content:space-between;}
+/* projector */
+#projector{position:fixed;inset:0;background:#0a0a0a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:700;text-align:center;padding:30px;}
+#projector.on{display:flex;}
+#projector .pk{color:var(--gold);font-weight:800;letter-spacing:4px;text-transform:uppercase;font-size:16px;}
+#projector h1{font-size:clamp(40px,9vw,96px);font-weight:900;margin:14px 0;}
+#projector .ptimer{font-size:clamp(60px,16vw,150px);font-weight:900;color:var(--gold);}
+#projector p{font-size:18px;opacity:.7;max-width:680px;margin-top:10px;}
+#projector .x{position:absolute;top:24px;right:28px;}
+/* printing — only the print area, never the whole page */
+#print-area{position:fixed;left:-99999px;top:0;width:700px;}
+.th-pagebreak{page-break-after:always;}
+@media print{
+  @page{margin:14mm;}
+  html,body{background:#fff!important;height:auto!important;overflow:visible!important;}
+  body>*{display:none!important;}
+  #print-area{display:block!important;position:static;left:0;width:auto;}
+  #print-area .th-sheet{padding:0;border:none;border-radius:0;}
+  #print-area .th-sheet .drawbox{min-height:340px;}
+}
+@media(max-width:880px){.th-grid,.th-lessons{grid-template-columns:1fr;}.th-span3{grid-column:auto;}.th-ldwrap{grid-template-columns:1fr;}}
 .hbtn{
   padding:12px 16px;border:1px solid var(--gray);border-radius:3px;
   font-family:var(--font);font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;
@@ -437,8 +510,68 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <div class="qs-tip">✨ New here? Tap <b>Start Building</b> or try a <b>Demo</b> above to jump straight in.</div>
   </div>
 
+  <div class="teacher-link"><button id="h-teacher">👩‍🏫 &nbsp;For Teachers →</button></div>
+
   <input type="file" id="file-input" accept=".codejump,.json,.html,text/html,application/json" style="display:none;">
 </div>
+
+<!-- ══ TEACHER HUB ══════════════════════════════════════════════════════ -->
+<div id="teacher" class="hide">
+  <!-- HUB -->
+  <div class="th-screen on" id="t-hub">
+    <div class="th-bar">
+      <span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Teacher Hub</span>
+      <span class="spacer"></span>
+      <button class="th-chip" onclick="openProjector()">📺 Projector</button>
+      <button class="th-chip" onclick="printPack()">🖨 Print pack</button>
+      <button class="th-chip gold" onclick="hideTeacher()">← Back to CodeJump</button>
+    </div>
+    <div class="th-wrap">
+      <div class="th-grid">
+        <div class="th-panel">
+          <h3>📅 Challenge of the day</h3>
+          <div style="font-weight:800;font-size:16px;margin-bottom:6px;">"Marble Run"</div>
+          <p class="th-muted" style="margin-bottom:6px;">Build a level using at least one moving platform and a bounce mushroom.</p>
+          <button class="th-btn" onclick="loadChallenge()">▶ Load starter level</button>
+          <button class="th-btn ghost" onclick="printChallengeCard()">🖨 Print challenge card</button>
+        </div>
+        <div class="th-panel">
+          <h3>📚 This unit</h3>
+          <div id="th-unit"></div>
+          <p class="th-muted" style="margin-top:8px;">Tap any lesson — finished ones stay open to revisit.</p>
+        </div>
+        <div class="th-panel">
+          <h3>🗂 Pupils' work</h3>
+          <p class="th-muted" style="margin-bottom:12px;">Open a level a pupil handed in (a <b>.codejump</b> or <b>.html</b> file) and it loads into the editor to play or mark.</p>
+          <button class="th-btn" onclick="openSubmission()">📂 Open a pupil's level →</button>
+        </div>
+        <div class="th-panel th-span3">
+          <h3>🧩 Lesson library</h3>
+          <div class="th-lessons" id="th-lessonGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- LESSON DETAIL -->
+  <div class="th-screen" id="t-lesson">
+    <div class="th-bar"><span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Lesson</span><span class="spacer"></span><button class="th-back" onclick="thGo('t-hub')">← Back to Hub</button></div>
+    <div class="th-wrap"><div class="th-ldwrap">
+      <div class="th-ld" id="th-ldLeft"></div>
+      <div id="th-ldSheet"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- projector -->
+<div id="projector">
+  <button class="th-chip x" onclick="closeProjector()">✕ Close</button>
+  <div class="pk">Challenge of the day</div>
+  <h1>Marble Run 🎮</h1>
+  <div class="ptimer" id="ptimer">10:00</div>
+  <p>Build a level using at least one moving platform and a bounce mushroom. Ready… go!</p>
+</div>
+
+<div id="print-area"></div>
 
 <!-- ══ APP ════════════════════════════════════════════════════════════════ -->
 <div id="app" class="hide">
@@ -764,6 +897,107 @@ document.querySelectorAll('[data-demo]').forEach(btn=>{
   btn.onclick=()=>{DEMOS[btn.dataset.demo]();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
 });
 document.getElementById('home-btn').onclick=()=>showHome();
+
+// ═══════════════════════════════════════════════════════════════════════
+// TEACHER HUB
+// ═══════════════════════════════════════════════════════════════════════
+const TH_LESSONS={
+  1:{num:'LESSON 1',ks:'KS1 · Sequence',title:'Intro to Tiles',obj:'Paint platforms, a start and a goal to make your very first level.',
+     steps:['Tap a tile, then paint it onto the grid.','Add a Start 🚩 and a Goal 🏁.','Make a path that joins them up.','Press Play and walk to the goal.'],
+     challenge:'Add a gem 💎 to collect on the way.',
+     key:'Focus on SEQUENCE: tiles placed in order make a path. Check every level has exactly one Start and one Goal before playing.'},
+  2:{num:'LESSON 2',ks:'KS1 · Events',title:'Events & Keys',obj:'Use code blocks so the arrow keys move your player.',
+     steps:['Open Code.','Find "when ⬅️ key pressed → move left".','Add Jump on the Space bar.','Play and test your controls.'],
+     challenge:'Change which key makes the player jump.',
+     key:'Introduces EVENTS ("when key pressed"). On tablets, remind pupils the on-screen buttons trigger these same actions.'},
+  3:{num:'LESSON 3',ks:'KS1 · Selection',title:'Make it Tricky!',obj:'Add a rule so the player must collect all the gems before the goal opens.',
+     steps:['Build a level with a Start 🚩 and a Goal 🏁.','Add 3 gems 💎 in tricky places.','Open Code → choose "win by → collect all gems".','Press Play and test it. Did it work?'],
+     challenge:'Add a spike trap 🌵 the player must jump over.',
+     key:'Pupils set the win-condition block to "collect all gems". Common mistake: forgetting to place gems, so the goal opens instantly. Check they tested in Play mode.'},
+  4:{num:'LESSON 4',ks:'KS2 · Repetition',title:'Enemies on Patrol',obj:'Use Enemy A and Enemy B with different movement patterns and speeds.',
+     steps:['Place an Enemy A 👾 and an Enemy B 🐛.','Open Code → set Enemy A to patrol left–right.','Set Enemy B to patrol up–down.','Give them different speeds and Play.'],
+     challenge:'Make one enemy fast and one slow — which is harder to avoid?',
+     key:'Two enemy types should have distinct patterns. Discuss "repetition": the patrol repeats forever. Extension: ask why up–down enemies guard ladders well.'},
+  5:{num:'LESSON 5',ks:'KS2 · Debugging',title:'Debug the Level',obj:'Open a broken level, work out why it cannot be finished, and fix it.',
+     steps:['Load the starter level.','Play it — find what stops you finishing.','Talk: is a tile missing? Is the goal unreachable?','Fix it in Build, then Play to confirm.'],
+     challenge:'Break a level on purpose for a partner to fix.',
+     key:'The bug: a gap too wide to jump. Fix = add platforms or a bounce mushroom. Teaches the design–test–debug cycle from the computing curriculum.'},
+};
+const TH_DONE={1:true,2:true,3:'now'}; // demo progress markers
+// Starter levels each lesson loads into the editor
+const TH_STARTERS={
+  1:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][2]=T.START;grid[9][17]=T.GOAL;grid[8][9]=T.GEM;},
+  2:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;[8,9,10].forEach(c=>grid[7][c]=T.GRASS);grid[6][9]=T.GEM;},
+  3:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][5]=T.GEM;grid[7][9]=T.GEM;grid[8][13]=T.GEM;},
+  4:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[9][7]=T.ENEMY;grid[9][12]=T.ENEMY2;},
+  5:()=>{grid=mkGrid();theme='water';for(let c=0;c<COLS;c++){if(c<8||c>12){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][5]=T.GEM;},
+  challenge:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[5][18]=T.GOAL;grid[9][9]=T.MOVER;grid[9][14]=T.BOUNCE;[16,17,18].forEach(c=>grid[6][c]=T.GRASS);},
+};
+let thCurrent=3;
+function showTeacher(){document.getElementById('teacher').classList.remove('hide');thGo('t-hub');thBuildUnit();thBuildLibrary();}
+function hideTeacher(){document.getElementById('teacher').classList.add('hide');}
+function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
+function thBuildUnit(){
+  const u=document.getElementById('th-unit');u.innerHTML='';
+  const circ=['①','②','③','④','⑤'];
+  [1,2,3,4,5].forEach((n,i)=>{const L=TH_LESSONS[n];const d=document.createElement('div');d.className='th-row clk';d.onclick=()=>thOpenLesson(n);
+    const tag=TH_DONE[n]==='now'?'<span class="th-tag now">Today</span>':(TH_DONE[n]?'<span class="th-tag done">Done</span>':'');
+    d.innerHTML=`<span class="grow">${circ[i]} ${L.title}</span>${tag}`;u.appendChild(d);});
+}
+function thBuildLibrary(){
+  const g=document.getElementById('th-lessonGrid');g.innerHTML='';
+  [1,2,3,4,5].forEach(n=>{const L=TH_LESSONS[n];const d=document.createElement('div');d.className='th-lcard';d.onclick=()=>thOpenLesson(n);
+    d.innerHTML=`<div class="lnum">${L.num}</div><div class="ltitle">${L.title}</div><div class="lobj"><span class="th-tag now">${L.ks}</span><br><br>${L.obj}</div><div class="th-openhint">Open lesson →</div>`;
+    g.appendChild(d);});
+}
+function thSheetHTML(n){const L=TH_LESSONS[n];return `<div class="th-sheet">
+  <div class="ks">${L.ks.replace('·','Computing ·')}</div>
+  <h4>${L.num.replace('LESSON','Lesson')} — ${L.title} 🎮</h4>
+  <p><b>Today I will:</b> ${L.obj.toLowerCase()}</p>
+  <ol>${L.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+  <div class="drawbox">✏️ Draw your level plan here before you build it</div>
+  <p style="margin-top:12px;"><b>Challenge:</b> ${L.challenge}</p>
+  <div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>`;}
+function thCardHTML(){return `<div class="th-sheet">
+  <div class="ks">Challenge of the Day</div>
+  <h4>Marble Run 🎮</h4>
+  <p><b>Your mission:</b> build a level that uses at least one moving platform ➡️ and a bounce mushroom 🍄.</p>
+  <ol><li>Make a Start 🚩 and a Goal 🏁.</li><li>Add a moving platform the player must time.</li><li>Add a bounce mushroom to reach somewhere high.</li><li>Test it in Play — can you finish it?</li></ol>
+  <div class="drawbox">✏️ Sketch your idea here first</div>
+  <div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>`;}
+function thOpenLesson(n){
+  thCurrent=n;const L=TH_LESSONS[n];
+  document.getElementById('th-ldLeft').innerHTML=
+    `<div class="lnum" style="color:var(--gold);font-weight:800;letter-spacing:1px;font-size:12px;">${L.num} · ${L.ks}</div>
+     <h2>${L.title}</h2>
+     <p style="opacity:.85;line-height:1.5;"><b>Objective:</b> ${L.obj}</p>
+     <ol class="th-steps">${L.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+     <p style="font-size:13px;"><b style="color:var(--gold)">Challenge:</b> ${L.challenge}</p>
+     <button class="th-btn" style="margin-top:14px" onclick="loadStarter(thCurrent)">▶ Load starter level</button>
+     <div style="display:flex;gap:8px;margin-top:8px;">
+       <button class="th-btn ghost" onclick="printWorksheet()">🖨 Print worksheet</button>
+       <button class="th-btn ghost" onclick="thToggleKey()">🔑 Answer key</button>
+     </div>
+     <div class="th-keybox" id="th-keyBox" style="display:none;"><h4>Teacher answer key</h4>${L.key}</div>`;
+  document.getElementById('th-ldSheet').innerHTML=thSheetHTML(n);
+  thGo('t-lesson');
+}
+function thToggleKey(){const k=document.getElementById('th-keyBox');k.style.display=k.style.display==='none'?'block':'none';}
+// Printing — only the print area
+function doPrint(html){const pa=document.getElementById('print-area');pa.innerHTML=html;window.print();setTimeout(()=>pa.innerHTML='',600);}
+function printWorksheet(){doPrint(thSheetHTML(thCurrent));}
+function printChallengeCard(){doPrint(thCardHTML());}
+function printPack(){doPrint([1,2,3,4,5].map((n,i)=>thSheetHTML(n)+(i<4?'<div class="th-pagebreak"></div>':'')).join(''));}
+// Load starter levels into the editor
+function loadStarter(n){TH_STARTERS[n]();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}
+function loadChallenge(){TH_STARTERS.challenge();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Challenge loaded! ✏️','#ae853e');}
+function openSubmission(){hideTeacher();document.getElementById('file-input').click();}
+// Projector mode with live countdown
+let thProjInt=null,thProjLeft=600;
+function openProjector(){thProjLeft=600;document.getElementById('projector').classList.add('on');thTickProj();thProjInt=setInterval(()=>{thProjLeft=Math.max(0,thProjLeft-1);thTickProj();},1000);}
+function thTickProj(){const m=Math.floor(thProjLeft/60),s=thProjLeft%60;document.getElementById('ptimer').textContent=m+':'+String(s).padStart(2,'0');}
+function closeProjector(){document.getElementById('projector').classList.remove('on');clearInterval(thProjInt);}
+document.getElementById('h-teacher').onclick=()=>showTeacher();
 
 // ═══════════════════════════════════════════════════════════════════════
 // CANVAS

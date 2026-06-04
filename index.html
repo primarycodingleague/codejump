@@ -149,6 +149,7 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .th-chip{border:1px solid var(--gray);border-radius:4px;padding:8px 13px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:transparent;transition:.15s;font-family:var(--font);}
 .th-chip:hover{border-color:var(--gold);color:var(--gold);}
 .th-chip.gold{background:var(--gold);color:#000;border-color:var(--gold);}
+.th-year.active{background:var(--gold);color:#000;border-color:var(--gold);}
 .th-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .th-panel{background:var(--dark);border:1px solid var(--gray);border-radius:6px;padding:18px;}
 .th-panel h3{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
@@ -186,6 +187,8 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .th-sheet ol{margin:10px 0 10px 20px;}.th-sheet li{margin:4px 0;}
 .th-sheet .drawbox{border:2px dashed #555;border-radius:6px;padding:22px 16px;margin-top:14px;min-height:300px;color:#000;text-align:center;font-weight:700;}
 .th-sheet .foot{margin-top:16px;border-top:1px solid #999;padding-top:10px;font-size:12px;color:#000;font-weight:600;display:flex;justify-content:space-between;}
+.th-expand{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--gold);background:transparent;border:1px solid var(--gold);border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap;}
+.th-expand:hover{background:var(--gold);color:#000;}
 /* projector */
 #projector{position:fixed;inset:0;background:#0a0a0a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:700;text-align:center;padding:30px;}
 #projector.on{display:flex;}
@@ -589,24 +592,32 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
   <div class="th-screen on" id="t-hub">
     <div class="th-bar">
       <span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Teacher Hub</span>
+      <span style="display:flex;gap:6px;margin-left:8px;">
+        <button class="th-chip th-year" data-year="1" onclick="thSetYear(1)">Year 1</button>
+        <button class="th-chip th-year" data-year="2" onclick="thSetYear(2)">Year 2</button>
+      </span>
       <span class="spacer"></span>
-      <button class="th-chip" onclick="openProjector()">📺 Projector</button>
       <button class="th-chip" onclick="printPack()">🖨 Print pack</button>
       <button class="th-chip gold" onclick="hideTeacher()">← Back to CodeJump</button>
     </div>
     <div class="th-wrap">
       <div class="th-grid">
         <div class="th-panel">
-          <h3>📅 Challenge of the day</h3>
-          <div style="font-weight:800;font-size:16px;margin-bottom:6px;">"Marble Run"</div>
-          <p class="th-muted" style="margin-bottom:6px;">Build a level using at least one moving platform and a bounce mushroom.</p>
+          <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px;">📅 Challenge of the day
+            <button class="th-expand" onclick="openProjector()" title="Show full screen for the class">⛶ Expand</button>
+          </h3>
+          <div id="th-chal-day" class="th-muted" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;"></div>
+          <div id="th-chal-title" style="font-weight:800;font-size:16px;margin-bottom:6px;">"Marble Run"</div>
+          <p id="th-chal-desc" class="th-muted" style="margin-bottom:6px;">Build a level using at least one moving platform and a bounce mushroom.</p>
           <button class="th-btn" onclick="loadChallenge()">▶ Load starter level</button>
           <button class="th-btn ghost" onclick="printChallengeCard()">🖨 Print challenge card</button>
         </div>
         <div class="th-panel">
           <h3>📚 This unit</h3>
+          <div id="th-unit-name" style="font-weight:800;font-size:14px;color:var(--white);margin-bottom:4px;"></div>
+          <div class="th-muted" id="th-unit-big" style="margin-bottom:10px;font-style:italic;"></div>
           <div id="th-unit"></div>
-          <p class="th-muted" style="margin-top:8px;">Tap any lesson — finished ones stay open to revisit.</p>
+          <p class="th-muted" style="margin-top:8px;">Tap any lesson to open it.</p>
         </div>
         <div class="th-panel">
           <h3>🗂 Pupils' work</h3>
@@ -633,10 +644,10 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 <!-- projector -->
 <div id="projector">
   <button class="th-chip x" onclick="closeProjector()">✕ Close</button>
-  <div class="pk">Challenge of the day</div>
-  <h1>Marble Run 🎮</h1>
+  <div class="pk" id="proj-day">Challenge of the day</div>
+  <h1 id="proj-title">Marble Run 🎮</h1>
   <div class="ptimer" id="ptimer">10:00</div>
-  <p>Build a level using at least one moving platform and a bounce mushroom. Ready… go!</p>
+  <p id="proj-desc">Build a level using at least one moving platform and a bounce mushroom. Ready… go!</p>
 </div>
 
 <div id="print-area"></div>
@@ -969,100 +980,194 @@ document.getElementById('home-btn').onclick=()=>showHome();
 // ═══════════════════════════════════════════════════════════════════════
 // TEACHER HUB
 // ═══════════════════════════════════════════════════════════════════════
-const TH_LESSONS={
-  1:{num:'LESSON 1',ks:'KS1 · Sequence',title:'Intro to Tiles',obj:'Paint platforms, a start and a goal to make your very first level.',
-     steps:['Tap a tile, then paint it onto the grid.','Add a Start 🚩 and a Goal 🏁.','Make a path that joins them up.','Press Play and walk to the goal.'],
-     challenge:'Add a gem 💎 to collect on the way.',
-     key:'Focus on SEQUENCE: tiles placed in order make a path. Check every level has exactly one Start and one Goal before playing.'},
-  2:{num:'LESSON 2',ks:'KS1 · Events',title:'Events & Keys',obj:'Use code blocks so the arrow keys move your player.',
-     steps:['Open Code.','Find "when ⬅️ key pressed → move left".','Add Jump on the Space bar.','Play and test your controls.'],
-     challenge:'Change which key makes the player jump.',
-     key:'Introduces EVENTS ("when key pressed"). On tablets, remind pupils the on-screen buttons trigger these same actions.'},
-  3:{num:'LESSON 3',ks:'KS1 · Selection',title:'Make it Tricky!',obj:'Add a rule so the player must collect all the gems before the goal opens.',
-     steps:['Build a level with a Start 🚩 and a Goal 🏁.','Add 3 gems 💎 in tricky places.','Open Code → choose "win by → collect all gems".','Press Play and test it. Did it work?'],
-     challenge:'Add a spike trap 🌵 the player must jump over.',
-     key:'Pupils set the win-condition block to "collect all gems". Common mistake: forgetting to place gems, so the goal opens instantly. Check they tested in Play mode.'},
-  4:{num:'LESSON 4',ks:'KS2 · Repetition',title:'Enemies on Patrol',obj:'Use Enemy A and Enemy B with different movement patterns and speeds.',
-     steps:['Place an Enemy A 👾 and an Enemy B 🐛.','Open Code → set Enemy A to patrol left–right.','Set Enemy B to patrol up–down.','Give them different speeds and Play.'],
-     challenge:'Make one enemy fast and one slow — which is harder to avoid?',
-     key:'Two enemy types should have distinct patterns. Discuss "repetition": the patrol repeats forever. Extension: ask why up–down enemies guard ladders well.'},
-  5:{num:'LESSON 5',ks:'KS2 · Debugging',title:'Debug the Level',obj:'Open a broken level, work out why it cannot be finished, and fix it.',
-     steps:['Load the starter level.','Play it — find what stops you finishing.','Talk: is a tile missing? Is the goal unreachable?','Fix it in Build, then Play to confirm.'],
-     challenge:'Break a level on purpose for a partner to fix.',
-     key:'The bug: a gap too wide to jump. Fix = add platforms or a bounce mushroom. Teaches the design–test–debug cycle from the computing curriculum.'},
-};
-const TH_DONE={1:true,2:true,3:'now'}; // demo progress markers
-// Starter levels each lesson loads into the editor
+// Starter levels lessons can load into the editor
 const TH_STARTERS={
-  1:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][2]=T.START;grid[9][17]=T.GOAL;grid[8][9]=T.GEM;},
-  2:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;[8,9,10].forEach(c=>grid[7][c]=T.GRASS);grid[6][9]=T.GEM;},
-  3:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][5]=T.GEM;grid[7][9]=T.GEM;grid[8][13]=T.GEM;},
-  4:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[9][7]=T.ENEMY;grid[9][12]=T.ENEMY2;},
-  5:()=>{grid=mkGrid();theme='water';for(let c=0;c<COLS;c++){if(c<8||c>12){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][5]=T.GEM;},
-  challenge:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[5][18]=T.GOAL;grid[9][9]=T.MOVER;grid[9][14]=T.BOUNCE;[16,17,18].forEach(c=>grid[6][c]=T.GRASS);},
+  demo:()=>DEMOS.forest(),
+  simple:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][2]=T.START;grid[9][17]=T.GOAL;},
+  hazards:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][5]=T.GEM;grid[9][9]=T.SPIKE;grid[9][13]=T.BOUNCE;},
+  themed:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][2]=T.START;grid[9][17]=T.GOAL;grid[8][9]=T.STAR;},
+  code:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][2]=T.START;grid[9][17]=T.GOAL;grid[8][9]=T.GEM;},
+  jump:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){if(c<7||c>9){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}}grid[9][1]=T.START;grid[9][18]=T.GOAL;[12,13].forEach(c=>grid[7][c]=T.GRASS);grid[6][13]=T.GEM;},
+  enemies:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[9][7]=T.ENEMY;grid[9][12]=T.ENEMY2;},
+  gems:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][4]=T.GEM;grid[7][9]=T.GEM;grid[8][14]=T.GEM;},
+  mover:()=>{grid=mkGrid();theme='water';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[5][18]=T.GOAL;grid[9][9]=T.MOVER;grid[9][14]=T.BOUNCE;[16,17,18].forEach(c=>grid[6][c]=T.GRASS);},
+  challenge:()=>dailyChallenge().build(),
 };
-let thCurrent=3;
-function showTeacher(){document.getElementById('teacher').classList.remove('hide');thGo('t-hub');thBuildUnit();thBuildLibrary();}
+// ── Challenge of the Day ─────────────────────────────────────────────────
+// A rotating pool. The same challenge shows for everyone on a given calendar
+// day (date-based, not random), and it changes automatically at midnight.
+const TH_CHALLENGES=[
+  {title:'Marble Run',desc:'Build a level using at least one moving platform and a bounce mushroom.',
+   steps:['Make a Start and a Goal.','Add a moving platform the player must time.','Add a bounce mushroom to reach somewhere high.','Test it in Play — can you finish it?'],
+   build:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[5][18]=T.GOAL;grid[9][9]=T.MOVER;grid[9][14]=T.BOUNCE;[16,17,18].forEach(c=>grid[6][c]=T.GRASS);}},
+  {title:'Gem Hunter',desc:'Hide three gems around your level so the player must explore to win.',
+   steps:['Make a Start and a Goal.','Add three gems in tricky spots.','Set the win rule to “collect all gems”.','Test it — can you reach every gem?'],
+   build:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][4]=T.GEM;grid[7][9]=T.GEM;grid[8][14]=T.GEM;}},
+  {title:'Mind the Gap',desc:'Make a big gap the player has to jump across to reach the goal.',
+   steps:['Make a Start on the left.','Leave a gap in the floor.','Put the Goal on the far side.','Test the jump — is it possible but tricky?'],
+   build:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){if(c<7||c>9){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}}grid[9][1]=T.START;grid[9][18]=T.GOAL;[12,13].forEach(c=>grid[7][c]=T.GRASS);grid[6][13]=T.GEM;}},
+  {title:'Two Guards',desc:'Use both enemy types — make one fast and one slow.',
+   steps:['Make a Start and a Goal.','Add an Enemy A and an Enemy B.','Make one fast and one slow.','Test it — which guard is trickier?'],
+   build:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[9][7]=T.ENEMY;grid[9][12]=T.ENEMY2;}},
+  {title:'Beat the Clock',desc:'Set a timer and design a level the player can just finish in time.',
+   steps:['Make a Start and a Goal far apart.','Set the win rule to “survive / finish in time”.','Choose a fair timer.','Test it — tricky but possible?'],
+   build:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[8][6]=T.GEM;grid[8][12]=T.GEM;}},
+  {title:'Sky High',desc:'Use bounce mushrooms to climb up to a goal placed high in the sky.',
+   steps:['Make a Start on the ground.','Stack platforms going upward.','Add bounce mushrooms to climb.','Put the Goal at the top and test it.'],
+   build:()=>{grid=mkGrid();theme='space';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][5]=T.BOUNCE;[8,9].forEach(c=>grid[7][c]=T.GRASS);grid[6][12]=T.BOUNCE;[14,15].forEach(c=>grid[4][c]=T.GRASS);grid[3][15]=T.GOAL;}},
+  {title:'Spike Alley',desc:'Make a path past spikes that the player must dodge carefully.',
+   steps:['Make a Start and a Goal.','Add a row of spikes to avoid.','Leave safe spots to land on.','Test it — fair but challenging?'],
+   build:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;grid[9][18]=T.GOAL;[6,8,10,12].forEach(c=>grid[9][c]=T.SPIKE);grid[7][9]=T.GEM;}},
+  {title:'Theme Park',desc:'Pick a theme (space, water or forest) and decorate a level to match it.',
+   steps:['Choose a background theme.','Build a level that fits the theme.','Add matching decorations.','Give it a themed title and test it.'],
+   build:()=>{grid=mkGrid();theme='water';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][2]=T.START;grid[9][17]=T.GOAL;grid[8][9]=T.GEM;}},
+  {title:'Moving Maze',desc:'Use two moving platforms the player must time to cross.',
+   steps:['Make a Start and a Goal.','Add two moving platforms.','Set their ranges so timing matters.','Test it — can you cross both?'],
+   build:()=>{grid=mkGrid();theme='water';for(let c=0;c<COLS;c++){if(c<5||c>15){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}}grid[9][1]=T.START;grid[9][18]=T.GOAL;grid[9][8]=T.MOVER;grid[9][12]=T.MOVER;}},
+  {title:'Treasure Tower',desc:'Build upward and place a gem on every level the player climbs.',
+   steps:['Build platforms going up like a tower.','Put a gem on each level.','Set the win rule to “collect all gems”.','Put the Goal at the top and test it.'],
+   build:()=>{grid=mkGrid();theme='forest';for(let c=0;c<COLS;c++){grid[11][c]=T.GRASS;grid[10][c]=T.PLATFORM;}grid[9][1]=T.START;[4,5].forEach(c=>grid[8][c]=T.GRASS);grid[7][4]=T.GEM;[9,10].forEach(c=>grid[6][c]=T.GRASS);grid[5][9]=T.GEM;[14,15].forEach(c=>grid[4][c]=T.GRASS);grid[3][14]=T.GEM;grid[3][15]=T.GOAL;}},
+];
+function dailyChallenge(){
+  const d=new Date();
+  const day=Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()))/86400000);
+  return TH_CHALLENGES[((day%TH_CHALLENGES.length)+TH_CHALLENGES.length)%TH_CHALLENGES.length];
+}
+// Two KS1 units mapped from the Primary Coding League unit overviews
+const TH_UNITS={
+  1:{name:'Year 1 — Design Your Game World',
+     big:'Games have rules, characters and worlds. I can design a level and change how it plays.',
+     lessons:[
+       {num:'Session 1',ks:'Year 1 · Algorithms',title:'What Makes a Game?',obj:'Look at a game and spot the start, the challenge, the rules and the goal',
+        steps:['Look at or play a simple game.','Find where the game STARTS.','Find the CHALLENGE — the tricky bit.','Find the RULES and the GOAL (how you win).','Draw your own game idea on paper.'],
+        challenge:'Label the start, the goal and one rule on your drawing.',
+        key:'Unplugged — no screens. Use a physical or paper game as the stimulus. Introduce algorithm, input and output. NC (Y1): understand what algorithms are and how they are implemented as programs.',starter:null},
+       {num:'Session 2',ks:'Year 1 · Explore',title:'Meet CodeJump',obj:'Play a ready-made level, then explore Build mode',
+        steps:['Open a demo level (Forest, Space or Ocean).','Play it all the way to the goal.','Tap BUILD to switch to Build mode.','Tap tiles and paint to explore freely.'],
+        challenge:'Find three different blocks you can paint.',
+        key:'Landing page · demo levels · Build mode. Free exploration before formal building. NC (Y1): use technology purposefully to create digital content.',starter:'demo'},
+       {num:'Session 3',ks:'Year 1 · Sequence',title:'My First Level',obj:'Build a level you can finish, with a start, platforms and a goal',
+        steps:['Place ONE Start.','Build platforms to walk and jump on.','Place ONE Goal.','Play it — can you reach the goal?','Save your level.'],
+        challenge:'Ask a friend to test it. Fix anything that does not work.',
+        key:'Build mode · Save (.codejump). The level MUST be completable — peer test and iterate. NC (Y1): create and debug simple programs.',starter:'simple'},
+       {num:'Session 4',ks:'Year 1 · Design',title:'Hazards & Helpers',obj:'Add gems, spikes and bounce pads to change how tricky your level is',
+        steps:['Add gems to collect.','Add a spike to jump over.','Add a bounce pad.','Play and test — too easy or too hard?','Use Undo if you change your mind.'],
+        challenge:'Change one thing to make your level fairer after testing.',
+        key:'Full tile palette · Undo. Discuss what changes difficulty; redesign from playtest feedback. NC (Y1): create and debug simple programs.',starter:'hazards'},
+       {num:'Session 5',ks:'Year 1 · Creativity',title:'Theme Day',obj:'Choose a theme and redesign your level to match a story',
+        steps:['Pick a theme: Forest, Space or Underwater.','Open Design and change the sky colours.','Design your own player sprite.','Make your level match your story.'],
+        challenge:'Give your level a title that matches your theme.',
+        key:'Theme selector · Sky colour picker · Sprite Designer. NC (Y1): use technology purposefully to organise and manipulate digital content.',starter:'themed'},
+       {num:'Session 6',ks:'Year 1 · Share',title:'Game Showcase & Ship It',obj:'Share your game and take it home as a file',
+        steps:['Open your level, then tap Share.','Copy a link OR Download Playable Game (.html).','Play a game a friend made.','Give one kind comment and one idea.'],
+        challenge:'Send your game file home so you can play it again.',
+        key:'Share → Download Playable Game (.html). Peer feedback and celebration. Pupils open their own saved level first. NC (Y1): use technology purposefully to create, store and retrieve digital content.',starter:null},
+     ]},
+  2:{name:'Year 2 — Code Your Game',
+     big:'Programmers make precise decisions that change how a game feels. I can control the physics and design the challenge.',
+     lessons:[
+       {num:'Session 1',ks:'Year 2 · Reasoning',title:'Recap + Code Panel',obj:'Reopen a level and predict what each code block does before changing it',
+        steps:['Load a saved level.','Open the CODE panel.','Read each block — what do you think it does?','Predict first, then test one change.'],
+        challenge:'Find the block that sets how many lives you have.',
+        key:'Code panel · block scripts. Predict-before-change builds reasoning. NC (Y2): use logical reasoning to predict the behaviour of simple programs.',starter:'code'},
+       {num:'Session 2',ks:'Year 2 · Variables',title:'Physics Decisions',obj:'Change gravity and jump height and feel the difference',
+        steps:['Open Code.','Set gravity to floaty, then to heavy.','Change jump height from low to high.','Predict, change, play, then talk about it.'],
+        challenge:'Find the settings that make your favourite feel.',
+        key:'Gravity · Jump Height (Y2 advanced controls). Predict → change → play → evaluate. NC (Y2): use sequence, selection and repetition; work with variables.',starter:'jump'},
+       {num:'Session 3',ks:'Year 2 · Repetition',title:'Two Types of Enemy',obj:'Give Enemy A and Enemy B different movements and speeds',
+        steps:['Place an Enemy A and an Enemy B.','Open Code and set Enemy A to patrol left and right.','Set Enemy B to patrol up and down.','Give them different speeds and play.'],
+        challenge:'Make one enemy fast and one slow — which is trickier?',
+        key:'Enemy A & B pattern + speed. The patrol repeats forever — discuss repetition. NC (Y2): use sequence, selection and repetition in programs.',starter:'enemies'},
+       {num:'Session 4',ks:'Year 2 · Selection',title:'Win Conditions',obj:'Choose how to win and design your level around it',
+        steps:['Open Code and find Win.','Try Reach Goal, Collect All Gems and Beat the Timer.','Pick ONE for your level.','Design the level so your win rule is fun.'],
+        challenge:'Set a timer and test if you can win in time.',
+        key:'Win condition selector · Timer · Gem counter HUD. NC (Y2): use selection in programs.',starter:'gems'},
+       {num:'Session 5',ks:'Year 2 · Debugging',title:'Platform & Bounce Tuning',obj:'Adjust moving platforms and bounce height and test if it is fair',
+        steps:['Add a moving platform.','Change its travel: short, medium or long.','Change bounce height from low to super.','Test — is it fairer or harder?'],
+        challenge:'Tune it so it is tricky but always possible.',
+        key:'Mover range · Bounce height · Sprite Designer. Iterative testing and refining. NC (Y2): design, write and debug programs that accomplish specific goals.',starter:'mover'},
+       {num:'Session 6',ks:'Year 2 · Present',title:'Final Game — Ship It',obj:'Build, code and design a full game, then present two coding decisions',
+        steps:['Build your level.','Set the physics, enemies and win rule in Code.','Design your sprites.','Download as .html and present two choices you made.'],
+        challenge:'Explain WHY you chose your two settings.',
+        key:'All modes · Share → Download Playable Game (.html). Present and articulate decisions. Pupils use their own game — no starter. NC (Y2): design, write and debug programs; use logical reasoning.',starter:null},
+     ]},
+};
+let thYear=1, thCurrent=null;
+function thLessons(){return TH_UNITS[thYear].lessons;}
+function showTeacher(){document.getElementById('teacher').classList.remove('hide');thGo('t-hub');thRenderHub();}
 function hideTeacher(){document.getElementById('teacher').classList.add('hide');}
 function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
-function thBuildUnit(){
+function thSetYear(y){thYear=y;thRenderHub();}
+function thRenderHub(){
+  document.querySelectorAll('.th-year').forEach(b=>b.classList.toggle('active',(+b.dataset.year)===thYear));
+  const U=TH_UNITS[thYear];
+  document.getElementById('th-unit-name').textContent=U.name;
+  document.getElementById('th-unit-big').textContent='“'+U.big+'”';
+  const ch=dailyChallenge();
+  document.getElementById('th-chal-day').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('th-chal-title').textContent='“'+ch.title+'”';
+  document.getElementById('th-chal-desc').textContent=ch.desc;
+  const circ=['①','②','③','④','⑤','⑥'];
   const u=document.getElementById('th-unit');u.innerHTML='';
-  const circ=['①','②','③','④','⑤'];
-  [1,2,3,4,5].forEach((n,i)=>{const L=TH_LESSONS[n];const d=document.createElement('div');d.className='th-row clk';d.onclick=()=>thOpenLesson(n);
-    const tag=TH_DONE[n]==='now'?'<span class="th-tag now">Today</span>':(TH_DONE[n]?'<span class="th-tag done">Done</span>':'');
-    d.innerHTML=`<span class="grow">${circ[i]} ${L.title}</span>${tag}`;u.appendChild(d);});
-}
-function thBuildLibrary(){
+  thLessons().forEach((L,i)=>{const d=document.createElement('div');d.className='th-row clk';d.onclick=()=>thOpenLesson(i);
+    d.innerHTML='<span class="grow">'+circ[i]+' '+L.title+'</span>';u.appendChild(d);});
   const g=document.getElementById('th-lessonGrid');g.innerHTML='';
-  [1,2,3,4,5].forEach(n=>{const L=TH_LESSONS[n];const d=document.createElement('div');d.className='th-lcard';d.onclick=()=>thOpenLesson(n);
-    d.innerHTML=`<div class="lnum">${L.num}</div><div class="ltitle">${L.title}</div><div class="lobj"><span class="th-tag now">${L.ks}</span><br><br>${L.obj}</div><div class="th-openhint">Open lesson →</div>`;
+  thLessons().forEach((L,i)=>{const d=document.createElement('div');d.className='th-lcard';d.onclick=()=>thOpenLesson(i);
+    d.innerHTML='<div class="lnum">'+L.num+'</div><div class="ltitle">'+L.title+'</div><div class="lobj"><span class="th-tag now">'+L.ks+'</span><br><br>'+L.obj+'</div><div class="th-openhint">Open lesson →</div>';
     g.appendChild(d);});
 }
-function thSheetHTML(n){const L=TH_LESSONS[n];return `<div class="th-sheet">
-  <div class="ks">${L.ks.replace('·','Computing ·')}</div>
-  <h4>${L.num.replace('LESSON','Lesson')} — ${L.title} 🎮</h4>
-  <p><b>Today I will:</b> ${L.obj.toLowerCase()}</p>
-  <ol>${L.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
-  <div class="drawbox">✏️ Draw your level plan here before you build it</div>
-  <p style="margin-top:12px;"><b>Challenge:</b> ${L.challenge}</p>
-  <div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>`;}
-function thCardHTML(){return `<div class="th-sheet">
-  <div class="ks">Challenge of the Day</div>
-  <h4>Marble Run 🎮</h4>
-  <p><b>Your mission:</b> build a level that uses at least one moving platform ➡️ and a bounce mushroom 🍄.</p>
-  <ol><li>Make a Start 🚩 and a Goal 🏁.</li><li>Add a moving platform the player must time.</li><li>Add a bounce mushroom to reach somewhere high.</li><li>Test it in Play — can you finish it?</li></ol>
-  <div class="drawbox">✏️ Sketch your idea here first</div>
-  <div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>`;}
-function thOpenLesson(n){
-  thCurrent=n;const L=TH_LESSONS[n];
+function thSheetHTML(L){return '<div class="th-sheet">'+
+  '<div class="ks">'+L.ks+'</div>'+
+  '<h4>'+L.num+' — '+L.title+' 🎮</h4>'+
+  '<p><b>Today I will:</b> '+L.obj.charAt(0).toLowerCase()+L.obj.slice(1)+'.</p>'+
+  '<ol>'+L.steps.map(s=>'<li>'+s+'</li>').join('')+'</ol>'+
+  '<div class="drawbox">✏️ Draw your plan here before you start</div>'+
+  '<p style="margin-top:12px;"><b>Challenge:</b> '+L.challenge+'</p>'+
+  '<div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>';}
+function thCardHTML(){const ch=dailyChallenge();return '<div class="th-sheet">'+
+  '<div class="ks">Challenge of the Day · '+new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})+'</div>'+
+  '<h4>'+ch.title+' 🎮</h4>'+
+  '<p><b>Your mission:</b> '+ch.desc+'</p>'+
+  '<ol>'+ch.steps.map(s=>'<li>'+s+'</li>').join('')+'</ol>'+
+  '<div class="drawbox">✏️ Sketch your idea here first</div>'+
+  '<div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>';}
+function thOpenLesson(i){
+  const L=thLessons()[i];thCurrent=L;
+  const loadBtn=L.starter
+    ?'<button class="th-btn" style="margin-top:14px" onclick="loadStarter()">▶ Load starter level</button>'
+    :'<div class="th-muted" style="margin-top:14px;border:1px dashed var(--gray);border-radius:6px;padding:10px 12px;">✋ This session uses no starter level (unplugged or pupils’ own game). Print the worksheet below.</div>';
   document.getElementById('th-ldLeft').innerHTML=
-    `<div class="lnum" style="color:var(--gold);font-weight:800;letter-spacing:1px;font-size:12px;">${L.num} · ${L.ks}</div>
-     <h2>${L.title}</h2>
-     <p style="opacity:.85;line-height:1.5;"><b>Objective:</b> ${L.obj}</p>
-     <ol class="th-steps">${L.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
-     <p style="font-size:13px;"><b style="color:var(--gold)">Challenge:</b> ${L.challenge}</p>
-     <button class="th-btn" style="margin-top:14px" onclick="loadStarter(thCurrent)">▶ Load starter level</button>
-     <div style="display:flex;gap:8px;margin-top:8px;">
-       <button class="th-btn ghost" onclick="printWorksheet()">🖨 Print worksheet</button>
-       <button class="th-btn ghost" onclick="thToggleKey()">🔑 Answer key</button>
-     </div>
-     <div class="th-keybox" id="th-keyBox" style="display:none;"><h4>Teacher answer key</h4>${L.key}</div>`;
-  document.getElementById('th-ldSheet').innerHTML=thSheetHTML(n);
+    '<div class="lnum" style="color:var(--gold);font-weight:800;letter-spacing:1px;font-size:12px;">'+L.num+' · '+L.ks+'</div>'+
+    '<h2>'+L.title+'</h2>'+
+    '<p style="opacity:.85;line-height:1.5;"><b>Objective:</b> '+L.obj+'.</p>'+
+    '<ol class="th-steps">'+L.steps.map(s=>'<li>'+s+'</li>').join('')+'</ol>'+
+    '<p style="font-size:13px;"><b style="color:var(--gold)">Challenge:</b> '+L.challenge+'</p>'+
+    loadBtn+
+    '<div style="display:flex;gap:8px;margin-top:8px;">'+
+      '<button class="th-btn ghost" onclick="printWorksheet()">🖨 Print worksheet</button>'+
+      '<button class="th-btn ghost" onclick="thToggleKey()">🔑 Answer key</button>'+
+    '</div>'+
+    '<div class="th-keybox" id="th-keyBox" style="display:none;"><h4>Teacher notes & curriculum</h4>'+L.key+'</div>';
+  document.getElementById('th-ldSheet').innerHTML=thSheetHTML(L);
   thGo('t-lesson');
 }
 function thToggleKey(){const k=document.getElementById('th-keyBox');k.style.display=k.style.display==='none'?'block':'none';}
 // Printing — only the print area
 function doPrint(html){const pa=document.getElementById('print-area');pa.innerHTML=html;window.print();setTimeout(()=>pa.innerHTML='',600);}
-function printWorksheet(){doPrint(thSheetHTML(thCurrent));}
+function printWorksheet(){if(thCurrent)doPrint(thSheetHTML(thCurrent));}
 function printChallengeCard(){doPrint(thCardHTML());}
-function printPack(){doPrint([1,2,3,4,5].map((n,i)=>thSheetHTML(n)+(i<4?'<div class="th-pagebreak"></div>':'')).join(''));}
+function printPack(){const ls=thLessons();doPrint(ls.map((L,i)=>thSheetHTML(L)+(i<ls.length-1?'<div class="th-pagebreak"></div>':'')).join(''));}
 // Load starter levels into the editor
-function loadStarter(n){TH_STARTERS[n]();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}
+function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}}
 function loadChallenge(){TH_STARTERS.challenge();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Challenge loaded! ✏️','#ae853e');}
 function openSubmission(){hideTeacher();document.getElementById('file-input').click();}
 // Projector mode with live countdown
 let thProjInt=null,thProjLeft=600;
-function openProjector(){thProjLeft=600;document.getElementById('projector').classList.add('on');thTickProj();thProjInt=setInterval(()=>{thProjLeft=Math.max(0,thProjLeft-1);thTickProj();},1000);}
+function openProjector(){const ch=dailyChallenge();
+  document.getElementById('proj-day').textContent='Challenge of the day · '+new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('proj-title').textContent=ch.title+' 🎮';
+  document.getElementById('proj-desc').textContent=ch.desc+' Ready… go!';
+  thProjLeft=600;document.getElementById('projector').classList.add('on');thTickProj();thProjInt=setInterval(()=>{thProjLeft=Math.max(0,thProjLeft-1);thTickProj();},1000);}
 function thTickProj(){const m=Math.floor(thProjLeft/60),s=thProjLeft%60;document.getElementById('ptimer').textContent=m+':'+String(s).padStart(2,'0');}
 function closeProjector(){document.getElementById('projector').classList.remove('on');clearInterval(thProjInt);}
 document.getElementById('h-teacher').onclick=()=>showTeacher();

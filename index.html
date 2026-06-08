@@ -829,6 +829,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <button class="mode-btn"        id="btn-code">&lt;/&gt; Code</button>
     <div class="sep"></div>
     <button class="tbtn active" id="t-paint">🖌️ Paint</button>
+    <button class="tbtn"        id="t-fill">🪣 Fill Row</button>
     <button class="tbtn"        id="t-erase">🧹 Erase</button>
     <button class="tbtn"        id="t-undo">↩️ Undo</button>
     <button class="tbtn"        id="t-clear">🗑️ Clear</button>
@@ -917,9 +918,10 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
         <div class="preview-label">Colours</div>
         <div class="color-palette" id="color-palette"></div>
         <div id="cur-color-display"></div>
-        <div class="preview-label" style="margin-top:8px">Eraser</div>
-        <div id="d-pixel-tools" style="display:flex;gap:6px;">
+        <div class="preview-label" style="margin-top:8px">Tools</div>
+        <div id="d-pixel-tools" style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="dbtn gray" id="d-eraser">◻️ Eraser</button>
+          <button class="dbtn gray" id="d-fill">🪣 Fill all</button>
         </div>
       </div>
     </div>
@@ -2033,7 +2035,7 @@ function buildPalette(){
   TILES.forEach(ti=>{const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${ti.label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};pal.appendChild(d);});
 }
 buildPalette();
-function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');}
+function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
 
 let histSaved=false;
 function pushHistory(){history.push(grid.map(r=>[...r]));if(history.length>60)history.shift();histSaved=true;}
@@ -2062,12 +2064,24 @@ document.querySelectorAll('.mv-step').forEach(b=>b.onclick=()=>mvAdjust(b.datase
 document.getElementById('mv-done').onclick=()=>{document.getElementById('mover-modal').classList.add('hide');commitLevel();renderPagesStrip();};
 function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);}
 function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2;}
-canvas.addEventListener('mousedown',e=>{if(mode!=='build')return;const{col,row}=cellFromEvent(e);const erase=(e.button===2||tool==='erase');if(!erase&&tryTravelEdit(col,row))return;if(!histSaved)pushHistory();histSaved=false;painting=true;lastCell='';paint(col,row,erase);if(!erase&&isTravelTile(selTile)&&col>=0&&col<COLS&&row>=0&&row<ROWS&&grid[row][col]===selTile){painting=false;openEditorFor(row,col);}});
-canvas.addEventListener('mousemove',e=>{if(mode!=='build'||!painting)return;const{col,row}=cellFromEvent(e);paint(col,row,e.button===2||tool==='erase');});
+// Fill an entire row with the selected tile (Fill Row tool).
+function fillRow(row,clickCol){if(row<0||row>=ROWS)return;
+  if(selTile===T.START||selTile===T.GOAL){paint(clickCol|0,row,false);return;} // single placement only
+  for(let c=0;c<COLS;c++){const mk=row+','+c;const prev=grid[row][c];
+    if(prev===T.MOVER)delete moverCfg[mk];
+    if(prev===T.ENEMY||prev===T.ENEMY2)delete enemyCfg[mk];
+    grid[row][c]=selTile;
+    if(selTile===T.MOVER&&!moverCfg[mk])moverCfg[mk]={l:moverDefaultTiles(),r:moverDefaultTiles()};
+    if((selTile===T.ENEMY||selTile===T.ENEMY2)&&!enemyCfg[mk])enemyCfg[mk]=enemyDefaultCfg(selTile);
+  }
+}
+function buildApply(col,row,erase){if(tool==='fill'&&!erase)fillRow(row,col);else paint(col,row,erase);}
+canvas.addEventListener('mousedown',e=>{if(mode!=='build')return;const{col,row}=cellFromEvent(e);const erase=(e.button===2||tool==='erase');if(tool==='paint'&&!erase&&tryTravelEdit(col,row))return;if(!histSaved)pushHistory();histSaved=false;painting=true;lastCell='';buildApply(col,row,erase);if(tool==='paint'&&!erase&&isTravelTile(selTile)&&col>=0&&col<COLS&&row>=0&&row<ROWS&&grid[row][col]===selTile){painting=false;openEditorFor(row,col);}});
+canvas.addEventListener('mousemove',e=>{if(mode!=='build'||!painting)return;const{col,row}=cellFromEvent(e);buildApply(col,row,e.button===2||tool==='erase');});
 window.addEventListener('mouseup',()=>{const was=painting;painting=false;lastCell='';histSaved=false;if(was&&mode==='build'){commitLevel();renderPagesStrip();}});
 canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(mode!=='build')return;pushHistory();const{col,row}=cellFromEvent(e);grid[row][col]=T.EMPTY;});
-canvas.addEventListener('touchstart',e=>{if(mode!=='build')return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);if(tool!=='erase'&&tryTravelEdit(col,row))return;pushHistory();painting=true;lastCell='';paint(col,row,tool==='erase');if(tool!=='erase'&&isTravelTile(selTile)&&col>=0&&col<COLS&&row>=0&&row<ROWS&&grid[row][col]===selTile){painting=false;openEditorFor(row,col);}},{passive:false});
-canvas.addEventListener('touchmove',e=>{if(mode!=='build'||!painting)return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);paint(col,row,tool==='erase');},{passive:false});
+canvas.addEventListener('touchstart',e=>{if(mode!=='build')return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);if(tool==='paint'&&tryTravelEdit(col,row))return;pushHistory();painting=true;lastCell='';buildApply(col,row,tool==='erase');if(tool==='paint'&&isTravelTile(selTile)&&col>=0&&col<COLS&&row>=0&&row<ROWS&&grid[row][col]===selTile){painting=false;openEditorFor(row,col);}},{passive:false});
+canvas.addEventListener('touchmove',e=>{if(mode!=='build'||!painting)return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);buildApply(col,row,tool==='erase');},{passive:false});
 canvas.addEventListener('touchend',()=>{const was=painting;painting=false;lastCell='';if(was&&mode==='build'){commitLevel();renderPagesStrip();}});
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2087,7 +2101,7 @@ function switchMode(m){
   const cp=document.getElementById('code-panel');
   if(m==='code'){cp.classList.add('show');setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);},50);}
   else cp.classList.remove('show');
-  ['t-paint','t-erase','t-undo','t-clear'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
+  ['t-paint','t-fill','t-erase','t-undo','t-clear'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
   if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!muted)startMusic();}
   else{stopPlay();stopMusic();if(typeof clearTouchKeys==='function')clearTouchKeys();}
 }
@@ -2105,6 +2119,7 @@ function validate(){
 // TOOLBAR
 // ═══════════════════════════════════════════════════════════════════════
 document.getElementById('t-paint').onclick=()=>setTool('paint');
+document.getElementById('t-fill').onclick=()=>setTool('fill');
 document.getElementById('t-erase').onclick=()=>setTool('erase');
 document.getElementById('t-undo') .onclick=()=>undo();
 document.getElementById('t-clear').onclick=()=>{if(confirm('Clear this page?')){pushHistory();grid=mkGrid();commitLevel();renderPagesStrip();}};
@@ -2454,6 +2469,7 @@ document.getElementById('d-close').onclick=()=>closeDesigner();
 document.getElementById('bgm-gradient').onclick=()=>setBgMode('gradient');
 document.getElementById('bgm-paint').onclick=()=>setBgMode('paint');
 document.getElementById('d-eraser').onclick=()=>{dErasing=!dErasing;document.getElementById('d-eraser').style.background=dErasing?'var(--gold)':'transparent';};
+document.getElementById('d-fill').onclick=()=>{const data=pdata[dTarget];if(!data)return;const v=dErasing?'':dColor;for(let i=0;i<256;i++)data[i]=v;renderPix();};
 document.getElementById('d-clear').onclick=()=>{
   if(dTarget==='bg'){if(bgMode==='paint'){pdata.bg=new Array(256).fill('');renderPix();}else{document.getElementById('bg-top-pick').value='#87ceeb';document.getElementById('bg-bot-pick').value='#b8dff0';updateBgStrip();}}
   else{pdata[dTarget]=new Array(256).fill('');renderPix();}
@@ -2711,6 +2727,7 @@ const CJ_VERSION='2026.06.09';
 const CJ_WHATSNEW=[
   '➡️ Custom moving platforms — tap a moving block to set exactly how many tiles it travels left and right.',
   '👾 Custom enemy movement — tap an enemy to set how far it patrols left, right, up and down.',
+  '🪣 Fill tools — fill a whole row of ground in one click, and fill the Design canvas with any colour.',
   '🧩 Code blocks now snap together properly — any value or maths block fits inside logic blocks.',
   '⏳ New “wait” block — pause your code for a few seconds before the next step.',
   '👩‍🏫 Teacher Hub — two new Year 2 lessons on event coding and functions.',

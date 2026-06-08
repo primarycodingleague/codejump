@@ -315,6 +315,21 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .pal-item.sel{background:var(--gold);color:var(--black);border-color:var(--gold);}
 .pal-icon{font-size:20px;line-height:1;}
 
+/* ── PAGES (multi-level) RAIL ───────────────────────────────────────── */
+#pages{background:#2b2b2b;width:104px;min-width:104px;padding:8px 6px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;border-right:1px solid var(--gray);}
+.app.mode-play #pages,#app.mode-play #pages{display:none;}
+.page-cell{position:relative;border:2px solid var(--gray);border-radius:6px;overflow:hidden;cursor:pointer;background:#000;transition:border-color .12s,transform .12s;}
+.page-cell:hover{border-color:var(--gold);}
+.page-cell.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(174,133,62,.4);}
+.page-thumb{display:block;width:100%;height:auto;image-rendering:pixelated;}
+.page-num{position:absolute;left:3px;top:2px;font-family:var(--display);font-size:13px;color:#fff;text-shadow:0 1px 2px #000;line-height:1;}
+.page-del{position:absolute;right:2px;top:2px;width:16px;height:16px;border:none;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:14px;cursor:pointer;padding:0;opacity:0;transition:opacity .12s;}
+.page-cell:hover .page-del{opacity:1;}
+.page-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:2px dashed var(--gray);border-radius:6px;background:transparent;color:var(--gold);cursor:pointer;padding:10px 0;font-family:var(--font);transition:border-color .12s,background .12s;}
+.page-add:hover{border-color:var(--gold);background:rgba(174,133,62,.12);}
+.page-add span{font-size:22px;line-height:1;}
+.page-add small{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+body.is-touch #pages{width:120px;min-width:120px;}
 /* ── CANVAS WRAP ────────────────────────────────────────────────────── */
 #cwrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--black);}
 #gc{display:block;border:2px solid var(--gold);cursor:crosshair;image-rendering:pixelated;}
@@ -430,8 +445,10 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 #design-box{
   background:var(--dark);border:1px solid var(--gold);
   border-radius:4px;padding:24px;display:flex;flex-direction:column;gap:14px;
-  max-width:700px;width:95vw;max-height:95vh;overflow-y:auto;
+  max-width:700px;width:95vw;max-height:95vh;overflow-y:auto;position:relative;
 }
+#d-close{position:absolute;top:12px;right:14px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(255,255,255,.08);color:var(--white);font-size:20px;line-height:1;cursor:pointer;z-index:2;transition:background .12s,color .12s;}
+#d-close:hover{background:var(--gold);color:#000;}
 #design-box h2{color:var(--gold);font-size:22px;font-weight:900;text-align:center;letter-spacing:1px;text-transform:uppercase;}
 .design-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
 .design-tab{
@@ -711,6 +728,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 
   <div id="main">
     <div id="palette"></div>
+    <div id="pages"></div>
     <div id="cwrap">
       <canvas id="gc"></canvas>
       <div id="code-panel">
@@ -766,8 +784,13 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 <!-- ══ DESIGNER ═══════════════════════════════════════════════════════════ -->
 <div id="design-modal" class="hide">
   <div id="design-box">
+    <button id="d-close" title="Close without saving" aria-label="Close">✕</button>
     <h2>🎨 Design Studio</h2>
     <div class="design-tabs" id="design-tabs"></div>
+    <div id="bg-mode" style="display:none;justify-content:center;gap:8px;margin:0 0 10px;">
+      <button class="dbtn" id="bgm-gradient">🌈 Gradient</button>
+      <button class="dbtn" id="bgm-paint">🎨 Paint your own</button>
+    </div>
     <div class="design-area" id="design-area">
       <div>
         <div class="preview-label">Draw here ✏️ (16 × 16 pixels)</div>
@@ -784,14 +807,16 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
       </div>
     </div>
     <div id="bg-editor" style="display:none;max-width:520px;margin:0 auto;">
-      <div class="preview-label">Pick your own sky colours</div>
-      <div class="bg-row">
-        <label>Top <input type="color" id="bg-top-pick" value="#87ceeb" oninput="updateBgStrip()"></label>
-        <label>Bottom <input type="color" id="bg-bot-pick" value="#b8dff0" oninput="updateBgStrip()"></label>
+      <div id="bg-gradient-controls">
+        <div class="preview-label">Pick your own sky colours</div>
+        <div class="bg-row">
+          <label>Top <input type="color" id="bg-top-pick" value="#87ceeb" oninput="updateBgStrip()"></label>
+          <label>Bottom <input type="color" id="bg-bot-pick" value="#b8dff0" oninput="updateBgStrip()"></label>
+        </div>
+        <div id="bg-strip" style="height:80px;border-radius:10px;border:1px solid var(--gray);margin:12px 0;"></div>
+        <div class="preview-label">Or pick a preset</div>
+        <div class="bg-presets" id="bg-presets-wrap"></div>
       </div>
-      <div id="bg-strip" style="height:80px;border-radius:10px;border:1px solid var(--gray);margin:12px 0;"></div>
-      <div class="preview-label">Or pick a preset</div>
-      <div class="bg-presets" id="bg-presets-wrap"></div>
     </div>
     <div id="design-preview-wrap" style="text-align:center">
       <div class="preview-label">Game preview (48×48)</div>
@@ -835,14 +860,14 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 // ═══════════════════════════════════════════════════════════════════════
 const COLS=20,ROWS=12,TS=48,CW=960,CH=576;
 const GRID_PX=16,PPX=3;
-const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13};
+const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14};
 const TILES=[
   {id:T.PLATFORM,icon:'🟫',label:'Platform'},{id:T.GRASS,icon:'🌿',label:'Grass Top'},
   {id:T.GEM,icon:'💎',label:'Gem'},{id:T.STAR,icon:'⭐',label:'Star'},
   {id:T.SPIKE,icon:'🌵',label:'Spike'},{id:T.BOUNCE,icon:'🍄',label:'Bounce!'},
   {id:T.MOVER,icon:'➡️',label:'Moving'},{id:T.ENEMY,icon:'👾',label:'Enemy A'},
   {id:T.ENEMY2,icon:'🐛',label:'Enemy B'},
-  {id:T.START,icon:'🚩',label:'Start'},{id:T.GOAL,icon:'🏁',label:'Goal'},
+  {id:T.START,icon:'🚩',label:'Start'},{id:T.DOOR,icon:'🚪',label:'Next Level'},{id:T.GOAL,icon:'🏁',label:'Finish'},
   {id:T.CLOUD,icon:'☁️',label:'Cloud'},{id:T.LADDER,icon:'🪜',label:'Ladder'},
 ];
 const THEMES={
@@ -858,14 +883,60 @@ let mode='build',selTile=T.PLATFORM,tool='paint',theme='forest';
 let grid=mkGrid(),painting=false,lastCell='',history=[];
 let gemA=0,goalA=0,tick=0;
 let customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
-let customBg={top:null,bottom:null}; // null = use theme default
+let customBg={top:null,bottom:null,art:null}; // top/bottom = gradient; art = 16×16 painted sky (overrides gradient)
 function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().sky[1]];}
+
+// ── MULTI-LEVEL (pages) ──────────────────────────────────────────────────
+// LEVELS holds every page's layout/world. The working vars grid/theme/customBg
+// always mirror the page currently being edited (curLevel) or played (playLevel).
+// The Blockly rules program and customSprites are shared across the whole game.
+let LEVELS=[], curLevel=0, playLevel=0;
+function snapLevel(){return{grid:grid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null}};}
+function blankLevel(){const g=mkGrid();for(let c=0;c<COLS;c++){g[ROWS-1][c]=T.GRASS;g[ROWS-2]&&(g[ROWS-2][c]=T.PLATFORM);}g[ROWS-3][1]=T.START;return{grid:g,theme:'forest',customBg:{top:null,bottom:null,art:null}};}
+function commitLevel(){if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
+function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
+function gotoLevel(i){if(i<0||i>=LEVELS.length||i===curLevel){return;}commitLevel();curLevel=i;activateLevel(i);history=[];renderPagesStrip();}
+function addLevel(){commitLevel();LEVELS.push(blankLevel());curLevel=LEVELS.length-1;activateLevel(curLevel);history=[];renderPagesStrip();toast('Page '+LEVELS.length+' added 🚪','#10b981');}
+function deleteLevel(i){if(LEVELS.length<=1){toast('A game needs at least one page.','#ef4444');return;}LEVELS.splice(i,1);if(curLevel>=LEVELS.length)curLevel=LEVELS.length-1;else if(curLevel>i)curLevel--;activateLevel(curLevel);history=[];renderPagesStrip();}
+function renderPagesStrip(){
+  const wrap=document.getElementById('pages');if(!wrap)return;wrap.innerHTML='';
+  if(curLevel>0)commitLevel(); // keep thumbnails fresh for non-active pages
+  else if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();
+  LEVELS.forEach((L,i)=>{
+    const cell=document.createElement('div');cell.className='page-cell'+(i===curLevel?' sel':'');
+    const cv=document.createElement('canvas');cv.className='page-thumb';cv.width=80;cv.height=48;
+    drawMiniThumb(cv,L.grid,L.theme);
+    const num=document.createElement('div');num.className='page-num';num.textContent=(i+1);
+    cell.appendChild(cv);cell.appendChild(num);
+    cell.onclick=()=>gotoLevel(i);
+    if(LEVELS.length>1){const del=document.createElement('button');del.className='page-del';del.textContent='×';del.title='Delete this page';del.onclick=ev=>{ev.stopPropagation();if(confirm('Delete page '+(i+1)+'?'))deleteLevel(i);};cell.appendChild(del);}
+    wrap.appendChild(cell);
+  });
+  const add=document.createElement('button');add.className='page-add';add.title='Add a new page';add.innerHTML='<span>＋</span><small>Page</small>';add.onclick=addLevel;wrap.appendChild(add);
+}
 // Cache the sky gradient — only rebuild when the colours actually change.
 let _skyGrad=null,_skyKey='';
 function skyGradient(c){
   const sk=getSkyColors();const key=sk[0]+'|'+sk[1];
   if(key!==_skyKey||!_skyGrad){_skyKey=key;_skyGrad=c.createLinearGradient(0,0,0,CH);_skyGrad.addColorStop(0,sk[0]);_skyGrad.addColorStop(1,sk[1]);}
   return _skyGrad;
+}
+// Custom painted background (16×16). Cached into a tiny buffer, soft-scaled to fill.
+const _bgArt=document.createElement('canvas');_bgArt.width=16;_bgArt.height=16;
+const _bgArtX=_bgArt.getContext('2d');let _bgArtKey='';
+function buildBgArt(){
+  const key=customBg.art?customBg.art.join(','):'';
+  if(key===_bgArtKey)return !!customBg.art;
+  _bgArtKey=key;_bgArtX.clearRect(0,0,16,16);
+  if(!customBg.art)return false;
+  for(let r=0;r<16;r++)for(let c=0;c<16;c++){const col=customBg.art[r*16+c];if(col){_bgArtX.fillStyle=col;_bgArtX.fillRect(c,r,1,1);}}
+  return true;
+}
+// Fill a context's sky: gradient base, with the painted art (if any) softly overlaid.
+function paintSky(tx){
+  tx.fillStyle=skyGradient(tx);tx.fillRect(0,0,CW,CH);
+  if(buildBgArt()){const sm=tx.imageSmoothingEnabled;tx.imageSmoothingEnabled=true;tx.drawImage(_bgArt,0,0,16,16,0,0,CW,CH);tx.imageSmoothingEnabled=sm;}
 }
 
 // ── Sharing config ──────────────────────────────────────────────────
@@ -880,7 +951,7 @@ let gameConfig={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'norm
   enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
   lives:3,gemPoints:10,starPoints:50,
   gravity:'normal',jumpHeight:'normal',bounceHeight:'normal',moverRange:'medium',
-  winCondition:'goal',timerSeconds:60};
+  winCondition:'goal',timerSeconds:60,music:'happy'};
 let player=null,enemies=[],movers=[],items=[],confetti=[];
 let score=0,lives=3,camX=0,playing=false;
 let gameTimer=0,gemsTotal=0,gemsGot=0;
@@ -897,25 +968,22 @@ function getSaves(){try{return JSON.parse(localStorage.getItem('bap_saves')||'[]
 function setSaves(s){localStorage.setItem('bap_saves',JSON.stringify(s));}
 
 function saveCurrentLevel(){
-  const name=prompt('Give your level a name:','My Level');
+  const name=prompt('Give your game a name:','My Game');
   if(name===null)return;
-  const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):'';
+  commitLevel();
+  const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
+  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null}}));
   const saves=getSaves();
-  saves.unshift({id:Date.now().toString(),name:name||'My Level',date:new Date().toLocaleDateString('en-GB'),grid:grid.map(r=>[...r]),theme,blocklyXml:xml,customSprites,customBg});
+  saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
   setSaves(saves.slice(0,12));
-  toast('Level saved! 💾','#10b981');
+  toast(levels.length>1?('Game saved ('+levels.length+' pages)! 💾'):'Game saved! 💾','#10b981');
 }
 
 function loadSaveData(save){
-  grid=save.grid.map(r=>[...r]);
-  theme=save.theme||'forest';
-  document.getElementById('theme-sel').value=theme;
-  if(save.customSprites)Object.assign(customSprites,save.customSprites);
-  if(save.customBg)Object.assign(customBg,save.customBg);
-  if(save.blocklyXml&&blocklyWorkspace){
-    blocklyWorkspace.clear();
-    try{const xml=Blockly.utils.xml.textToDom(save.blocklyXml);Blockly.Xml.domToWorkspace(xml,blocklyWorkspace);}catch(e){}
-  }
+  applyPayload((save.version>=2||Array.isArray(save.levels))
+    ?{levels:save.levels,blocklyXml:save.blocklyXml,customSprites:save.customSprites}
+    :{grid:save.grid,theme:save.theme,customBg:save.customBg,blocklyXml:save.blocklyXml,customSprites:save.customSprites});
+  const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;
   readBlocklyConfig();
 }
 
@@ -926,7 +994,7 @@ function drawMiniThumb(canvas,g,th_name){
   grd.addColorStop(0,t.sky[0]);grd.addColorStop(1,t.sky[1]);
   ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
   const cw=W/COLS,ch=H/ROWS;
-  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder};
+  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#43d17a'};
   g.forEach((row,r)=>row.forEach((cell,c)=>{if(cell&&clr[cell]){ctx.fillStyle=clr[cell];ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}}));
 }
 
@@ -1001,9 +1069,9 @@ const DEMOS={
   },
 };
 
-document.getElementById('h-new').onclick=()=>{grid=mkGrid();theme='forest';customSprites={player:null,enemy:null,platform:null};hideHome();switchMode('build');};
+document.getElementById('h-new').onclick=()=>{grid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};customSprites={player:null,enemy:null,platform:null};resetSingleLevel();hideHome();switchMode('build');};
 document.querySelectorAll('[data-demo]').forEach(btn=>{
-  btn.onclick=()=>{DEMOS[btn.dataset.demo]();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
+  btn.onclick=()=>{DEMOS[btn.dataset.demo]();customBg={top:null,bottom:null,art:null};resetSingleLevel();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
 });
 document.getElementById('home-btn').onclick=()=>showHome();
 
@@ -1188,8 +1256,8 @@ function printWorksheet(){if(thCurrent)doPrint(thSheetHTML(thCurrent));}
 function printChallengeCard(){doPrint(thCardHTML());}
 function printPack(){const ls=thLessons();doPrint(ls.map((L,i)=>thSheetHTML(L)+(i<ls.length-1?'<div class="th-pagebreak"></div>':'')).join(''));}
 // Load starter levels into the editor
-function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}}
-function loadChallenge(){TH_STARTERS.challenge();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Challenge loaded! ✏️','#ae853e');}
+function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();customBg={top:null,bottom:null,art:null};resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}}
+function loadChallenge(){TH_STARTERS.challenge();customBg={top:null,bottom:null,art:null};resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Challenge loaded! ✏️','#ae853e');}
 function openSubmission(){hideTeacher();document.getElementById('file-input').click();}
 // Projector mode with live countdown
 let thProjInt=null,thProjLeft=600;
@@ -1324,6 +1392,11 @@ function defineBlocks(){
     this.appendDummyInput().appendField('⏱️ win by surviving').appendField(new Blockly.FieldDropdown([['30','30'],['60','60'],['90','90']]),'SECS').appendField('seconds');
     this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(20);
   }};
+  // ── Sound ──
+  Blockly.Blocks['set_music']={init:function(){
+    this.appendDummyInput().appendField('🎵 play music').appendField(new Blockly.FieldDropdown([['😀 Happy','happy'],['🗺️ Adventure','adventure'],['👻 Spooky','spooky'],['🚀 Space','space'],['😌 Chill','chill'],['🔇 None','off']]),'MUSIC');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(330);
+  }};
 }
 
 function getToolbox(){
@@ -1348,6 +1421,9 @@ function getToolbox(){
     ]},
     {kind:'category',name:'🔴  Rules',colour:'0',contents:[
       {kind:'block',type:'set_lives'},{kind:'block',type:'set_gem_points'},{kind:'block',type:'set_star_points'}
+    ]},
+    {kind:'category',name:'🎵  Sound',colour:'330',contents:[
+      {kind:'block',type:'set_music'}
     ]},
   ]};
 }
@@ -1402,7 +1478,8 @@ function initBlockly(){
     theme:Blockly.Themes.Dark,
     renderer:'zelos',
   });
-  const xml=Blockly.utils.xml.textToDom(getDefaultXml());
+  const xml=Blockly.utils.xml.textToDom(window._pendingXml||getDefaultXml());
+  window._pendingXml=null;
   Blockly.Xml.domToWorkspace(xml,blocklyWorkspace);
   blocklyWorkspace.addChangeListener(()=>readBlocklyConfig());
   Blockly.svgResize(blocklyWorkspace);
@@ -1414,7 +1491,7 @@ function readBlocklyConfig(){
     enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
     lives:3,gemPoints:10,starPoints:50,
     gravity:'normal',jumpHeight:'normal',bounceHeight:'normal',moverRange:'medium',
-    winCondition:'goal',timerSeconds:60};
+    winCondition:'goal',timerSeconds:60,music:'happy'};
   blocklyWorkspace.getTopBlocks(false).forEach(block=>{
     if(block.type==='when_key_pressed'){
       const key=block.getFieldValue('KEY');
@@ -1453,6 +1530,7 @@ function readBlocklyConfig(){
         if(n.type==='set_lives')cfg.lives=parseInt(n.getFieldValue('LIVES'))||3;
         if(n.type==='set_gem_points')cfg.gemPoints=parseInt(n.getFieldValue('POINTS'))||10;
         if(n.type==='set_star_points')cfg.starPoints=parseInt(n.getFieldValue('POINTS'))||50;
+        if(n.type==='set_music')cfg.music=n.getFieldValue('MUSIC');
         n=n.getNextBlock();
       }
     }
@@ -1516,6 +1594,16 @@ function drawTile(id,px,py){
     case T.GOAL:{
       if(drawCustomSprite('goal',px,py))break;
       c.fillStyle='rgba(255,215,0,.12)';c.fillRect(px,py,TS,TS);c.fillStyle='#aaa';c.fillRect(px+TS/2-2,py+4,4,TS-8);c.save();c.translate(px+TS/2+2,py+5);for(let fi=0;fi<4;fi++)for(let fj=0;fj<2;fj++){c.fillStyle=(fi+fj)%2===0?'#fff':'#111';c.fillRect(fj*10+Math.sin(goalA+fi*.8)*4,fi*5,10,5);}c.restore();break;}
+    case T.DOOR:{
+      const dx=px+8,dy=py+4,dw=TS-16,dh=TS-4,glow=0.5+0.5*Math.abs(Math.sin(goalA));
+      c.fillStyle='rgba(120,220,140,'+(0.10+0.12*glow)+')';c.fillRect(px,py,TS,TS);
+      c.fillStyle='#6d4c2f';c.fillRect(dx,dy,dw,dh);
+      c.fillStyle='#5a3d25';c.fillRect(dx+4,dy+4,dw-8,dh-8);
+      c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(dx,dy,dw,dh);
+      c.fillStyle='#ffd24a';c.beginPath();c.arc(dx+dw-9,dy+dh/2,2.6,0,Math.PI*2);c.fill();
+      // green "next" arrow
+      c.fillStyle='#43d17a';c.beginPath();c.moveTo(dx+dw*0.32,dy+dh*0.30);c.lineTo(dx+dw*0.68,dy+dh*0.50);c.lineTo(dx+dw*0.32,dy+dh*0.70);c.closePath();c.fill();c.strokeStyle='#0a3d1f';c.lineWidth=1.5;c.stroke();
+      break;}
     case T.CLOUD:
       if(drawCustomSprite('cloud',px,py))break;
       c.globalAlpha=.82;c.fillStyle=t.cloud;c.beginPath();c.arc(px+18,py+30,13,0,Math.PI*2);c.arc(px+32,py+24,15,0,Math.PI*2);c.arc(px+44,py+30,11,0,Math.PI*2);c.fill();c.globalAlpha=1;break;
@@ -1531,7 +1619,7 @@ function star5(c,cx,cy,R,r,col){c.beginPath();for(let i=0;i<10;i++){const a=i*Ma
 // BUILD
 // ═══════════════════════════════════════════════════════════════════════
 function drawBuild(){
-  const t=th();ctx.fillStyle=skyGradient(ctx);ctx.fillRect(0,0,CW,CH);
+  const t=th();paintSky(ctx);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid&&tid!==T.ENEMY&&tid!==T.ENEMY2)drawTile(tid,c*TS,r*TS);if(tid===T.ENEMY)drawEnemyAt(c*TS,r*TS,0,1,'A');if(tid===T.ENEMY2)drawEnemyAt(c*TS,r*TS,0,1,'B');}
   ctx.strokeStyle=t.grid;ctx.lineWidth=1;for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*TS,0);ctx.lineTo(c*TS,CH);ctx.stroke();}for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*TS);ctx.lineTo(CW,r*TS);ctx.stroke();}
 }
@@ -1545,17 +1633,17 @@ function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('
 
 let histSaved=false;
 function pushHistory(){history.push(grid.map(r=>[...r]));if(history.length>60)history.shift();histSaved=true;}
-function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}grid=history.pop();toast('Undone! ↩️','#6366f1');}
+function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}grid=history.pop();commitLevel();renderPagesStrip();toast('Undone! ↩️','#6366f1');}
 
 function cellFromEvent(e){const r=canvas.getBoundingClientRect();return{col:Math.floor((e.clientX-r.left)/r.width*COLS),row:Math.floor((e.clientY-r.top)/r.height*ROWS)};}
 function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;if(erase){grid[row][col]=T.EMPTY;return;}if(selTile===T.START||selTile===T.GOAL){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===selTile)grid[r][c]=T.EMPTY;}grid[row][col]=selTile;}
 canvas.addEventListener('mousedown',e=>{if(mode!=='build')return;if(!histSaved)pushHistory();histSaved=false;painting=true;lastCell='';const{col,row}=cellFromEvent(e);paint(col,row,e.button===2||tool==='erase');});
 canvas.addEventListener('mousemove',e=>{if(mode!=='build'||!painting)return;const{col,row}=cellFromEvent(e);paint(col,row,e.button===2||tool==='erase');});
-window.addEventListener('mouseup',()=>{painting=false;lastCell='';histSaved=false;});
+window.addEventListener('mouseup',()=>{const was=painting;painting=false;lastCell='';histSaved=false;if(was&&mode==='build'){commitLevel();renderPagesStrip();}});
 canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(mode!=='build')return;pushHistory();const{col,row}=cellFromEvent(e);grid[row][col]=T.EMPTY;});
 canvas.addEventListener('touchstart',e=>{if(mode!=='build')return;e.preventDefault();pushHistory();painting=true;lastCell='';const t=e.touches[0];const{col,row}=cellFromEvent(t);paint(col,row,tool==='erase');},{passive:false});
 canvas.addEventListener('touchmove',e=>{if(mode!=='build'||!painting)return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);paint(col,row,tool==='erase');},{passive:false});
-canvas.addEventListener('touchend',()=>{painting=false;lastCell='';});
+canvas.addEventListener('touchend',()=>{const was=painting;painting=false;lastCell='';if(was&&mode==='build'){commitLevel();renderPagesStrip();}});
 
 // ═══════════════════════════════════════════════════════════════════════
 // MODE SWITCH
@@ -1566,6 +1654,8 @@ function switchMode(m){
   ['btn-build','btn-play','btn-code'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('btn-'+m).classList.add('active');
   document.getElementById('palette').style.display=m==='build'?'flex':'none';
+  document.getElementById('pages').style.display=m==='build'?'flex':'none';
+  if(m==='build'){if(!LEVELS.length)resetSingleLevel();activateLevel(curLevel);renderPagesStrip();if(typeof renderStaticLayer==='function')renderStaticLayer();}
   document.getElementById('hint').classList.toggle('hide',m!=='play');
   document.getElementById('app').classList.toggle('mode-play',m==='play');
   document.getElementById('gc').style.display=m==='code'?'none':'block';
@@ -1573,13 +1663,20 @@ function switchMode(m){
   if(m==='code'){cp.classList.add('show');setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);},50);}
   else cp.classList.remove('show');
   ['t-paint','t-erase','t-undo','t-clear'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
-  if(m==='play'){readBlocklyConfig();startPlay();if(!muted)startMusic();}
+  if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!muted)startMusic();}
   else{stopPlay();stopMusic();if(typeof clearTouchKeys==='function')clearTouchKeys();}
 }
 
 function validate(){
-  let s=0,g=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.START)s++;if(grid[r][c]===T.GOAL)g++;}
-  if(!s||!g){toast("Don't forget your Start 🚩 and Finish 🏁!",'#ef4444');return false;}return true;
+  commitLevel();
+  for(let i=0;i<LEVELS.length;i++){
+    let s=0;const g=LEVELS[i].grid;
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(g[r][c]===T.START)s++;
+    if(!s){if(i!==curLevel)gotoLevel(i);toast('Page '+(i+1)+' needs a Start 🚩!','#ef4444');return false;}
+  }
+  const anyGoal=LEVELS.some(L=>L.grid.some(row=>row.some(v=>v===T.GOAL)));
+  if(!anyGoal){toast('Add a Finish 🏁 to end your game!','#ef4444');return false;}
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1588,28 +1685,43 @@ function validate(){
 document.getElementById('t-paint').onclick=()=>setTool('paint');
 document.getElementById('t-erase').onclick=()=>setTool('erase');
 document.getElementById('t-undo') .onclick=()=>undo();
-document.getElementById('t-clear').onclick=()=>{if(confirm('Clear the whole level?')){pushHistory();grid=mkGrid();}};
+document.getElementById('t-clear').onclick=()=>{if(confirm('Clear this page?')){pushHistory();grid=mkGrid();commitLevel();renderPagesStrip();}};
 document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 // ═══════════════════════════════════════════════════════════════════════
 // SHARING  (Copy Link · Download Playable HTML · Save Level File · Import)
 // ═══════════════════════════════════════════════════════════════════════
 function buildPayload(){
+  commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  return{grid,theme,blocklyXml:xml,customSprites,customBg};
+  const levels=LEVELS.map(L=>({grid:L.grid,theme:L.theme,customBg:L.customBg}));
+  // Keep grid/theme/customBg = first page so legacy importers still work.
+  return{version:2,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
+// Coerce an untrusted 16×16 background-art array into 256 safe colours/blanks.
+function sanitizeArt(a){if(!Array.isArray(a))return null;const out=new Array(256).fill('');let any=false;for(let i=0;i<256;i++){const col=safeColor(a[i]);if(col){out[i]=col;any=true;}}return any?out:null;}
 // Coerce an untrusted grid into a fixed ROWS×COLS grid of valid tile numbers.
 function sanitizeGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;
   for(let r=0;r<ROWS;r++){const row=Array.isArray(g[r])?g[r]:[];
     for(let c=0;c<COLS;c++){let v=row[c];v=(typeof v==='number'&&isFinite(v))?(v|0):0;out[r][c]=(v>=0&&v<=20)?v:0;}}
   return out;}
+function cleanLevel(L){return{
+  grid:sanitizeGrid(L&&L.grid),
+  theme:(L&&typeof L.theme==='string'&&THEMES[L.theme])?L.theme:'forest',
+  customBg:{top:(L&&L.customBg&&safeColor(L.customBg.top))||null,bottom:(L&&L.customBg&&safeColor(L.customBg.bottom))||null,art:(L&&L.customBg)?sanitizeArt(L.customBg.art):null}
+};}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;
-  if(d.grid)grid=sanitizeGrid(d.grid);
-  if(typeof d.theme==='string'&&THEMES[d.theme]){theme=d.theme;const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;}
   if(d.customSprites&&typeof d.customSprites==='object')Object.assign(customSprites,d.customSprites);
-  if(d.customBg&&typeof d.customBg==='object'){const t=safeColor(d.customBg.top),b=safeColor(d.customBg.bottom);if(t)customBg.top=t;if(b)customBg.bottom=b;}
+  // v2 multi-level, or legacy single-level wrapped into one page.
+  let lvls=null;
+  if(Array.isArray(d.levels)&&d.levels.length)lvls=d.levels;
+  else if(d.grid)lvls=[{grid:d.grid,theme:d.theme,customBg:d.customBg}];
+  if(lvls){
+    LEVELS=lvls.map(cleanLevel);if(!LEVELS.length)LEVELS=[blankLevel()];
+    curLevel=0;playLevel=0;activateLevel(0);renderPagesStrip();
+  }
   if(typeof d.blocklyXml==='string'){
     window._pendingXml=d.blocklyXml;
     if(blocklyWorkspace){blocklyWorkspace.clear();try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(d.blocklyXml),blocklyWorkspace);window._pendingXml=null;}catch(e){}}
@@ -1707,7 +1819,7 @@ document.getElementById('share-modal').addEventListener('click',e=>{if(e.target.
 // — Wire up Open File on home —
 document.getElementById('h-open').onclick=()=>document.getElementById('file-input').click();
 document.getElementById('file-input').onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)importFromFile(f);e.target.value='';};
-document.getElementById('theme-sel').onchange=e=>theme=e.target.value;
+document.getElementById('theme-sel').onchange=e=>{theme=e.target.value;_skyKey='';commitLevel();renderPagesStrip();};
 document.getElementById('btn-build').onclick=()=>switchMode('build');
 document.getElementById('btn-play') .onclick=()=>switchMode('play');
 document.getElementById('btn-code') .onclick=()=>switchMode('code');
@@ -1794,7 +1906,7 @@ const BG_PRESETS=[
   {label:'🪐 Space',   top:'#000011',bot:'#0a0030'},
 ];
 
-let dTarget='player',dColor='#ff0000',dErasing=false,pdrawing=false,pdata={};
+let dTarget='player',dColor='#ff0000',dErasing=false,pdrawing=false,pdata={},bgMode='gradient';
 const pixC=document.getElementById('pixel-canvas'),pixX=pixC.getContext('2d');
 const prevC=document.getElementById('preview-canvas'),prevX=prevC.getContext('2d');
 const PCELL=20;
@@ -1805,6 +1917,9 @@ function openDesigner(){
   DT.filter(t=>t.type==='sprite').forEach(t=>{
     pdata[t.key]=customSprites[t.key]?[...customSprites[t.key]]:new Array(256).fill('');
   });
+  // Clone the background art too, and start in whichever mode the page is using
+  pdata.bg=customBg.art?[...customBg.art]:new Array(256).fill('');
+  bgMode=customBg.art?'paint':'gradient';
   buildDTabs();
   selDTarget('player');
   buildDPalette();
@@ -1827,13 +1942,22 @@ function selDTarget(k){
   dTarget=k;
   document.querySelectorAll('.design-tab').forEach((b,i)=>b.classList.toggle('active',DT[i].key===k));
   const isBg=(DT.find(t=>t.key===k)||{}).type==='bg';
-  document.getElementById('design-area').style.display=isBg?'none':'flex';
-  document.getElementById('design-preview-wrap').style.display=isBg?'none':'block';
-  document.getElementById('d-pixel-tools').style.display=isBg?'none':'flex';
-  document.getElementById('bg-editor').style.display=isBg?'block':'none';
-  if(!isBg) renderPix();
-  else renderBgEditor();
+  const bgPaint=isBg&&bgMode==='paint';
+  // Pixel editor (canvas + colours + preview) shows for sprites AND for bg "paint" mode.
+  const showPixel=!isBg||bgPaint;
+  document.getElementById('design-area').style.display=showPixel?'flex':'none';
+  document.getElementById('design-preview-wrap').style.display=showPixel?'block':'none';
+  document.getElementById('d-pixel-tools').style.display=showPixel?'flex':'none';
+  document.getElementById('bg-mode').style.display=isBg?'flex':'none';
+  document.getElementById('bg-editor').style.display=(isBg&&!bgPaint)?'block':'none';
+  if(isBg){
+    document.getElementById('bgm-gradient').classList.toggle('active',bgMode==='gradient');
+    document.getElementById('bgm-paint').classList.toggle('active',bgMode==='paint');
+    if(bgPaint){if(!pdata.bg)pdata.bg=new Array(256).fill('');renderPix();}
+    else renderBgEditor();
+  }else renderPix();
 }
+function setBgMode(m){bgMode=m;selDTarget('bg');}
 
 function buildDPalette(){
   const c=document.getElementById('color-palette');c.innerHTML='';
@@ -1892,19 +2016,30 @@ pixC.addEventListener('touchstart',e=>{e.preventDefault();pdrawing=true;const{r,
 pixC.addEventListener('touchmove',e=>{e.preventDefault();if(pdrawing){const{r,c}=pxFromE(e.touches[0]);ppaint(r,c);}},{passive:false});
 pixC.addEventListener('touchend',()=>pdrawing=false);
 
+document.getElementById('d-close').onclick=()=>closeDesigner();
+document.getElementById('bgm-gradient').onclick=()=>setBgMode('gradient');
+document.getElementById('bgm-paint').onclick=()=>setBgMode('paint');
 document.getElementById('d-eraser').onclick=()=>{dErasing=!dErasing;document.getElementById('d-eraser').style.background=dErasing?'var(--gold)':'transparent';};
-document.getElementById('d-clear').onclick=()=>{if(dTarget==='bg'){customBg={top:null,bottom:null};renderBgEditor();}else{pdata[dTarget]=new Array(256).fill('');renderPix();}};
-document.getElementById('d-reset').onclick=()=>{if(dTarget==='bg'){customBg={top:null,bottom:null};renderBgEditor();toast('Background reset','#585555');}else{pdata[dTarget]=new Array(256).fill('');customSprites[dTarget]=null;renderPix();toast('Reset to default','#585555');}};
+document.getElementById('d-clear').onclick=()=>{
+  if(dTarget==='bg'){if(bgMode==='paint'){pdata.bg=new Array(256).fill('');renderPix();}else{document.getElementById('bg-top-pick').value='#87ceeb';document.getElementById('bg-bot-pick').value='#b8dff0';updateBgStrip();}}
+  else{pdata[dTarget]=new Array(256).fill('');renderPix();}
+};
+document.getElementById('d-reset').onclick=()=>{
+  if(dTarget==='bg'){pdata.bg=new Array(256).fill('');customBg={top:null,bottom:null,art:null};_skyKey='';_bgArtKey='';renderBgEditor();if(bgMode==='paint')renderPix();toast('Background reset','#585555');}
+  else{pdata[dTarget]=new Array(256).fill('');customSprites[dTarget]=null;renderPix();toast('Reset to default','#585555');}
+};
 document.getElementById('d-done').onclick=()=>{
   // Save sprites
   DT.filter(t=>t.type==='sprite').forEach(t=>{
     customSprites[t.key]=pdata[t.key]&&pdata[t.key].some(c=>c!=='')?[...pdata[t.key]]:null;
   });
-  // Save bg
+  // Save bg — gradient colours always; painted art only in "paint" mode (else clear it)
   customBg.top=document.getElementById('bg-top-pick').value||null;
   customBg.bottom=document.getElementById('bg-bot-pick').value||null;
+  customBg.art=(bgMode==='paint'&&pdata.bg&&pdata.bg.some(c=>c!==''))?[...pdata.bg]:null;
   localStorage.setItem('bap_sprites',JSON.stringify(customSprites));
   localStorage.setItem('bap_bg',JSON.stringify(customBg));
+  _skyKey='';_bgArtKey='';commitLevel();renderPagesStrip();
   toast('Design saved! 🎨','#ae853e');
   closeDesigner();
 };
@@ -1912,12 +2047,19 @@ document.getElementById('d-done').onclick=()=>{
 // ═══════════════════════════════════════════════════════════════════════
 // MUSIC
 // ═══════════════════════════════════════════════════════════════════════
-const MEL=[659,784,880,784,659,523,587,659,523,659,784,659,523,392,440,523];
-const BASS=[131,131,196,196,165,165,131,131,196,196,165,165,131,131,196,165];
+// Five themed chiptune loops (16-step). Each: tempo, waveforms, melody + bassline.
+const TRACKS={
+  happy:    {bpm:138,lead:'square',  bass:'triangle',mel:[659,784,880,784,659,523,587,659,523,659,784,659,523,392,440,523],line:[131,131,196,196,165,165,131,131,196,196,165,165,131,131,196,165]},
+  adventure:{bpm:122,lead:'sawtooth',bass:'triangle',mel:[523,659,784,1047,784,659,587,659,440,523,659,587,523,392,440,523],line:[131,131,175,175,196,196,131,131,147,147,165,165,131,131,98,131]},
+  spooky:   {bpm:96, lead:'sine',    bass:'triangle',mel:[440,415,440,523,440,415,392,415,349,392,415,392,330,349,392,330],line:[110,110,104,104,98,98,110,110,87,87,98,98,82,82,98,82]},
+  space:    {bpm:128,lead:'sine',    bass:'sawtooth',mel:[523,659,1047,1319,1047,659,784,1047,587,784,1175,784,659,523,784,659],line:[65,65,98,98,82,82,65,65,73,73,98,98,65,65,49,65]},
+  chill:    {bpm:84, lead:'sine',    bass:'sine',    mel:[523,587,659,587,523,494,440,494,392,440,494,523,440,392,440,523],line:[131,131,165,165,147,147,131,131,110,110,147,147,131,131,98,131]},
+};
 let audioCtx=null,musicTimer=null,musicBeat=0;
 function startMusic(){if(muted)return;if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();musicBeat=0;scheduleBeat();}
 function stopMusic(){if(musicTimer){clearTimeout(musicTimer);musicTimer=null;}}
-function scheduleBeat(){if(mode!=='play')return;const bpm=138,dur=60/bpm,i=musicBeat%16;chirp(MEL[i],dur*.75,'square',0.055);chirp(BASS[i],dur*.9,'triangle',0.07);if(i%2===0)chirp(MEL[i]*1.5,dur*.4,'sine',0.025);musicBeat++;musicTimer=setTimeout(scheduleBeat,dur*1000);}
+function scheduleBeat(){if(mode!=='play')return;const tk=TRACKS[gameConfig.music];if(!tk)return; // 'off' = silence
+  const dur=60/tk.bpm,i=musicBeat%16;chirp(tk.mel[i],dur*.75,tk.lead,0.055);chirp(tk.line[i],dur*.9,tk.bass,0.07);if(i%2===0)chirp(tk.mel[i]*1.5,dur*.4,'sine',0.025);musicBeat++;musicTimer=setTimeout(scheduleBeat,dur*1000);}
 function chirp(freq,dur,type,vol){if(!audioCtx||muted)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;const t=audioCtx.currentTime;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+dur+0.01);}catch(e){}}
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1939,7 +2081,10 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];return t===T.PLATFORM||t===T.GRASS;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();score=0;lives=gameConfig.lives;camX=0;confetti=[];playing=true;hideOv();spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();}
+function loadPlayLevel(i){activateLevel(i);camX=0;spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=0;score=0;lives=gameConfig.lives;confetti=[];playing=true;hideOv();loadPlayLevel(0);}
+function nextLevel(){playLevel++;if(playLevel>=LEVELS.length){winNow('🎉 You Win!');return;}if(!muted)chirp(660,0.08,'square',0.07);loadPlayLevel(playLevel);if(player)player.inv=60;toast('Page '+(playLevel+1)+' of '+LEVELS.length+'! 🚪','#10b981');}
+function checkDoor(){if(!player)return;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.DOOR){const gx=c*TS,gy=r*TS;if(player.x<gx+TS&&player.x+PW>gx&&player.y<gy+TS&&player.y+PH>gy){nextLevel();return;}}}
 function stopPlay(){playing=false;}
 function findT(id){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===id)return{c,r};return{c:0,r:0};}
 function spawnPlayer(){const{c,r}=findT(T.START);player={x:c*TS+(TS-PW)/2,y:r*TS,vx:0,vy:0,onGround:false,onLadder:false,facingRight:true,dead:false,deadTimer:0,inv:0,standingMover:null};updateCam();}
@@ -1991,16 +2136,14 @@ const bgCtx=bgLayer.getContext('2d');
 const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START]);
 let dynTiles=[]; // animated/collectible tiles drawn each frame (gem, star, bounce, goal)
 function renderStaticLayer(){
-  const sk=getSkyColors();
   bgCtx.clearRect(0,0,CW,CH);
-  const g=bgCtx.createLinearGradient(0,0,0,CH);g.addColorStop(0,sk[0]);g.addColorStop(1,sk[1]);
-  bgCtx.fillStyle=g;bgCtx.fillRect(0,0,CW,CH);
+  paintSky(bgCtx);
   const old=ctx;ctx=bgCtx; // redirect tile drawing to the offscreen layer
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(STATIC_TILES.has(tid))drawTile(tid,c*TS,r*TS);}
   ctx=old;
   // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
   dynTiles=[];
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL)dynTiles.push({c,r,tid});}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR)dynTiles.push({c,r,tid});}
 }
 function drawPlay(){
   const t=th();
@@ -2053,7 +2196,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
-  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkGoal();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
+  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkDoor();if(playing)checkGoal();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
   drawPlay();
 }
 

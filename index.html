@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/blockly@10.4.3/blockly_compressed.js"></script>
+<script src="https://unpkg.com/blockly@10.4.3/blocks_compressed.js"></script>
 <script src="https://unpkg.com/blockly@10.4.3/msg/en.js"></script>
 <style>
 @import url('https://fonts.cdnfonts.com/css/lazy-dog');
@@ -380,23 +381,33 @@ body.is-touch #t-hand{display:inline-block;}
 #code-panel{display:none;width:100%;height:100%;flex-direction:column;background:var(--black);}
 #code-panel.show{display:flex;}
 #blockly-div{flex:1;height:0;}
-.cp-run-bar{flex-shrink:0;padding:10px 12px;background:var(--dark);border-top:1px solid var(--gray);}
+.cp-run-bar{flex-shrink:0;padding:10px 12px;background:var(--dark);border-top:1px solid var(--gray);display:flex;gap:8px;align-items:stretch;}
 .cp-run{
-  display:block;width:100%;background:var(--gold);color:var(--black);
+  flex:1;background:var(--gold);color:var(--black);
   border:none;border-radius:3px;font-family:var(--font);font-weight:800;
   font-size:15px;letter-spacing:1.5px;text-transform:uppercase;
   padding:13px;cursor:pointer;transition:background .15s;
 }
 .cp-run:hover{background:#c99a4a;}
 .cp-run:active{transform:scale(.98);}
+.cp-clear{
+  flex:0 0 auto;background:transparent;color:var(--white);border:1px solid var(--gray);
+  border-radius:3px;font-family:var(--font);font-weight:700;font-size:13px;
+  letter-spacing:.5px;text-transform:uppercase;padding:0 16px;cursor:pointer;transition:background .15s,color .15s,border-color .15s;
+}
+.cp-clear:hover{background:#ef4444;color:#fff;border-color:#ef4444;}
 /* Blockly font overrides */
 .blocklyToolboxDiv{background:var(--dark)!important;border-right:1px solid var(--gray)!important;}
-.blocklyTreeRow{padding:8px 12px!important;}
+.blocklyToolboxDiv{padding:6px 0!important;}
+.blocklyTreeRow{padding:9px 14px!important;display:flex!important;align-items:center!important;margin:1px 0!important;}
+.blocklyTreeRowContentContainer{display:flex!important;align-items:center!important;}
+.blocklyTreeLabel{font-family:var(--font)!important;font-weight:700!important;font-size:13px!important;letter-spacing:.3px!important;line-height:1.1!important;color:#fff!important;}
+.blocklyTreeIcon{display:none!important;}
 body.is-touch .blocklyTreeRow{padding:13px 14px!important;}
 body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .blocklyTreeRow:not(.blocklyTreeSelected):hover{background:rgba(174,133,62,.12)!important;}
 .blocklyTreeSelected{background:rgba(174,133,62,.22)!important;}
-.blocklyText{font-family:var(--font)!important;font-weight:600!important;}
+/* Font is set via the Blockly theme (fontStyle) so block sizes measure correctly — not here. */
 .blocklyFlyoutBackground{fill:#1a1a1a!important;}
 
 /* ── GAME OVERLAYS ─────────────────────────────────────────────────── */
@@ -440,6 +451,20 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .share-close{margin-top:16px;background:none;border:none;color:var(--white);opacity:.55;font-family:var(--font);font-size:13px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;}
 .share-close:hover{opacity:1;}
 /* ── SPRITE DESIGNER ────────────────────────────────────────────────── */
+/* ── KS1/KS2 chooser ──────────────────────────────────────────────── */
+#ks-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;}
+#ks-modal.hide{display:none;}
+.ks-box{background:var(--dark);border:1px solid var(--gold);border-radius:10px;padding:28px;max-width:560px;width:100%;text-align:center;}
+.ks-box h2{color:var(--gold);font-family:var(--display);font-size:26px;margin-bottom:8px;}
+.ks-box p{color:var(--white);opacity:.8;font-size:14px;line-height:1.5;margin-bottom:20px;}
+.ks-opts{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.ks-opt{flex:1;min-width:200px;background:var(--black);border:2px solid var(--gray);border-radius:10px;padding:22px 16px;cursor:pointer;color:var(--white);transition:border-color .15s,transform .15s,background .15s;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.ks-opt:hover{border-color:var(--gold);transform:translateY(-3px);background:rgba(174,133,62,.1);}
+.ks-opt .ks-emoji{font-size:46px;line-height:1;}
+.ks-opt b{font-family:var(--font);font-size:18px;font-weight:800;letter-spacing:.5px;}
+.ks-opt small{font-size:12px;opacity:.7;line-height:1.4;}
+.ks-cancel{margin-top:18px;background:transparent;border:1px solid var(--gray);color:var(--white);border-radius:6px;padding:8px 18px;cursor:pointer;font-family:var(--font);font-size:13px;}
+.ks-cancel:hover{border-color:var(--white);}
 #design-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;display:flex;align-items:center;justify-content:center;}
 #design-modal.hide{display:none;}
 #design-box{
@@ -695,6 +720,18 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
   <p id="proj-desc">Build a level using at least one moving platform and a bounce mushroom. Ready… go!</p>
 </div>
 
+<div id="ks-modal" class="hide">
+  <div class="ks-box">
+    <h2>Who's making this game?</h2>
+    <p>This sets which coding blocks you'll have in the Code section. You can't change it later, so pick the right one!</p>
+    <div class="ks-opts">
+      <button class="ks-opt" data-ks="ks1"><span class="ks-emoji">🧒</span><b>Key Stage 1</b><small>Ages 5–7<br>Simple game blocks</small></button>
+      <button class="ks-opt" data-ks="ks2"><span class="ks-emoji">🧑‍💻</span><b>Key Stage 2</b><small>Ages 7–11<br>Full coding blocks</small></button>
+    </div>
+    <button class="ks-cancel" id="ks-cancel">Cancel</button>
+  </div>
+</div>
+
 <div id="print-area"></div>
 
 <!-- ══ APP ════════════════════════════════════════════════════════════════ -->
@@ -735,6 +772,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
         <div id="blockly-div"></div>
         <div class="cp-run-bar">
           <button class="cp-run" id="cp-run">▶️ Test it — switch to Play!</button>
+          <button class="cp-clear" id="cp-clear" title="Remove all code blocks">🗑️ Clear code</button>
         </div>
       </div>
       <div id="hint" class="hide">⬅️➡️ Move &nbsp;|&nbsp; Space Jump &nbsp;|&nbsp; ⬆️ Climb</div>
@@ -892,7 +930,7 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
 function snapLevel(){return{grid:grid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null}};}
-function blankLevel(){const g=mkGrid();for(let c=0;c<COLS;c++){g[ROWS-1][c]=T.GRASS;g[ROWS-2]&&(g[ROWS-2][c]=T.PLATFORM);}g[ROWS-3][1]=T.START;return{grid:g,theme:'forest',customBg:{top:null,bottom:null,art:null}};}
+function blankLevel(){return{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}};}
 function commitLevel(){if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
 function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
@@ -947,6 +985,8 @@ const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
 // Marker the self-contained export injects so a baked file knows its level.
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
+let keyStage='ks2'; // 'ks1' = simple game blocks only · 'ks2' = full coding blocks + interpreter
+function setKeyStage(ks){keyStage=(ks==='ks1')?'ks1':'ks2';if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
 let gameConfig={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'normal',
   enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
   lives:3,gemPoints:10,starPoints:50,
@@ -974,15 +1014,15 @@ function saveCurrentLevel(){
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
   const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null}}));
   const saves=getSaves();
-  saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
+  saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
   setSaves(saves.slice(0,12));
   toast(levels.length>1?('Game saved ('+levels.length+' pages)! 💾'):'Game saved! 💾','#10b981');
 }
 
 function loadSaveData(save){
   applyPayload((save.version>=2||Array.isArray(save.levels))
-    ?{levels:save.levels,blocklyXml:save.blocklyXml,customSprites:save.customSprites}
-    :{grid:save.grid,theme:save.theme,customBg:save.customBg,blocklyXml:save.blocklyXml,customSprites:save.customSprites});
+    ?{keyStage:save.keyStage,levels:save.levels,blocklyXml:save.blocklyXml,customSprites:save.customSprites}
+    :{keyStage:save.keyStage,grid:save.grid,theme:save.theme,customBg:save.customBg,blocklyXml:save.blocklyXml,customSprites:save.customSprites});
   const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;
   readBlocklyConfig();
 }
@@ -1069,9 +1109,22 @@ const DEMOS={
   },
 };
 
-document.getElementById('h-new').onclick=()=>{grid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};customSprites={player:null,enemy:null,platform:null};resetSingleLevel();hideHome();switchMode('build');};
+document.getElementById('h-new').onclick=()=>document.getElementById('ks-modal').classList.remove('hide');
+document.getElementById('ks-cancel').onclick=()=>document.getElementById('ks-modal').classList.add('hide');
+document.querySelectorAll('.ks-opt').forEach(b=>b.onclick=()=>startNewProject(b.dataset.ks));
+function startNewProject(ks){
+  setKeyStage(ks);
+  grid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};
+  customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
+  resetSingleLevel();
+  // Fresh default program for this key stage
+  if(blocklyWorkspace){blocklyWorkspace.clear();window._pendingXml='';try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(getDefaultXml()),blocklyWorkspace);}catch(e){}readBlocklyConfig();}
+  else{window._pendingXml='';}
+  document.getElementById('ks-modal').classList.add('hide');
+  hideHome();switchMode('build');
+}
 document.querySelectorAll('[data-demo]').forEach(btn=>{
-  btn.onclick=()=>{DEMOS[btn.dataset.demo]();customBg={top:null,bottom:null,art:null};resetSingleLevel();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
+  btn.onclick=()=>{DEMOS[btn.dataset.demo]();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
 });
 document.getElementById('home-btn').onclick=()=>showHome();
 
@@ -1188,6 +1241,14 @@ const TH_UNITS={
         steps:['Build your level.','Set the physics, enemies and win rule in Code.','Design your sprites.','Download as .html and present two choices you made.'],
         challenge:'Explain WHY you chose your two settings.',
         key:'All modes · Share → Download Playable Game (.html). Present and articulate decisions. Pupils use their own game — no starter. NC (Y2): design, write and debug programs; use logical reasoning.',starter:null},
+       {num:'Session 7',ks:'Year 2 · Events',title:'Make the Game React',obj:'Use event blocks so the game responds to what the player does',
+        steps:['Open Code (this is a Key Stage 2 game).','From Events, drag out “when I collect a gem”.','Under it, add Actions → “change score by 100” and “show message”.','Try “when I touch an enemy” too, then play and test it.'],
+        challenge:'Make a friendly message pop up every time a gem is collected.',
+        key:'Event-driven programming: hats fire when something happens (collect gem, touch enemy, land on a page, every N seconds). Actions (change score/lives, show message) run in response. NC (Y2): use sequence, selection and repetition; design and debug programs that respond to inputs/events.',starter:'gems'},
+       {num:'Session 8',ks:'Year 2 · Logic & Variables',title:'Conditions, Counts & Functions',obj:'Use if, variables, wait and your own function to control the game',
+        steps:['In Code, make a variable (e.g. “coins”) and change it when a gem is collected.','Add an “if … then” using the value blocks (score, lives) and an operator.','Use “wait” to pause, then show a message.','Make a Function you can reuse, and call it from an event.'],
+        challenge:'Use “if score > 50” to win the game automatically.',
+        key:'Selection (if/else), variables, operators/comparison, wait (timed sequencing) and functions (procedures with parameters/return). The interpreter runs these live with safety limits. NC (Y2): use sequence, selection, repetition and variables; decompose problems using functions; debug with logical reasoning.',starter:'enemies'},
      ]},
 };
 let thYear=1, thCurrent=null;
@@ -1205,7 +1266,7 @@ function thRenderHub(){
   document.getElementById('th-chal-day').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('th-chal-title').textContent='“'+ch.title+'”';
   document.getElementById('th-chal-desc').textContent=ch.desc;
-  const circ=['①','②','③','④','⑤','⑥'];
+  const circ=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
   const u=document.getElementById('th-unit');u.innerHTML='';
   thLessons().forEach((L,i)=>{const d=document.createElement('div');d.className='th-row clk';d.onclick=()=>thOpenLesson(i);
     d.innerHTML='<span class="grow">'+circ[i]+' '+L.title+'</span>';u.appendChild(d);});
@@ -1256,8 +1317,8 @@ function printWorksheet(){if(thCurrent)doPrint(thSheetHTML(thCurrent));}
 function printChallengeCard(){doPrint(thCardHTML());}
 function printPack(){const ls=thLessons();doPrint(ls.map((L,i)=>thSheetHTML(L)+(i<ls.length-1?'<div class="th-pagebreak"></div>':'')).join(''));}
 // Load starter levels into the editor
-function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();customBg={top:null,bottom:null,art:null};resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}}
-function loadChallenge(){TH_STARTERS.challenge();customBg={top:null,bottom:null,art:null};resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Challenge loaded! ✏️','#ae853e');}
+function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();customBg={top:null,bottom:null,art:null};setKeyStage(thYear===2?'ks2':'ks1');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Starter level loaded — happy building! ✏️','#ae853e');}}
+function loadChallenge(){TH_STARTERS.challenge();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');toast('Challenge loaded! ✏️','#ae853e');}
 function openSubmission(){hideTeacher();document.getElementById('file-input').click();}
 // Projector mode with live countdown
 let thProjInt=null,thProjLeft=600;
@@ -1397,13 +1458,70 @@ function defineBlocks(){
     this.appendDummyInput().appendField('🎵 play music').appendField(new Blockly.FieldDropdown([['😀 Happy','happy'],['🗺️ Adventure','adventure'],['👻 Spooky','spooky'],['🚀 Space','space'],['😌 Chill','chill'],['🔇 None','off']]),'MUSIC');
     this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(330);
   }};
+  // ── Actions (run by the interpreter) ──
+  Blockly.Blocks['change_score']={init:function(){
+    this.appendValueInput('N').setCheck('Number').appendField('➕ change score by');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
+  Blockly.Blocks['change_lives']={init:function(){
+    this.appendValueInput('N').setCheck('Number').appendField('❤️ change lives by');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
+  Blockly.Blocks['show_message']={init:function(){
+    this.appendValueInput('MSG').appendField('💬 show message');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
+  // ── Values (reporters) ──
+  Blockly.Blocks['get_score']={init:function(){
+    this.appendDummyInput().appendField('⭐ score');this.setOutput(true,'Number');this.setColour(30);
+  }};
+  Blockly.Blocks['get_lives']={init:function(){
+    this.appendDummyInput().appendField('❤️ lives');this.setOutput(true,'Number');this.setColour(30);
+  }};
+  Blockly.Blocks['get_page']={init:function(){
+    this.appendDummyInput().appendField('📄 page number');this.setOutput(true,'Number');this.setColour(30);
+  }};
+  Blockly.Blocks['get_timer']={init:function(){
+    this.appendDummyInput().appendField('⏱️ seconds left');this.setOutput(true,'Number');this.setColour(30);
+  }};
+  // ── Event hats (run by the interpreter) ──
+  Blockly.Blocks['when_collect_gem']={init:function(){
+    this.appendDummyInput().appendField('💎 when I collect a gem');this.setNextStatement(true);this.setColour(45);
+  }};
+  Blockly.Blocks['when_touch_enemy']={init:function(){
+    this.appendDummyInput().appendField('👾 when I touch an enemy');this.setNextStatement(true);this.setColour(45);
+  }};
+  Blockly.Blocks['when_level_start']={init:function(){
+    this.appendDummyInput().appendField('🚩 when I land on a page');this.setNextStatement(true);this.setColour(45);
+  }};
+  Blockly.Blocks['every_n_seconds']={init:function(){
+    this.appendDummyInput().appendField('⏰ every').appendField(new Blockly.FieldNumber(2,1,120,1),'N').appendField('seconds');this.setNextStatement(true);this.setColour(45);
+  }};
+  // ── More actions ──
+  Blockly.Blocks['go_next_page']={init:function(){
+    this.appendDummyInput().appendField('🚪 go to next page');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
+  Blockly.Blocks['win_game']={init:function(){
+    this.appendDummyInput().appendField('🏆 win the game');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
+  Blockly.Blocks['game_over']={init:function(){
+    this.appendDummyInput().appendField('💀 game over');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
+  Blockly.Blocks['wait_seconds']={init:function(){
+    this.appendValueInput('N').setCheck('Number').appendField('⏳ wait');
+    this.appendDummyInput().appendField('seconds');this.setInputsInline(true);
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
 }
 
 function getToolbox(){
-  return{kind:'categoryToolbox',contents:[
-    {kind:'category',name:'🟡  Events',colour:'45',contents:[
-      {kind:'block',type:'when_key_pressed'},{kind:'block',type:'when_game_starts'}
-    ]},
+  // Game blocks — shown for every key stage.
+  const events=[{kind:'block',type:'when_key_pressed'},{kind:'block',type:'when_game_starts'}];
+  if(keyStage==='ks2')events.push(
+    {kind:'block',type:'when_collect_gem'},{kind:'block',type:'when_touch_enemy'},
+    {kind:'block',type:'when_level_start'},{kind:'block',type:'every_n_seconds'});
+  const game=[
+    {kind:'category',name:'🟡  Events',colour:'45',contents:events},
     {kind:'category',name:'🔵  Player',colour:'210',contents:[
       {kind:'block',type:'player_move_left'},{kind:'block',type:'player_move_right'},
       {kind:'block',type:'player_jump'},{kind:'block',type:'player_speed'}
@@ -1425,7 +1543,52 @@ function getToolbox(){
     {kind:'category',name:'🎵  Sound',colour:'330',contents:[
       {kind:'block',type:'set_music'}
     ]},
-  ]};
+  ];
+  if(keyStage==='ks1')return{kind:'categoryToolbox',contents:game};
+  // KS2 — full coding blocks that the interpreter runs.
+  const code=[
+    {kind:'sep'},
+    {kind:'category',name:'🎬  Actions',colour:'30',contents:[
+      {kind:'block',type:'change_score',inputs:{N:{shadow:{type:'math_number',fields:{NUM:10}}}}},
+      {kind:'block',type:'change_lives',inputs:{N:{shadow:{type:'math_number',fields:{NUM:1}}}}},
+      {kind:'block',type:'show_message',inputs:{MSG:{shadow:{type:'text',fields:{TEXT:'Well done!'}}}}},
+      {kind:'block',type:'wait_seconds',inputs:{N:{shadow:{type:'math_number',fields:{NUM:1}}}}},
+      {kind:'block',type:'go_next_page'},{kind:'block',type:'win_game'},{kind:'block',type:'game_over'}
+    ]},
+    {kind:'category',name:'🔎  Values',colour:'30',contents:[
+      {kind:'block',type:'get_score'},{kind:'block',type:'get_lives'},
+      {kind:'block',type:'get_page'},{kind:'block',type:'get_timer'}
+    ]},
+    {kind:'sep'},
+    {kind:'category',name:'🧠  Logic',colour:'210',contents:[
+      {kind:'block',type:'controls_if'},
+      {kind:'block',type:'logic_compare'},
+      {kind:'block',type:'logic_operation'},
+      {kind:'block',type:'logic_negate'},
+      {kind:'block',type:'logic_boolean'}
+    ]},
+    {kind:'category',name:'🔁  Loops',colour:'120',contents:[
+      {kind:'block',type:'controls_repeat_ext',inputs:{TIMES:{shadow:{type:'math_number',fields:{NUM:10}}}}},
+      {kind:'block',type:'controls_whileUntil'},
+      {kind:'block',type:'controls_for',inputs:{FROM:{shadow:{type:'math_number',fields:{NUM:1}}},TO:{shadow:{type:'math_number',fields:{NUM:10}}},BY:{shadow:{type:'math_number',fields:{NUM:1}}}}},
+      {kind:'block',type:'controls_flow_statements'}
+    ]},
+    {kind:'category',name:'➗  Math',colour:'230',contents:[
+      {kind:'block',type:'math_number'},
+      {kind:'block',type:'math_arithmetic',inputs:{A:{shadow:{type:'math_number',fields:{NUM:1}}},B:{shadow:{type:'math_number',fields:{NUM:1}}}}},
+      {kind:'block',type:'math_single',inputs:{NUM:{shadow:{type:'math_number',fields:{NUM:9}}}}},
+      {kind:'block',type:'math_modulo',inputs:{DIVIDEND:{shadow:{type:'math_number',fields:{NUM:64}}},DIVISOR:{shadow:{type:'math_number',fields:{NUM:10}}}}},
+      {kind:'block',type:'math_random_int',inputs:{FROM:{shadow:{type:'math_number',fields:{NUM:1}}},TO:{shadow:{type:'math_number',fields:{NUM:6}}}}}
+    ]},
+    {kind:'category',name:'🔤  Text',colour:'160',contents:[
+      {kind:'block',type:'text'},
+      {kind:'block',type:'text_join'}
+    ]},
+    {kind:'sep'},
+    {kind:'category',name:'📦  Variables',colour:'330',custom:'VARIABLE'},
+    {kind:'category',name:'🧩  Functions',colour:'290',custom:'PROCEDURE'}
+  ];
+  return{kind:'categoryToolbox',contents:game.concat(code)};
 }
 
 function getDefaultXml(){
@@ -1470,14 +1633,25 @@ function getDefaultXml(){
 function initBlockly(){
   if(blocklyWorkspace)return;
   defineBlocks();
+  // Custom theme — set the font HERE so Blockly measures block sizes with the
+  // real font (Montserrat). Doing it via CSS instead desyncs measurement from
+  // rendering and makes the text sit off-centre.
+  const cjTheme=Blockly.Theme.defineTheme('codejump',{
+    base:Blockly.Themes.Dark,
+    fontStyle:{family:"'Montserrat', sans-serif",weight:'600',size:11},
+  });
   blocklyWorkspace=Blockly.inject('blockly-div',{
     toolbox:getToolbox(),
     scrollbars:true,
     zoom:{controls:true,wheel:true,startScale:(('ontouchstart' in window)||navigator.maxTouchPoints>0)?1.05:0.85,maxScale:2.5,minScale:0.4,scaleSpeed:1.1},
     grid:{spacing:24,length:3,colour:'rgba(255,255,255,0.08)',snap:true},
-    theme:Blockly.Themes.Dark,
+    theme:cjTheme,
     renderer:'zelos',
   });
+  // Relax type-checking so any value/reporter block can plug into any value
+  // input (e.g. a number into an "if", a reporter into "and"). The interpreter
+  // coerces types at runtime, so this is friendlier for young coders.
+  try{blocklyWorkspace.connectionChecker.doTypeChecks=function(){return true;};}catch(e){}
   const xml=Blockly.utils.xml.textToDom(window._pendingXml||getDefaultXml());
   window._pendingXml=null;
   Blockly.Xml.domToWorkspace(xml,blocklyWorkspace);
@@ -1537,6 +1711,134 @@ function readBlocklyConfig(){
   });
   Object.assign(gameConfig,cfg);
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// BLOCK INTERPRETER (Phase 1) — runs KS2 "code" blocks at game events.
+// A small tree-walker over the Blockly blocks. No eval, no DOM access; it can
+// only touch the safe game API below. Hard op/loop caps stop runaway loops.
+// ═══════════════════════════════════════════════════════════════════════
+let runVars={};               // shared variable map for the whole game
+let cjProcs={};               // name → function definition block
+let cjEveryHats=[];           // {block, period(frames), next(tick)}
+let cjOps=0;                  // shared op budget for one event run
+const CJ_MAX_OPS=50000, CJ_MAX_LOOP=10000, CJ_MAX_DEPTH=60;
+const CJ_BREAK={brk:1}, CJ_CONT={cont:1}, CJ_RETURN={ret:1};
+function cjNum(v){const n=Number(v);return isFinite(n)?n:0;}
+function cjIn(block,name){return block.getInputTargetBlock(name);}
+function cjTick(){if(++cjOps>CJ_MAX_OPS)throw '__cj_halt__';}
+function cjEval(b,ctx){
+  if(!b)return 0;
+  switch(b.type){
+    case 'math_number':return Number(b.getFieldValue('NUM'))||0;
+    case 'text':return b.getFieldValue('TEXT')||'';
+    case 'logic_boolean':return b.getFieldValue('BOOL')==='TRUE';
+    case 'logic_null':return null;
+    case 'get_score':return score;
+    case 'get_lives':return lives;
+    case 'get_page':return playLevel+1;
+    case 'get_timer':return Math.ceil(gameTimer/60);
+    case 'variables_get':return (b.getFieldValue('VAR') in ctx.vars)?ctx.vars[b.getFieldValue('VAR')]:0;
+    case 'math_arithmetic':{const a=cjNum(cjEval(cjIn(b,'A'),ctx)),c=cjNum(cjEval(cjIn(b,'B'),ctx));switch(b.getFieldValue('OP')){case 'ADD':return a+c;case 'MINUS':return a-c;case 'MULTIPLY':return a*c;case 'DIVIDE':return c?a/c:0;case 'POWER':return Math.pow(a,c);}return 0;}
+    case 'math_single':{const n=cjNum(cjEval(cjIn(b,'NUM'),ctx));switch(b.getFieldValue('OP')){case 'ROOT':return Math.sqrt(Math.abs(n));case 'ABS':return Math.abs(n);case 'NEG':return -n;case 'LN':return Math.log(n);case 'LOG10':return Math.log10(n);}return n;}
+    case 'math_modulo':{const a=cjNum(cjEval(cjIn(b,'DIVIDEND'),ctx)),c=cjNum(cjEval(cjIn(b,'DIVISOR'),ctx));return c?a%c:0;}
+    case 'math_random_int':{let a=Math.floor(cjNum(cjEval(cjIn(b,'FROM'),ctx))),c=Math.floor(cjNum(cjEval(cjIn(b,'TO'),ctx)));if(a>c){const t=a;a=c;c=t;}return Math.floor(Math.random()*(c-a+1))+a;}
+    case 'logic_compare':{const a=cjEval(cjIn(b,'A'),ctx),c=cjEval(cjIn(b,'B'),ctx);switch(b.getFieldValue('OP')){case 'EQ':return a==c;case 'NEQ':return a!=c;case 'LT':return a<c;case 'LTE':return a<=c;case 'GT':return a>c;case 'GTE':return a>=c;}return false;}
+    case 'logic_operation':{const op=b.getFieldValue('OP');const a=cjEval(cjIn(b,'A'),ctx);if(op==='AND')return a&&cjEval(cjIn(b,'B'),ctx);return a||cjEval(cjIn(b,'B'),ctx);}
+    case 'logic_negate':return !cjEval(cjIn(b,'BOOL'),ctx);
+    case 'text_join':{let s='';let i=0;while(b.getInput('ADD'+i)){s+=String(cjEval(cjIn(b,'ADD'+i),ctx)??'');i++;}return s;}
+    case 'procedures_callreturn':return cjCallProc(b,ctx);
+    default:return 0;
+  }
+}
+let cjFibers=[]; // suspended scripts waiting to resume: {gen, at(tick)}
+// Statement-context proc call — a generator so `wait` inside a function suspends.
+function* cjCallProcG(block,ctx){
+  const name=block.getProcedureCall?block.getProcedureCall():block.getFieldValue('NAME');
+  const p=cjProcs[name];if(!p)return;
+  const depth=(ctx.depth||0)+1;if(depth>CJ_MAX_DEPTH)throw '__cj_halt__';
+  const locals=Object.create(runVars);
+  const models=p.block.getVarModels?p.block.getVarModels():[];
+  for(let i=0;i<models.length;i++)locals[models[i].getId()]=cjEval(block.getInputTargetBlock('ARG'+i),ctx);
+  const childCtx={vars:locals,depth,ret:undefined};
+  try{yield* cjRunG(p.block.getInputTargetBlock('STACK'),childCtx);}catch(e){if(e!==CJ_RETURN)throw e;}
+}
+// Value-context proc call (used inside expressions) — runs synchronously, ignoring any waits.
+function cjCallProc(block,ctx){
+  const name=block.getProcedureCall?block.getProcedureCall():block.getFieldValue('NAME');
+  const p=cjProcs[name];if(!p)return 0;
+  const depth=(ctx.depth||0)+1;if(depth>CJ_MAX_DEPTH)throw '__cj_halt__';
+  const locals=Object.create(runVars);
+  const models=p.block.getVarModels?p.block.getVarModels():[];
+  for(let i=0;i<models.length;i++)locals[models[i].getId()]=cjEval(block.getInputTargetBlock('ARG'+i),ctx);
+  const childCtx={vars:locals,depth,ret:undefined};
+  try{const g=cjRunG(p.block.getInputTargetBlock('STACK'),childCtx);let r=g.next();while(!r.done)r=g.next();}
+  catch(e){if(e!==CJ_RETURN)throw e;}
+  if(p.hasReturn&&childCtx.ret===undefined)return cjEval(p.block.getInputTargetBlock('RETURN'),childCtx);
+  return childCtx.ret!==undefined?childCtx.ret:0;
+}
+// Generator runner — yields a frame-count when it hits a "wait" block.
+function* cjRunG(block,ctx){
+  while(block){
+    cjTick();
+    switch(block.type){
+      case 'wait_seconds':{const n=cjNum(cjEval(cjIn(block,'N'),ctx));yield Math.max(0,Math.round(n*60));break;}
+      case 'change_score':score+=cjNum(cjEval(cjIn(block,'N'),ctx));if(score<0)score=0;break;
+      case 'change_lives':{const d=Math.round(cjNum(cjEval(cjIn(block,'N'),ctx)));if(d<0){for(let k=0;k<-d;k++)killPlayer();}else lives+=d;break;}
+      case 'show_message':toast(String(cjEval(cjIn(block,'MSG'),ctx)),'#4a90d9');break;
+      case 'text_print':toast(String(cjEval(cjIn(block,'TEXT'),ctx)),'#4a90d9');break;
+      case 'go_next_page':nextLevel();return;
+      case 'win_game':winNow('🎉 You Win!');return;
+      case 'game_over':playing=false;stopMusic();document.getElementById('ov-dead').classList.remove('hide');return;
+      case 'variables_set':ctx.vars[block.getFieldValue('VAR')]=cjEval(cjIn(block,'VALUE'),ctx);break;
+      case 'math_change':ctx.vars[block.getFieldValue('VAR')]=cjNum(ctx.vars[block.getFieldValue('VAR')])+cjNum(cjEval(cjIn(block,'DELTA'),ctx));break;
+      case 'controls_if':{let i=0,done=false;while(block.getInput('IF'+i)){if(cjEval(cjIn(block,'IF'+i),ctx)){yield* cjRunG(cjIn(block,'DO'+i),ctx);done=true;break;}i++;}if(!done&&block.getInput('ELSE'))yield* cjRunG(cjIn(block,'ELSE'),ctx);break;}
+      case 'controls_repeat_ext':{let t=Math.min(CJ_MAX_LOOP,Math.floor(cjNum(cjEval(cjIn(block,'TIMES'),ctx))));const body=cjIn(block,'DO');for(let i=0;i<t;i++){cjTick();try{yield* cjRunG(body,ctx);}catch(e){if(e===CJ_BREAK)break;if(e===CJ_CONT)continue;throw e;}}break;}
+      case 'controls_whileUntil':{const until=block.getFieldValue('MODE')==='UNTIL';const body=cjIn(block,'DO');let guard=0;while(true){if(++guard>CJ_MAX_LOOP)throw '__cj_halt__';cjTick();let c=!!cjEval(cjIn(block,'BOOL'),ctx);if(until)c=!c;if(!c)break;try{yield* cjRunG(body,ctx);}catch(e){if(e===CJ_BREAK)break;if(e===CJ_CONT)continue;throw e;}}break;}
+      case 'controls_for':{const v=block.getFieldValue('VAR');let from=cjNum(cjEval(cjIn(block,'FROM'),ctx)),to=cjNum(cjEval(cjIn(block,'TO'),ctx)),by=Math.abs(cjNum(cjEval(cjIn(block,'BY'),ctx)))||1;const body=cjIn(block,'DO');let guard=0;const step=(from<=to)?by:-by;for(let x=from;step>0?x<=to:x>=to;x+=step){if(++guard>CJ_MAX_LOOP)throw '__cj_halt__';cjTick();ctx.vars[v]=x;try{yield* cjRunG(body,ctx);}catch(e){if(e===CJ_BREAK)break;if(e===CJ_CONT)continue;throw e;}}break;}
+      case 'controls_flow_statements':throw block.getFieldValue('FLOW')==='BREAK'?CJ_BREAK:CJ_CONT;
+      case 'procedures_callnoreturn':yield* cjCallProcG(block,ctx);break;
+      case 'procedures_ifreturn':if(cjEval(cjIn(block,'CONDITION'),ctx)){if(block.getInput('VALUE'))ctx.ret=cjEval(cjIn(block,'VALUE'),ctx);throw CJ_RETURN;}break;
+      default:break; // config/game blocks handled declaratively — skip
+    }
+    block=block.getNextBlock();
+  }
+}
+function cjErr(e){if(e==='__cj_halt__')toast('Your code ran too long and was stopped! 🛑','#ef4444');else if(e!==CJ_BREAK&&e!==CJ_CONT&&e!==CJ_RETURN)console.warn('Interpreter:',e);}
+// Catalogue user-defined functions so calls can find them.
+function cjFindProcs(){const m={};if(!blocklyWorkspace)return m;blocklyWorkspace.getTopBlocks(false).forEach(b=>{if(b.type==='procedures_defnoreturn'||b.type==='procedures_defreturn'){const d=b.getProcedureDef();m[d[0]]={block:b,hasReturn:b.type==='procedures_defreturn'};}});return m;}
+// Start a script: run until the first wait, then park it as a fiber if unfinished.
+function cjFire(firstBlock){
+  if(!firstBlock)return;cjOps=0;
+  const gen=cjRunG(firstBlock,{vars:runVars,depth:0});
+  let r;try{r=gen.next();}catch(e){cjErr(e);return;}
+  if(!r.done)cjFibers.push({gen,at:tick+(r.value|0)});
+}
+// Each playing frame: resume any fibers whose wait has elapsed.
+function cjPumpFibers(){
+  if(!cjFibers.length)return;
+  const due=cjFibers.filter(f=>tick>=f.at);
+  if(!due.length)return;
+  cjFibers=cjFibers.filter(f=>tick<f.at); // keep the not-yet-due; resumed ones re-add below
+  for(const f of due){if(!playing)break;cjOps=0;let r;try{r=f.gen.next();}catch(e){cjErr(e);continue;}if(!r.done){f.at=tick+(r.value|0);cjFibers.push(f);}}
+}
+// Fire all hats of a given type (e.g. when_collect_gem).
+function cjRunHats(type){if(keyStage!=='ks2'||!blocklyWorkspace)return;blocklyWorkspace.getTopBlocks(true).forEach(b=>{if(b.type===type)cjFire(b.getNextBlock());});}
+// Set up procedures, timers, variables and fibers at the start of a game.
+function cjInitEvents(){
+  runVars={};cjProcs=cjFindProcs();cjEveryHats=[];cjFibers=[];
+  if(keyStage!=='ks2'||!blocklyWorkspace)return;
+  blocklyWorkspace.getTopBlocks(true).forEach(b=>{
+    if(b.type==='every_n_seconds'){const n=Math.max(1,Math.floor(Number(b.getFieldValue('N'))||1));cjEveryHats.push({block:b,period:n*60,next:tick+n*60});}
+  });
+}
+// Called each playing frame: fire due "every N seconds" hats, then resume waiting fibers.
+function cjTickTimers(){
+  if(keyStage!=='ks2')return;
+  for(const h of cjEveryHats){if(tick>=h.next){h.next=tick+h.period;if(playing)cjFire(h.block.getNextBlock());}}
+  cjPumpFibers();
+}
+// "when game starts" — run once after state reset.
+function runStartScripts(){cjRunHats('when_game_starts');}
 
 // ═══════════════════════════════════════════════════════════════════════
 // TILE DRAWING
@@ -1669,11 +1971,8 @@ function switchMode(m){
 
 function validate(){
   commitLevel();
-  for(let i=0;i<LEVELS.length;i++){
-    let s=0;const g=LEVELS[i].grid;
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(g[r][c]===T.START)s++;
-    if(!s){if(i!==curLevel)gotoLevel(i);toast('Page '+(i+1)+' needs a Start 🚩!','#ef4444');return false;}
-  }
+  // Start flags are optional now: pages without one drop the player in on the left.
+  // A game just needs a Finish 🏁 somewhere so it can be completed.
   const anyGoal=LEVELS.some(L=>L.grid.some(row=>row.some(v=>v===T.GOAL)));
   if(!anyGoal){toast('Add a Finish 🏁 to end your game!','#ef4444');return false;}
   return true;
@@ -1695,7 +1994,7 @@ function buildPayload(){
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
   const levels=LEVELS.map(L=>({grid:L.grid,theme:L.theme,customBg:L.customBg}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
-  return{version:2,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
+  return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -1713,6 +2012,7 @@ function cleanLevel(L){return{
 };}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;
+  setKeyStage(d.keyStage==='ks1'?'ks1':'ks2'); // legacy payloads default to full (ks2)
   if(d.customSprites&&typeof d.customSprites==='object')Object.assign(customSprites,d.customSprites);
   // v2 multi-level, or legacy single-level wrapped into one page.
   let lvls=null;
@@ -1824,6 +2124,13 @@ document.getElementById('btn-build').onclick=()=>switchMode('build');
 document.getElementById('btn-play') .onclick=()=>switchMode('play');
 document.getElementById('btn-code') .onclick=()=>switchMode('code');
 document.getElementById('cp-run').onclick=()=>switchMode('play');
+document.getElementById('cp-clear').onclick=()=>{
+  if(!blocklyWorkspace){initBlockly();}
+  if(confirm('Remove ALL your code blocks? This cannot be undone.')){
+    blocklyWorkspace.clear();window._pendingXml='';readBlocklyConfig();
+    toast('Code cleared 🗑️','#585555');
+  }
+};
 document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
 document.getElementById('o-retry') .onclick=()=>{hideOv();startPlay();};
@@ -2081,13 +2388,21 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];return t===T.PLATFORM||t===T.GRASS;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();}
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=0;score=0;lives=gameConfig.lives;confetti=[];playing=true;hideOv();loadPlayLevel(0);}
+function loadPlayLevel(i){activateLevel(i);camX=0;spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=0;score=0;lives=gameConfig.lives;confetti=[];playing=true;hideOv();cjInitEvents();loadPlayLevel(0);runStartScripts();}
 function nextLevel(){playLevel++;if(playLevel>=LEVELS.length){winNow('🎉 You Win!');return;}if(!muted)chirp(660,0.08,'square',0.07);loadPlayLevel(playLevel);if(player)player.inv=60;toast('Page '+(playLevel+1)+' of '+LEVELS.length+'! 🚪','#10b981');}
 function checkDoor(){if(!player)return;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.DOOR){const gx=c*TS,gy=r*TS;if(player.x<gx+TS&&player.x+PW>gx&&player.y<gy+TS&&player.y+PH>gy){nextLevel();return;}}}
 function stopPlay(){playing=false;}
 function findT(id){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===id)return{c,r};return{c:0,r:0};}
-function spawnPlayer(){const{c,r}=findT(T.START);player={x:c*TS+(TS-PW)/2,y:r*TS,vx:0,vy:0,onGround:false,onLadder:false,facingRight:true,dead:false,deadTimer:0,inv:0,standingMover:null};updateCam();}
+function spawnPlayer(){
+  let sc=-1,sr=-1;
+  for(let r=0;r<ROWS&&sc<0;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.START){sc=c;sr=r;break;}
+  if(sc<0){ // No Start flag on this page → enter from the left edge, standing on the floor
+    sc=0;sr=ROWS-2;
+    for(let r=ROWS-1;r>=0;r--){if(isSolid(0,r)){sr=r-1;break;}}
+    if(sr<0)sr=0;
+  }
+  player={x:sc*TS+(TS-PW)/2,y:sr*TS,vx:0,vy:0,onGround:false,onLadder:false,facingRight:true,dead:false,deadTimer:0,inv:0,standingMover:null};updateCam();}
 function initEnemies(){enemies=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=grid[r][c];if(t===T.ENEMY||t===T.ENEMY2){const kind=t===T.ENEMY2?'B':'A';const pat=kind==='B'?gameConfig.enemyBPattern:gameConfig.enemyAPattern;enemies.push({x:c*TS,y:r*TS,originX:c*TS,originY:r*TS,vx:eSpd(kind)*(kind==='B'?-1:1),row:r,anim:0,phase:Math.random()*Math.PI*2,kind,pat});}}}
 function initMovers(){movers=[];const rng=moverRangePx();for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.MOVER)movers.push({x:c*TS,y:r*TS+8,originX:c*TS,vx:MSPD,range:rng,w:TS,h:TS-16});}
 function initItems(){items=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=grid[r][c];if(t===T.GEM||t===T.STAR)items.push({c,r,type:t,got:false,pop:0});}}
@@ -2108,8 +2423,8 @@ function resolveX(p){const tr=Math.floor(p.y/TS),br=Math.floor((p.y+PH-1)/TS);if
 function resolveY(p){const lc=Math.floor((p.x+2)/TS),rc=Math.floor((p.x+PW-3)/TS);p.onGround=false;if(p.vy>0){const br=Math.floor((p.y+PH)/TS);if(isSolid(lc,br)||isSolid(rc,br)){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(tileAt(lc,br)===T.BOUNCE||tileAt(rc,br)===T.BOUNCE){p.y=br*TS-PH;p.vy=bounceForce();if(!muted)chirp(880,0.05,'square',0.08);}else{for(const m of movers){const prev=p.y+PH-p.vy;if(p.x+PW-4>m.x&&p.x+4<m.x+m.w&&prev<=m.y+2&&p.y+PH>=m.y){p.y=m.y-PH;p.vy=0;p.onGround=true;p.standingMover=m;break;}}}}else if(p.vy<0){const tr=Math.floor(p.y/TS);if(isSolid(lc,tr)||isSolid(rc,tr)){p.y=(tr+1)*TS;p.vy=0;}}}
 function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;const pat=e.pat;if(pat==='upDown'){e.y=e.originY+Math.sin(tick*0.04+e.phase)*TS*1.8;e.x=e.originX;}else if(pat==='stationary'){}else{e.vx=Math.sign(e.vx||1)*eSpd(e.kind);e.x+=e.vx;const col=e.vx>0?Math.floor((e.x+TS)/TS):Math.floor(e.x/TS);if(isSolid(col,e.row))e.vx*=-1;const fc=e.vx>0?Math.floor((e.x+TS)/TS):Math.floor(e.x/TS);if(!isSolid(fc,e.row+1)&&e.row+1<ROWS)e.vx*=-1;if(e.x<0){e.x=0;e.vx=Math.abs(e.vx);}if(e.x+TS>COLS*TS){e.x=COLS*TS-TS;e.vx=-Math.abs(e.vx);}};});}
 function updateMovers(){movers.forEach(m=>{m.x+=m.vx;if(Math.abs(m.x-m.originX)>=m.range){m.vx*=-1;m.x=m.originX+Math.sign(m.x-m.originX)*m.range;}});}
-function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);if(!muted)chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);}});}
-function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{if(tileAt(c,r)===T.SPIKE)killPlayer();}));if(player.inv>0)return;for(const e of enemies)if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){killPlayer();break;}}
+function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);if(!muted)chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);if(it.type===T.GEM)cjRunHats('when_collect_gem');}});}
+function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{if(tileAt(c,r)===T.SPIKE)killPlayer();}));if(player.inv>0)return;for(const e of enemies)if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){killPlayer();cjRunHats('when_touch_enemy');break;}}
 let goalHintT=0;
 function winNow(title){playing=false;stopMusic();document.getElementById('final-score').textContent=score;const w=document.getElementById('ov-win');const h=w.querySelector('h2');if(h&&title)h.textContent=title;w.classList.remove('hide');spawnConfetti();}
 function checkGoal(){
@@ -2196,7 +2511,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
-  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkDoor();if(playing)checkGoal();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
+  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
   drawPlay();
 }
 

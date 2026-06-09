@@ -2970,7 +2970,6 @@ function updatePlayer(){
   const p=player;if(p.inv>0)p.inv--;p.standingMover=null;
   const spd=pSpd(),midC=Math.floor((p.x+PW/2)/TS),topR=Math.floor(p.y/TS),midR=Math.floor((p.y+PH/2)/TS);
   const onLad=tileAt(midC,topR)===T.LADDER||tileAt(midC,midR)===T.LADDER;
-  p.dropThru=isDown()&&!onLad; // hold Down to drop through one-way platforms
   if(isLeft()){p.vx=-spd;p.facingRight=false;}else if(isRight()){p.vx=spd;p.facingRight=true;}else p.vx*=0.65;
   if(onLad){if(isUp()){p.vy=-3;p.onLadder=true;}else if(isDown()){p.vy=3;p.onLadder=true;}else if(p.onLadder)p.vy=0;if(p.onLadder)p.x=midC*TS+(TS-PW)/2;}else p.onLadder=false;
   if(p.onGround){p.jumps=0;p.waterLeap=false;}
@@ -2995,7 +2994,7 @@ function updatePlayer(){
   if(p.x<0)p.x=0;if(p.x+PW>COLS*TS)p.x=COLS*TS-PW;if(p.y>CH+80)killPlayer();
 }
 function resolveX(p){const tr=Math.floor(p.y/TS),br=Math.floor((p.y+PH-1)/TS);if(p.vx>0){const rc=Math.floor((p.x+PW)/TS);if(isSolid(rc,tr)||isSolid(rc,br)){p.x=rc*TS-PW;p.vx=0;}}else if(p.vx<0){const lc=Math.floor(p.x/TS);if(isSolid(lc,tr)||isSolid(lc,br)){p.x=(lc+1)*TS;p.vx=0;}}}
-function resolveY(p){const lc=Math.floor((p.x+2)/TS),rc=Math.floor((p.x+PW-3)/TS);p.onGround=false;if(p.vy>0){const br=Math.floor((p.y+PH)/TS);const prevBottom=p.y+PH-p.vy;const onewayLand=(tileAt(lc,br)===T.ONEWAY||tileAt(rc,br)===T.ONEWAY)&&!p.dropThru&&prevBottom<=br*TS+2;if(isSolid(lc,br)||isSolid(rc,br)){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(onewayLand){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(tileAt(lc,br)===T.BOUNCE||tileAt(rc,br)===T.BOUNCE){p.y=br*TS-PH;p.vy=bounceForce();chirp(880,0.05,'square',0.08);}else{for(const m of movers){const prev=p.y+PH-p.vy;if(p.x+PW-4>m.x&&p.x+4<m.x+m.w&&prev<=m.y+2&&p.y+PH>=m.y){p.y=m.y-PH;p.vy=0;p.onGround=true;p.standingMover=m;break;}}}}else if(p.vy<0){const tr=Math.floor(p.y/TS);if(isSolid(lc,tr)||isSolid(rc,tr)){p.y=(tr+1)*TS;p.vy=0;}}}
+function resolveY(p){const lc=Math.floor((p.x+2)/TS),rc=Math.floor((p.x+PW-3)/TS);p.onGround=false;if(p.vy>0){const br=Math.floor((p.y+PH)/TS);const prevBottom=p.y+PH-p.vy;const onewayLand=(tileAt(lc,br)===T.ONEWAY||tileAt(rc,br)===T.ONEWAY)&&prevBottom<=br*TS+2;if(isSolid(lc,br)||isSolid(rc,br)){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(onewayLand){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(tileAt(lc,br)===T.BOUNCE||tileAt(rc,br)===T.BOUNCE){p.y=br*TS-PH;p.vy=bounceForce();chirp(880,0.05,'square',0.08);}else{for(const m of movers){const prev=p.y+PH-p.vy;if(p.x+PW-4>m.x&&p.x+4<m.x+m.w&&prev<=m.y+2&&p.y+PH>=m.y){p.y=m.y-PH;p.vy=0;p.onGround=true;p.standingMover=m;break;}}}}else if(p.vy<0){const tr=Math.floor(p.y/TS);if(isSolid(lc,tr)||isSolid(rc,tr)){p.y=(tr+1)*TS;p.vy=0;}}}
 function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;
   if(e.mode==='box'){
     if(e.vx&&e.maxX>e.minX){e.x+=e.vx;if(e.x<=e.minX){e.x=e.minX;e.vx=Math.abs(e.vx);}else if(e.x>=e.maxX){e.x=e.maxX;e.vx=-Math.abs(e.vx);}}

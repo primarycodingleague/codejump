@@ -333,6 +333,10 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 body.is-touch #pages{width:120px;min-width:120px;}
 /* ── CANVAS WRAP ────────────────────────────────────────────────────── */
 #cwrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--black);}
+#play-mute{display:none;position:absolute;top:12px;right:12px;z-index:40;width:44px;height:44px;border-radius:50%;border:2px solid var(--gold);background:rgba(0,0,0,.55);color:#fff;font-size:20px;line-height:1;cursor:pointer;align-items:center;justify-content:center;transition:background .12s,transform .12s;}
+#play-mute:hover{background:rgba(0,0,0,.8);}
+#play-mute:active{transform:scale(.92);}
+#app.mode-play #play-mute{display:flex;}
 #gc{display:block;border:2px solid var(--gold);cursor:crosshair;image-rendering:pixelated;}
 #hint{
   position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
@@ -878,6 +882,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
           <button class="cp-clear" id="cp-clear" title="Remove all code blocks">🗑️ Clear code</button>
         </div>
       </div>
+      <button id="play-mute" title="Mute / unmute music" aria-label="Mute music">🔊</button>
       <div id="hint" class="hide">⬅️➡️ Move &nbsp;|&nbsp; Space Jump &nbsp;|&nbsp; ⬆️ Climb</div>
       <!-- On-screen controls for touch devices (Play mode) -->
       <div id="touch-controls" aria-hidden="true">
@@ -2300,7 +2305,10 @@ document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
 document.getElementById('o-retry') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build2').onclick=()=>{hideOv();switchMode('build');};
-document.getElementById('t-mute').onclick=()=>{muted=!muted;document.getElementById('t-mute').textContent=muted?'🔇':'🔊';if(muted)stopMusic();else if(mode==='play')startMusic();};
+function setMuteIcons(){const ic=muted?'🔇':'🔊';document.getElementById('t-mute').textContent=ic;const pm=document.getElementById('play-mute');if(pm)pm.textContent=ic;}
+function toggleMute(){muted=!muted;setMuteIcons();if(muted)stopMusic();else if(mode==='play')startMusic();}
+document.getElementById('t-mute').onclick=toggleMute;
+document.getElementById('play-mute').onclick=toggleMute;
 document.getElementById('btn-design').onclick=()=>openDesigner();
 window.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&mode==='play')e.preventDefault();if((e.ctrlKey||e.metaKey)&&e.key==='z'&&mode==='build'){e.preventDefault();undo();}});
 window.addEventListener('keyup',e=>keys[e.code]=false);
@@ -2774,6 +2782,7 @@ const CJ_WHATSNEW=[
   '➡️ Custom moving platforms — tap a moving block to set exactly how many tiles it travels left and right.',
   '👾 Custom enemy movement — tap an enemy to set how far it patrols left, right, up and down.',
   '🪣 Fill tools — fill a whole row of ground in one click, and fill the Design canvas with any colour.',
+  '🔊 Mute button — tap the speaker in Play mode to mute or unmute your game music.',
   '🧩 Code blocks now snap together properly — any value or maths block fits inside logic blocks.',
   '⏳ New “wait” block — pause your code for a few seconds before the next step.',
   '👩‍🏫 Teacher Hub — two new Year 2 lessons on event coding and functions.',

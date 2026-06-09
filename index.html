@@ -1118,6 +1118,8 @@ const THEMES={
 // ═══════════════════════════════════════════════════════════════════════
 let mode='build',selTile=T.PLATFORM,tool='paint',theme='forest';
 let grid=mkGrid(),painting=false,lastCell='',history=[],future=[];
+let waterGrid=mkGrid(); // background water layer (0 / T.WATER / T.WATER_TOP) — items can sit on top
+function waterAt(c,r){return (r>=0&&r<ROWS&&c>=0&&c<COLS)?waterGrid[r][c]:0;}
 let moverCfg={}; // per moving-platform travel: "r,c" -> {l:tilesLeft, r:tilesRight}
 let enemyCfg={}; // per-enemy travel: "r,c" -> {l,r,u,d} tiles
 let doorCfg={};  // per-door: "r,c" -> {key:'none'|'red'..., dir:'next'|'prev'}
@@ -1133,10 +1135,10 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // always mirror the page currently being edited (curLevel) or played (playLevel).
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
-function snapLevel(){return{grid:grid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg)};}
-function blankLevel(){return{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{}};}
+function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg)};}
+function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{}};}
 function commitLevel(){if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
-function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
@@ -1157,7 +1159,7 @@ function renderPagesStrip(){
   LEVELS.forEach((L,i)=>{
     const cell=document.createElement('div');cell.className='page-cell'+(i===curLevel?' sel':'');
     const cv=document.createElement('canvas');cv.className='page-thumb';cv.width=80;cv.height=48;
-    drawMiniThumb(cv,L.grid,L.theme);
+    drawMiniThumb(cv,L.grid,L.theme,L.waterGrid);
     const num=document.createElement('div');num.className='page-num';num.textContent=(i+1);
     cell.appendChild(cv);cell.appendChild(num);
     cell.onclick=()=>gotoLevel(i);
@@ -1239,7 +1241,7 @@ function saveCurrentLevel(){
   if(name===null)return;
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{})}));
+  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{})}));
   const saves=getSaves();
   saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
   setSaves(saves.slice(0,12));clearDirty();
@@ -1254,7 +1256,7 @@ function loadSaveData(save){clearDirty();
   readBlocklyConfig();
 }
 
-function drawMiniThumb(canvas,g,th_name){
+function drawMiniThumb(canvas,g,th_name,water){
   const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
   const t=THEMES[th_name]||THEMES.forest;
   const grd=ctx.createLinearGradient(0,0,0,H);
@@ -1262,6 +1264,7 @@ function drawMiniThumb(canvas,g,th_name){
   ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
   const cw=W/COLS,ch=H/ROWS;
   const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63',[T.WATER_TOP]:'#2a8cdc',[T.WATER]:'#2a8cdc'};
+  if(Array.isArray(water)){ctx.fillStyle='rgba(42,140,220,.5)';water.forEach((row,r)=>row.forEach((cell,c)=>{if(cell)ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}));}
   g.forEach((row,r)=>row.forEach((cell,c)=>{if(cell&&clr[cell]){ctx.fillStyle=clr[cell];ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}}));
 }
 
@@ -1346,7 +1349,7 @@ document.getElementById('ks-cancel').onclick=()=>document.getElementById('ks-mod
 document.querySelectorAll('.ks-opt').forEach(b=>b.onclick=()=>startNewProject(b.dataset.ks));
 function startNewProject(ks){clearDirty();
   setKeyStage(ks);
-  grid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};
+  grid=mkGrid();waterGrid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};
   customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
   resetSingleLevel();
   // Fresh default program for this key stage
@@ -1370,7 +1373,7 @@ function closeTut(){document.getElementById('tutorial').classList.add('hide');tr
 document.getElementById('tut-next').onclick=()=>{if(tutStep<TUTORIAL.length-1){tutStep++;renderTut();}else closeTut();};
 document.getElementById('tut-skip').onclick=closeTut;
 document.querySelectorAll('[data-demo]').forEach(btn=>{
-  btn.onclick=()=>{DEMOS[btn.dataset.demo]();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();clearDirty();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
+  btn.onclick=()=>{DEMOS[btn.dataset.demo]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();clearDirty();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
 });
 document.getElementById('home-btn').onclick=()=>{if(dirty){autoSaveDraft();if(!confirm('Go back to the home screen?\n\nYour game is auto-saved as a draft you can resume — but unsaved changes won\'t be in your saved levels.'))return;}showHome();};
 
@@ -1563,8 +1566,8 @@ function printWorksheet(){if(thCurrent)doPrint(thSheetHTML(thCurrent));}
 function printChallengeCard(){doPrint(thCardHTML());}
 function printPack(){const ls=thLessons();doPrint(ls.map((L,i)=>thSheetHTML(L)+(i<ls.length-1?'<div class="th-pagebreak"></div>':'')).join(''));}
 // Load starter levels into the editor
-function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();customBg={top:null,bottom:null,art:null};setKeyStage(thYear===2?'ks2':'ks1');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');clearDirty();toast('Starter level loaded — happy building! ✏️','#ae853e');}}
-function loadChallenge(){TH_STARTERS.challenge();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');clearDirty();toast('Challenge loaded! ✏️','#ae853e');}
+function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){TH_STARTERS[thCurrent.starter]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage(thYear===2?'ks2':'ks1');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');clearDirty();toast('Starter level loaded — happy building! ✏️','#ae853e');}}
+function loadChallenge(){TH_STARTERS.challenge();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');clearDirty();toast('Challenge loaded! ✏️','#ae853e');}
 function openSubmission(){hideTeacher();document.getElementById('file-input').click();}
 // Projector mode with live countdown
 let thProjInt=null,thProjLeft=600;
@@ -2265,6 +2268,7 @@ function star5(c,cx,cy,R,r,col){c.beginPath();for(let i=0;i<10;i++){const a=i*Ma
 // ═══════════════════════════════════════════════════════════════════════
 function drawBuild(){
   const t=th();paintSky(ctx);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c])drawTile(waterGrid[r][c],c*TS,r*TS);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid&&tid!==T.ENEMY&&tid!==T.ENEMY2)drawTile(tid,c*TS,r*TS,tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:null);if(tid===T.ENEMY)drawEnemyAt(c*TS,r*TS,0,1,'A');if(tid===T.ENEMY2)drawEnemyAt(c*TS,r*TS,0,1,'B');}
   ctx.strokeStyle=t.grid;ctx.lineWidth=1;for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*TS,0);ctx.lineTo(c*TS,CH);ctx.stroke();}for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*TS);ctx.lineTo(CW,r*TS);ctx.stroke();}
   // Show each moving platform's travel range (build mode only)
@@ -2304,8 +2308,8 @@ buildPalette();
 function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
 
 let histSaved=false;
-function snapState(){return{grid:grid.map(r=>[...r]),moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg)};}
-function restoreState(s){grid=s.grid.map(r=>[...r]);moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});commitLevel();renderPagesStrip();}
+function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg)};}
+function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});commitLevel();renderPagesStrip();}
 function pushHistory(){history.push(snapState());if(history.length>80)history.shift();future=[];histSaved=true;}
 function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}future.push(snapState());restoreState(history.pop());markDirty();toast('Undone! ↩️','#6366f1');}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone! ↪️','#6366f1');}
@@ -2313,7 +2317,11 @@ function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}h
 function cellFromEvent(e){const r=canvas.getBoundingClientRect();return{col:Math.floor((e.clientX-r.left)/r.width*COLS),row:Math.floor((e.clientY-r.top)/r.height*ROWS)};}
 function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN;
   const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];};
-  if(erase){grid[row][col]=T.EMPTY;dropMeta();return;}
+  if(erase){ // peel the foreground item first, then the water behind it
+    if(grid[row][col]!==T.EMPTY){grid[row][col]=T.EMPTY;dropMeta();}
+    else if(waterGrid[row][col]){waterGrid[row][col]=0;}
+    return;}
+  if(selTile===T.WATER||selTile===T.WATER_TOP){waterGrid[row][col]=selTile;return;} // water is a background layer
   if(selTile===T.START||selTile===T.GOAL){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===selTile)grid[r][c]=T.EMPTY;}
   if(prev!==selTile)dropMeta();
   grid[row][col]=selTile;
@@ -2361,6 +2369,7 @@ function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverE
 function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY||t===T.SIGN;}
 // Fill an entire row with the selected tile (Fill Row tool).
 function fillRow(row,clickCol){if(row<0||row>=ROWS)return;
+  if(selTile===T.WATER||selTile===T.WATER_TOP){for(let c=0;c<COLS;c++)waterGrid[row][c]=selTile;return;} // fill the water layer
   if(selTile===T.START||selTile===T.GOAL){paint(clickCol|0,row,false);return;} // single placement only
   for(let c=0;c<COLS;c++){const mk=row+','+c;const prev=grid[row][c];
     if(prev===T.MOVER)delete moverCfg[mk];
@@ -2421,7 +2430,7 @@ document.getElementById('t-erase').onclick=()=>setTool('erase');
 document.getElementById('t-undo') .onclick=()=>undo();
 document.getElementById('t-redo') .onclick=()=>redo();
 document.getElementById('t-testpage').onclick=()=>testThisPage();
-document.getElementById('t-clear').onclick=()=>{if(confirm('Clear this page?')){pushHistory();grid=mkGrid();commitLevel();renderPagesStrip();markDirty();}};
+document.getElementById('t-clear').onclick=()=>{if(confirm('Clear this page?')){pushHistory();grid=mkGrid();waterGrid=mkGrid();commitLevel();renderPagesStrip();markDirty();}};
 document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 // ═══════════════════════════════════════════════════════════════════════
 // SHARING  (Copy Link · Download Playable HTML · Save Level File · Import)
@@ -2429,7 +2438,7 @@ document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 function buildPayload(){
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid,theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{}}));
+  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
 }
@@ -2438,6 +2447,7 @@ function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\(
 // Coerce an untrusted 16×16 background-art array into 256 safe colours/blanks.
 function sanitizeArt(a){if(!Array.isArray(a))return null;const out=new Array(256).fill('');let any=false;for(let i=0;i<256;i++){const col=safeColor(a[i]);if(col){out[i]=col;any=true;}}return any?out:null;}
 // Coerce an untrusted grid into a fixed ROWS×COLS grid of valid tile numbers.
+function sanitizeWaterGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;for(let r=0;r<ROWS;r++){const row=Array.isArray(g[r])?g[r]:[];for(let c=0;c<COLS;c++){const v=row[c]|0;out[r][c]=(v===T.WATER||v===T.WATER_TOP)?v:0;}}return out;}
 function sanitizeGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;
   for(let r=0;r<ROWS;r++){const row=Array.isArray(g[r])?g[r]:[];
     for(let c=0;c<COLS;c++){let v=row[c];v=(typeof v==='number'&&isFinite(v))?(v|0):0;out[r][c]=(v>=0&&v<=30)?v:0;}}
@@ -2447,8 +2457,8 @@ function sanitizeEnemyCfg(m){const out={};if(!m||typeof m!=='object')return out;
 function sanitizeDoorCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const key=(v.key==='none'||KEY_COLORS[v.key])?v.key:'none';const dir=(v.dir==='prev')?'prev':'next';out[k]={key,dir};}return out;}
 function sanitizeKeyCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={color};}return out;}
 function sanitizeSignCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const txt=(m[k]&&typeof m[k].text==='string')?m[k].text:'';out[k]={text:txt.slice(0,140)};}return out;}
-function cleanLevel(L){return{
-  grid:sanitizeGrid(L&&L.grid),
+function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&L.waterGrid);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(_g[r][c]===T.WATER||_g[r][c]===T.WATER_TOP){if(!_w[r][c])_w[r][c]=_g[r][c];_g[r][c]=0;}}return{
+  grid:_g,waterGrid:_w,
   theme:(L&&typeof L.theme==='string'&&THEMES[L.theme])?L.theme:'forest',
   customBg:{top:(L&&L.customBg&&safeColor(L.customBg.top))||null,bottom:(L&&L.customBg&&safeColor(L.customBg.bottom))||null,art:(L&&L.customBg)?sanitizeArt(L.customBg.art):null},
   moverCfg:sanitizeMoverCfg(L&&L.moverCfg),
@@ -2902,7 +2912,7 @@ function checkAir(){
   for(const b of airBubbles){b.y+=b.vy;b.a-=0.012;}airBubbles=airBubbles.filter(b=>b.a>0);
   if(player.dead)return;
   const hc=Math.floor((player.x+PW/2)/TS),hr=Math.floor((player.y+6)/TS);
-  if(tileAt(hc,hr)===T.WATER){
+  if(waterAt(hc,hr)===T.WATER){
     air=Math.max(0,air-1);const shown=Math.ceil(air/AIR_MAX*6);
     if(shown<airCount){airCount=shown;airBubbles.push({x:player.x+PW/2-camX+(Math.random()*10-5),y:player.y+4,vy:-1-Math.random(),r:2+Math.random()*2,a:1});chirp(700+Math.random()*200,0.05,'sine',0.03);}
     if(air<=0){air=AIR_MAX;airCount=6;toast('Out of air! 🫧','#4a90d9');killPlayer();}
@@ -2963,16 +2973,18 @@ function updatePlayer(){
   p.dropThru=isDown()&&!onLad; // hold Down to drop through one-way platforms
   if(isLeft()){p.vx=-spd;p.facingRight=false;}else if(isRight()){p.vx=spd;p.facingRight=true;}else p.vx*=0.65;
   if(onLad){if(isUp()){p.vy=-3;p.onLadder=true;}else if(isDown()){p.vy=3;p.onLadder=true;}else if(p.onLadder)p.vy=0;if(p.onLadder)p.x=midC*TS+(TS-PW)/2;}else p.onLadder=false;
-  if(p.onGround)p.jumps=0;
+  if(p.onGround){p.jumps=0;p.waterLeap=false;}
+  const wt=waterAt(midC,midR);const inWater=(wt===T.WATER||wt===T.WATER_TOP);
+  if(p.vy>0)p.waterLeap=false; // leap ends once you start falling
   const jp=isJump();
   if(jp&&!p.jumpPrev&&!onLad){
     if(p.onGround){p.vy=jumpForce();p.onGround=false;p.jumps=1;chirp(523,0.07,'square',0.045);}
+    else if(inWater){p.vy=jumpForce()*0.8;p.waterLeap=true;chirp(587,0.07,'sine',0.045);} // leap out of water onto a ledge
     else if(gameConfig.doubleJump&&(p.jumps||0)<2){p.vy=jumpForce()*0.9;p.jumps=2;chirp(659,0.07,'square',0.045);}
   }
   p.jumpPrev=jp;
-  const wt=tileAt(midC,midR);const inWater=(wt===T.WATER||wt===T.WATER_TOP);
   if(p.onLadder){}
-  else if(inWater){if(isJump()||isUp())p.vy-=0.55;p.vy=Math.max(-3.2,Math.min(3.2,p.vy+0.18));p.vx*=0.9;}
+  else if(inWater){if(!p.waterLeap){if(isUp())p.vy-=0.55;p.vy=Math.max(-3.2,Math.min(3.2,p.vy+0.18));}p.vx*=0.92;}
   else p.vy=Math.min(p.vy+grav(),18);
   p.x+=p.vx;resolveX(p);p.y+=p.vy;resolveY(p);
   if(p.standingMover){const mx=p.standingMover.vx;p.x+=mx;const snap=p.x;resolveX(p);if(Math.abs(p.x-snap)>0.1){p.onGround=false;p.standingMover=null;p.vx=-mx*1.5;}}
@@ -3042,17 +3054,19 @@ function updateCam(){if(!player)return;const t=player.x-CW/2+PW/2;camX+=(t-camX)
 // so this is a 1:1 background image.
 const bgLayer=document.createElement('canvas');bgLayer.width=CW;bgLayer.height=CH;
 const bgCtx=bgLayer.getContext('2d');
-const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START,T.ONEWAY,T.TREE,T.FLOWER,T.BUSH,T.SIGN,T.WATER]);
+const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START,T.ONEWAY,T.TREE,T.FLOWER,T.BUSH,T.SIGN]);
 let dynTiles=[]; // animated/collectible tiles drawn each frame (gem, star, bounce, goal)
 function renderStaticLayer(){
   bgCtx.clearRect(0,0,CW,CH);
   paintSky(bgCtx);
   const old=ctx;ctx=bgCtx; // redirect tile drawing to the offscreen layer
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c]===T.WATER)drawTile(T.WATER,c*TS,r*TS); // deep water behind everything
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(STATIC_TILES.has(tid))drawTile(tid,c*TS,r*TS);}
   ctx=old;
   // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
   dynTiles=[];
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE||tid===T.WATER_TOP)dynTiles.push({c,r,tid});}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c]===T.WATER_TOP)dynTiles.push({c,r,tid:T.WATER_TOP}); // surface water behind items
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE)dynTiles.push({c,r,tid});}
 }
 function drawPlay(){
   const t=th();
@@ -3151,15 +3165,16 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.11';
+const CJ_VERSION='2026.06.12';
 const CJ_WHATSNEW=[
-  '💧 Water! — add a Water Top and Water blocks and swim through them. In KS2 watch your air bubbles — run out and you lose a life!',
-  '⏬🔥 One-way platforms & lava, ⏪⏩ conveyor belts, 🧱 crumbling platforms — new ways to build a challenge.',
-  '🪧 Signs — write a message; players press ⬆️ (or tap the sign) to read it.',
+  '💧 Water you can swim through! In KS2 keep an eye on your air bubbles — run out and you lose a life.',
+  '🐠 Place gems, stars, signs and enemies ON the water so divers can collect and use them underwater.',
+  '🏊 Press jump in water to leap out onto a ledge.',
+  '⏬🔥 One-way platforms & lava, ⏪⏩ conveyor belts, 🧱 crumbling platforms — more ways to build a challenge.',
+  '🪧 Signs — write a message; players press ⬆️ or tap the sign to read it.',
   '🌳🌸 Bigger trees, flowers and bushes to decorate your world.',
-  '🧰 Tidy palette — blocks are now grouped (Blocks, Hazards, Water, Pickups…) in KS2.',
+  '🧰 Tidy palette grouped into Blocks, Hazards, Water, Pickups… (KS2).',
   '🦘 Double jump, 🔊 “play sound” block, 🏆 custom win message, and a ▶️ “This Page” test button.',
-  '🧒 Key Stage 1 made simpler — one Enemy and easier Win options (full block coding kept).',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

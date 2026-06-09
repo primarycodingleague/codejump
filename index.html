@@ -531,8 +531,10 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 }
 #toast.hide{opacity:0;}
 /* ── Moving-platform editor ─────────────────────────────────────────── */
-#mover-modal,#door-modal,#key-modal{position:fixed;inset:0;z-index:1550;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;}
-#mover-modal.hide,#door-modal.hide,#key-modal.hide{display:none;}
+#mover-modal,#door-modal,#key-modal,#sign-modal{position:fixed;inset:0;z-index:1550;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;}
+#mover-modal.hide,#door-modal.hide,#key-modal.hide,#sign-modal.hide{display:none;}
+#sign-text{width:100%;box-sizing:border-box;border:1px solid var(--gray);border-radius:8px;background:var(--black);color:#fff;font-family:var(--font);font-size:14px;padding:10px;resize:vertical;margin-bottom:6px;}
+#sign-text:focus{outline:none;border-color:var(--gold);}
 .mv-box{background:var(--dark);border:1px solid var(--gold);border-radius:12px;padding:22px 24px;max-width:360px;width:100%;text-align:center;}
 .dk-swatches{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .dk-sw{width:48px;height:48px;border-radius:10px;border:3px solid transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;transition:transform .1s;}
@@ -846,8 +848,10 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 <div id="door-modal" class="hide">
   <div class="mv-box">
     <h3>🚪 Door</h3>
-    <p>Which key does it need?</p>
-    <div class="dk-swatches" id="door-keys"></div>
+    <div id="door-key-section">
+      <p>Which key does it need?</p>
+      <div class="dk-swatches" id="door-keys"></div>
+    </div>
     <p style="margin-top:16px">Where does it go?</p>
     <div class="dk-dir">
       <button class="dk-dir-btn" data-dir="prev">⬅️ Previous page</button>
@@ -863,6 +867,15 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <p>Pick a colour</p>
     <div class="dk-swatches" id="key-colors"></div>
     <button class="mv-done" id="key-done">Done</button>
+  </div>
+</div>
+
+<div id="sign-modal" class="hide">
+  <div class="mv-box">
+    <h3>🪧 Sign</h3>
+    <p>What should it say when the player walks past?</p>
+    <textarea id="sign-text" maxlength="140" rows="3" placeholder="e.g. Watch out for the spikes!"></textarea>
+    <button class="mv-done" id="sign-done">Done</button>
   </div>
 </div>
 
@@ -925,6 +938,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <button class="tbtn"        id="t-undo">↩️ Undo</button>
     <button class="tbtn"        id="t-redo">↪️ Redo</button>
     <button class="tbtn"        id="t-clear">🗑️ Clear</button>
+    <button class="tbtn"        id="t-testpage" title="Test just this page">▶️ This Page</button>
     <div class="sep"></div>
     <button class="tbtn" id="t-save">💾 Save</button>
     <button class="tbtn" id="t-share">🔗 Share</button>
@@ -1006,6 +1020,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <div class="design-area" id="design-area">
       <div>
         <div class="preview-label">Draw here ✏️ (16 × 16 pixels)</div>
+        <div class="preview-label" style="opacity:.6;font-size:9px;margin-top:-4px">Showing the current design — 🗑️ Clear makes it blank, ↺ Reset brings back the default</div>
         <canvas id="pixel-canvas" width="320" height="320"></canvas>
       </div>
       <div class="design-right">
@@ -1073,17 +1088,20 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 // ═══════════════════════════════════════════════════════════════════════
 const COLS=20,ROWS=12,TS=48,CW=960,CH=576;
 const GRID_PX=16,PPX=3;
-const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16};
+const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25};
 const KEY_COLORS={red:'#e53935',blue:'#4a90d9',green:'#43a047',yellow:'#fdd835'};
 const KEY_NAMES={red:'Red',blue:'Blue',green:'Green',yellow:'Yellow'};
 const TILES=[
   {id:T.PLATFORM,icon:'🟫',label:'Platform'},{id:T.GRASS,icon:'🌿',label:'Grass Top'},
+  {id:T.ONEWAY,icon:'⏬',label:'One-Way'},{id:T.CRUMBLE,icon:'🧱',label:'Crumble'},
+  {id:T.CONVEYOR_L,icon:'⏪',label:'Belt ◀'},{id:T.CONVEYOR_R,icon:'⏩',label:'Belt ▶'},
   {id:T.GEM,icon:'💎',label:'Gem'},{id:T.STAR,icon:'⭐',label:'Star'},
-  {id:T.SPIKE,icon:'🌵',label:'Spike'},{id:T.BOUNCE,icon:'🍄',label:'Bounce!'},
+  {id:T.SPIKE,icon:'🌵',label:'Spike'},{id:T.LAVA,icon:'🔥',label:'Lava'},{id:T.BOUNCE,icon:'🍄',label:'Bounce!'},
   {id:T.MOVER,icon:'➡️',label:'Moving'},{id:T.ENEMY,icon:'👾',label:'Enemy A'},
   {id:T.ENEMY2,icon:'🐛',label:'Enemy B'},
   {id:T.START,icon:'🚩',label:'Start'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint'},{id:T.DOOR,icon:'🚪',label:'Door'},{id:T.KEY,icon:'🔑',label:'Key'},{id:T.GOAL,icon:'🏁',label:'Finish'},
-  {id:T.CLOUD,icon:'☁️',label:'Cloud'},{id:T.LADDER,icon:'🪜',label:'Ladder'},
+  {id:T.CLOUD,icon:'☁️',label:'Cloud'},{id:T.LADDER,icon:'🪜',label:'Ladder'},{id:T.SIGN,icon:'🪧',label:'Sign'},
+  {id:T.TREE,icon:'🌳',label:'Tree'},{id:T.FLOWER,icon:'🌸',label:'Flower'},{id:T.BUSH,icon:'🌿',label:'Bush'},
 ];
 const THEMES={
   forest:{sky:['#87ceeb','#b8dff0'],ground:'#7B4F2E',grass:'#4caf50',grassHi:'#81c784',gem:'#00bcd4',gemHi:'#80deea',star:'#FFD700',spike:'#78909c',cloud:'#fff',ladder:'#a0522d',ladderRung:'#cd853f',enemy:'#e53935',enemyDark:'#b71c1c',enemy2:'#8e24aa',enemy2Dark:'#4a148c',startCol:'#00c853',mover:'#4a90d9',moverHi:'#74b3f0',bounce:'#e53935',grid:'rgba(0,0,0,0.07)'},
@@ -1100,6 +1118,7 @@ let moverCfg={}; // per moving-platform travel: "r,c" -> {l:tilesLeft, r:tilesRi
 let enemyCfg={}; // per-enemy travel: "r,c" -> {l,r,u,d} tiles
 let doorCfg={};  // per-door: "r,c" -> {key:'none'|'red'..., dir:'next'|'prev'}
 let keyCfg={};   // per-key:  "r,c" -> {color:'red'|'blue'|'green'|'yellow'}
+let signCfg={};  // per-sign: "r,c" -> {text:'...'}
 let gemA=0,goalA=0,tick=0;
 let customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
 let customBg={top:null,bottom:null,art:null}; // top/bottom = gradient; art = 16×16 painted sky (overrides gradient)
@@ -1110,10 +1129,10 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // always mirror the page currently being edited (curLevel) or played (playLevel).
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
-function snapLevel(){return{grid:grid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg)};}
-function blankLevel(){return{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{}};}
+function snapLevel(){return{grid:grid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg)};}
+function blankLevel(){return{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{}};}
 function commitLevel(){if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
-function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
@@ -1183,15 +1202,18 @@ const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks only · 'ks2' = full coding blocks + interpreter
-function setKeyStage(ks){keyStage=(ks==='ks1')?'ks1':'ks2';if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
+function setKeyStage(ks){keyStage=(ks==='ks1')?'ks1':'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
 let gameConfig={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'normal',
   enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
   lives:3,gemPoints:10,starPoints:50,
   gravity:'normal',jumpHeight:'normal',bounceHeight:'normal',moverRange:'medium',
-  winCondition:'goal',timerSeconds:60,music:'happy'};
+  winCondition:'goal',timerSeconds:60,music:'happy',doubleJump:false,winMessage:''};
 let player=null,enemies=[],movers=[],items=[],confetti=[];
 let playerKeys={}; // colours of keys the player is holding this game
 let checkpoint=null; // {level,c,r} last checkpoint reached on the current page
+let crumbleState={}; // "r,c" -> 'shaking'|'gone' for crumbling platforms
+let crumbleT={};     // "r,c" -> frames remaining in current state
+let signShownT={};   // throttle for sign messages
 let score=0,lives=3,camX=0,playing=false;
 let gameTimer=0,gemsTotal=0,gemsGot=0;
 let musicMuted=false, sfxMuted=false;
@@ -1212,7 +1234,7 @@ function saveCurrentLevel(){
   if(name===null)return;
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{})}));
+  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{})}));
   const saves=getSaves();
   saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
   setSaves(saves.slice(0,12));clearDirty();
@@ -1234,7 +1256,7 @@ function drawMiniThumb(canvas,g,th_name){
   grd.addColorStop(0,t.sky[0]);grd.addColorStop(1,t.sky[1]);
   ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
   const cw=W/COLS,ch=H/ROWS;
-  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a'};
+  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63'};
   g.forEach((row,r)=>row.forEach((cell,c)=>{if(cell&&clr[cell]){ctx.fillStyle=clr[cell];ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}}));
 }
 
@@ -1731,6 +1753,18 @@ function defineBlocks(){
     this.appendDummyInput().appendField('seconds');this.setInputsInline(true);
     this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
   }};
+  Blockly.Blocks['set_double_jump']={init:function(){
+    this.appendDummyInput().appendField('🦘 double jump').appendField(new Blockly.FieldDropdown([['ON','on'],['OFF','off']]),'DJ');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(160);
+  }};
+  Blockly.Blocks['win_message']={init:function(){
+    this.appendDummyInput().appendField('🏆 win screen says').appendField(new Blockly.FieldTextInput('You win!'),'MSG');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(20);
+  }};
+  Blockly.Blocks['play_sound']={init:function(){
+    this.appendDummyInput().appendField('🔊 play sound').appendField(new Blockly.FieldDropdown([['🪙 coin','coin'],['🦘 jump','jump'],['⚡ zap','zap'],['🏆 win','win'],['✨ power','power']]),'SND');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(30);
+  }};
 }
 
 function getToolbox(){
@@ -1745,17 +1779,16 @@ function getToolbox(){
       {kind:'block',type:'player_move_left'},{kind:'block',type:'player_move_right'},
       {kind:'block',type:'player_jump'},{kind:'block',type:'player_speed'}
     ]},
-    {kind:'category',name:'🟣  Enemies',colour:'260',contents:[
-      {kind:'block',type:'enemy_a_behaviour'},{kind:'block',type:'enemy_a_speed'},
-      {kind:'block',type:'enemy_b_behaviour'},{kind:'block',type:'enemy_b_speed'}
-    ]},
+    {kind:'category',name:'🟣  Enemies',colour:'260',contents:keyStage==='ks1'
+      ?[{kind:'block',type:'enemy_a_behaviour'},{kind:'block',type:'enemy_a_speed'}]
+      :[{kind:'block',type:'enemy_a_behaviour'},{kind:'block',type:'enemy_a_speed'},{kind:'block',type:'enemy_b_behaviour'},{kind:'block',type:'enemy_b_speed'}]},
     {kind:'category',name:'🟢  Physics',colour:'160',contents:[
       {kind:'block',type:'set_gravity'},{kind:'block',type:'set_jump_height'},
-      {kind:'block',type:'set_bounce_height'},{kind:'block',type:'set_mover_range'}
+      {kind:'block',type:'set_bounce_height'},{kind:'block',type:'set_mover_range'},{kind:'block',type:'set_double_jump'}
     ]},
-    {kind:'category',name:'🏁  Win',colour:'20',contents:[
-      {kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_collect_gems'},{kind:'block',type:'win_survive_timer'}
-    ]},
+    {kind:'category',name:'🏁  Win',colour:'20',contents:keyStage==='ks1'
+      ?[{kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_message'}]
+      :[{kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_collect_gems'},{kind:'block',type:'win_survive_timer'},{kind:'block',type:'win_message'}]},
     {kind:'category',name:'🔴  Rules',colour:'0',contents:[
       {kind:'block',type:'set_lives'},{kind:'block',type:'set_gem_points'},{kind:'block',type:'set_star_points'}
     ]},
@@ -1772,7 +1805,7 @@ function getToolbox(){
       {kind:'block',type:'change_lives',inputs:{N:{shadow:{type:'math_number',fields:{NUM:1}}}}},
       {kind:'block',type:'show_message',inputs:{MSG:{shadow:{type:'text',fields:{TEXT:'Well done!'}}}}},
       {kind:'block',type:'wait_seconds',inputs:{N:{shadow:{type:'math_number',fields:{NUM:1}}}}},
-      {kind:'block',type:'go_next_page'},{kind:'block',type:'win_game'},{kind:'block',type:'game_over'}
+      {kind:'block',type:'go_next_page'},{kind:'block',type:'win_game'},{kind:'block',type:'game_over'},{kind:'block',type:'play_sound'}
     ]},
     {kind:'category',name:'🔎  Values',colour:'30',contents:[
       {kind:'block',type:'get_score'},{kind:'block',type:'get_lives'},
@@ -1885,7 +1918,7 @@ function readBlocklyConfig(){
     enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
     lives:3,gemPoints:10,starPoints:50,
     gravity:'normal',jumpHeight:'normal',bounceHeight:'normal',moverRange:'medium',
-    winCondition:'goal',timerSeconds:60,music:'happy'};
+    winCondition:'goal',timerSeconds:60,music:'happy',doubleJump:false,winMessage:''};
   blocklyWorkspace.getTopBlocks(false).forEach(block=>{
     if(block.type==='when_key_pressed'){
       const key=block.getFieldValue('KEY');
@@ -1916,6 +1949,8 @@ function readBlocklyConfig(){
         if(n.type==='set_jump_height')cfg.jumpHeight=n.getFieldValue('J');
         if(n.type==='set_bounce_height')cfg.bounceHeight=n.getFieldValue('B');
         if(n.type==='set_mover_range')cfg.moverRange=n.getFieldValue('R');
+        if(n.type==='set_double_jump')cfg.doubleJump=n.getFieldValue('DJ')==='on';
+        if(n.type==='win_message')cfg.winMessage=n.getFieldValue('MSG');
         // Win conditions
         if(n.type==='win_reach_goal')cfg.winCondition='goal';
         if(n.type==='win_collect_gems')cfg.winCondition='gems';
@@ -2009,6 +2044,7 @@ function* cjRunG(block,ctx){
       case 'go_next_page':nextLevel();return;
       case 'win_game':winNow('🎉 You Win!');return;
       case 'game_over':playing=false;stopMusic();document.getElementById('ov-dead').classList.remove('hide');endGamePromo();return;
+      case 'play_sound':playSfx(block.getFieldValue('SND'));break;
       case 'variables_set':ctx.vars[block.getFieldValue('VAR')]=cjEval(cjIn(block,'VALUE'),ctx);break;
       case 'math_change':ctx.vars[block.getFieldValue('VAR')]=cjNum(ctx.vars[block.getFieldValue('VAR')])+cjNum(cjEval(cjIn(block,'DELTA'),ctx));break;
       case 'controls_if':{let i=0,done=false;while(block.getInput('IF'+i)){if(cjEval(cjIn(block,'IF'+i),ctx)){yield* cjRunG(cjIn(block,'DO'+i),ctx);done=true;break;}i++;}if(!done&&block.getInput('ELSE'))yield* cjRunG(cjIn(block,'ELSE'),ctx);break;}
@@ -2160,6 +2196,43 @@ function drawTile(id,px,py,meta){
     case T.LADDER:
       if(drawCustomSprite('ladder',px,py))break;
       c.fillStyle=t.ladder;c.fillRect(px+10,py,6,TS);c.fillRect(px+32,py,6,TS);c.fillStyle=t.ladderRung;for(let r=0;r<4;r++)c.fillRect(px+10,py+7+r*12,28,5);c.strokeStyle='#000';c.lineWidth=1.5;c.strokeRect(px+10,py,6,TS);c.strokeRect(px+32,py,6,TS);break;
+    case T.ONEWAY:
+      if(drawCustomSprite('oneway',px,py))break;
+      c.fillStyle=t.ground;c.fillRect(px,py,TS,12);c.fillStyle=t.grassHi||'#fff';c.globalAlpha=.5;c.fillRect(px,py,TS,4);c.globalAlpha=1;c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+1,py+1,TS-2,11);
+      c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<3;i++){const ax=px+12+i*12;c.beginPath();c.moveTo(ax,py+24);c.lineTo(ax+5,py+16);c.lineTo(ax+10,py+24);c.closePath();c.fill();}break;
+    case T.LAVA:{
+      if(drawCustomSprite('lava',px,py))break;
+      c.fillStyle='#b71c1c';c.fillRect(px,py+6,TS,TS-6);c.fillStyle='#ff5722';c.fillRect(px,py+6,TS,8);
+      c.fillStyle='#ffca28';for(let i=0;i<3;i++){const bx=px+10+i*15,by=py+18+Math.sin(goalA*1.5+i*2)*4;c.beginPath();c.arc(bx,by,3,0,Math.PI*2);c.fill();}
+      c.fillStyle='#ff8a65';c.fillRect(px,py+4+Math.sin(goalA*2)*2,TS,3);break;}
+    case T.TREE:
+      if(drawCustomSprite('tree',px,py))break;
+      c.fillStyle='#6d4c2f';c.fillRect(px+TS/2-4,py+24,8,TS-24);c.fillStyle='#3d8b40';c.beginPath();c.arc(px+TS/2,py+18,15,0,Math.PI*2);c.arc(px+TS/2-10,py+24,11,0,Math.PI*2);c.arc(px+TS/2+10,py+24,11,0,Math.PI*2);c.fill();c.fillStyle='#4caf50';c.beginPath();c.arc(px+TS/2-4,py+16,9,0,Math.PI*2);c.fill();break;
+    case T.FLOWER:
+      if(drawCustomSprite('flower',px,py))break;
+      c.strokeStyle='#43a047';c.lineWidth=3;c.beginPath();c.moveTo(px+TS/2,py+TS);c.lineTo(px+TS/2,py+24);c.stroke();c.fillStyle='#ec407a';for(let i=0;i<5;i++){const a=goalA*0+i*Math.PI*2/5;c.beginPath();c.arc(px+TS/2+Math.cos(a)*8,py+18+Math.sin(a)*8,5,0,Math.PI*2);c.fill();}c.fillStyle='#ffd54f';c.beginPath();c.arc(px+TS/2,py+18,4,0,Math.PI*2);c.fill();break;
+    case T.BUSH:
+      if(drawCustomSprite('bush',px,py))break;
+      c.fillStyle='#388e3c';c.beginPath();c.arc(px+14,py+TS-12,12,0,Math.PI*2);c.arc(px+30,py+TS-14,14,0,Math.PI*2);c.arc(px+40,py+TS-10,10,0,Math.PI*2);c.fill();c.fillStyle='#4caf50';c.beginPath();c.arc(px+20,py+TS-18,7,0,Math.PI*2);c.fill();break;
+    case T.SIGN:{
+      if(drawCustomSprite('sign',px,py))break;
+      c.fillStyle='#6d4c2f';c.fillRect(px+TS/2-3,py+18,6,TS-18);
+      c.fillStyle='#caa472';c.fillRect(px+8,py+6,TS-16,20);c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+8,py+6,TS-16,20);
+      c.fillStyle='#5a3d25';for(let i=0;i<3;i++)c.fillRect(px+12,py+10+i*5,TS-24,2);break;}
+    case T.CONVEYOR_L:
+    case T.CONVEYOR_R:{
+      const dir=id===T.CONVEYOR_R?1:-1;
+      c.fillStyle='#555';c.fillRect(px,py+8,TS,TS-16);c.fillStyle='#333';c.fillRect(px,py+8,TS,4);c.fillRect(px,py+TS-12,TS,4);
+      c.fillStyle='#888';const off=(tick*2*dir)%16;for(let i=-1;i<TS/16+1;i++){const ax=px+((i*16+off)+16)%(TS+16)-8;c.beginPath();c.moveTo(ax,py+TS/2-4);c.lineTo(ax+6,py+TS/2);c.lineTo(ax,py+TS/2+4);c.closePath();c.fill();}
+      c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+1,py+9,TS-2,TS-18);break;}
+    case T.CRUMBLE:{
+      const st=(meta&&meta.state)||'solid';const sh=st==='shaking'?Math.sin(tick*1.2)*2:0;
+      c.save();c.translate(sh,0);
+      c.globalAlpha=st==='gone'?0.18:1;
+      c.fillStyle='#a98c63';c.fillRect(px,py,TS,TS);c.fillStyle='#c4a877';c.fillRect(px,py,TS,7);
+      c.strokeStyle='#6d4c2f';c.lineWidth=2;c.strokeRect(px+1,py+1,TS-2,TS-2);
+      c.strokeStyle='rgba(80,50,20,.7)';c.lineWidth=1.5;c.beginPath();c.moveTo(px+14,py);c.lineTo(px+20,py+18);c.lineTo(px+12,py+TS);c.moveTo(px+32,py+6);c.lineTo(px+28,py+24);c.lineTo(px+38,py+TS);c.stroke();
+      c.globalAlpha=1;c.restore();break;}
   }
   c.restore();
 }
@@ -2197,7 +2270,7 @@ function drawBuild(){
 
 function buildPalette(){
   const pal=document.getElementById('palette');pal.innerHTML='';
-  TILES.forEach(ti=>{const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${ti.label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};pal.appendChild(d);});
+  TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2))).forEach(ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};pal.appendChild(d);});
 }
 buildPalette();
 function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
@@ -2210,8 +2283,8 @@ function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone! ↪️','#6366f1');}
 
 function cellFromEvent(e){const r=canvas.getBoundingClientRect();return{col:Math.floor((e.clientX-r.left)/r.width*COLS),row:Math.floor((e.clientY-r.top)/r.height*ROWS)};}
-function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY;
-  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];};
+function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN;
+  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];};
   if(erase){grid[row][col]=T.EMPTY;dropMeta();return;}
   if(selTile===T.START||selTile===T.GOAL){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===selTile)grid[r][c]=T.EMPTY;}
   if(prev!==selTile)dropMeta();
@@ -2219,9 +2292,10 @@ function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const
   if(selTile===T.MOVER&&!moverCfg[mk])moverCfg[mk]={l:moverDefaultTiles(),r:moverDefaultTiles()};
   if((selTile===T.ENEMY||selTile===T.ENEMY2)&&!enemyCfg[mk])enemyCfg[mk]=enemyDefaultCfg(selTile);
   if(selTile===T.DOOR&&!doorCfg[mk])doorCfg[mk]={key:'none',dir:'next'};
-  if(selTile===T.KEY&&!keyCfg[mk])keyCfg[mk]={color:'yellow'};}
+  if(selTile===T.KEY&&!keyCfg[mk])keyCfg[mk]={color:'yellow'};
+  if(selTile===T.SIGN&&!signCfg[mk])signCfg[mk]={text:''};}
 // Tapping any placed moving platform OR enemy (in Paint mode) opens its travel editor.
-function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}return false;}
+function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}return false;}
 function enemyDefaultCfg(tid){return tid===T.ENEMY2?{l:0,r:0,u:2,d:2}:{l:3,r:3,u:0,d:0};}
 let mvKind='mover',mvKey=null;
 function mvMap(){return mvKind==='enemy'?enemyCfg:moverCfg;}
@@ -2234,7 +2308,10 @@ document.querySelectorAll('.mv-step').forEach(b=>b.onclick=()=>mvAdjust(b.datase
 document.getElementById('mv-done').onclick=()=>{document.getElementById('mover-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
 // ── Door editor ──
 let dkDoor=null;
-function openDoorEditor(row,col){dkDoor=row+','+col;if(!doorCfg[dkDoor])doorCfg[dkDoor]={key:'none',dir:'next'};renderDoorEditor();document.getElementById('door-modal').classList.remove('hide');}
+function openDoorEditor(row,col){dkDoor=row+','+col;if(!doorCfg[dkDoor])doorCfg[dkDoor]={key:'none',dir:'next'};
+  const ks1=keyStage==='ks1';if(ks1)doorCfg[dkDoor].key='none';
+  document.getElementById('door-key-section').style.display=ks1?'none':'';
+  renderDoorEditor();document.getElementById('door-modal').classList.remove('hide');}
 function renderDoorEditor(){
   const cfg=doorCfg[dkDoor];const ks=document.getElementById('door-keys');ks.innerHTML='';
   const opts=[['none','No key',null]].concat(Object.keys(KEY_COLORS).map(c=>[c,KEY_NAMES[c]+' key',KEY_COLORS[c]]));
@@ -2248,8 +2325,12 @@ let dkKey=null;
 function openKeyEditor(row,col){dkKey=row+','+col;if(!keyCfg[dkKey])keyCfg[dkKey]={color:'yellow'};renderKeyEditor();document.getElementById('key-modal').classList.remove('hide');}
 function renderKeyEditor(){const cfg=keyCfg[dkKey];const ks=document.getElementById('key-colors');ks.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderKeyEditor();};ks.appendChild(b);});}
 document.getElementById('key-done').onclick=()=>{document.getElementById('key-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
-function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);else if(t===T.DOOR)openDoorEditor(row,col);else if(t===T.KEY)openKeyEditor(row,col);}
-function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY;}
+// ── Sign editor ──
+let dkSign=null;
+function openSignEditor(row,col){dkSign=row+','+col;if(!signCfg[dkSign])signCfg[dkSign]={text:''};document.getElementById('sign-text').value=signCfg[dkSign].text||'';document.getElementById('sign-modal').classList.remove('hide');setTimeout(()=>document.getElementById('sign-text').focus(),30);}
+document.getElementById('sign-done').onclick=()=>{if(dkSign)signCfg[dkSign].text=document.getElementById('sign-text').value.slice(0,140);document.getElementById('sign-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
+function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);else if(t===T.DOOR)openDoorEditor(row,col);else if(t===T.KEY)openKeyEditor(row,col);else if(t===T.SIGN)openSignEditor(row,col);}
+function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY||t===T.SIGN;}
 // Fill an entire row with the selected tile (Fill Row tool).
 function fillRow(row,clickCol){if(row<0||row>=ROWS)return;
   if(selTile===T.START||selTile===T.GOAL){paint(clickCol|0,row,false);return;} // single placement only
@@ -2287,7 +2368,7 @@ function switchMode(m){
   const cp=document.getElementById('code-panel');
   if(m==='code'){cp.classList.add('show');setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);},50);}
   else cp.classList.remove('show');
-  ['t-paint','t-fill','t-erase','t-undo','t-redo','t-clear'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
+  ['t-paint','t-fill','t-erase','t-undo','t-redo','t-clear','t-testpage'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
   if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!musicMuted)startMusic();}
   else{stopPlay();stopMusic();if(typeof clearTouchKeys==='function')clearTouchKeys();}
 }
@@ -2309,6 +2390,7 @@ document.getElementById('t-fill').onclick=()=>setTool('fill');
 document.getElementById('t-erase').onclick=()=>setTool('erase');
 document.getElementById('t-undo') .onclick=()=>undo();
 document.getElementById('t-redo') .onclick=()=>redo();
+document.getElementById('t-testpage').onclick=()=>testThisPage();
 document.getElementById('t-clear').onclick=()=>{if(confirm('Clear this page?')){pushHistory();grid=mkGrid();commitLevel();renderPagesStrip();markDirty();}};
 document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 // ═══════════════════════════════════════════════════════════════════════
@@ -2317,7 +2399,7 @@ document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 function buildPayload(){
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid,theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{}}));
+  const levels=LEVELS.map(L=>({grid:L.grid,theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
 }
@@ -2328,12 +2410,13 @@ function sanitizeArt(a){if(!Array.isArray(a))return null;const out=new Array(256
 // Coerce an untrusted grid into a fixed ROWS×COLS grid of valid tile numbers.
 function sanitizeGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;
   for(let r=0;r<ROWS;r++){const row=Array.isArray(g[r])?g[r]:[];
-    for(let c=0;c<COLS;c++){let v=row[c];v=(typeof v==='number'&&isFinite(v))?(v|0):0;out[r][c]=(v>=0&&v<=20)?v:0;}}
+    for(let c=0;c<COLS;c++){let v=row[c];v=(typeof v==='number'&&isFinite(v))?(v|0):0;out[r][c]=(v>=0&&v<=30)?v:0;}}
   return out;}
 function sanitizeMoverCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const l=Math.max(0,Math.min(19,(v.l|0))),r=Math.max(0,Math.min(19,(v.r|0)));out[k]={l,r};}return out;}
 function sanitizeEnemyCfg(m){const out={};if(!m||typeof m!=='object')return out;const cl=x=>Math.max(0,Math.min(11,(x|0)));for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};out[k]={l:cl(v.l),r:cl(v.r),u:cl(v.u),d:cl(v.d)};}return out;}
 function sanitizeDoorCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const key=(v.key==='none'||KEY_COLORS[v.key])?v.key:'none';const dir=(v.dir==='prev')?'prev':'next';out[k]={key,dir};}return out;}
 function sanitizeKeyCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={color};}return out;}
+function sanitizeSignCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const txt=(m[k]&&typeof m[k].text==='string')?m[k].text:'';out[k]={text:txt.slice(0,140)};}return out;}
 function cleanLevel(L){return{
   grid:sanitizeGrid(L&&L.grid),
   theme:(L&&typeof L.theme==='string'&&THEMES[L.theme])?L.theme:'forest',
@@ -2341,7 +2424,8 @@ function cleanLevel(L){return{
   moverCfg:sanitizeMoverCfg(L&&L.moverCfg),
   enemyCfg:sanitizeEnemyCfg(L&&L.enemyCfg),
   doorCfg:sanitizeDoorCfg(L&&L.doorCfg),
-  keyCfg:sanitizeKeyCfg(L&&L.keyCfg)
+  keyCfg:sanitizeKeyCfg(L&&L.keyCfg),
+  signCfg:sanitizeSignCfg(L&&L.signCfg)
 };}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
@@ -2538,6 +2622,12 @@ const DT=[
   {key:'goal',   icon:'🏁', name:'Goal',     type:'sprite'},
   {key:'cloud',  icon:'☁️', name:'Cloud',   type:'sprite'},
   {key:'ladder', icon:'🪜', name:'Ladder',   type:'sprite'},
+  {key:'oneway', icon:'⏬', name:'One-Way',  type:'sprite'},
+  {key:'lava',   icon:'🔥', name:'Lava',     type:'sprite'},
+  {key:'tree',   icon:'🌳', name:'Tree',     type:'sprite'},
+  {key:'flower', icon:'🌸', name:'Flower',   type:'sprite'},
+  {key:'bush',   icon:'🌿', name:'Bush',     type:'sprite'},
+  {key:'sign',   icon:'🪧', name:'Sign',     type:'sprite'},
   {key:'key_red',   icon:'🔑', name:'Red Key',   type:'sprite'},
   {key:'key_blue',  icon:'🔑', name:'Blue Key',  type:'sprite'},
   {key:'key_green', icon:'🔑', name:'Green Key', type:'sprite'},
@@ -2564,9 +2654,11 @@ const PCELL=20;
 
 function openDesigner(){
   document.getElementById('design-modal').classList.remove('hide');
-  // Clone all sprite data into working copy
+  // Clone existing custom sprites; non-custom targets load their default lazily (on select).
   DT.filter(t=>t.type==='sprite').forEach(t=>{
-    pdata[t.key]=customSprites[t.key]?[...customSprites[t.key]]:new Array(256).fill('');
+    const cur=customSprites[t.key];
+    pdata[t.key]=Array.isArray(cur)?[...cur]:null; // null = default, rasterised when the tab is opened
+    dTouched[t.key]=Array.isArray(cur);
   });
   // Clone the background art too, and start in whichever mode the page is using
   pdata.bg=customBg.art?[...customBg.art]:new Array(256).fill('');
@@ -2576,6 +2668,26 @@ function openDesigner(){
   buildDPalette();
 }
 function closeDesigner(){document.getElementById('design-modal').classList.add('hide');}
+let dTouched={}; // which sprite targets the user has changed this session
+function spriteKeyToTile(k){return ({platform:T.PLATFORM,grass:T.GRASS,gem:T.GEM,star:T.STAR,spike:T.SPIKE,bounce:T.BOUNCE,mover:T.MOVER,start:T.START,goal:T.GOAL,cloud:T.CLOUD,ladder:T.LADDER,oneway:T.ONEWAY,lava:T.LAVA,tree:T.TREE,flower:T.FLOWER,bush:T.BUSH,sign:T.SIGN})[k];}
+function _hex2(x){return ('0'+(x&255).toString(16)).slice(-2);}
+// Render a target's DEFAULT art into a 16×16 colour array, so the editor can show the current look.
+function rasterizeDefault(key){
+  const out=new Array(256).fill('');
+  const oc=document.createElement('canvas');oc.width=TS;oc.height=TS;const octx=oc.getContext('2d');
+  const oldCtx=ctx,oldCustom=customSprites[key];ctx=octx;customSprites[key]=null; // force the vector default
+  try{
+    if(key==='player'){const op=player,ocam=camX;camX=0;player={x:0,y:0,vx:0,facingRight:true,onGround:true};drawPlayer();player=op;camX=ocam;}
+    else if(key==='enemy')drawEnemyAt(0,0,0,1,'A');
+    else if(key==='enemy2')drawEnemyAt(0,0,0,1,'B');
+    else if(key.indexOf('key_')===0)drawTile(T.KEY,0,0,{color:key.slice(4)});
+    else{const tid=spriteKeyToTile(key);if(tid!=null)drawTile(tid,0,0,null);}
+  }catch(e){}
+  ctx=oldCtx;customSprites[key]=oldCustom;
+  let img;try{img=octx.getImageData(0,0,TS,TS).data;}catch(e){return out;}
+  for(let r=0;r<16;r++)for(let c=0;c<16;c++){const sx=Math.min(TS-1,Math.floor((c+0.5)*TS/16)),sy=Math.min(TS-1,Math.floor((r+0.5)*TS/16));const i=(sy*TS+sx)*4;if(img[i+3]>110)out[r*16+c]='#'+_hex2(img[i])+_hex2(img[i+1])+_hex2(img[i+2]);}
+  return out;
+}
 
 function buildDTabs(){
   const c=document.getElementById('design-tabs');c.innerHTML='';
@@ -2606,7 +2718,10 @@ function selDTarget(k){
     document.getElementById('bgm-paint').classList.toggle('active',bgMode==='paint');
     if(bgPaint){if(!pdata.bg)pdata.bg=new Array(256).fill('');renderPix();}
     else renderBgEditor();
-  }else renderPix();
+  }else{
+    if(pdata[k]==null){pdata[k]=rasterizeDefault(k);dTouched[k]=false;} // show the current/default design
+    renderPix();
+  }
 }
 function setBgMode(m){bgMode=m;selDTarget('bg');}
 
@@ -2659,7 +2774,7 @@ function updateBgStrip(){
 
 // Pixel draw
 function pxFromE(e){const r=pixC.getBoundingClientRect();return{c:Math.floor((e.clientX-r.left)*(320/r.width)/PCELL),r:Math.floor((e.clientY-r.top)*(320/r.height)/PCELL)};}
-function ppaint(pr,pc){if(pr<0||pr>=16||pc<0||pc>=16)return;pdata[dTarget][pr*16+pc]=dErasing?'':dColor;renderPix();}
+function ppaint(pr,pc){if(pr<0||pr>=16||pc<0||pc>=16)return;if(!pdata[dTarget])pdata[dTarget]=new Array(256).fill('');pdata[dTarget][pr*16+pc]=dErasing?'':dColor;dTouched[dTarget]=true;renderPix();}
 pixC.addEventListener('mousedown',e=>{pdrawing=true;const{r,c}=pxFromE(e);ppaint(r,c);});
 pixC.addEventListener('mousemove',e=>{if(!pdrawing)return;const{r,c}=pxFromE(e);ppaint(r,c);});
 window.addEventListener('mouseup',()=>pdrawing=false);
@@ -2671,19 +2786,20 @@ document.getElementById('d-close').onclick=()=>closeDesigner();
 document.getElementById('bgm-gradient').onclick=()=>setBgMode('gradient');
 document.getElementById('bgm-paint').onclick=()=>setBgMode('paint');
 document.getElementById('d-eraser').onclick=()=>{dErasing=!dErasing;document.getElementById('d-eraser').style.background=dErasing?'var(--gold)':'transparent';};
-document.getElementById('d-fill').onclick=()=>{const data=pdata[dTarget];if(!data)return;const v=dErasing?'':dColor;for(let i=0;i<256;i++)data[i]=v;renderPix();};
+document.getElementById('d-fill').onclick=()=>{if(!pdata[dTarget])pdata[dTarget]=new Array(256).fill('');const data=pdata[dTarget];const v=dErasing?'':dColor;for(let i=0;i<256;i++)data[i]=v;if(dTarget!=='bg')dTouched[dTarget]=true;renderPix();};
 document.getElementById('d-clear').onclick=()=>{
   if(dTarget==='bg'){if(bgMode==='paint'){pdata.bg=new Array(256).fill('');renderPix();}else{document.getElementById('bg-top-pick').value='#87ceeb';document.getElementById('bg-bot-pick').value='#b8dff0';updateBgStrip();}}
-  else{pdata[dTarget]=new Array(256).fill('');renderPix();}
+  else{pdata[dTarget]=new Array(256).fill('');dTouched[dTarget]=true;renderPix();toast('Cleared — save to make it blank','#585555');}
 };
 document.getElementById('d-reset').onclick=()=>{
   if(dTarget==='bg'){pdata.bg=new Array(256).fill('');customBg={top:null,bottom:null,art:null};_skyKey='';_bgArtKey='';renderBgEditor();if(bgMode==='paint')renderPix();toast('Background reset','#585555');}
-  else{pdata[dTarget]=new Array(256).fill('');customSprites[dTarget]=null;renderPix();toast('Reset to default','#585555');}
+  else{pdata[dTarget]=rasterizeDefault(dTarget);dTouched[dTarget]=false;customSprites[dTarget]=null;renderPix();toast('Reset to default','#585555');}
 };
 document.getElementById('d-done').onclick=()=>{
-  // Save sprites
+  // Save sprites: only overwrite targets the user changed. An empty (but touched) sprite = invisible.
   DT.filter(t=>t.type==='sprite').forEach(t=>{
-    customSprites[t.key]=pdata[t.key]&&pdata[t.key].some(c=>c!=='')?[...pdata[t.key]]:null;
+    if(!dTouched[t.key])return; // untouched → keep whatever it was (custom or default)
+    customSprites[t.key]=(pdata[t.key]&&pdata[t.key].some(c=>c!==''))?[...pdata[t.key]]:[];
   });
   // Save bg — gradient colours always; painted art only in "paint" mode (else clear it)
   customBg.top=document.getElementById('bg-top-pick').value||null;
@@ -2713,6 +2829,7 @@ function stopMusic(){if(musicTimer){clearTimeout(musicTimer);musicTimer=null;}}
 function scheduleBeat(){if(mode!=='play')return;const tk=TRACKS[gameConfig.music];if(!tk)return; // 'off' = silence
   const dur=60/tk.bpm,i=musicBeat%16;chirp(tk.mel[i],dur*.75,tk.lead,0.055,true);chirp(tk.line[i],dur*.9,tk.bass,0.07,true);if(i%2===0)chirp(tk.mel[i]*1.5,dur*.4,'sine',0.025,true);musicBeat++;musicTimer=setTimeout(scheduleBeat,dur*1000);}
 function chirp(freq,dur,type,vol,isMusic){if(!audioCtx)return;if(isMusic?musicMuted:sfxMuted)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;const t=audioCtx.currentTime;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+dur+0.01);}catch(e){}}
+function playSfx(name){switch(name){case 'coin':chirp(880,0.08,'square',0.07);chirp(1320,0.08,'square',0.05);break;case 'jump':chirp(523,0.07,'square',0.05);break;case 'zap':chirp(140,0.16,'sawtooth',0.06);break;case 'power':chirp(660,0.1,'square',0.06);chirp(990,0.1,'square',0.05);break;case 'win':[523,659,784,1047].forEach((f,i)=>setTimeout(()=>chirp(f,0.12,'square',0.06),i*90));break;default:chirp(660,0.08,'square',0.05);}}
 
 // ═══════════════════════════════════════════════════════════════════════
 // PHYSICS
@@ -2730,16 +2847,20 @@ function isRight(){return !!keys[KC[gameConfig.moveRight]];}
 function isJump() {return !!keys[KC[gameConfig.jump]];}
 function isUp()   {return keys['ArrowUp']||keys['KeyW'];}
 function isDown() {return keys['ArrowDown']||keys['KeyS'];}
-function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];return t===T.PLATFORM||t===T.GRASS;}
+function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=0;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(0);runStartScripts();}
+function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+let _testFromLevel=null;
+function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();}
 function nextLevel(){playLevel++;if(playLevel>=LEVELS.length){winNow('🎉 You Win!');return;}chirp(660,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Page '+(playLevel+1)+' of '+LEVELS.length+'! 🚪','#10b981');}
 function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e');return;}playLevel--;chirp(440,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Back to page '+(playLevel+1)+'! 🚪','#10b981');}
 // Resume after a game over: restart the CURRENT page (not the whole game), keeping score & keys.
 function resumeFromDeath(){lives=gameConfig.lives;playing=true;hideOv();loadPlayLevel(playLevel);if(!musicMuted)startMusic();}
 function checkCheckpoint(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.CHECKPOINT){if(!checkpoint||checkpoint.level!==playLevel||checkpoint.c!==cc||checkpoint.r!==cr){checkpoint={level:playLevel,c:cc,r:cr};chirp(880,0.08,'square',0.05);toast('Checkpoint reached! ⛳','#10b981');}}}
+function updateCrumble(){for(const k in crumbleState){if(crumbleT[k]>0){crumbleT[k]--;continue;}if(crumbleState[k]==='shaking'){crumbleState[k]='gone';crumbleT[k]=150;chirp(170,0.18,'sawtooth',0.05);}else{delete crumbleState[k];delete crumbleT[k];}}}
+function checkSign(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.SIGN){const k=cr+','+cc,cfg=signCfg[k];const txt=cfg&&cfg.text?cfg.text:'';if(txt&&(!signShownT[k]||tick-signShownT[k]>150)){signShownT[k]=tick;toast('🪧 '+txt,'#caa472');}}}
 let doorHintT=0;
 function checkDoor(){if(!player)return;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.DOOR){const gx=c*TS,gy=r*TS;if(player.x<gx+TS&&player.x+PW>gx&&player.y<gy+TS&&player.y+PH>gy){
     const cfg=doorCfg[r+','+c]||{key:'none',dir:'next'};
@@ -2786,16 +2907,27 @@ function updatePlayer(){
   const p=player;if(p.inv>0)p.inv--;p.standingMover=null;
   const spd=pSpd(),midC=Math.floor((p.x+PW/2)/TS),topR=Math.floor(p.y/TS),midR=Math.floor((p.y+PH/2)/TS);
   const onLad=tileAt(midC,topR)===T.LADDER||tileAt(midC,midR)===T.LADDER;
+  p.dropThru=isDown()&&!onLad; // hold Down to drop through one-way platforms
   if(isLeft()){p.vx=-spd;p.facingRight=false;}else if(isRight()){p.vx=spd;p.facingRight=true;}else p.vx*=0.65;
   if(onLad){if(isUp()){p.vy=-3;p.onLadder=true;}else if(isDown()){p.vy=3;p.onLadder=true;}else if(p.onLadder)p.vy=0;if(p.onLadder)p.x=midC*TS+(TS-PW)/2;}else p.onLadder=false;
-  if(isJump()&&p.onGround&&!onLad){p.vy=jumpForce();p.onGround=false;chirp(523,0.07,'square',0.045);}
+  if(p.onGround)p.jumps=0;
+  const jp=isJump();
+  if(jp&&!p.jumpPrev&&!onLad){
+    if(p.onGround){p.vy=jumpForce();p.onGround=false;p.jumps=1;chirp(523,0.07,'square',0.045);}
+    else if(gameConfig.doubleJump&&(p.jumps||0)<2){p.vy=jumpForce()*0.9;p.jumps=2;chirp(659,0.07,'square',0.045);}
+  }
+  p.jumpPrev=jp;
   if(!p.onLadder)p.vy=Math.min(p.vy+grav(),18);
   p.x+=p.vx;resolveX(p);p.y+=p.vy;resolveY(p);
   if(p.standingMover){const mx=p.standingMover.vx;p.x+=mx;const snap=p.x;resolveX(p);if(Math.abs(p.x-snap)>0.1){p.onGround=false;p.standingMover=null;p.vx=-mx*1.5;}}
+  // Conveyor belts: nudge the player while standing on one
+  if(p.onGround){const fr=Math.floor((p.y+PH+1)/TS),fc1=Math.floor((p.x+4)/TS),fc2=Math.floor((p.x+PW-4)/TS);const bt=tileAt(fc1,fr)!==T.EMPTY?tileAt(fc1,fr):tileAt(fc2,fr);if(bt===T.CONVEYOR_L){p.x-=2.2;resolveX(p);}else if(bt===T.CONVEYOR_R){p.x+=2.2;resolveX(p);}}
+  // Crumbling platforms: start them shaking when stood on
+  if(p.onGround){const fr=Math.floor((p.y+PH+1)/TS);[Math.floor((p.x+4)/TS),Math.floor((p.x+PW-4)/TS)].forEach(fc=>{if(tileAt(fc,fr)===T.CRUMBLE){const k=fr+','+fc;if(!crumbleState[k]){crumbleState[k]='shaking';crumbleT[k]=28;}}});}
   if(p.x<0)p.x=0;if(p.x+PW>COLS*TS)p.x=COLS*TS-PW;if(p.y>CH+80)killPlayer();
 }
 function resolveX(p){const tr=Math.floor(p.y/TS),br=Math.floor((p.y+PH-1)/TS);if(p.vx>0){const rc=Math.floor((p.x+PW)/TS);if(isSolid(rc,tr)||isSolid(rc,br)){p.x=rc*TS-PW;p.vx=0;}}else if(p.vx<0){const lc=Math.floor(p.x/TS);if(isSolid(lc,tr)||isSolid(lc,br)){p.x=(lc+1)*TS;p.vx=0;}}}
-function resolveY(p){const lc=Math.floor((p.x+2)/TS),rc=Math.floor((p.x+PW-3)/TS);p.onGround=false;if(p.vy>0){const br=Math.floor((p.y+PH)/TS);if(isSolid(lc,br)||isSolid(rc,br)){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(tileAt(lc,br)===T.BOUNCE||tileAt(rc,br)===T.BOUNCE){p.y=br*TS-PH;p.vy=bounceForce();chirp(880,0.05,'square',0.08);}else{for(const m of movers){const prev=p.y+PH-p.vy;if(p.x+PW-4>m.x&&p.x+4<m.x+m.w&&prev<=m.y+2&&p.y+PH>=m.y){p.y=m.y-PH;p.vy=0;p.onGround=true;p.standingMover=m;break;}}}}else if(p.vy<0){const tr=Math.floor(p.y/TS);if(isSolid(lc,tr)||isSolid(rc,tr)){p.y=(tr+1)*TS;p.vy=0;}}}
+function resolveY(p){const lc=Math.floor((p.x+2)/TS),rc=Math.floor((p.x+PW-3)/TS);p.onGround=false;if(p.vy>0){const br=Math.floor((p.y+PH)/TS);const prevBottom=p.y+PH-p.vy;const onewayLand=(tileAt(lc,br)===T.ONEWAY||tileAt(rc,br)===T.ONEWAY)&&!p.dropThru&&prevBottom<=br*TS+2;if(isSolid(lc,br)||isSolid(rc,br)){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(onewayLand){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(tileAt(lc,br)===T.BOUNCE||tileAt(rc,br)===T.BOUNCE){p.y=br*TS-PH;p.vy=bounceForce();chirp(880,0.05,'square',0.08);}else{for(const m of movers){const prev=p.y+PH-p.vy;if(p.x+PW-4>m.x&&p.x+4<m.x+m.w&&prev<=m.y+2&&p.y+PH>=m.y){p.y=m.y-PH;p.vy=0;p.onGround=true;p.standingMover=m;break;}}}}else if(p.vy<0){const tr=Math.floor(p.y/TS);if(isSolid(lc,tr)||isSolid(rc,tr)){p.y=(tr+1)*TS;p.vy=0;}}}
 function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;
   if(e.mode==='box'){
     if(e.vx&&e.maxX>e.minX){e.x+=e.vx;if(e.x<=e.minX){e.x=e.minX;e.vx=Math.abs(e.vx);}else if(e.x>=e.maxX){e.x=e.maxX;e.vx=-Math.abs(e.vx);}}
@@ -2807,9 +2939,9 @@ function updateMovers(){movers.forEach(m=>{if(!m.vx||m.maxX<=m.minX)return;m.x+=
 function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;
     if(it.type===T.KEY){playerKeys[it.color]=true;chirp(1318,0.1,'square',0.06);toast((KEY_NAMES[it.color]||'')+' key! 🔑',KEY_COLORS[it.color]||'#fdd835');return;}
     if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);if(it.type===T.GEM)cjRunHats('when_collect_gem');}});}
-function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{if(tileAt(c,r)===T.SPIKE)killPlayer();}));if(player.inv>0)return;for(const e of enemies)if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){killPlayer();cjRunHats('when_touch_enemy');break;}}
+function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{const tt=tileAt(c,r);if(tt===T.SPIKE||tt===T.LAVA)killPlayer();}));if(player.inv>0)return;for(const e of enemies)if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){killPlayer();cjRunHats('when_touch_enemy');break;}}
 let goalHintT=0;
-function winNow(title){playing=false;stopMusic();document.getElementById('final-score').textContent=score;const w=document.getElementById('ov-win');const h=w.querySelector('h2');if(h&&title)h.textContent=title;w.classList.remove('hide');spawnConfetti();endGamePromo();}
+function winNow(title){playing=false;stopMusic();document.getElementById('final-score').textContent=score;const w=document.getElementById('ov-win');const h=w.querySelector('h2');if(h&&title)h.textContent=title;const pp=w.querySelector('p');if(pp&&gameConfig.winMessage)pp.innerHTML=gameConfig.winMessage.replace(/</g,'&lt;')+'<br>Score: <strong id="final-score">'+score+'</strong>';w.classList.remove('hide');spawnConfetti();endGamePromo();}
 // ── Promo popup: every now and then after a game ends, advertise PCL / Clubs ──
 const PROMOS=[
   {logo:'pcl-mark',title:'Primary Coding League',msg:'Loving CodeJump? Come and represent your school in Primary Coding League! The award-winning global coding competition for primary-aged children!',btn:'Visit Primary Coding League →',url:'https://www.primarycodingleague.co.uk'},
@@ -2854,7 +2986,7 @@ function updateCam(){if(!player)return;const t=player.x-CW/2+PW/2;camX+=(t-camX)
 // so this is a 1:1 background image.
 const bgLayer=document.createElement('canvas');bgLayer.width=CW;bgLayer.height=CH;
 const bgCtx=bgLayer.getContext('2d');
-const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START]);
+const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START,T.ONEWAY,T.TREE,T.FLOWER,T.BUSH,T.SIGN]);
 let dynTiles=[]; // animated/collectible tiles drawn each frame (gem, star, bounce, goal)
 function renderStaticLayer(){
   bgCtx.clearRect(0,0,CW,CH);
@@ -2864,14 +2996,14 @@ function renderStaticLayer(){
   ctx=old;
   // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
   dynTiles=[];
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT)dynTiles.push({c,r,tid});}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE)dynTiles.push({c,r,tid});}
 }
 function drawPlay(){
   const t=th();
   ctx.drawImage(bgLayer,-camX,0); // sky + static tiles, pre-rendered
   for(const cell of dynTiles){const{c,r,tid}=cell;
     if(tid===T.GEM||tid===T.STAR||tid===T.KEY){const it=items.find(i=>i.c===c&&i.r===r);if(it&&it.got){if(it.pop>0&&tid!==T.KEY)drawPop(c,r,it.pop,tid);continue;}}
-    const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:null;drawTile(tid,px,r*TS,meta);}
+    const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:tid===T.CRUMBLE?{state:crumbleState[r+','+c]}:null;drawTile(tid,px,r*TS,meta);}
   movers.forEach(m=>{const px=m.x-camX;if(px+m.w<0||px>CW)return;const t2=th();ctx.save();ctx.fillStyle=t2.mover;ctx.fillRect(px,m.y,m.w,m.h);ctx.fillStyle=t2.moverHi;ctx.fillRect(px,m.y,m.w,7);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(px,m.y+m.h-5,m.w,5);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(px+1,m.y+1,m.w-2,m.h-2);ctx.fillStyle='rgba(255,255,255,'+(.5+.5*Math.sin(tick*.08))+')';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(m.vx>0?'▶':'◀',px+m.w/2,m.y+m.h/2+5);ctx.restore();});
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   if(player&&(!player.dead||tick%6<3))drawPlayer();
@@ -2917,7 +3049,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
-  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
+  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
   drawPlay();
 }
 
@@ -2960,21 +3092,16 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.09';
+const CJ_VERSION='2026.06.10';
 const CJ_WHATSNEW=[
-  '➡️ Custom moving platforms — tap a moving block to set exactly how many tiles it travels left and right.',
-  '👾 Custom enemy movement — tap an enemy to set how far it patrols left, right, up and down.',
-  '🪣 Fill tools — fill a whole row of ground in one click, and fill the Design canvas with any colour.',
-  '🔊 Music & sound — separate toggles in Play mode to turn music and sound effects on or off.',
-  '↪️ Redo — a Redo button to go with Undo.',
-  '📑 Pages — duplicate a page, and reorder pages with the ▲▼ buttons.',
-  '🔑 Keys & locked doors — tap a Door to pick which colour key it needs and whether it goes to the next or previous page. Tap a Key to choose its colour, and design each key colour in the Design Studio.',
-  '⛳ Checkpoints — drop a checkpoint flag so players respawn there instead of the start.',
-  '💾 Never lose work — your game auto-saves as a draft you can resume, with a warning before you leave.',
-  '👋 New here? A quick tutorial now guides first-time game makers.',
-  '🧩 Code blocks now snap together properly — any value or maths block fits inside logic blocks.',
-  '⏳ New “wait” block — pause your code for a few seconds before the next step.',
-  '👩‍🏫 Teacher Hub — two new Year 2 lessons on event coding and functions.',
+  '⏬ One-way platforms — jump up through them and land on top (hold Down to drop through).',
+  '🔥 Lava — a new hazard to dodge, alongside spikes.',
+  '⏪⏩ Conveyor belts & 🧱 crumbling platforms — belts carry you along, crumbles fall away when you stand on them.',
+  '🪧 Signs — pop up your own message when the player walks past. Great for clues and stories!',
+  '🌳🌸 Decorations — trees, flowers and bushes to make your levels look beautiful.',
+  '🦘 Double jump, 🔊 a “play sound” block, and a 🏆 custom win message — all in the Code section.',
+  '▶️ “This Page” button — test just the page you’re working on.',
+  '🧒 Key Stage 1 made simpler — one Enemy and easier Win options (with full block coding kept).',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

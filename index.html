@@ -615,6 +615,57 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .tut-btn:hover{background:#c99a4a;}
 .tut-skip{margin-top:10px;background:transparent;border:none;color:var(--white);opacity:.5;font-family:var(--font);font-size:13px;cursor:pointer;text-decoration:underline;}
 .tut-skip:hover{opacity:.8;}
+/* User Guide / Help */
+#help-modal{position:fixed;inset:0;z-index:1580;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;}
+#help-modal.hide{display:none;}
+.help-box{position:relative;background:var(--dark);border:1px solid var(--gold);border-radius:12px;padding:22px 24px;max-width:720px;width:100%;max-height:92vh;display:flex;flex-direction:column;}
+.help-box h2{color:var(--gold);font-family:var(--display);font-size:24px;text-align:center;margin-bottom:14px;}
+#help-close{position:absolute;top:12px;right:14px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:19px;cursor:pointer;}
+#help-close:hover{background:var(--gold);color:#000;}
+.help-tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;}
+.help-tab{background:var(--black);border:1px solid var(--gray);color:#fff;border-radius:20px;padding:7px 14px;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;transition:all .12s;}
+.help-tab:hover{border-color:var(--gold);}
+.help-tab.active{background:var(--gold);color:#000;border-color:var(--gold);}
+.help-content{overflow-y:auto;color:var(--white);font-family:var(--font);font-size:14px;line-height:1.6;padding-right:6px;}
+.help-content h3{color:var(--gold);font-size:16px;margin:14px 0 6px;}
+.help-content p{margin-bottom:8px;}
+.help-content ul{margin:0 0 10px 18px;}.help-content li{margin-bottom:5px;}
+.help-content b{color:#fff;}
+.help-ref{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.help-ref .hr-ic{font-size:24px;line-height:1;flex:0 0 28px;text-align:center;}
+.help-ref .hr-tx b{color:var(--gold);}
+.help-grouphead{color:var(--gold);font-weight:800;font-size:12px;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 4px;}
+/* Guided coach panel */
+#coach{position:fixed;right:14px;bottom:14px;z-index:48;width:260px;max-width:calc(100vw - 28px);}
+#coach.hide{display:none;}
+.coach-inner{background:var(--dark);border:2px solid var(--gold);border-radius:12px;padding:12px 14px;box-shadow:0 8px 26px rgba(0,0,0,.5);}
+.coach-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.coach-badge{font-family:var(--font);font-weight:800;font-size:11px;letter-spacing:.5px;color:var(--gold);text-transform:uppercase;}
+#coach-exit{border:none;background:transparent;color:#fff;opacity:.6;font-size:15px;cursor:pointer;}#coach-exit:hover{opacity:1;}
+.coach-step{font-family:var(--font);color:#fff;font-size:14px;line-height:1.45;margin-bottom:10px;}
+.coach-step b{color:var(--gold);}
+.coach-row{display:flex;align-items:center;justify-content:space-between;}
+.coach-dots{font-size:11px;letter-spacing:3px;color:var(--gold);}
+.coach-skip{border:1px solid var(--gray);background:var(--black);color:#fff;border-radius:14px;font-family:var(--font);font-size:12px;font-weight:700;padding:5px 12px;cursor:pointer;}
+.coach-skip:hover{border-color:var(--gold);}
+.coach-hl{outline:3px solid var(--gold)!important;outline-offset:1px;border-radius:4px;animation:coachpulse 1s ease-in-out infinite;}
+@keyframes coachpulse{0%,100%{box-shadow:0 0 0 0 rgba(174,133,62,.6);}50%{box-shadow:0 0 0 6px rgba(174,133,62,0);}}
+.help-launch{display:block;width:100%;margin-top:6px;background:var(--gold);color:#000;border:none;border-radius:8px;font-family:var(--font);font-weight:800;font-size:14px;padding:11px;cursor:pointer;}
+.help-launch:hover{background:#c99a4a;}
+/* Teacher Guide screen */
+.th-guide-body{overflow-y:auto;}
+.tg-doc{max-width:760px;margin:0 auto;line-height:1.6;font-family:var(--font);color:var(--white);}
+.tg-doc h3{color:var(--gold);font-size:18px;margin:18px 0 6px;border-bottom:1px solid rgba(255,255,255,.14);padding-bottom:4px;}
+.tg-doc h4{font-size:12px;text-transform:uppercase;letter-spacing:.6px;opacity:.65;margin:12px 0 4px;}
+.tg-doc p{margin:0 0 8px;}.tg-doc ul{margin:0 0 10px 18px;}.tg-doc li{margin-bottom:4px;}
+.tg-doc .tg-ref{display:flex;gap:8px;align-items:flex-start;padding:3px 0;}
+.tg-doc .tg-ref .i{font-size:18px;flex:0 0 24px;text-align:center;}
+.tg-doc b{color:#fff;}
+@media print{#print-area .tg-doc{color:#000;max-width:none;}#print-area .tg-doc h3{color:#000;}#print-area .tg-doc h4{opacity:1;color:#333;}#print-area .tg-doc b{color:#000;}}
+/* Tooltips */
+#tip{position:fixed;z-index:1700;max-width:230px;background:#1a1a1a;color:#fff;border:1px solid var(--gold);border-radius:8px;padding:8px 11px;font-family:var(--font);font-size:12px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.5);pointer-events:none;}
+#tip.hide{display:none;}
+#tip b{color:var(--gold);}
 /* Resume-draft pill (home screen) */
 #resume-pill{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:520;background:var(--gold);color:#000;border:none;border-radius:24px;font-family:var(--font);font-weight:800;font-size:14px;letter-spacing:.4px;padding:11px 22px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45);}
 #resume-pill:hover{background:#c99a4a;}
@@ -772,6 +823,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
         <button class="th-chip th-year" data-year="2" onclick="thSetYear(2)">Year 2</button>
       </span>
       <span class="spacer"></span>
+      <button class="th-chip" onclick="openTeacherGuide()">📖 Teacher Guide</button>
       <button class="th-chip" onclick="printPack()">🖨 Print pack</button>
       <button class="th-chip gold" onclick="hideTeacher()">← Back to CodeJump</button>
     </div>
@@ -813,6 +865,13 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
       <div class="th-ld" id="th-ldLeft"></div>
       <div id="th-ldSheet"></div>
     </div></div>
+  </div>
+  <!-- TEACHER GUIDE -->
+  <div class="th-screen" id="t-guide">
+    <div class="th-bar"><span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Teacher Guide</span><span class="spacer"></span>
+      <button class="th-chip" onclick="printGuide()">🖨 Print</button>
+      <button class="th-back" onclick="thGo('t-hub')">← Back to Hub</button></div>
+    <div class="th-wrap"><div class="th-panel th-guide-body" id="th-guide-body"></div></div>
   </div>
 </div>
 
@@ -891,6 +950,14 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
   </div>
 </div>
 
+<div id="coach" class="hide">
+  <div class="coach-inner">
+    <div class="coach-top"><span class="coach-badge">🎓 Guide</span><button id="coach-exit" title="Exit">✕</button></div>
+    <div class="coach-step" id="coach-step"></div>
+    <div class="coach-row"><span class="coach-dots" id="coach-dots"></span><button class="coach-skip" id="coach-skip">Skip →</button></div>
+  </div>
+</div>
+
 <div id="tutorial" class="hide">
   <div class="tut-box">
     <div class="tut-emoji" id="tut-emoji">🎮</div>
@@ -902,6 +969,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
   </div>
 </div>
 
+<div id="tip" class="hide"></div>
 <button id="resume-pill" class="hide">↩️ Resume your last game</button>
 <div id="rotate-hint">↻ Turn your phone sideways for more room</div>
 
@@ -949,6 +1017,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <button class="tbtn" id="t-mute">🔊</button>
     <button class="tbtn" id="t-hand" title="Switch controls to left/right hand">🤚 Hand</button>
     <button class="mode-btn" id="btn-design">🎨 Design</button>
+    <button class="mode-btn" id="btn-help">❓ Help</button>
   </div>
 
   <div id="main">
@@ -1010,6 +1079,15 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 </div>
 
 <!-- ══ DESIGNER ═══════════════════════════════════════════════════════════ -->
+<div id="help-modal" class="hide">
+  <div class="help-box">
+    <button id="help-close" title="Close" aria-label="Close">✕</button>
+    <h2>📖 CodeJump Guide</h2>
+    <div class="help-tabs" id="help-tabs"></div>
+    <div class="help-content" id="help-content"></div>
+  </div>
+</div>
+
 <div id="design-modal" class="hide">
   <div id="design-box">
     <button id="d-close" title="Close without saving" aria-label="Close">✕</button>
@@ -1107,6 +1185,52 @@ const TILES=[
   {id:T.START,icon:'🚩',label:'Start',g:'marker'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint',g:'marker'},{id:T.DOOR,icon:'🚪',label:'Door',g:'marker'},{id:T.SIGN,icon:'🪧',label:'Sign',g:'marker'},{id:T.GOAL,icon:'🏁',label:'Finish',g:'marker'},
   {id:T.TREE,icon:'🌳',label:'Tree',g:'decor'},{id:T.FLOWER,icon:'🌸',label:'Flower',g:'decor'},{id:T.BUSH,icon:'🌿',label:'Bush',g:'decor'},
 ];
+// Shared plain-English descriptions — used by tooltips, the User Guide and the Teacher's Guide.
+const TILE_DESC={
+  [T.PLATFORM]:'A solid block. Stand and walk on it.',
+  [T.GRASS]:'A grassy platform — solid, with grass on top.',
+  [T.ONEWAY]:'Jump UP through it from below, then stand on top. You can never fall back down through it.',
+  [T.CRUMBLE]:'Stand on it and it shakes, then falls away! It comes back after a moment.',
+  [T.CONVEYOR_L]:'A belt that carries the player to the LEFT while they stand on it.',
+  [T.CONVEYOR_R]:'A belt that carries the player to the RIGHT while they stand on it.',
+  [T.MOVER]:'A moving platform. Tap it to set how many tiles it travels left and right.',
+  [T.BOUNCE]:'A bouncy mushroom — land on it to bounce up high!',
+  [T.LADDER]:'Climb up and down with the Up/Down keys.',
+  [T.CLOUD]:'A fluffy cloud for decoration (you pass right through it).',
+  [T.SPIKE]:'Spikes! Touching them costs a life.',
+  [T.LAVA]:'Hot lava! Touching it costs a life.',
+  [T.ENEMY]:'An enemy that moves around — touching it costs a life. Tap it to set how far it patrols (left/right/up/down).',
+  [T.ENEMY2]:'A second kind of enemy. Tap it to set its movement.',
+  [T.WATER_TOP]:'The surface of water — place it along the top of a pool.',
+  [T.WATER]:'Water you can swim through. Press Jump to swim up, and jump out onto a ledge. In KS2, watch your air bubbles — run out and you lose a life!',
+  [T.GEM]:'A gem to collect for points.',
+  [T.STAR]:'A star worth lots of points.',
+  [T.KEY]:'A coloured key. Collect it to open locked doors of the same colour. Tap it to choose its colour.',
+  [T.START]:'Where the player begins. Every game needs a Start.',
+  [T.CHECKPOINT]:'A checkpoint flag. Reach it and you respawn here instead of the start.',
+  [T.DOOR]:'A door to another page. Tap it to choose which key it needs (if any) and whether it goes to the next or previous page.',
+  [T.SIGN]:'A sign with your own message. The player presses Up (or taps the sign) to read it. Tap it to write the message.',
+  [T.GOAL]:'The Finish! Reach it to win the whole game.',
+  [T.TREE]:'A big tree to decorate your level.',
+  [T.FLOWER]:'A pretty flower for decoration.',
+  [T.BUSH]:'A leafy bush for decoration.',
+};
+// Toolbar / mode buttons explained (keyed by element id).
+const TOOL_DESC={
+  'btn-build':'BUILD — design your level by placing blocks on the grid.',
+  'btn-play':'PLAY — test your game! Press it any time to try what you’ve made.',
+  'btn-code':'CODE — snap together blocks to set the rules: controls, physics, enemies, how to win, and more.',
+  't-paint':'Paint — click the grid to place the selected block.',
+  't-fill':'Fill Row — click a row to fill it all with the selected block (great for floors).',
+  't-erase':'Erase — click blocks to remove them.',
+  't-undo':'Undo your last change.','t-redo':'Redo a change you undid.',
+  't-clear':'Clear this whole page.','t-testpage':'Test just the page you’re building.',
+  't-save':'Save your game so you can come back to it later.',
+  't-share':'Share — copy a link, download a playable file, or save a level file.',
+  'theme-sel':'Theme — change the look of this page (Forest, Space, Underwater).',
+  't-mute':'Turn the music on or off.','t-hand':'Switch the on-screen controls to left or right hand.',
+  'btn-design':'DESIGN — draw your own pictures for the player, blocks, keys and background.',
+};
 const THEMES={
   forest:{sky:['#87ceeb','#b8dff0'],ground:'#7B4F2E',grass:'#4caf50',grassHi:'#81c784',gem:'#00bcd4',gemHi:'#80deea',star:'#FFD700',spike:'#78909c',cloud:'#fff',ladder:'#a0522d',ladderRung:'#cd853f',enemy:'#e53935',enemyDark:'#b71c1c',enemy2:'#8e24aa',enemy2Dark:'#4a148c',startCol:'#00c853',mover:'#4a90d9',moverHi:'#74b3f0',bounce:'#e53935',grid:'rgba(0,0,0,0.07)'},
   space:{sky:['#0d0d2b','#1a1a4e'],ground:'#546e7a',grass:'#7c4dff',grassHi:'#9c27b0',gem:'#00e5ff',gemHi:'#80d8ff',star:'#ffea00',spike:'#b0bec5',cloud:'#3949ab',ladder:'#6d4c41',ladderRung:'#8d6e63',enemy:'#ff4081',enemyDark:'#c51162',enemy2:'#00bcd4',enemy2Dark:'#00838f',startCol:'#69f0ae',mover:'#7b61ff',moverHi:'#a78bfa',bounce:'#ff4081',grid:'rgba(255,255,255,0.04)'},
@@ -1502,7 +1626,7 @@ const TH_UNITS={
 };
 let thYear=1, thCurrent=null;
 function thLessons(){return TH_UNITS[thYear].lessons;}
-function showTeacher(){document.getElementById('teacher').classList.remove('hide');thGo('t-hub');thRenderHub();}
+function showTeacher(){document.getElementById('teacher').classList.remove('hide');const rp=document.getElementById('resume-pill');if(rp)rp.classList.add('hide');thGo('t-hub');thRenderHub();}
 function hideTeacher(){document.getElementById('teacher').classList.add('hide');}
 function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
 function thSetYear(y){thYear=y;thRenderHub();}
@@ -2264,6 +2388,87 @@ function drawTile(id,px,py,meta){
 function star5(c,cx,cy,R,r,col){c.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rd=i%2===0?R:r;i===0?c.moveTo(cx+Math.cos(a)*rd,cy+Math.sin(a)*rd):c.lineTo(cx+Math.cos(a)*rd,cy+Math.sin(a)*rd);}c.closePath();c.fillStyle=col;c.fill();c.strokeStyle='#000';c.lineWidth=2;c.stroke();}
 
 // ═══════════════════════════════════════════════════════════════════════
+// TOOLTIPS
+// ═══════════════════════════════════════════════════════════════════════
+let _tipLong=null;
+function showTip(el,html){const tip=document.getElementById('tip');tip.innerHTML=html;tip.classList.remove('hide');const r=el.getBoundingClientRect(),tr=tip.getBoundingClientRect();let x=r.right+8,y=r.top;if(x+tr.width>window.innerWidth-8)x=r.left-tr.width-8;if(x<4)x=4;if(y+tr.height>window.innerHeight-8)y=window.innerHeight-tr.height-8;if(y<4)y=4;tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){const t=document.getElementById('tip');if(t)t.classList.add('hide');}
+function attachTip(el,html){if(!el)return;el.addEventListener('mouseenter',()=>showTip(el,html));el.addEventListener('mouseleave',hideTip);el.addEventListener('touchstart',()=>{clearTimeout(_tipLong);_tipLong=setTimeout(()=>showTip(el,html),450);},{passive:true});el.addEventListener('touchend',()=>{clearTimeout(_tipLong);setTimeout(hideTip,1600);});}
+Object.keys(TOOL_DESC).forEach(id=>{const el=document.getElementById(id);if(el){el.removeAttribute('title');attachTip(el,TOOL_DESC[id]);}});
+
+// ═══════════════════════════════════════════════════════════════════════
+// USER GUIDE (Help)
+// ═══════════════════════════════════════════════════════════════════════
+function tileReferenceHTML(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<div class="help-grouphead">'+name+'</div>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="help-ref"><span class="hr-ic">'+t.icon+'</span><span class="hr-tx"><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
+const HELP_TABS=[
+ ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button>`],
+ ['build','🧱 Building',`<p>In <b>Build</b> mode, pick a tool at the top:</p><ul><li><b>🖌️ Paint</b> — place the selected block.</li><li><b>🪣 Fill Row</b> — fill a whole row (great for floors).</li><li><b>🧹 Erase</b> — remove blocks (peels the item first, then any water behind it).</li><li><b>↩️ Undo / ↪️ Redo</b>, <b>🗑️ Clear</b> the page, and <b>▶️ This Page</b> to test one page.</li></ul><p>Some blocks have extra settings — just <b>tap them after placing</b>: moving platforms, enemies, doors, keys and signs.</p><p>Use the <b>pages</b> strip to add, duplicate (⧉), reorder (▲▼) and delete pages for a multi-level adventure.</p><h3>Every block, explained</h3>`+tileReferenceHTML()],
+ ['design','🎨 Designing',`<p>Open <b>🎨 Design</b> to draw your own 16×16 pictures for the player, enemies, blocks, keys and more.</p><ul><li>Pick a tab to choose what to draw.</li><li>It shows the <b>current design</b> — tweak it, <b>🗑️ Clear</b> to make something blank/invisible, or <b>↺ Reset</b> for the default.</li><li>Use <b>🪣 Fill all</b> to fill the canvas, and the eraser to rub out.</li><li>The <b>Background</b> tab lets you pick sky colours or paint your own sky.</li></ul>`],
+ ['code','🧩 Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b>🟡 Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b>🔵 Player</b> — movement and speed.</li><li><b>🟣 Enemies</b> — how enemies move.</li><li><b>🟢 Physics</b> — gravity, jump height, bounce, double jump.</li><li><b>🏁 Win</b> — how to win, plus a custom win message.</li><li><b>🔴 Rules</b> — lives and points.</li><li><b>🎵 Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b>🗑️ Clear code</b> removes everything.</p><p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
+ ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game in “My Levels”. Your work also <b>auto-saves</b> as a draft.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to open later.</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen for lessons, worksheets, starter levels and the full guide.</p>`],
+];
+let helpTab='start';
+function openHelp(){buildHelpTabs();selHelpTab('start');document.getElementById('help-modal').classList.remove('hide');}
+function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';HELP_TABS.forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
+function selHelpTab(k){helpTab=k;document.querySelectorAll('.help-tab').forEach((b,i)=>b.classList.toggle('active',HELP_TABS[i][0]===k));const tab=HELP_TABS.find(t=>t[0]===k);const el=document.getElementById('help-content');el.innerHTML=tab?tab[2]:'';el.scrollTop=0;}
+document.getElementById('btn-help').onclick=openHelp;
+document.getElementById('help-close').onclick=()=>document.getElementById('help-modal').classList.add('hide');
+
+// ═══════════════════════════════════════════════════════════════════════
+// TEACHER GUIDE
+// ═══════════════════════════════════════════════════════════════════════
+function guideTileRef(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<h4>'+name+'</h4>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="tg-ref"><span class="i">'+t.icon+'</span><span><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
+function teacherGuideHTML(){return `<div class="tg-doc">
+  <h3>What is CodeJump?</h3>
+  <p>CodeJump is a browser-based game maker for primary children. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
+  <h3>The four modes</h3>
+  <ul><li><b>🏗️ Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶️ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b>🎨 Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
+  <h3>Key Stage 1 vs Key Stage 2</h3>
+  <p>Pupils choose a key stage when starting a new game — it sets which blocks they see:</p>
+  <ul><li><b>Key Stage 1</b> — the simple game blocks only (controls, physics, enemies, win, sound). One generic Enemy, no keys, and a simpler Win choice. Great for sequencing and cause-and-effect.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li></ul>
+  <h3>Running a lesson</h3>
+  <ul><li>Use the <b>Lesson library</b> and <b>Challenge of the day</b> on the hub — each has a worksheet and a starter level.</li><li><b>Project</b> a challenge full-screen with the ⛶ Expand button and the built-in timer.</li><li>Collect pupils' games via <b>“Open a pupil's level”</b> (.codejump or .html files).</li><li>Suggested flow: <i>predict → place a few blocks → play → improve</i>.</li></ul>
+  <h3>Every block &amp; tile</h3>
+  `+guideTileRef()+`
+  <h3>Coding blocks (Key Stage 2)</h3>
+  <p>Events fire scripts (game start, collect a gem, touch an enemy, land on a page, every N seconds). Actions change score/lives, show a message, play a sound, go to a page, win, or end the game. These combine with standard Logic, Loops, Maths, Variables and Functions. A friendly limit stops runaway loops, so nothing freezes.</p>
+  <h3>Saving, sharing &amp; safety</h3>
+  <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
+  <h3>Troubleshooting</h3>
+  <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>Can't press Play?</b> Add a Finish 🏁 — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
+  <h3>Curriculum links</h3>
+  <p>Sequence, selection, repetition, variables and decomposition (functions); design, write and debug programs; use logical reasoning to predict behaviour. KS1 focuses on algorithms, predicting, and debugging simple programs.</p>
+</div>`;}
+function openTeacherGuide(){document.getElementById('th-guide-body').innerHTML=teacherGuideHTML();thGo('t-guide');}
+function printGuide(){doPrint(teacherGuideHTML());}
+
+// ═══════════════════════════════════════════════════════════════════════
+// GUIDED MISSIONS — a coach that checks your progress and advances itself
+// ═══════════════════════════════════════════════════════════════════════
+function _palItem(label){return [...document.querySelectorAll('#palette .pal-item')].find(e=>{const s=e.querySelector('span:last-child');return s&&s.textContent.trim().toLowerCase().startsWith(label.toLowerCase());});}
+function _gridHas(id){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===id)return true;return false;}
+function _floorMade(){let n=0;for(let c=0;c<COLS;c++)if(grid[ROWS-1][c]===T.GRASS||grid[ROWS-1][c]===T.PLATFORM)n++;return n>=6;}
+const MISSIONS={
+ first:{title:'Make your first game',steps:[
+  {text:'Pick the <b>Grass Top 🌿</b> block on the left, then click along the bottom to make a floor.',hl:()=>_palItem('Grass'),check:_floorMade},
+  {text:'Now pick <b>Start 🚩</b> and click the grid — that’s where the player begins.',hl:()=>_palItem('Start'),check:()=>_gridHas(T.START)},
+  {text:'Pick <b>Finish 🏁</b> and place it somewhere to the right.',hl:()=>_palItem('Finish'),check:()=>_gridHas(T.GOAL)},
+  {text:'Add something fun — a <b>Gem 💎</b>, a <b>Spike 🌵</b> or an <b>Enemy 👾</b>.',hl:()=>_palItem('Gem'),check:()=>_gridHas(T.GEM)||_gridHas(T.STAR)||_gridHas(T.SPIKE)||_gridHas(T.ENEMY)||_gridHas(T.ENEMY2)},
+  {text:'Press <b>▶️ Play</b> at the top to test your game!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
+  {text:'🎉 You made a game! Keep exploring — add more pages, draw your own pictures in 🎨 Design, or set rules in &lt;/&gt; Code.',final:true,check:()=>false},
+ ]},
+};
+let missionId=null,missionStep=0,_missionTimer=null;
+function startMission(id){const m=MISSIONS[id];if(!m)return;document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
+function _clearHL(){document.querySelectorAll('.coach-hl').forEach(e=>e.classList.remove('coach-hl'));}
+function renderCoach(){const m=MISSIONS[missionId];if(!m)return;const st=m.steps[missionStep];document.getElementById('coach-step').innerHTML=st.text;document.getElementById('coach-dots').textContent=m.steps.map((_,i)=>i<missionStep?'·':i===missionStep?'●':'○').join('');document.getElementById('coach-skip').style.display=st.final?'none':'';_clearHL();if(st.hl){try{const el=st.hl();if(el)el.classList.add('coach-hl');}catch(e){}}}
+function advanceMission(){const m=MISSIONS[missionId];if(!m)return;if(missionStep<m.steps.length-1){missionStep++;chirp(880,0.08,'square',0.05);renderCoach();}else endMission();}
+function missionTick(){const m=MISSIONS[missionId];if(!m){endMission();return;}const st=m.steps[missionStep];if(st.final)return;try{if(st.check())advanceMission();}catch(e){}}
+function endMission(){clearInterval(_missionTimer);_missionTimer=null;_clearHL();missionId=null;const c=document.getElementById('coach');if(c)c.classList.add('hide');}
+document.getElementById('coach-exit').onclick=endMission;
+document.getElementById('coach-skip').onclick=()=>advanceMission();
+
+// ═══════════════════════════════════════════════════════════════════════
 // BUILD
 // ═══════════════════════════════════════════════════════════════════════
 function drawBuild(){
@@ -2297,7 +2502,7 @@ function drawBuild(){
 function buildPalette(){
   const pal=document.getElementById('palette');pal.innerHTML='';
   const vis=TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2)));
-  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};return d;};
+  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};attachTip(d,'<b>'+label+'</b>'+(TILE_DESC[ti.id]?'<br>'+TILE_DESC[ti.id]:''));return d;};
   if(keyStage==='ks2'){
     TILE_GROUPS.forEach(([g,name])=>{const items=vis.filter(ti=>ti.g===g);if(!items.length)return;const h=document.createElement('div');h.className='pal-group';h.textContent=name;pal.appendChild(h);items.forEach(ti=>pal.appendChild(mkItem(ti)));});
   }else{
@@ -3164,16 +3369,12 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.12';
+const CJ_VERSION='2026.06.13';
 const CJ_WHATSNEW=[
-  '💧 Water you can swim through! In KS2 keep an eye on your air bubbles — run out and you lose a life.',
-  '🐠 Place gems, stars, signs and enemies ON the water so divers can collect and use them underwater.',
-  '🏊 Press jump in water to leap out onto a ledge.',
-  '⏬🔥 One-way platforms & lava, ⏪⏩ conveyor belts, 🧱 crumbling platforms — more ways to build a challenge.',
-  '🪧 Signs — write a message; players press ⬆️ or tap the sign to read it.',
-  '🌳🌸 Bigger trees, flowers and bushes to decorate your world.',
-  '🧰 Tidy palette grouped into Blocks, Hazards, Water, Pickups… (KS2).',
-  '🦘 Double jump, 🔊 “play sound” block, 🏆 custom win message, and a ▶️ “This Page” test button.',
+  '🎓 Guided builds — open ❓ Help → “Try a guided build” and CodeJump walks you through making a game, step by step.',
+  '📖 A new in-app Guide — tap ❓ Help to learn what every block, tool and button does.',
+  '💡 Tooltips — hover or long-press any block or button for a quick explanation.',
+  '👩‍🏫 Teachers: a full Teacher Guide is now in the Teacher Hub (with a Print button).',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

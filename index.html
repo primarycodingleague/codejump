@@ -315,6 +315,8 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .pal-item:hover{border-color:var(--gold);}
 .pal-item.sel{background:var(--gold);color:var(--black);border-color:var(--gold);}
 .pal-icon{font-size:20px;line-height:1;}
+.pal-group{font-family:var(--font);font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);opacity:.85;padding:7px 2px 2px;margin-top:2px;border-top:1px solid var(--gray);text-align:center;}
+.pal-group:first-child{border-top:none;margin-top:0;}
 
 /* ── PAGES (multi-level) RAIL ───────────────────────────────────────── */
 #pages{background:#2b2b2b;width:104px;min-width:104px;padding:8px 6px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;border-right:1px solid var(--gray);}
@@ -1088,20 +1090,22 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 // ═══════════════════════════════════════════════════════════════════════
 const COLS=20,ROWS=12,TS=48,CW=960,CH=576;
 const GRID_PX=16,PPX=3;
-const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25};
+const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25,WATER_TOP:26,WATER:27};
 const KEY_COLORS={red:'#e53935',blue:'#4a90d9',green:'#43a047',yellow:'#fdd835'};
 const KEY_NAMES={red:'Red',blue:'Blue',green:'Green',yellow:'Yellow'};
+const TILE_GROUPS=[['build','🧱 Blocks'],['hazard','⚠️ Hazards'],['water','💧 Water'],['item','💎 Pickups'],['marker','🚩 Markers'],['decor','🌳 Decorations']];
 const TILES=[
-  {id:T.PLATFORM,icon:'🟫',label:'Platform'},{id:T.GRASS,icon:'🌿',label:'Grass Top'},
-  {id:T.ONEWAY,icon:'⏬',label:'One-Way'},{id:T.CRUMBLE,icon:'🧱',label:'Crumble'},
-  {id:T.CONVEYOR_L,icon:'⏪',label:'Belt ◀'},{id:T.CONVEYOR_R,icon:'⏩',label:'Belt ▶'},
-  {id:T.GEM,icon:'💎',label:'Gem'},{id:T.STAR,icon:'⭐',label:'Star'},
-  {id:T.SPIKE,icon:'🌵',label:'Spike'},{id:T.LAVA,icon:'🔥',label:'Lava'},{id:T.BOUNCE,icon:'🍄',label:'Bounce!'},
-  {id:T.MOVER,icon:'➡️',label:'Moving'},{id:T.ENEMY,icon:'👾',label:'Enemy A'},
-  {id:T.ENEMY2,icon:'🐛',label:'Enemy B'},
-  {id:T.START,icon:'🚩',label:'Start'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint'},{id:T.DOOR,icon:'🚪',label:'Door'},{id:T.KEY,icon:'🔑',label:'Key'},{id:T.GOAL,icon:'🏁',label:'Finish'},
-  {id:T.CLOUD,icon:'☁️',label:'Cloud'},{id:T.LADDER,icon:'🪜',label:'Ladder'},{id:T.SIGN,icon:'🪧',label:'Sign'},
-  {id:T.TREE,icon:'🌳',label:'Tree'},{id:T.FLOWER,icon:'🌸',label:'Flower'},{id:T.BUSH,icon:'🌿',label:'Bush'},
+  {id:T.PLATFORM,icon:'🟫',label:'Platform',g:'build'},{id:T.GRASS,icon:'🌿',label:'Grass Top',g:'build'},
+  {id:T.ONEWAY,icon:'⏬',label:'One-Way',g:'build'},{id:T.CRUMBLE,icon:'🧱',label:'Crumble',g:'build'},
+  {id:T.CONVEYOR_L,icon:'⏪',label:'Belt ◀',g:'build'},{id:T.CONVEYOR_R,icon:'⏩',label:'Belt ▶',g:'build'},
+  {id:T.MOVER,icon:'➡️',label:'Moving',g:'build'},{id:T.BOUNCE,icon:'🍄',label:'Bounce!',g:'build'},
+  {id:T.LADDER,icon:'🪜',label:'Ladder',g:'build'},{id:T.CLOUD,icon:'☁️',label:'Cloud',g:'build'},
+  {id:T.SPIKE,icon:'🌵',label:'Spike',g:'hazard'},{id:T.LAVA,icon:'🔥',label:'Lava',g:'hazard'},
+  {id:T.ENEMY,icon:'👾',label:'Enemy A',g:'hazard'},{id:T.ENEMY2,icon:'🐛',label:'Enemy B',g:'hazard'},
+  {id:T.WATER_TOP,icon:'🌊',label:'Water Top',g:'water'},{id:T.WATER,icon:'💧',label:'Water',g:'water'},
+  {id:T.GEM,icon:'💎',label:'Gem',g:'item'},{id:T.STAR,icon:'⭐',label:'Star',g:'item'},{id:T.KEY,icon:'🔑',label:'Key',g:'item'},
+  {id:T.START,icon:'🚩',label:'Start',g:'marker'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint',g:'marker'},{id:T.DOOR,icon:'🚪',label:'Door',g:'marker'},{id:T.SIGN,icon:'🪧',label:'Sign',g:'marker'},{id:T.GOAL,icon:'🏁',label:'Finish',g:'marker'},
+  {id:T.TREE,icon:'🌳',label:'Tree',g:'decor'},{id:T.FLOWER,icon:'🌸',label:'Flower',g:'decor'},{id:T.BUSH,icon:'🌿',label:'Bush',g:'decor'},
 ];
 const THEMES={
   forest:{sky:['#87ceeb','#b8dff0'],ground:'#7B4F2E',grass:'#4caf50',grassHi:'#81c784',gem:'#00bcd4',gemHi:'#80deea',star:'#FFD700',spike:'#78909c',cloud:'#fff',ladder:'#a0522d',ladderRung:'#cd853f',enemy:'#e53935',enemyDark:'#b71c1c',enemy2:'#8e24aa',enemy2Dark:'#4a148c',startCol:'#00c853',mover:'#4a90d9',moverHi:'#74b3f0',bounce:'#e53935',grid:'rgba(0,0,0,0.07)'},
@@ -1214,6 +1218,7 @@ let checkpoint=null; // {level,c,r} last checkpoint reached on the current page
 let crumbleState={}; // "r,c" -> 'shaking'|'gone' for crumbling platforms
 let crumbleT={};     // "r,c" -> frames remaining in current state
 let signShownT={};   // throttle for sign messages
+let air=600,airCount=6,airBubbles=[];const AIR_MAX=600; // KS2 underwater air meter
 let score=0,lives=3,camX=0,playing=false;
 let gameTimer=0,gemsTotal=0,gemsGot=0;
 let musicMuted=false, sfxMuted=false;
@@ -1256,7 +1261,7 @@ function drawMiniThumb(canvas,g,th_name){
   grd.addColorStop(0,t.sky[0]);grd.addColorStop(1,t.sky[1]);
   ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
   const cw=W/COLS,ch=H/ROWS;
-  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63'};
+  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63',[T.WATER_TOP]:'#2a8cdc',[T.WATER]:'#2a8cdc'};
   g.forEach((row,r)=>row.forEach((cell,c)=>{if(cell&&clr[cell]){ctx.fillStyle=clr[cell];ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}}));
 }
 
@@ -2205,9 +2210,16 @@ function drawTile(id,px,py,meta){
       c.fillStyle='#b71c1c';c.fillRect(px,py+6,TS,TS-6);c.fillStyle='#ff5722';c.fillRect(px,py+6,TS,8);
       c.fillStyle='#ffca28';for(let i=0;i<3;i++){const bx=px+10+i*15,by=py+18+Math.sin(goalA*1.5+i*2)*4;c.beginPath();c.arc(bx,by,3,0,Math.PI*2);c.fill();}
       c.fillStyle='#ff8a65';c.fillRect(px,py+4+Math.sin(goalA*2)*2,TS,3);break;}
-    case T.TREE:
+    case T.TREE:{
+      // A big tree: trunk in the placed cell, leafy canopy 3 wide × 2 tall above it.
       if(drawCustomSprite('tree',px,py))break;
-      c.fillStyle='#6d4c2f';c.fillRect(px+TS/2-4,py+24,8,TS-24);c.fillStyle='#3d8b40';c.beginPath();c.arc(px+TS/2,py+18,15,0,Math.PI*2);c.arc(px+TS/2-10,py+24,11,0,Math.PI*2);c.arc(px+TS/2+10,py+24,11,0,Math.PI*2);c.fill();c.fillStyle='#4caf50';c.beginPath();c.arc(px+TS/2-4,py+16,9,0,Math.PI*2);c.fill();break;
+      const cx=px+TS/2;
+      c.fillStyle='#6d4c2f';c.fillRect(cx-6,py+10,12,TS-10);c.strokeStyle='#4e3420';c.lineWidth=1.5;c.strokeRect(cx-6,py+10,12,TS-10);
+      c.fillStyle='#2f7d32';c.beginPath();
+      [[0,-TS*0.5,TS*0.95],[-TS,-TS*0.15,TS*0.7],[TS,-TS*0.15,TS*0.7],[0,-TS*1.35,TS*0.72],[-TS*0.55,-TS*0.95,TS*0.6],[TS*0.55,-TS*0.95,TS*0.6]].forEach(([dx,dy,r])=>{c.moveTo(cx+dx+r,py+dy);c.arc(cx+dx,py+dy,r,0,Math.PI*2);});
+      c.fill();
+      c.fillStyle='#4caf50';[[ -TS*0.4,-TS*0.7,TS*0.4],[TS*0.45,-TS*0.5,TS*0.35],[0,-TS*1.1,TS*0.32]].forEach(([dx,dy,r])=>{c.beginPath();c.arc(cx+dx,py+dy,r,0,Math.PI*2);c.fill();});
+      break;}
     case T.FLOWER:
       if(drawCustomSprite('flower',px,py))break;
       c.strokeStyle='#43a047';c.lineWidth=3;c.beginPath();c.moveTo(px+TS/2,py+TS);c.lineTo(px+TS/2,py+24);c.stroke();c.fillStyle='#ec407a';for(let i=0;i<5;i++){const a=goalA*0+i*Math.PI*2/5;c.beginPath();c.arc(px+TS/2+Math.cos(a)*8,py+18+Math.sin(a)*8,5,0,Math.PI*2);c.fill();}c.fillStyle='#ffd54f';c.beginPath();c.arc(px+TS/2,py+18,4,0,Math.PI*2);c.fill();break;
@@ -2222,9 +2234,19 @@ function drawTile(id,px,py,meta){
     case T.CONVEYOR_L:
     case T.CONVEYOR_R:{
       const dir=id===T.CONVEYOR_R?1:-1;
-      c.fillStyle='#555';c.fillRect(px,py+8,TS,TS-16);c.fillStyle='#333';c.fillRect(px,py+8,TS,4);c.fillRect(px,py+TS-12,TS,4);
-      c.fillStyle='#888';const off=(tick*2*dir)%16;for(let i=-1;i<TS/16+1;i++){const ax=px+((i*16+off)+16)%(TS+16)-8;c.beginPath();c.moveTo(ax,py+TS/2-4);c.lineTo(ax+6,py+TS/2);c.lineTo(ax,py+TS/2+4);c.closePath();c.fill();}
-      c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+1,py+9,TS-2,TS-18);break;}
+      // Solid platform body...
+      c.fillStyle=t.ground;c.fillRect(px,py,TS,TS);c.fillStyle='rgba(0,0,0,.22)';c.fillRect(px,py+TS-6,TS,6);
+      // ...with a moving belt strip across the top
+      c.fillStyle='#3a3a3a';c.fillRect(px,py,TS,12);
+      c.fillStyle='#9a9a9a';const off=(tick*2*dir)%16;for(let i=-1;i<TS/16+1;i++){const ax=px+((i*16+off)+16)%(TS+16)-8;c.beginPath();c.moveTo(ax,py+3);c.lineTo(ax+6,py+6);c.lineTo(ax,py+9);c.closePath();c.fill();}
+      c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+1,py+1,TS-2,TS-2);c.beginPath();c.moveTo(px,py+12);c.lineTo(px+TS,py+12);c.stroke();break;}
+    case T.WATER_TOP:{
+      c.fillStyle='rgba(40,140,220,.45)';c.fillRect(px,py+5,TS,TS-5);
+      c.strokeStyle='rgba(255,255,255,.65)';c.lineWidth=2;c.beginPath();for(let x=0;x<=TS;x+=4){const yy=py+5+Math.sin((px+x+tick*2)*0.22)*3;if(x===0)c.moveTo(px+x,yy);else c.lineTo(px+x,yy);}c.stroke();
+      c.fillStyle='rgba(255,255,255,.25)';c.fillRect(px,py+8,TS,3);break;}
+    case T.WATER:
+      c.fillStyle='rgba(40,140,220,.42)';c.fillRect(px,py,TS,TS);
+      c.fillStyle='rgba(255,255,255,.12)';c.beginPath();c.arc(px+12+((tick+px)%20),py+30-((tick*0.5)%30),2,0,Math.PI*2);c.arc(px+34,py+20-((tick*0.4+px)%40),1.5,0,Math.PI*2);c.fill();break;
     case T.CRUMBLE:{
       const st=(meta&&meta.state)||'solid';const sh=st==='shaking'?Math.sin(tick*1.2)*2:0;
       c.save();c.translate(sh,0);
@@ -2270,7 +2292,13 @@ function drawBuild(){
 
 function buildPalette(){
   const pal=document.getElementById('palette');pal.innerHTML='';
-  TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2))).forEach(ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};pal.appendChild(d);});
+  const vis=TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2)));
+  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};return d;};
+  if(keyStage==='ks2'){
+    TILE_GROUPS.forEach(([g,name])=>{const items=vis.filter(ti=>ti.g===g);if(!items.length)return;const h=document.createElement('div');h.className='pal-group';h.textContent=name;pal.appendChild(h);items.forEach(ti=>pal.appendChild(mkItem(ti)));});
+  }else{
+    vis.forEach(ti=>pal.appendChild(mkItem(ti)));
+  }
 }
 buildPalette();
 function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
@@ -2350,6 +2378,8 @@ canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(mode!=='build')r
 canvas.addEventListener('touchstart',e=>{if(mode!=='build')return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);if(tool==='paint'&&tryTravelEdit(col,row))return;pushHistory();painting=true;lastCell='';buildApply(col,row,tool==='erase');if(tool==='paint'&&isTravelTile(selTile)&&col>=0&&col<COLS&&row>=0&&row<ROWS&&grid[row][col]===selTile){painting=false;openEditorFor(row,col);}},{passive:false});
 canvas.addEventListener('touchmove',e=>{if(mode!=='build'||!painting)return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);buildApply(col,row,tool==='erase');},{passive:false});
 canvas.addEventListener('touchend',()=>{const was=painting;painting=false;lastCell='';if(was&&mode==='build'){commitLevel();renderPagesStrip();markDirty();}});
+// In Play mode, tap a sign to read it
+canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellFromEvent(e);if(tileAt(col,row)===T.SIGN){const cfg=signCfg[row+','+col];if(cfg&&cfg.text)toast('🪧 '+cfg.text,'#caa472');}});
 
 // ═══════════════════════════════════════════════════════════════════════
 // MODE SWITCH
@@ -2850,7 +2880,7 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
 let _testFromLevel=null;
 function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
 function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();}
@@ -2860,7 +2890,30 @@ function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e')
 function resumeFromDeath(){lives=gameConfig.lives;playing=true;hideOv();loadPlayLevel(playLevel);if(!musicMuted)startMusic();}
 function checkCheckpoint(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.CHECKPOINT){if(!checkpoint||checkpoint.level!==playLevel||checkpoint.c!==cc||checkpoint.r!==cr){checkpoint={level:playLevel,c:cc,r:cr};chirp(880,0.08,'square',0.05);toast('Checkpoint reached! ⛳','#10b981');}}}
 function updateCrumble(){for(const k in crumbleState){if(crumbleT[k]>0){crumbleT[k]--;continue;}if(crumbleState[k]==='shaking'){crumbleState[k]='gone';crumbleT[k]=150;chirp(170,0.18,'sawtooth',0.05);}else{delete crumbleState[k];delete crumbleT[k];}}}
-function checkSign(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.SIGN){const k=cr+','+cc,cfg=signCfg[k];const txt=cfg&&cfg.text?cfg.text:'';if(txt&&(!signShownT[k]||tick-signShownT[k]>150)){signShownT[k]=tick;toast('🪧 '+txt,'#caa472');}}}
+let signNear=null,upPrev=false; // sign the player is standing in front of
+function readSign(){if(signNear&&signNear.text){toast('🪧 '+signNear.text,'#caa472');chirp(660,0.06,'sine',0.04);}}
+function checkSign(){signNear=null;if(!player)return;
+  const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);
+  if(tileAt(cc,cr)===T.SIGN){const cfg=signCfg[cr+','+cc];const txt=cfg&&cfg.text?cfg.text:'';if(txt)signNear={c:cc,r:cr,text:txt};}
+  const up=isUp();if(signNear&&up&&!upPrev)readSign();upPrev=up;}
+// KS2 underwater air: deplete while head is in deep water, reset on surfacing, drown loses a life.
+function checkAir(){
+  if(keyStage!=='ks2'||!player){return;}
+  for(const b of airBubbles){b.y+=b.vy;b.a-=0.012;}airBubbles=airBubbles.filter(b=>b.a>0);
+  if(player.dead)return;
+  const hc=Math.floor((player.x+PW/2)/TS),hr=Math.floor((player.y+6)/TS);
+  if(tileAt(hc,hr)===T.WATER){
+    air=Math.max(0,air-1);const shown=Math.ceil(air/AIR_MAX*6);
+    if(shown<airCount){airCount=shown;airBubbles.push({x:player.x+PW/2-camX+(Math.random()*10-5),y:player.y+4,vy:-1-Math.random(),r:2+Math.random()*2,a:1});chirp(700+Math.random()*200,0.05,'sine',0.03);}
+    if(air<=0){air=AIR_MAX;airCount=6;toast('Out of air! 🫧','#4a90d9');killPlayer();}
+  }else{air=AIR_MAX;airCount=6;}
+}
+function drawAir(){
+  if(keyStage!=='ks2'||!player)return;ctx.save();
+  ctx.fillStyle='rgba(255,255,255,.75)';for(const b of airBubbles){ctx.globalAlpha=Math.max(0,b.a);ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+  if(air<AIR_MAX){const cx=player.x+PW/2-camX,top=player.y-24;for(let i=0;i<6;i++){ctx.beginPath();ctx.arc(cx-15+i*6,top,2.6,0,Math.PI*2);ctx.fillStyle=i<airCount?'rgba(120,200,255,.95)':'rgba(255,255,255,.16)';ctx.fill();ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=0.8;ctx.stroke();}}
+  ctx.restore();
+}
 let doorHintT=0;
 function checkDoor(){if(!player)return;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.DOOR){const gx=c*TS,gy=r*TS;if(player.x<gx+TS&&player.x+PW>gx&&player.y<gy+TS&&player.y+PH>gy){
     const cfg=doorCfg[r+','+c]||{key:'none',dir:'next'};
@@ -2917,7 +2970,10 @@ function updatePlayer(){
     else if(gameConfig.doubleJump&&(p.jumps||0)<2){p.vy=jumpForce()*0.9;p.jumps=2;chirp(659,0.07,'square',0.045);}
   }
   p.jumpPrev=jp;
-  if(!p.onLadder)p.vy=Math.min(p.vy+grav(),18);
+  const wt=tileAt(midC,midR);const inWater=(wt===T.WATER||wt===T.WATER_TOP);
+  if(p.onLadder){}
+  else if(inWater){if(isJump()||isUp())p.vy-=0.55;p.vy=Math.max(-3.2,Math.min(3.2,p.vy+0.18));p.vx*=0.9;}
+  else p.vy=Math.min(p.vy+grav(),18);
   p.x+=p.vx;resolveX(p);p.y+=p.vy;resolveY(p);
   if(p.standingMover){const mx=p.standingMover.vx;p.x+=mx;const snap=p.x;resolveX(p);if(Math.abs(p.x-snap)>0.1){p.onGround=false;p.standingMover=null;p.vx=-mx*1.5;}}
   // Conveyor belts: nudge the player while standing on one
@@ -2986,7 +3042,7 @@ function updateCam(){if(!player)return;const t=player.x-CW/2+PW/2;camX+=(t-camX)
 // so this is a 1:1 background image.
 const bgLayer=document.createElement('canvas');bgLayer.width=CW;bgLayer.height=CH;
 const bgCtx=bgLayer.getContext('2d');
-const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START,T.ONEWAY,T.TREE,T.FLOWER,T.BUSH,T.SIGN]);
+const STATIC_TILES=new Set([T.PLATFORM,T.GRASS,T.SPIKE,T.LADDER,T.CLOUD,T.START,T.ONEWAY,T.TREE,T.FLOWER,T.BUSH,T.SIGN,T.WATER]);
 let dynTiles=[]; // animated/collectible tiles drawn each frame (gem, star, bounce, goal)
 function renderStaticLayer(){
   bgCtx.clearRect(0,0,CW,CH);
@@ -2996,7 +3052,7 @@ function renderStaticLayer(){
   ctx=old;
   // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
   dynTiles=[];
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE)dynTiles.push({c,r,tid});}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE||tid===T.WATER_TOP)dynTiles.push({c,r,tid});}
 }
 function drawPlay(){
   const t=th();
@@ -3007,6 +3063,9 @@ function drawPlay(){
   movers.forEach(m=>{const px=m.x-camX;if(px+m.w<0||px>CW)return;const t2=th();ctx.save();ctx.fillStyle=t2.mover;ctx.fillRect(px,m.y,m.w,m.h);ctx.fillStyle=t2.moverHi;ctx.fillRect(px,m.y,m.w,7);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(px,m.y+m.h-5,m.w,5);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(px+1,m.y+1,m.w-2,m.h-2);ctx.fillStyle='rgba(255,255,255,'+(.5+.5*Math.sin(tick*.08))+')';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(m.vx>0?'▶':'◀',px+m.w/2,m.y+m.h/2+5);ctx.restore();});
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   if(player&&(!player.dead||tick%6<3))drawPlayer();
+  // "Press ⬆️ to read" prompt above a sign the player is in front of
+  if(signNear){const bx=signNear.c*TS-camX+TS/2,by=signNear.r*TS-10;ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText('⬆️ Read').width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText('⬆️ Read',bx,by-3);ctx.restore();}
+  drawAir();
   drawConfetti();drawHUD();
 }
 function drawPop(c,r,pop,type){const x=c*TS-camX+TS/2,y=r*TS+(1-pop)*28;ctx.save();ctx.globalAlpha=pop;ctx.font='bold 18px Nunito';ctx.fillStyle=type===T.STAR?'#FFD700':'#00bcd4';ctx.textAlign='center';ctx.shadowColor='#000';ctx.shadowBlur=4;ctx.fillText(type===T.STAR?'+'+gameConfig.starPoints:'+'+gameConfig.gemPoints,x,y);ctx.restore();}
@@ -3049,7 +3108,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
-  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
+  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
   drawPlay();
 }
 
@@ -3092,16 +3151,15 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.10';
+const CJ_VERSION='2026.06.11';
 const CJ_WHATSNEW=[
-  '⏬ One-way platforms — jump up through them and land on top (hold Down to drop through).',
-  '🔥 Lava — a new hazard to dodge, alongside spikes.',
-  '⏪⏩ Conveyor belts & 🧱 crumbling platforms — belts carry you along, crumbles fall away when you stand on them.',
-  '🪧 Signs — pop up your own message when the player walks past. Great for clues and stories!',
-  '🌳🌸 Decorations — trees, flowers and bushes to make your levels look beautiful.',
-  '🦘 Double jump, 🔊 a “play sound” block, and a 🏆 custom win message — all in the Code section.',
-  '▶️ “This Page” button — test just the page you’re working on.',
-  '🧒 Key Stage 1 made simpler — one Enemy and easier Win options (with full block coding kept).',
+  '💧 Water! — add a Water Top and Water blocks and swim through them. In KS2 watch your air bubbles — run out and you lose a life!',
+  '⏬🔥 One-way platforms & lava, ⏪⏩ conveyor belts, 🧱 crumbling platforms — new ways to build a challenge.',
+  '🪧 Signs — write a message; players press ⬆️ (or tap the sign) to read it.',
+  '🌳🌸 Bigger trees, flowers and bushes to decorate your world.',
+  '🧰 Tidy palette — blocks are now grouped (Blocks, Hazards, Water, Pickups…) in KS2.',
+  '🦘 Double jump, 🔊 “play sound” block, 🏆 custom win message, and a ▶️ “This Page” test button.',
+  '🧒 Key Stage 1 made simpler — one Enemy and easier Win options (full block coding kept).',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

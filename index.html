@@ -631,10 +631,19 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .help-content p{margin-bottom:8px;}
 .help-content ul{margin:0 0 10px 18px;}.help-content li{margin-bottom:5px;}
 .help-content b{color:#fff;}
+.help-content code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:12px;background:rgba(255,255,255,.08);color:#9ad1ff;padding:1px 5px;border-radius:4px;}
 .help-ref{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07);}
 .help-ref .hr-ic{font-size:24px;line-height:1;flex:0 0 28px;text-align:center;}
 .help-ref .hr-tx b{color:var(--gold);}
 .help-grouphead{color:var(--gold);font-weight:800;font-size:12px;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 4px;}
+/* KS3 Python text editor */
+#ks3-editor{position:absolute;inset:0;display:flex;flex-direction:column;background:#1b1f27;}
+#ks3-editor.hide{display:none;}
+.ks3-wrap{flex:1;display:flex;overflow:hidden;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:14px;line-height:1.5;}
+.ks3-gutter{flex:0 0 auto;min-width:34px;padding:10px 6px 10px 8px;text-align:right;color:#5b6472;background:#161a21;user-select:none;white-space:pre;overflow:hidden;border-right:1px solid #2a3140;}
+#ks3-code{flex:1;resize:none;border:none;outline:none;padding:10px 12px;background:#1b1f27;color:#e6edf3;font:inherit;line-height:1.5;white-space:pre;overflow:auto;tab-size:4;}
+.ks3-status{flex:0 0 auto;padding:7px 12px;font-family:var(--font);font-size:13px;font-weight:700;background:#11151b;color:#6bcb77;border-top:1px solid #2a3140;}
+.ks3-status.err{color:#ff8585;}
 /* Chest editor */
 .ch-types{display:flex;gap:8px;justify-content:center;}
 .ch-type{flex:1;background:var(--black);border:2px solid var(--gray);color:#fff;border-radius:10px;padding:12px 6px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;}
@@ -671,6 +680,8 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .tg-doc .tg-ref{display:flex;gap:8px;align-items:flex-start;padding:3px 0;}
 .tg-doc .tg-ref .i{font-size:18px;flex:0 0 24px;text-align:center;}
 .tg-doc b{color:#fff;}
+.tg-doc code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:12px;background:rgba(255,255,255,.08);color:#9ad1ff;padding:1px 5px;border-radius:4px;}
+@media print{#print-area .tg-doc code{background:#eee;color:#000;}}
 @media print{#print-area .tg-doc{color:#000;max-width:none;}#print-area .tg-doc h3{color:#000;}#print-area .tg-doc h4{opacity:1;color:#333;}#print-area .tg-doc b{color:#000;}}
 /* Tooltips */
 #tip{position:fixed;z-index:1700;max-width:230px;background:#1a1a1a;color:#fff;border:1px solid var(--gold);border-radius:8px;padding:8px 11px;font-family:var(--font);font-size:12px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.5);pointer-events:none;}
@@ -1042,6 +1053,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <div class="ks-opts">
       <button class="ks-opt" data-ks="ks1"><span class="ks-emoji">🧒</span><b>Key Stage 1</b><small>Ages 5–7<br>Simple game blocks</small></button>
       <button class="ks-opt" data-ks="ks2"><span class="ks-emoji">🧑‍💻</span><b>Key Stage 2</b><small>Ages 7–11<br>Full coding blocks</small></button>
+      <button class="ks-opt" data-ks="ks3"><span class="ks-emoji">👩‍🔬</span><b>Key Stage 3</b><small>Ages 11–14<br>Write Python-style code</small></button>
     </div>
     <button class="ks-cancel" id="ks-cancel">Cancel</button>
   </div>
@@ -1089,9 +1101,16 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
       <canvas id="gc"></canvas>
       <div id="code-panel">
         <div id="blockly-div"></div>
+        <div id="ks3-editor" class="hide">
+          <div class="ks3-wrap">
+            <div class="ks3-gutter" id="ks3-gutter">1</div>
+            <textarea id="ks3-code" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
+          </div>
+          <div class="ks3-status" id="ks3-status">✓ Ready</div>
+        </div>
         <div class="cp-run-bar">
           <button class="cp-run" id="cp-run">▶️ Test it — switch to Play!</button>
-          <button class="cp-clear" id="cp-clear" title="Remove all code blocks">🗑️ Clear code</button>
+          <button class="cp-clear" id="cp-clear" title="Clear the code">🗑️ Clear code</button>
         </div>
       </div>
       <button id="play-mute" title="Music on / off" aria-label="Toggle music">🎵</button>
@@ -1276,7 +1295,7 @@ const TILE_DESC={
   [T.CHEST]:'A treasure chest! Fill it with gems, stars or a key. The player presses Up (or taps it) to open it. Tap it to choose what’s inside — in Key Stage 2 you can also lock it so a matching key is needed first.',
   [T.TELEPORT]:'A teleport pad (Key Stage 2). Place two pads of the same colour — step on one to zap instantly to the other. Tap it to choose its colour.',
   [T.BUTTON]:'A button / pressure plate (Key Stage 2). Step on it to open every gate of the same colour. Tap it to choose its colour.',
-  [T.GATE]:'A gate (Key Stage 2). It blocks the whole passage (right up to the ceiling, so it can’t be jumped over) until a button of the same colour is pressed. Tap it to choose its colour and how long it stays open.',
+  [T.GATE]:'A gate (Key Stage 2). A solid block that opens when a button of the same colour is pressed. Stack several to build a taller wall. Tap it to choose its colour and how long it stays open.',
   [T.GOAL]:'The Finish! Reach it to win the whole game.',
   [T.TREE]:'A big tree to decorate your level.',
   [T.FLOWER]:'A pretty flower for decoration.',
@@ -1402,8 +1421,10 @@ const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
 // Marker the self-contained export injects so a baked file knows its level.
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
-let keyStage='ks2'; // 'ks1' = simple game blocks only · 'ks2' = full coding blocks + interpreter
-function setKeyStage(ks){keyStage=(ks==='ks1')?'ks1':'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
+let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
+function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
+function isKS3(){return keyStage==='ks3';}
+function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}if(typeof updateCodeModeUI==='function')updateCodeModeUI();}
 let gameConfig={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'normal',
   enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',enemyAChase:false,enemyBChase:false,stomp:false,
   lives:3,gemPoints:10,starPoints:50,
@@ -1439,15 +1460,15 @@ function saveCurrentLevel(){
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
   const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{}),chestCfg:JSON.parse(JSON.stringify(L.chestCfg||{})),teleCfg:JSON.parse(JSON.stringify(L.teleCfg||{})),buttonCfg:JSON.parse(JSON.stringify(L.buttonCfg||{})),gateCfg:JSON.parse(JSON.stringify(L.gateCfg||{}))}));
   const saves=getSaves();
-  saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
+  saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,ks3Code,customSprites});
   setSaves(saves.slice(0,12));clearDirty();
   toast(levels.length>1?('Game saved ('+levels.length+' pages)! 💾'):'Game saved! 💾','#10b981');
 }
 
 function loadSaveData(save){clearDirty();
   applyPayload((save.version>=2||Array.isArray(save.levels))
-    ?{keyStage:save.keyStage,levels:save.levels,blocklyXml:save.blocklyXml,customSprites:save.customSprites}
-    :{keyStage:save.keyStage,grid:save.grid,theme:save.theme,customBg:save.customBg,blocklyXml:save.blocklyXml,customSprites:save.customSprites});
+    ?{keyStage:save.keyStage,levels:save.levels,blocklyXml:save.blocklyXml,ks3Code:save.ks3Code,customSprites:save.customSprites}
+    :{keyStage:save.keyStage,grid:save.grid,theme:save.theme,customBg:save.customBg,blocklyXml:save.blocklyXml,ks3Code:save.ks3Code,customSprites:save.customSprites});
   const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;
   readBlocklyConfig();
 }
@@ -1545,6 +1566,7 @@ document.getElementById('ks-cancel').onclick=()=>document.getElementById('ks-mod
 document.querySelectorAll('.ks-opt').forEach(b=>b.onclick=()=>startNewProject(b.dataset.ks));
 function startNewProject(ks){clearDirty();
   setKeyStage(ks);
+  ks3Code=(ks==='ks3')?KS3_DEFAULT:'';
   grid=mkGrid();waterGrid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};
   customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
   resetSingleLevel();
@@ -2197,6 +2219,199 @@ function readBlocklyConfig(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// CJPy — a tiny, SAFE Python-style interpreter for Key Stage 3 text code.
+// Tokenizer (indentation-aware) → recursive-descent parser → capped evaluator.
+// No eval / no DOM: code can only call the game API functions passed to run().
+// ═══════════════════════════════════════════════════════════════════════
+const CJPy=(function(){
+  function PyErr(msg,line){const e=new Error(msg);e.cjMsg=msg;e.cjLine=line||0;return e;}
+  const KW=new Set(['if','elif','else','while','for','in','def','return','True','False','None','and','or','not','break','continue','range']);
+  function tokenize(src){
+    const lines=String(src).replace(/\r\n?/g,'\n').split('\n');const toks=[];const indents=[0];
+    for(let ln=0;ln<lines.length;ln++){
+      const line=lines[ln];let i=0;while(i<line.length&&(line[i]===' '||line[i]==='\t'))i++;
+      const content=line.slice(i);
+      if(content===''||content[0]==='#')continue; // blank / comment-only line
+      const indent=i;
+      if(indent>indents[indents.length-1]){indents.push(indent);toks.push({t:'INDENT',ln:ln+1});}
+      while(indent<indents[indents.length-1]){indents.pop();toks.push({t:'DEDENT',ln:ln+1});}
+      let j=0;const L=content;
+      while(j<L.length){
+        const ch=L[j];
+        if(ch===' '||ch==='\t'){j++;continue;}
+        if(ch==='#')break;
+        if(/[0-9]/.test(ch)||(ch==='.'&&/[0-9]/.test(L[j+1]||''))){let s=j;while(j<L.length&&/[0-9.]/.test(L[j]))j++;toks.push({t:'NUM',v:parseFloat(L.slice(s,j)),ln:ln+1});continue;}
+        if(/[A-Za-z_]/.test(ch)){let s=j;while(j<L.length&&/[A-Za-z0-9_]/.test(L[j]))j++;const w=L.slice(s,j);toks.push({t:KW.has(w)?'KW':'NAME',v:w,ln:ln+1});continue;}
+        if(ch==='"'||ch==="'"){const q=ch;j++;let str='';while(j<L.length&&L[j]!==q){if(L[j]==='\\'&&j+1<L.length){j++;str+=({n:'\n',t:'\t'}[L[j]]||L[j]);}else str+=L[j];j++;}if(L[j]!==q)throw PyErr('A piece of text is missing its closing quote',ln+1);j++;toks.push({t:'STR',v:str,ln:ln+1});continue;}
+        const two=L.substr(j,2);
+        if(['==','!=','<=','>=','//','**'].includes(two)){toks.push({t:'OP',v:two,ln:ln+1});j+=2;continue;}
+        if('+-*/%()[],:.<>='.includes(ch)){toks.push({t:'OP',v:ch,ln:ln+1});j++;continue;}
+        throw PyErr('I do not understand the symbol "'+ch+'"',ln+1);
+      }
+      toks.push({t:'NEWLINE',ln:ln+1});
+    }
+    while(indents.length>1){indents.pop();toks.push({t:'DEDENT',ln:lines.length});}
+    toks.push({t:'EOF',ln:lines.length});return toks;
+  }
+  function parse(toks){
+    let p=0;const peek=()=>toks[p],nx=()=>toks[p++];
+    const accept=(t,v)=>{const k=toks[p];if(k.t===t&&(v===undefined||k.v===v)){p++;return k;}return null;};
+    const expect=(t,v)=>{const k=accept(t,v);if(!k)throw PyErr('I expected "'+(v||t)+'" here',toks[p].ln);return k;};
+    const skipNL=()=>{while(peek().t==='NEWLINE')p++;};
+    function block(){expect('OP',':');expect('NEWLINE');expect('INDENT');const body=[];skipNL();while(peek().t!=='DEDENT'&&peek().t!=='EOF'){body.push(stmt());skipNL();}expect('DEDENT');return body;}
+    function program(){const body=[];skipNL();while(peek().t!=='EOF'){body.push(stmt());skipNL();}return{type:'Program',body};}
+    function stmt(){const tk=peek();
+      if(tk.t==='KW'){
+        if(tk.v==='if')return ifStmt();
+        if(tk.v==='while'){nx();const cond=expr();const body=block();return{type:'While',cond,body,ln:tk.ln};}
+        if(tk.v==='for')return forStmt();
+        if(tk.v==='def')return defStmt();
+        if(tk.v==='return'){nx();let arg=null;if(peek().t!=='NEWLINE')arg=expr();expect('NEWLINE');return{type:'Return',arg,ln:tk.ln};}
+        if(tk.v==='break'){nx();expect('NEWLINE');return{type:'Break',ln:tk.ln};}
+        if(tk.v==='continue'){nx();expect('NEWLINE');return{type:'Continue',ln:tk.ln};}
+      }
+      const e=expr();
+      if(peek().t==='OP'&&peek().v==='='){nx();const val=expr();expect('NEWLINE');return{type:'Assign',target:e,val,ln:tk.ln};}
+      expect('NEWLINE');return{type:'ExprStmt',expr:e,ln:tk.ln};
+    }
+    function ifStmt(){const tk=expect('KW','if');const clauses=[{cond:expr(),body:block()}];let els=null;
+      while(peek().t==='KW'&&peek().v==='elif'){nx();clauses.push({cond:expr(),body:block()});}
+      if(peek().t==='KW'&&peek().v==='else'){nx();els=block();}
+      return{type:'If',clauses,els,ln:tk.ln};}
+    function forStmt(){const tk=expect('KW','for');const name=expect('NAME').v;expect('KW','in');const iter=expr();const body=block();return{type:'For',name,iter,body,ln:tk.ln};}
+    function defStmt(){const tk=expect('KW','def');const name=expect('NAME').v;expect('OP','(');const params=[];if(peek().v!==')'){params.push(expect('NAME').v);while(accept('OP',','))params.push(expect('NAME').v);}expect('OP',')');const body=block();return{type:'Def',name,params,body,ln:tk.ln};}
+    const expr=()=>orE();
+    function orE(){let l=andE();while(peek().t==='KW'&&peek().v==='or'){nx();l={type:'Logic',op:'or',l,r:andE()};}return l;}
+    function andE(){let l=notE();while(peek().t==='KW'&&peek().v==='and'){nx();l={type:'Logic',op:'and',l,r:notE()};}return l;}
+    function notE(){if(peek().t==='KW'&&peek().v==='not'){const tk=nx();return{type:'Unary',op:'not',e:notE(),ln:tk.ln};}return cmp();}
+    function cmp(){let l=add();while(peek().t==='OP'&&['==','!=','<','>','<=','>='].includes(peek().v)){const op=nx().v;l={type:'Bin',op,l,r:add()};}return l;}
+    function add(){let l=mul();while(peek().t==='OP'&&['+','-'].includes(peek().v)){const op=nx().v;l={type:'Bin',op,l,r:mul()};}return l;}
+    function mul(){let l=un();while(peek().t==='OP'&&['*','/','//','%'].includes(peek().v)){const op=nx().v;l={type:'Bin',op,l,r:un()};}return l;}
+    function un(){if(peek().t==='OP'&&peek().v==='-'){const tk=nx();return{type:'Unary',op:'-',e:un(),ln:tk.ln};}return postfix();}
+    function postfix(){let e=prim();while(true){const tk=peek();
+      if(tk.t==='OP'&&tk.v==='('){nx();const args=[];if(peek().v!==')'){args.push(expr());while(accept('OP',','))args.push(expr());}expect('OP',')');e={type:'Call',callee:e,args,ln:tk.ln};}
+      else if(tk.t==='OP'&&tk.v==='['){nx();const idx=expr();expect('OP',']');e={type:'Index',obj:e,index:idx,ln:tk.ln};}
+      else if(tk.t==='OP'&&tk.v==='.'){nx();const name=expect('NAME').v;e={type:'Attr',obj:e,name,ln:tk.ln};}
+      else break;
+    }return e;}
+    function prim(){const tk=peek();
+      if(tk.t==='NUM'){nx();return{type:'Lit',v:tk.v};}
+      if(tk.t==='STR'){nx();return{type:'Lit',v:tk.v};}
+      if(tk.t==='KW'&&(tk.v==='True'||tk.v==='False')){nx();return{type:'Lit',v:tk.v==='True'};}
+      if(tk.t==='KW'&&tk.v==='None'){nx();return{type:'Lit',v:null};}
+      if(tk.t==='KW'&&tk.v==='range'){nx();return{type:'Name',v:'range',ln:tk.ln};}
+      if(tk.t==='NAME'){nx();return{type:'Name',v:tk.v,ln:tk.ln};}
+      if(tk.t==='OP'&&tk.v==='('){nx();const e=expr();expect('OP',')');return e;}
+      if(tk.t==='OP'&&tk.v==='['){nx();const items=[];if(peek().v!==']'){items.push(expr());while(accept('OP',','))items.push(expr());}expect('OP',']');return{type:'ListLit',items,ln:tk.ln};}
+      throw PyErr('I did not expect "'+(tk.v||tk.t)+'" here',tk.ln);
+    }
+    return program();
+  }
+  function makeRuntime(program,api,opts){
+    opts=opts||{};const maxOps=opts.maxOps||400000;let ops=0;
+    const guard=()=>{if(++ops>maxOps)throw PyErr('Your code ran for too long — is there an endless loop?',0);};
+    const funcs=Object.create(null);
+    const builtins=Object.assign(Object.create(null),{
+      range:(...a)=>{let s=0,e=0,st=1;if(a.length===1)e=a[0];else if(a.length===2){s=a[0];e=a[1];}else{s=a[0];e=a[1];st=a[2]||1;}const out=[];if(st>0)for(let i=s;i<e;i+=st)out.push(i);else if(st<0)for(let i=s;i>e;i+=st)out.push(i);return out;},
+      len:x=>x==null?0:x.length,str:x=>x===true?'True':x===false?'False':x==null?'None':String(x),
+      int:x=>Math.trunc(Number(x))||0,float:x=>Number(x)||0,abs:Math.abs,round:Math.round,
+      min:(...a)=>Math.min(...(a.length===1&&Array.isArray(a[0])?a[0]:a)),max:(...a)=>Math.max(...(a.length===1&&Array.isArray(a[0])?a[0]:a)),
+      sum:a=>(Array.isArray(a)?a.reduce((s,x)=>s+x,0):0),
+      randint:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,
+    },api&&api.funcs||{});
+    function truthy(v){return !(v===false||v===null||v===0||v===''||v===undefined||(Array.isArray(v)&&v.length===0));}
+    function Ret(v){this.v=v;}const BREAK={},CONT={};
+    function lookup(scopes,name,ln){for(const s of scopes){if(name in s)return s[name];}if(name in builtins)return builtins[name];if(name in funcs)return funcs[name];throw PyErr('I do not know what "'+name+'" means',ln);}
+    function callFn(fn,args,ln){guard();if(typeof fn==='function')return fn(...args);if(fn&&fn.__user){const local=Object.create(null);fn.params.forEach((pn,i)=>local[pn]=args[i]);const r=execBlock(fn.body,[local,fn.closure]);return r instanceof Ret?r.v:undefined;}throw PyErr('That is not something you can call with ( )',ln);}
+    function binop(op,l,r,ln){switch(op){case'+':return l+r;case'-':return l-r;case'*':return l*r;case'/':if(r===0)throw PyErr('You cannot divide by zero',ln);return l/r;case'//':if(r===0)throw PyErr('You cannot divide by zero',ln);return Math.floor(l/r);case'%':return l%r;case'==':return l===r;case'!=':return l!==r;case'<':return l<r;case'>':return l>r;case'<=':return l<=r;case'>=':return l>=r;}}
+    function idx(o,i,ln){if(o==null||(typeof o!=='string'&&!Array.isArray(o)))throw PyErr('You can only use [ ] on a list or text',ln);let k=Math.trunc(i);if(k<0)k+=o.length;if(k<0||k>=o.length)throw PyErr('That position is outside the list',ln);return o[k];}
+    function method(o,name,ln){if(Array.isArray(o)){if(name==='append')return x=>{o.push(x);};if(name==='pop')return ()=>o.pop();if(name==='remove')return x=>{const i=o.indexOf(x);if(i>=0)o.splice(i,1);};}throw PyErr('I do not know the command ".'+name+'" for that value',ln);}
+    function evalE(n,scopes){guard();switch(n.type){
+      case'Lit':return n.v;
+      case'Name':return lookup(scopes,n.v,n.ln);
+      case'ListLit':return n.items.map(i=>evalE(i,scopes));
+      case'Index':return idx(evalE(n.obj,scopes),evalE(n.index,scopes),n.ln);
+      case'Attr':return method(evalE(n.obj,scopes),n.name,n.ln);
+      case'Unary':{const v=evalE(n.e,scopes);return n.op==='-'?-v:!truthy(v);}
+      case'Logic':{const l=evalE(n.l,scopes);if(n.op==='and')return truthy(l)?evalE(n.r,scopes):l;return truthy(l)?l:evalE(n.r,scopes);}
+      case'Bin':return binop(n.op,evalE(n.l,scopes),evalE(n.r,scopes),n.ln);
+      case'Call':{const fn=n.callee.type==='Name'?lookup(scopes,n.callee.v,n.ln):evalE(n.callee,scopes);return callFn(fn,n.args.map(a=>evalE(a,scopes)),n.ln);}
+    }throw PyErr('I cannot work out that value',n.ln);}
+    function execBlock(body,scopes){for(const st of body){const r=execStmt(st,scopes);if(r instanceof Ret||r===BREAK||r===CONT)return r;}}
+    function execStmt(n,scopes){guard();switch(n.type){
+      case'Assign':{const val=evalE(n.val,scopes);const t=n.target;if(t.type==='Name')scopes[0][t.v]=val;else if(t.type==='Index'){const o=evalE(t.obj,scopes);let k=Math.trunc(evalE(t.index,scopes));if(Array.isArray(o)){if(k<0)k+=o.length;o[k]=val;}else throw PyErr('You can only change positions in a list',n.ln);}else throw PyErr('You cannot assign to that',n.ln);return;}
+      case'ExprStmt':evalE(n.expr,scopes);return;
+      case'If':{for(const c of n.clauses)if(truthy(evalE(c.cond,scopes)))return execBlock(c.body,scopes);if(n.els)return execBlock(n.els,scopes);return;}
+      case'While':{let g=0;while(truthy(evalE(n.cond,scopes))){if(++g>200000)throw PyErr('This loop repeated too many times',n.ln);const r=execBlock(n.body,scopes);if(r instanceof Ret)return r;if(r===BREAK)break;}return;}
+      case'For':{const list=evalE(n.iter,scopes);if(!Array.isArray(list)&&typeof list!=='string')throw PyErr('You can only loop "for ... in" a list or range()',n.ln);for(const it of list){scopes[0][n.name]=it;const r=execBlock(n.body,scopes);if(r instanceof Ret)return r;if(r===BREAK)break;}return;}
+      case'Def':funcs[n.name]={__user:true,params:n.params,body:n.body,closure:scopes[0]};return;
+      case'Return':return new Ret(n.arg?evalE(n.arg,scopes):undefined);
+      case'Break':return BREAK;case'Continue':return CONT;
+    }}
+    const global=Object.create(null);
+    execBlock(program.body,[global]);
+    return {funcs,global,has:name=>!!funcs[name],call:(name,args)=>{const fn=funcs[name];if(!fn)return undefined;return callFn(fn,args||[],0);},resetOps:()=>{ops=0;}};
+  }
+  return {
+    check(src){try{parse(tokenize(src));return{ok:true};}catch(e){return{ok:false,msg:e.cjMsg||e.message,line:e.cjLine||0};}},
+    run(src,api,opts){const program=parse(tokenize(src));return makeRuntime(program,api,opts);},
+  };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════
+// KS3 RUNTIME — editor UI + binding CJPy to the game (events + safe API)
+// ═══════════════════════════════════════════════════════════════════════
+let ks3Code='';let ks3Runtime=null,ks3Error=false;
+let ks3Input={left:false,right:false,jump:false};
+const KS3_DEFAULT=[
+"# Key Stage 3 — write Python-style code to control your game!",
+"# These special functions run automatically:",
+"",
+"def on_start():",
+"    say(\"Let's go!\")",
+"",
+"def on_update():",
+"    if is_key(\"right\"):",
+"        move_right()",
+"    if is_key(\"left\"):",
+"        move_left()",
+"    if is_key(\"space\"):",
+"        jump()",
+"",
+"def on_gem():",
+"    add_score(10)",
+""].join("\n");
+function ks3SetStatus(kind,msg,line){const el=document.getElementById('ks3-status');if(!el)return;if(kind==='ok'){el.classList.remove('err');el.textContent='✓ Your code looks good';}else{el.classList.add('err');el.textContent='⚠️ '+(msg||'Error')+(line?(' — line '+line):'');}}
+function ks3RefreshGutter(){const ta=document.getElementById('ks3-code'),g=document.getElementById('ks3-gutter');if(!ta||!g)return;const n=ta.value.split('\n').length;let s='';for(let i=1;i<=n;i++)s+=i+'\n';g.textContent=s;g.scrollTop=ta.scrollTop;}
+function ks3LiveCheck(){const r=CJPy.check(document.getElementById('ks3-code').value);if(r.ok)ks3SetStatus('ok');else ks3SetStatus('err',r.msg,r.line);}
+function updateCodeModeUI(){const ed=document.getElementById('ks3-editor'),bd=document.getElementById('blockly-div');if(!ed||!bd)return;if(isKS3()){ed.classList.remove('hide');bd.style.display='none';}else{ed.classList.add('hide');bd.style.display='';}}
+function showKs3Editor(){const ta=document.getElementById('ks3-code');ta.value=(ks3Code==null?KS3_DEFAULT:ks3Code);ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();updateCodeModeUI();setTimeout(()=>ta.focus(),40);}
+function wireKs3Editor(){const ta=document.getElementById('ks3-code');if(!ta)return;
+  ta.addEventListener('input',()=>{ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();});
+  ta.addEventListener('scroll',()=>{document.getElementById('ks3-gutter').scrollTop=ta.scrollTop;});
+  ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.slice(0,s)+'    '+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+4;ks3Code=ta.value;ks3RefreshGutter();}});
+}
+function ks3KeyHeld(name){name=String(name).toLowerCase();const m={left:['ArrowLeft','KeyA'],right:['ArrowRight','KeyD'],up:['ArrowUp','KeyW'],down:['ArrowDown','KeyS'],space:['Space'],jump:['Space','ArrowUp','KeyW']}[name];return m?m.some(k=>keys[k]):false;}
+function ks3MakeApi(){return {funcs:{
+  move_left:()=>{ks3Input.left=true;},move_right:()=>{ks3Input.right=true;},jump:()=>{ks3Input.jump=true;},
+  is_key:n=>ks3KeyHeld(n),
+  set_score:n=>{score=Math.max(0,Math.floor(+n||0));},add_score:n=>{score=Math.max(0,score+Math.floor(+n||0));},get_score:()=>score,
+  set_lives:n=>{lives=Math.max(0,Math.floor(+n||0));},add_lives:n=>{lives=Math.max(0,lives+Math.floor(+n||0));},get_lives:()=>lives,
+  say:m=>toast('💬 '+(m===true?'True':m===false?'False':String(m)),'#4a90d9'),
+  win:()=>{if(playing)winNow('🎉 You Win!');},game_over:()=>{if(playing)loseNow('💀 Game Over','Your code ended the game.');},
+  next_page:()=>nextLevel(),prev_page:()=>prevLevel(),
+  player_x:()=>player?Math.floor((player.x+PW/2)/TS):0,player_y:()=>player?Math.floor((player.y+PH/2)/TS):0,
+  on_ground:()=>!!(player&&player.onGround),gems_collected:()=>gemsGot,gems_total:()=>gemsTotal,
+  random:(a,b)=>Math.floor(Math.random()*((b|0)-(a|0)+1))+(a|0),
+  beep:f=>chirp(Math.max(80,Math.min(2000,+f||440)),0.1,'square',0.05),
+}};}
+function ks3Compile(){ks3Runtime=null;ks3Error=false;if(!isKS3())return;try{ks3Runtime=CJPy.run(ks3Code||'',ks3MakeApi(),{maxOps:200000});ks3SetStatus('ok');}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast('⚠️ '+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
+function ks3Call(name,args){if(!ks3Runtime||ks3Error||!ks3Runtime.has(name))return;try{ks3Runtime.resetOps();ks3Runtime.call(name,args||[]);}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast('⚠️ '+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
+function ks3Frame(){if(!isKS3())return;ks3Input.left=ks3Input.right=ks3Input.jump=false;ks3Call('on_update');}
+function ks3KeyName(code){const m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',Space:'space',Enter:'enter'};if(m[code])return m[code];if(code.indexOf('Key')===0)return code.slice(3).toLowerCase();if(code.indexOf('Digit')===0)return code.slice(5);return code.toLowerCase();}
+function ks3OnKey(name){if(isKS3())ks3Call('on_key',[name]);}
+
+// ═══════════════════════════════════════════════════════════════════════
 // BLOCK INTERPRETER (Phase 1) — runs KS2 "code" blocks at game events.
 // A small tree-walker over the Blockly blocks. No eval, no DOM access; it can
 // only touch the safe game API below. Hard op/loop caps stop runaway loops.
@@ -2548,10 +2763,15 @@ Object.keys(TOOL_DESC).forEach(id=>{const el=document.getElementById(id);if(el){
 // ═══════════════════════════════════════════════════════════════════════
 function tileReferenceHTML(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<div class="help-grouphead">'+name+'</div>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="help-ref"><span class="hr-ic">'+t.icon+'</span><span class="hr-tx"><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
 const HELP_TABS=[
- ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button><button class="help-launch" onclick="startMission('gadgets')">🧩 Puzzle with buttons &amp; gates (KS2) →</button>`],
+ ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button><button class="help-launch" onclick="startMission('gadgets')">🧩 Puzzle with buttons &amp; gates (KS2) →</button><button class="help-launch" onclick="startMission('ks3')">👩‍🔬 Your first Python game (KS3) →</button>`],
  ['build','🧱 Building',`<p>In <b>Build</b> mode, pick a tool at the top:</p><ul><li><b>🖌️ Paint</b> — place the selected block.</li><li><b>🪣 Fill Row</b> — fill a whole row (great for floors).</li><li><b>🧹 Erase</b> — remove blocks (peels the item first, then any water behind it).</li><li><b>↩️ Undo / ↪️ Redo</b>, <b>🗑️ Clear</b> the page, and <b>▶️ This Page</b> to test one page.</li></ul><p>Some blocks have extra settings — just <b>tap them after placing</b>: moving platforms, enemies, doors, keys and signs.</p><p>Use the <b>pages</b> strip to add, duplicate (⧉), reorder (▲▼) and delete pages for a multi-level adventure.</p><h3>Every block, explained</h3>`+tileReferenceHTML()],
  ['design','🎨 Designing',`<p>Open <b>🎨 Design</b> to draw your own 16×16 pictures for the player, enemies, blocks, keys and more.</p><ul><li>Pick a tab to choose what to draw.</li><li>It shows the <b>current design</b> — tweak it, <b>🗑️ Clear</b> to make something blank/invisible, or <b>↺ Reset</b> for the default.</li><li>Use <b>🪣 Fill all</b> to fill the canvas, and the eraser to rub out.</li><li>The <b>Background</b> tab lets you pick sky colours or paint your own sky.</li></ul>`],
- ['code','🧩 Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b>🟡 Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b>🔵 Player</b> — movement and speed.</li><li><b>🟣 Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b>🟢 Physics</b> — gravity, jump height, bounce, double jump.</li><li><b>🏁 Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b>🔴 Rules</b> — lives and points.</li><li><b>🎵 Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b>🗑️ Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: 🔑 keys & 🚪 doors, 🧰 <b>chests</b> (lockable), 🌀 <b>teleport pads</b>, and 🔘 <b>buttons</b> that open 🚧 <b>gates</b> — see the <b>Building</b> tab for what each does.</p><p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
+ ['code','🧩 Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b>🟡 Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b>🔵 Player</b> — movement and speed.</li><li><b>🟣 Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b>🟢 Physics</b> — gravity, jump height, bounce, double jump.</li><li><b>🏁 Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b>🔴 Rules</b> — lives and points.</li><li><b>🎵 Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b>🗑️ Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: 🔑 keys & 🚪 doors, 🧰 <b>chests</b> (lockable), 🌀 <b>teleport pads</b>, and 🔘 <b>buttons</b> that open 🚧 <b>gates</b> — see the <b>Building</b> tab for what each does.</p>
+   <h3>👩‍🔬 Key Stage 3 — write Python-style code</h3>
+   <p>KS3 games swap the blocks for a real <b>code editor</b>. You write Python-style code, and these functions run by themselves:</p>
+   <ul><li><code>on_start()</code> — once when the game begins.</li><li><code>on_update()</code> — every frame (~60×/second).</li><li><code>on_key(key)</code> — when a key is pressed, e.g. <code>"left"</code>, <code>"space"</code>.</li><li><code>on_gem()</code> / <code>on_enemy()</code> — collecting a gem / touching an enemy.</li></ul>
+   <p>Handy commands: <code>move_left() move_right() jump() is_key("right") add_score(10) set_lives(3) say("hi") win() game_over() player_x() on_ground() random(1,6)</code> — plus variables, <code>if/elif/else</code>, <code>while</code>, <code>for … in range()</code>, lists, and your own functions with <code>def</code>. The editor checks your code as you type and shows friendly errors with line numbers.</p>
+   <p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
  ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game in “My Levels”. Your work also <b>auto-saves</b> as a draft.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to open later.</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen for lessons, worksheets, starter levels and the full guide.</p>`],
 ];
 let helpTab='start';
@@ -2572,7 +2792,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <ul><li><b>🏗️ Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶️ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b>🎨 Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
   <h3>Key Stage 1 vs Key Stage 2</h3>
   <p>Pupils choose a key stage when starting a new game — it sets which blocks they see:</p>
-  <ul><li><b>Key Stage 1</b> — the simple game blocks only (controls, physics, enemies, win, sound). One generic Enemy, no keys, and a simpler Win choice. Great for sequencing and cause-and-effect.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li></ul>
+  <ul><li><b>Key Stage 1</b> — the simple game blocks only (controls, physics, enemies, win, sound). One generic Enemy, no keys, and a simpler Win choice. Great for sequencing and cause-and-effect.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real block-coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li><li><b>Key Stage 3</b> — swaps the blocks for a <b>text editor</b> where pupils write a safe <b>Python-style language</b> (see below). All the KS2 building blocks are still available.</li></ul>
   <h3>Running a lesson</h3>
   <ul><li>Use the <b>Lesson library</b> and <b>Challenge of the day</b> on the hub — each has a worksheet and a starter level.</li><li><b>Project</b> a challenge full-screen with the ⛶ Expand button and the built-in timer.</li><li>Collect pupils' games via <b>“Open a pupil's level”</b> (.codejump or .html files).</li><li>Suggested flow: <i>predict → place a few blocks → play → improve</i>.</li></ul>
   <h3>Every block &amp; tile</h3>
@@ -2581,6 +2801,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>Events fire scripts (game start, collect a gem, touch an enemy, land on a page, every N seconds). Actions change score/lives, show a message, play a sound, go to a page, win, or end the game. These combine with standard Logic, Loops, Maths, Variables and Functions. A friendly limit stops runaway loops, so nothing freezes.</p>
   <p><b>Win conditions</b> (Win category): reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b>, plus a custom win message. <b>Smart enemies</b> (Enemies category): make Enemy A/B <b>chase the player</b>, and enable <b>jump-to-defeat</b> (stomp).</p>
   <p><b>Key Stage 2 grid extras:</b> keys &amp; doors, lockable <b>chests</b>, <b>teleport pads</b> (same-colour pairs), and <b>buttons</b> that open same-colour <b>gates</b> — all listed with the other blocks above.</p>
+  <h3>Key Stage 3 — text coding (Python-style)</h3>
+  <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python-style language (no <code>eval</code>; capped loops so nothing freezes) featuring variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, and <b>functions</b> with <code>def</code>. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>, <code>random</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
   <h3>Troubleshooting</h3>
@@ -2615,9 +2837,16 @@ const MISSIONS={
   {text:'Press <b>▶️ Play</b> — step on the button to open the gate, then dash to the finish!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
   {text:'🎉 Brilliant puzzle! Try teleport pads 🌀 next, or set a points/time goal in &lt;/&gt; Code.',final:true,check:()=>false},
  ]},
+ ks3:{title:'Your first Python game',ks3:true,steps:[
+  {text:'Make a floor: pick <b>Grass Top 🌿</b> and click along the bottom.',hl:()=>_palItem('Grass'),check:_floorMade},
+  {text:'Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.',hl:()=>_palItem('Start'),check:()=>_gridHas(T.START)&&_gridHas(T.GOAL)},
+  {text:'Open <b>&lt;/&gt; Code</b> — your Python program is waiting there.',hl:()=>document.getElementById('btn-code'),check:()=>mode==='code'},
+  {text:'Read it: <code>on_update()</code> moves the player. Press <b>▶️ Play</b> and use the arrow keys + space!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
+  {text:'🎉 You ran a Python game! Back in Code, try changing <code>add_score(10)</code> to a bigger number, or add <code>say("Hello!")</code> inside <code>on_start</code>.',final:true,check:()=>false},
+ ]},
 };
 let missionId=null,missionStep=0,_missionTimer=null;
-function startMission(id){const m=MISSIONS[id];if(!m)return;if(m.ks2&&keyStage!=='ks2'){toast('Start a Key Stage 2 game to try this one 🙂','#ae853e');return;}document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
+function startMission(id){const m=MISSIONS[id];if(!m)return;if(m.ks2&&keyStage!=='ks2'){toast('Start a Key Stage 2 game to try this one 🙂','#ae853e');return;}if(m.ks3&&!isKS3()){toast('Start a Key Stage 3 game to try this one 🙂','#ae853e');return;}document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
 function _clearHL(){document.querySelectorAll('.coach-hl').forEach(e=>e.classList.remove('coach-hl'));}
 function renderCoach(){const m=MISSIONS[missionId];if(!m)return;const st=m.steps[missionStep];document.getElementById('coach-step').innerHTML=st.text;document.getElementById('coach-dots').textContent=m.steps.map((_,i)=>i<missionStep?'·':i===missionStep?'●':'○').join('');document.getElementById('coach-skip').style.display=st.final?'none':'';_clearHL();if(st.hl){try{const el=st.hl();if(el)el.classList.add('coach-hl');}catch(e){}}}
 function advanceMission(){const m=MISSIONS[missionId];if(!m)return;if(missionStep<m.steps.length-1){missionStep++;chirp(880,0.08,'square',0.05);renderCoach();}else endMission();}
@@ -2633,8 +2862,6 @@ function drawBuild(){
   const t=th();paintSky(ctx);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c])drawTile(waterGrid[r][c],c*TS,r*TS);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid&&tid!==T.ENEMY&&tid!==T.ENEMY2)drawTile(tid,c*TS,r*TS,tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHEST?{lock:(chestCfg[r+','+c]||{}).lock}:tid===T.TELEPORT?{color:(teleCfg[r+','+c]||{}).color}:tid===T.BUTTON?{color:(buttonCfg[r+','+c]||{}).color}:tid===T.GATE?{color:(gateCfg[r+','+c]||{}).color}:null);if(tid===T.ENEMY)drawEnemyAt(c*TS,r*TS,0,1,'A');if(tid===T.ENEMY2)drawEnemyAt(c*TS,r*TS,0,1,'B');}
-  // Preview each gate's full-height barrier (it blocks up to the ceiling so it can't be jumped over)
-  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){if(grid[r][c]===T.GATE){const col=(gateCfg[r+','+c]||{}).color;ctx.save();ctx.globalAlpha=0.32;for(let rr=r-1;rr>=0;rr--){if(grid[rr][c]!==T.EMPTY)break;drawTile(T.GATE,c*TS,rr*TS,{color:col,open:false});}ctx.restore();}}
   ctx.strokeStyle=t.grid;ctx.lineWidth=1;for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*TS,0);ctx.lineTo(c*TS,CH);ctx.stroke();}for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*TS);ctx.lineTo(CW,r*TS);ctx.stroke();}
   // Show each moving platform's travel range (build mode only)
   const def=moverDefaultTiles();
@@ -2738,8 +2965,8 @@ let dkChest=null;
 function openChestEditor(row,col){dkChest=row+','+col;if(!chestCfg[dkChest])chestCfg[dkChest]={contents:'gems',amount:3,color:'yellow',lock:'none'};if(keyStage==='ks1')chestCfg[dkChest].lock='none';renderChestEditor();document.getElementById('chest-modal').classList.remove('hide');}
 function renderChestEditor(){const cfg=chestCfg[dkChest];if(!cfg)return;const isKey=cfg.contents==='key';document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.classList.toggle('sel',b.dataset.c===cfg.contents));document.getElementById('chest-amount').textContent=cfg.amount;document.getElementById('chest-amount-row').style.display=isKey?'none':'';document.getElementById('chest-color-row').style.display=isKey?'':'none';const cs=document.getElementById('chest-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderChestEditor();};cs.appendChild(b);});
   // Locked chests are a Key Stage 2 feature only
-  const lockRow=document.getElementById('chest-lock-row');lockRow.style.display=(keyStage==='ks2')?'':'none';
-  if(keyStage==='ks2'){const ls=document.getElementById('chest-locks');ls.innerHTML='';const opts=[['none','Not locked',null]].concat(Object.keys(KEY_COLORS).map(c=>[c,KEY_NAMES[c]+' key',KEY_COLORS[c]]));opts.forEach(([val,label,col])=>{const b=document.createElement('div');b.className='dk-sw'+((cfg.lock||'none')===val?' sel':'')+(val==='none'?' dk-none':'');b.style.background=col||'#555';b.textContent=val==='none'?'Open':'';b.title=label;b.onclick=()=>{cfg.lock=val;renderChestEditor();};ls.appendChild(b);});}}
+  const lockRow=document.getElementById('chest-lock-row');lockRow.style.display=codingOn()?'':'none';
+  if(codingOn()){const ls=document.getElementById('chest-locks');ls.innerHTML='';const opts=[['none','Not locked',null]].concat(Object.keys(KEY_COLORS).map(c=>[c,KEY_NAMES[c]+' key',KEY_COLORS[c]]));opts.forEach(([val,label,col])=>{const b=document.createElement('div');b.className='dk-sw'+((cfg.lock||'none')===val?' sel':'')+(val==='none'?' dk-none':'');b.style.background=col||'#555';b.textContent=val==='none'?'Open':'';b.title=label;b.onclick=()=>{cfg.lock=val;renderChestEditor();};ls.appendChild(b);});}}
 document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.onclick=()=>{if(!dkChest)return;chestCfg[dkChest].contents=b.dataset.c;renderChestEditor();});
 document.getElementById('chest-minus').onclick=()=>{if(!dkChest)return;const cfg=chestCfg[dkChest];cfg.amount=Math.max(1,cfg.amount-1);renderChestEditor();};
 document.getElementById('chest-plus').onclick=()=>{if(!dkChest)return;const cfg=chestCfg[dkChest];cfg.amount=Math.min(20,cfg.amount+1);renderChestEditor();};
@@ -2798,7 +3025,7 @@ function switchMode(m){
   document.getElementById('app').classList.toggle('mode-play',m==='play');
   document.getElementById('gc').style.display=m==='code'?'none':'block';
   const cp=document.getElementById('code-panel');
-  if(m==='code'){cp.classList.add('show');setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);},50);}
+  if(m==='code'){cp.classList.add('show');if(isKS3()){showKs3Editor();}else{updateCodeModeUI();setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);},50);}}
   else cp.classList.remove('show');
   ['t-paint','t-fill','t-erase','t-undo','t-redo','t-clear','t-testpage'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
   if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!musicMuted)startMusic();}
@@ -2833,7 +3060,7 @@ function buildPayload(){
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
-  return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
+  return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -2870,7 +3097,8 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
 };}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
-  setKeyStage(d.keyStage==='ks1'?'ks1':'ks2'); // legacy payloads default to full (ks2)
+  setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
+  ks3Code=(typeof d.ks3Code==='string')?d.ks3Code:(d.keyStage==='ks3'?KS3_DEFAULT:'');
   if(d.customSprites&&typeof d.customSprites==='object')Object.assign(customSprites,d.customSprites);
   // v2 multi-level, or legacy single-level wrapped into one page.
   let lvls=null;
@@ -2983,12 +3211,14 @@ document.getElementById('btn-play') .onclick=()=>switchMode('play');
 document.getElementById('btn-code') .onclick=()=>switchMode('code');
 document.getElementById('cp-run').onclick=()=>switchMode('play');
 document.getElementById('cp-clear').onclick=()=>{
+  if(isKS3()){if(confirm('Clear all your code?')){const ta=document.getElementById('ks3-code');ta.value='';ks3Code='';ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();toast('Code cleared 🗑️','#585555');}return;}
   if(!blocklyWorkspace){initBlockly();}
   if(confirm('Remove ALL your code blocks? This cannot be undone.')){
     blocklyWorkspace.clear();window._pendingXml='';readBlocklyConfig();
     toast('Code cleared 🗑️','#585555');
   }
 };
+wireKs3Editor();
 document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
 document.getElementById('o-retry') .onclick=()=>{hideOv();resumeFromDeath();};
@@ -3002,7 +3232,7 @@ document.getElementById('play-mute').onclick=toggleMusic;
 document.getElementById('play-sfx').onclick=toggleSfx;
 setMuteIcons();
 document.getElementById('btn-design').onclick=()=>openDesigner();
-window.addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&mode==='play')e.preventDefault();if((e.ctrlKey||e.metaKey)&&e.key==='z'&&mode==='build'){e.preventDefault();undo();}});
+window.addEventListener('keydown',e=>{const wasDown=keys[e.code];keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&mode==='play')e.preventDefault();if((e.ctrlKey||e.metaKey)&&e.key==='z'&&mode==='build'){e.preventDefault();undo();}if(!wasDown&&mode==='play'&&playing&&document.activeElement!==document.getElementById('ks3-code'))ks3OnKey(ks3KeyName(e.code));});
 window.addEventListener('keyup',e=>keys[e.code]=false);
 
 // ── On-screen touch controls ────────────────────────────────────────
@@ -3283,18 +3513,18 @@ function jumpForce(){return BASE_JFORCE*({low:.78,normal:1,high:1.26}[gameConfig
 function bounceForce(){return BJFORCE*({low:.68,normal:1,super:1.4}[gameConfig.bounceHeight]||1);}
 function moverRangePx(){return TS*({short:2,medium:3,long:5}[gameConfig.moverRange]||3);}
 const KC={left:'ArrowLeft',right:'ArrowRight',up:'ArrowUp',down:'ArrowDown',space:'Space',w:'KeyW',a:'KeyA',d:'KeyD',s:'KeyS'};
-function isLeft() {return !!keys[KC[gameConfig.moveLeft]];}
-function isRight(){return !!keys[KC[gameConfig.moveRight]];}
-function isJump() {return !!keys[KC[gameConfig.jump]];}
+function isLeft() {return !!keys[KC[gameConfig.moveLeft]]||ks3Input.left;}
+function isRight(){return !!keys[KC[gameConfig.moveRight]]||ks3Input.right;}
+function isJump() {return !!keys[KC[gameConfig.jump]]||ks3Input.jump;}
 function isUp()   {return keys['ArrowUp']||keys['KeyW'];}
 function isDown() {return keys['ArrowDown']||keys['KeyS'];}
-function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(gateBarrier[row+','+col])return true;if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
+function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};teleCool=0;teleFrom=null;gateOpenUntil={};recomputeGateBarrier();upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};teleCool=0;teleFrom=null;gateOpenUntil={};upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
 let _testFromLevel=null;
 function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();if(isKS3()){ks3Compile();ks3Call('on_start');}}
 function nextLevel(){playLevel++;if(playLevel>=LEVELS.length){winNow('🎉 You Win!');return;}chirp(660,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Page '+(playLevel+1)+' of '+LEVELS.length+'! 🚪','#10b981');}
 function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e');return;}playLevel--;chirp(440,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Back to page '+(playLevel+1)+'! 🚪','#10b981');}
 // Resume after a game over: restart the CURRENT page (not the whole game), keeping score & keys.
@@ -3302,15 +3532,12 @@ function resumeFromDeath(){lives=gameConfig.lives;playing=true;hideOv();loadPlay
 function checkCheckpoint(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.CHECKPOINT){if(!checkpoint||checkpoint.level!==playLevel||checkpoint.c!==cc||checkpoint.r!==cr){checkpoint={level:playLevel,c:cc,r:cr};chirp(880,0.08,'square',0.05);toast('Checkpoint reached! ⛳','#10b981');}}}
 function updateCrumble(){for(const k in crumbleState){if(crumbleT[k]>0){crumbleT[k]--;continue;}if(crumbleState[k]==='shaking'){crumbleState[k]='gone';crumbleT[k]=150;chirp(170,0.18,'sawtooth',0.05);}else{delete crumbleState[k];delete crumbleT[k];}}}
 let gateOpenUntil={}; // "r,c" -> tick when it auto-closes (Infinity = stays open)
-let gateBarrier={};   // "r,c" -> colour : invisible-to-jump solid cells above closed gates
 function isGateOpen(r,c){const t=gateOpenUntil[r+','+c];return t!==undefined&&tick<t;}
 function anyGateOpen(color){for(const k in gateOpenUntil){if(tick<gateOpenUntil[k]&&(gateCfg[k]||{}).color===color)return true;}return false;}
-// A closed gate blocks its whole column up to the ceiling so it can't be jumped over.
-function recomputeGateBarrier(){gateBarrier={};for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){if(grid[r][c]===T.GATE&&!isGateOpen(r,c)){const col=(gateCfg[r+','+c]||{}).color;for(let rr=r-1;rr>=0;rr--){if(grid[rr][c]!==T.EMPTY)break;gateBarrier[rr+','+c]=col;}}}}
-function openGatesOfColor(color){let newlyOpened=false;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.GATE&&(gateCfg[r+','+c]||{}).color===color){const cfg=gateCfg[r+','+c]||{};const dur=cfg.dur;const until=(dur===undefined||dur==='forever')?Infinity:tick+(parseInt(dur,10)||5)*60;if(!isGateOpen(r,c))newlyOpened=true;gateOpenUntil[r+','+c]=until;}}recomputeGateBarrier();return newlyOpened;}
+function openGatesOfColor(color){let newlyOpened=false;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.GATE&&(gateCfg[r+','+c]||{}).color===color){const cfg=gateCfg[r+','+c]||{};const dur=cfg.dur;const until=(dur===undefined||dur==='forever')?Infinity:tick+(parseInt(dur,10)||5)*60;if(!isGateOpen(r,c))newlyOpened=true;gateOpenUntil[r+','+c]=until;}}return newlyOpened;}
 function checkButtons(){if(!player)return;const p=player;const cs=[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)],rs=[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)];
   for(const c of cs)for(const r of rs){if(tileAt(c,r)===T.BUTTON){const col=(buttonCfg[r+','+c]||{}).color;if(col&&openGatesOfColor(col)){chirp(660,0.08,'square',0.06);chirp(990,0.09,'square',0.05);toast('A gate opened! 🚧',KEY_COLORS[col]||'#10b981');}}}}
-function checkGateTimers(){let changed=false;for(const k in gateOpenUntil){const t=gateOpenUntil[k];if(t!==Infinity&&tick>=t){delete gateOpenUntil[k];changed=true;}}if(changed){recomputeGateBarrier();chirp(280,0.12,'square',0.05);}}
+function checkGateTimers(){let changed=false;for(const k in gateOpenUntil){const t=gateOpenUntil[k];if(t!==Infinity&&tick>=t){delete gateOpenUntil[k];changed=true;}}if(changed)chirp(280,0.12,'square',0.05);}
 let teleCool=0,teleFrom=null; // teleport cooldown + the pad we just arrived on
 function checkTeleport(){if(!player)return;if(teleCool>0)teleCool--;
   const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);
@@ -3339,7 +3566,7 @@ function checkSign(){signNear=null;chestNear=null;if(!player)return;
   const up=isUp();if(up&&!upPrev){if(signNear)readSign();if(chestNear)openChest();}upPrev=up;}
 // KS2 underwater air: deplete while head is in deep water, reset on surfacing, drown loses a life.
 function checkAir(){
-  if(keyStage!=='ks2'||!player){return;}
+  if(!codingOn()||!player){return;}
   for(const b of airBubbles){b.y+=b.vy;b.a-=0.012;}airBubbles=airBubbles.filter(b=>b.a>0);
   if(player.dead)return;
   const hc=Math.floor((player.x+PW/2)/TS),hr=Math.floor((player.y+6)/TS);
@@ -3350,7 +3577,7 @@ function checkAir(){
   }else{air=AIR_MAX;airCount=6;}
 }
 function drawAir(){
-  if(keyStage!=='ks2'||!player)return;ctx.save();
+  if(!codingOn()||!player)return;ctx.save();
   ctx.fillStyle='rgba(255,255,255,.75)';for(const b of airBubbles){ctx.globalAlpha=Math.max(0,b.a);ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
   if(air<AIR_MAX){const cx=player.x+PW/2-camX,top=player.y-24;for(let i=0;i<6;i++){ctx.beginPath();ctx.arc(cx-15+i*6,top,2.6,0,Math.PI*2);ctx.fillStyle=i<airCount?'rgba(120,200,255,.95)':'rgba(255,255,255,.16)';ctx.fill();ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=0.8;ctx.stroke();}}
   ctx.restore();
@@ -3447,11 +3674,11 @@ function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;if(e.dead)return;
 function updateMovers(){movers.forEach(m=>{if(!m.vx||m.maxX<=m.minX)return;m.x+=m.vx;if(m.x<=m.minX){m.x=m.minX;m.vx=Math.abs(m.vx);}else if(m.x>=m.maxX){m.x=m.maxX;m.vx=-Math.abs(m.vx);}});}
 function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;
     if(it.type===T.KEY){playerKeys[it.color]=true;chirp(1318,0.1,'square',0.06);toast((KEY_NAMES[it.color]||'')+' key! 🔑',KEY_COLORS[it.color]||'#fdd835');return;}
-    if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);if(it.type===T.GEM)cjRunHats('when_collect_gem');}});}
+    if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);if(it.type===T.GEM){cjRunHats('when_collect_gem');ks3Call('on_gem');}}});}
 function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{const tt=tileAt(c,r);if(tt===T.SPIKE||tt===T.LAVA)killPlayer();}));if(player.inv>0)return;let stomped=false;
   for(const e of enemies){if(e.dead)continue;if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){
     if(gameConfig.stomp&&player.vy>0&&(player.y+PH-e.y)<TS*0.7){e.dead=true;player.vy=jumpForce()*0.72;player.inv=Math.max(player.inv,8);score+=5;chirp(880,0.07,'square',0.06);chirp(1175,0.08,'square',0.05);stomped=true;continue;}
-    killPlayer();cjRunHats('when_touch_enemy');break;
+    killPlayer();cjRunHats('when_touch_enemy');ks3Call('on_enemy');break;
   }}
   if(stomped)enemies=enemies.filter(e=>!e.dead);}
 let goalHintT=0;
@@ -3521,7 +3748,6 @@ function drawPlay(){
   for(const cell of dynTiles){const{c,r,tid}=cell;
     if(tid===T.GEM||tid===T.STAR||tid===T.KEY){const it=items.find(i=>i.c===c&&i.r===r);if(it&&it.got){if(it.pop>0&&tid!==T.KEY)drawPop(c,r,it.pop,tid);continue;}}
     const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:tid===T.CRUMBLE?{state:crumbleState[r+','+c]}:tid===T.CHEST?{opened:chestOpened[r+','+c],lock:(chestCfg[r+','+c]||{}).lock}:tid===T.TELEPORT?{color:(teleCfg[r+','+c]||{}).color}:tid===T.BUTTON?{color:(buttonCfg[r+','+c]||{}).color,pressed:anyGateOpen((buttonCfg[r+','+c]||{}).color)}:tid===T.GATE?{color:(gateCfg[r+','+c]||{}).color,open:isGateOpen(r,c)}:null;drawTile(tid,px,r*TS,meta);}
-  for(const k in gateBarrier){const ix=k.indexOf(','),r=+k.slice(0,ix),c=+k.slice(ix+1);const px=c*TS-camX;if(px+TS<0||px>CW)continue;drawTile(T.GATE,px,r*TS,{color:gateBarrier[k],open:false});}
   movers.forEach(m=>{const px=m.x-camX;if(px+m.w<0||px>CW)return;const t2=th();ctx.save();ctx.fillStyle=t2.mover;ctx.fillRect(px,m.y,m.w,m.h);ctx.fillStyle=t2.moverHi;ctx.fillRect(px,m.y,m.w,7);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(px,m.y+m.h-5,m.w,5);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(px+1,m.y+1,m.w-2,m.h-2);ctx.fillStyle='rgba(255,255,255,'+(.5+.5*Math.sin(tick*.08))+')';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(m.vx>0?'▶':'◀',px+m.w/2,m.y+m.h/2+5);ctx.restore();});
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   if(player&&(!player.dead||tick%6<3))drawPlayer();
@@ -3577,7 +3803,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
-  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow('🎯 Target Reached!');}}
+  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{ks3Frame();updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow('🎯 Target Reached!');}}
   drawPlay();
 }
 
@@ -3620,17 +3846,13 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.15';
+const CJ_VERSION='2026.06.16';
 const CJ_WHATSNEW=[
-  '🧰 Treasure chests! Place a chest, then tap it to fill it with gems, stars or a coloured key.',
-  '🔼 Players press Up (or tap the chest) to open it and grab the treasure.',
-  '🔒 Key Stage 2: lock a chest so a matching key is needed to open it.',
-  '🌀 Key Stage 2: teleport pads! Place two pads of the same colour — step on one to zap to the other.',
-  '🔘🚧 Key Stage 2: buttons & gates! Step on a button to open every gate of the same colour — great for puzzles.',
-  '🎯🏃 Key Stage 2: two new ways to win — reach a target number of points, or race to the finish before a countdown runs out!',
-  '👾 Key Stage 2: smarter enemies — make Enemy A or B chase the player, and turn on “jump on enemies to defeat them”.',
-  '📖 The in-app Guide, tooltips & Teacher Guide now cover all the new blocks, plus a new ❓ Help guided puzzle: “Buttons & gates”.',
-  '🚧 Gates now block the whole passage to the ceiling (no jumping over!), and you can choose how long they stay open — forever or 3/5/10 seconds.',
+  '👩‍🔬 NEW Key Stage 3! Choose it for a new game and write real <b>Python-style code</b> in a built-in editor to control your game.',
+  '⌨️ KS3 code runs your game with on_start, on_update, on_key, on_gem and on_enemy — with variables, loops, lists, functions and friendly error messages.',
+  '🧰 Treasure chests — fill them with gems, stars or a key; in KS2 you can lock them.',
+  '🌀 Teleport pads, 🔘🚧 buttons & gates, 🎯🏃 points/time win goals, and 👾 chasing + stomp-able enemies (all Key Stage 2).',
+  '📖 The in-app Guide, tooltips & Teacher Guide cover everything new, with two new ❓ Help guided activities.',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

@@ -533,8 +533,8 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 }
 #toast.hide{opacity:0;}
 /* ── Moving-platform editor ─────────────────────────────────────────── */
-#mover-modal,#door-modal,#key-modal,#sign-modal{position:fixed;inset:0;z-index:1550;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;}
-#mover-modal.hide,#door-modal.hide,#key-modal.hide,#sign-modal.hide{display:none;}
+#mover-modal,#door-modal,#key-modal,#sign-modal,#chest-modal{position:fixed;inset:0;z-index:1550;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;}
+#mover-modal.hide,#door-modal.hide,#key-modal.hide,#sign-modal.hide,#chest-modal.hide{display:none;}
 #sign-text{width:100%;box-sizing:border-box;border:1px solid var(--gray);border-radius:8px;background:var(--black);color:#fff;font-family:var(--font);font-size:14px;padding:10px;resize:vertical;margin-bottom:6px;}
 #sign-text:focus{outline:none;border-color:var(--gold);}
 .mv-box{background:var(--dark);border:1px solid var(--gold);border-radius:12px;padding:22px 24px;max-width:360px;width:100%;text-align:center;}
@@ -635,6 +635,16 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .help-ref .hr-ic{font-size:24px;line-height:1;flex:0 0 28px;text-align:center;}
 .help-ref .hr-tx b{color:var(--gold);}
 .help-grouphead{color:var(--gold);font-weight:800;font-size:12px;letter-spacing:.5px;text-transform:uppercase;margin:14px 0 4px;}
+/* Chest editor */
+.ch-types{display:flex;gap:8px;justify-content:center;}
+.ch-type{flex:1;background:var(--black);border:2px solid var(--gray);color:#fff;border-radius:10px;padding:12px 6px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;}
+.ch-type:hover{border-color:var(--gold);}
+.ch-type.sel{background:var(--gold);color:#000;border-color:var(--gold);}
+#chest-modal p{margin:12px 0 6px;}
+.ch-stepper{display:flex;align-items:center;justify-content:center;gap:18px;}
+.ch-stepper button{width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);background:var(--black);color:var(--gold);font-size:24px;font-weight:800;cursor:pointer;line-height:1;}
+.ch-stepper button:hover{background:var(--gold);color:#000;}
+.ch-stepper span{font-family:var(--display);font-size:28px;color:#fff;min-width:40px;text-align:center;}
 /* Guided coach panel */
 #coach{position:fixed;right:14px;bottom:14px;z-index:48;width:260px;max-width:calc(100vw - 28px);}
 #coach.hide{display:none;}
@@ -940,6 +950,27 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
   </div>
 </div>
 
+<div id="chest-modal" class="hide">
+  <div class="mv-box">
+    <h3>🧰 Treasure Chest</h3>
+    <p>What's inside?</p>
+    <div class="ch-types">
+      <button class="ch-type" data-c="gems">💎 Gems</button>
+      <button class="ch-type" data-c="stars">⭐ Stars</button>
+      <button class="ch-type" data-c="key">🔑 Key</button>
+    </div>
+    <div id="chest-amount-row">
+      <p>How many?</p>
+      <div class="ch-stepper"><button id="chest-minus">−</button><span id="chest-amount">3</span><button id="chest-plus">+</button></div>
+    </div>
+    <div id="chest-color-row">
+      <p>Key colour</p>
+      <div class="dk-swatches" id="chest-colors"></div>
+    </div>
+    <button class="mv-done" id="chest-done">Done</button>
+  </div>
+</div>
+
 <div id="promo-modal" class="hide">
   <div class="promo-box">
     <button id="promo-close" title="Close" aria-label="Close">✕</button>
@@ -1168,7 +1199,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 // ═══════════════════════════════════════════════════════════════════════
 const COLS=20,ROWS=12,TS=48,CW=960,CH=576;
 const GRID_PX=16,PPX=3;
-const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25,WATER_TOP:26,WATER:27};
+const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25,WATER_TOP:26,WATER:27,CHEST:28};
 const KEY_COLORS={red:'#e53935',blue:'#4a90d9',green:'#43a047',yellow:'#fdd835'};
 const KEY_NAMES={red:'Red',blue:'Blue',green:'Green',yellow:'Yellow'};
 const TILE_GROUPS=[['build','🧱 Blocks'],['hazard','⚠️ Hazards'],['water','💧 Water'],['item','💎 Pickups'],['marker','🚩 Markers'],['decor','🌳 Decorations']];
@@ -1182,7 +1213,7 @@ const TILES=[
   {id:T.ENEMY,icon:'👾',label:'Enemy A',g:'hazard'},{id:T.ENEMY2,icon:'🐛',label:'Enemy B',g:'hazard'},
   {id:T.WATER_TOP,icon:'🌊',label:'Water Top',g:'water'},{id:T.WATER,icon:'💧',label:'Water',g:'water'},
   {id:T.GEM,icon:'💎',label:'Gem',g:'item'},{id:T.STAR,icon:'⭐',label:'Star',g:'item'},{id:T.KEY,icon:'🔑',label:'Key',g:'item'},
-  {id:T.START,icon:'🚩',label:'Start',g:'marker'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint',g:'marker'},{id:T.DOOR,icon:'🚪',label:'Door',g:'marker'},{id:T.SIGN,icon:'🪧',label:'Sign',g:'marker'},{id:T.GOAL,icon:'🏁',label:'Finish',g:'marker'},
+  {id:T.START,icon:'🚩',label:'Start',g:'marker'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint',g:'marker'},{id:T.DOOR,icon:'🚪',label:'Door',g:'marker'},{id:T.SIGN,icon:'🪧',label:'Sign',g:'marker'},{id:T.CHEST,icon:'🧰',label:'Chest',g:'marker'},{id:T.GOAL,icon:'🏁',label:'Finish',g:'marker'},
   {id:T.TREE,icon:'🌳',label:'Tree',g:'decor'},{id:T.FLOWER,icon:'🌸',label:'Flower',g:'decor'},{id:T.BUSH,icon:'🌿',label:'Bush',g:'decor'},
 ];
 // Shared plain-English descriptions — used by tooltips, the User Guide and the Teacher's Guide.
@@ -1210,6 +1241,7 @@ const TILE_DESC={
   [T.CHECKPOINT]:'A checkpoint flag. Reach it and you respawn here instead of the start.',
   [T.DOOR]:'A door to another page. Tap it to choose which key it needs (if any) and whether it goes to the next or previous page.',
   [T.SIGN]:'A sign with your own message. The player presses Up (or taps the sign) to read it. Tap it to write the message.',
+  [T.CHEST]:'A treasure chest! Fill it with gems, stars or a key. The player presses Up (or taps it) to open it. Tap it to choose what’s inside.',
   [T.GOAL]:'The Finish! Reach it to win the whole game.',
   [T.TREE]:'A big tree to decorate your level.',
   [T.FLOWER]:'A pretty flower for decoration.',
@@ -1249,6 +1281,7 @@ let enemyCfg={}; // per-enemy travel: "r,c" -> {l,r,u,d} tiles
 let doorCfg={};  // per-door: "r,c" -> {key:'none'|'red'..., dir:'next'|'prev'}
 let keyCfg={};   // per-key:  "r,c" -> {color:'red'|'blue'|'green'|'yellow'}
 let signCfg={};  // per-sign: "r,c" -> {text:'...'}
+let chestCfg={}; // per-chest:"r,c" -> {contents:'gems'|'stars'|'key', amount:N, color:'red'...}
 let gemA=0,goalA=0,tick=0;
 let customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
 let customBg={top:null,bottom:null,art:null}; // top/bottom = gradient; art = 16×16 painted sky (overrides gradient)
@@ -1259,10 +1292,10 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // always mirror the page currently being edited (curLevel) or played (playLevel).
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
-function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg)};}
-function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{}};}
+function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg))};}
+function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{}};}
 function commitLevel(){if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
-function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
@@ -1344,6 +1377,7 @@ let checkpoint=null; // {level,c,r} last checkpoint reached on the current page
 let crumbleState={}; // "r,c" -> 'shaking'|'gone' for crumbling platforms
 let crumbleT={};     // "r,c" -> frames remaining in current state
 let signShownT={};   // throttle for sign messages
+let chestOpened={};  // "r,c" -> true once a chest has been opened this play-through
 let air=600,airCount=6,airBubbles=[];const AIR_MAX=600; // KS2 underwater air meter
 let score=0,lives=3,camX=0,playing=false;
 let gameTimer=0,gemsTotal=0,gemsGot=0;
@@ -1365,7 +1399,7 @@ function saveCurrentLevel(){
   if(name===null)return;
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{})}));
+  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{}),chestCfg:JSON.parse(JSON.stringify(L.chestCfg||{}))}));
   const saves=getSaves();
   saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
   setSaves(saves.slice(0,12));clearDirty();
@@ -1387,7 +1421,7 @@ function drawMiniThumb(canvas,g,th_name,water){
   grd.addColorStop(0,t.sky[0]);grd.addColorStop(1,t.sky[1]);
   ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
   const cw=W/COLS,ch=H/ROWS;
-  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63',[T.WATER_TOP]:'#2a8cdc',[T.WATER]:'#2a8cdc'};
+  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CHEST]:'#9c6630',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63',[T.WATER_TOP]:'#2a8cdc',[T.WATER]:'#2a8cdc'};
   if(Array.isArray(water)){ctx.fillStyle='rgba(42,140,220,.5)';water.forEach((row,r)=>row.forEach((cell,c)=>{if(cell)ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}));}
   g.forEach((row,r)=>row.forEach((cell,c)=>{if(cell&&clr[cell]){ctx.fillStyle=clr[cell];ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}}));
 }
@@ -2358,6 +2392,27 @@ function drawTile(id,px,py,meta){
       c.fillStyle='#6d4c2f';c.fillRect(px+TS/2-3,py+18,6,TS-18);
       c.fillStyle='#caa472';c.fillRect(px+8,py+6,TS-16,20);c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+8,py+6,TS-16,20);
       c.fillStyle='#5a3d25';for(let i=0;i<3;i++)c.fillRect(px+12,py+10+i*5,TS-24,2);break;}
+    case T.CHEST:{
+      const opened=meta&&meta.opened;
+      const x0=px+7,w=TS-14,baseY=py+TS-15;
+      // chest base
+      c.fillStyle='#8a5a2b';c.fillRect(x0,baseY,w,13);
+      c.strokeStyle='#4a2f17';c.lineWidth=2;c.strokeRect(x0,baseY,w,13);
+      c.fillStyle='#c9a227';c.fillRect(x0,baseY+5,w,3); // gold band
+      if(opened){
+        // open lid tilted up behind
+        c.save();c.translate(x0,baseY);c.rotate(-0.5);
+        c.fillStyle='#7a4d24';c.fillRect(0,-11,w,11);c.strokeStyle='#4a2f17';c.strokeRect(0,-11,w,11);
+        c.fillStyle='#c9a227';c.fillRect(0,-7,w,3);c.restore();
+        // sparkle inside
+        c.fillStyle='#ffe28a';for(let i=0;i<3;i++){c.beginPath();c.arc(x0+8+i*9,baseY-1+Math.sin(tick*0.2+i)*1.5,2,0,Math.PI*2);c.fill();}
+      }else{
+        // closed lid (rounded top)
+        c.fillStyle='#9c6630';c.beginPath();c.moveTo(x0,baseY);c.lineTo(x0,baseY-6);c.quadraticCurveTo(px+TS/2,baseY-15,x0+w,baseY-6);c.lineTo(x0+w,baseY);c.closePath();c.fill();c.stroke();
+        c.fillStyle='#c9a227';c.fillRect(px+TS/2-3,baseY-9,6,16); // clasp
+        c.fillStyle='#4a2f17';c.fillRect(px+TS/2-2,baseY-2,4,5); // lock
+      }
+      break;}
     case T.CONVEYOR_L:
     case T.CONVEYOR_R:{
       const dir=id===T.CONVEYOR_R?1:-1;
@@ -2520,8 +2575,8 @@ function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone! ↪️','#6366f1');}
 
 function cellFromEvent(e){const r=canvas.getBoundingClientRect();return{col:Math.floor((e.clientX-r.left)/r.width*COLS),row:Math.floor((e.clientY-r.top)/r.height*ROWS)};}
-function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN;
-  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];};
+function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN,wasChest=prev===T.CHEST;
+  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];if(wasChest)delete chestCfg[mk];};
   if(erase){ // peel the foreground item first, then the water behind it
     if(grid[row][col]!==T.EMPTY){grid[row][col]=T.EMPTY;dropMeta();}
     else if(waterGrid[row][col]){waterGrid[row][col]=0;}
@@ -2534,9 +2589,10 @@ function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const
   if((selTile===T.ENEMY||selTile===T.ENEMY2)&&!enemyCfg[mk])enemyCfg[mk]=enemyDefaultCfg(selTile);
   if(selTile===T.DOOR&&!doorCfg[mk])doorCfg[mk]={key:'none',dir:'next'};
   if(selTile===T.KEY&&!keyCfg[mk])keyCfg[mk]={color:'yellow'};
-  if(selTile===T.SIGN&&!signCfg[mk])signCfg[mk]={text:''};}
+  if(selTile===T.SIGN&&!signCfg[mk])signCfg[mk]={text:''};
+  if(selTile===T.CHEST&&!chestCfg[mk])chestCfg[mk]={contents:'gems',amount:3,color:'yellow'};}
 // Tapping any placed moving platform OR enemy (in Paint mode) opens its travel editor.
-function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}return false;}
+function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}if(t===T.CHEST){openChestEditor(row,col);return true;}return false;}
 function enemyDefaultCfg(tid){return tid===T.ENEMY2?{l:0,r:0,u:2,d:2}:{l:3,r:3,u:0,d:0};}
 let mvKind='mover',mvKey=null;
 function mvMap(){return mvKind==='enemy'?enemyCfg:moverCfg;}
@@ -2570,8 +2626,15 @@ document.getElementById('key-done').onclick=()=>{document.getElementById('key-mo
 let dkSign=null;
 function openSignEditor(row,col){dkSign=row+','+col;if(!signCfg[dkSign])signCfg[dkSign]={text:''};document.getElementById('sign-text').value=signCfg[dkSign].text||'';document.getElementById('sign-modal').classList.remove('hide');setTimeout(()=>document.getElementById('sign-text').focus(),30);}
 document.getElementById('sign-done').onclick=()=>{if(dkSign)signCfg[dkSign].text=document.getElementById('sign-text').value.slice(0,140);document.getElementById('sign-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
-function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);else if(t===T.DOOR)openDoorEditor(row,col);else if(t===T.KEY)openKeyEditor(row,col);else if(t===T.SIGN)openSignEditor(row,col);}
-function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY||t===T.SIGN;}
+let dkChest=null;
+function openChestEditor(row,col){dkChest=row+','+col;if(!chestCfg[dkChest])chestCfg[dkChest]={contents:'gems',amount:3,color:'yellow'};renderChestEditor();document.getElementById('chest-modal').classList.remove('hide');}
+function renderChestEditor(){const cfg=chestCfg[dkChest];if(!cfg)return;const isKey=cfg.contents==='key';document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.classList.toggle('sel',b.dataset.c===cfg.contents));document.getElementById('chest-amount').textContent=cfg.amount;document.getElementById('chest-amount-row').style.display=isKey?'none':'';document.getElementById('chest-color-row').style.display=isKey?'':'none';const cs=document.getElementById('chest-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderChestEditor();};cs.appendChild(b);});}
+document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.onclick=()=>{if(!dkChest)return;chestCfg[dkChest].contents=b.dataset.c;renderChestEditor();});
+document.getElementById('chest-minus').onclick=()=>{if(!dkChest)return;const cfg=chestCfg[dkChest];cfg.amount=Math.max(1,cfg.amount-1);renderChestEditor();};
+document.getElementById('chest-plus').onclick=()=>{if(!dkChest)return;const cfg=chestCfg[dkChest];cfg.amount=Math.min(20,cfg.amount+1);renderChestEditor();};
+document.getElementById('chest-done').onclick=()=>{document.getElementById('chest-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
+function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);else if(t===T.DOOR)openDoorEditor(row,col);else if(t===T.KEY)openKeyEditor(row,col);else if(t===T.SIGN)openSignEditor(row,col);else if(t===T.CHEST)openChestEditor(row,col);}
+function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY||t===T.SIGN||t===T.CHEST;}
 // Fill an entire row with the selected tile (Fill Row tool).
 function fillRow(row,clickCol){if(row<0||row>=ROWS)return;
   if(selTile===T.WATER||selTile===T.WATER_TOP){for(let c=0;c<COLS;c++)waterGrid[row][c]=selTile;return;} // fill the water layer
@@ -2593,7 +2656,7 @@ canvas.addEventListener('touchstart',e=>{if(mode!=='build')return;e.preventDefau
 canvas.addEventListener('touchmove',e=>{if(mode!=='build'||!painting)return;e.preventDefault();const t=e.touches[0];const{col,row}=cellFromEvent(t);buildApply(col,row,tool==='erase');},{passive:false});
 canvas.addEventListener('touchend',()=>{const was=painting;painting=false;lastCell='';if(was&&mode==='build'){commitLevel();renderPagesStrip();markDirty();}});
 // In Play mode, tap a sign to read it
-canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellFromEvent(e);if(tileAt(col,row)===T.SIGN){const cfg=signCfg[row+','+col];if(cfg&&cfg.text)toast('🪧 '+cfg.text,'#caa472');}});
+canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellFromEvent(e);if(tileAt(col,row)===T.SIGN){const cfg=signCfg[row+','+col];if(cfg&&cfg.text)toast('🪧 '+cfg.text,'#caa472');}else if(tileAt(col,row)===T.CHEST&&!chestOpened[row+','+col]){chestNear={c:col,r:row};openChest();}});
 
 // ═══════════════════════════════════════════════════════════════════════
 // MODE SWITCH
@@ -2643,7 +2706,7 @@ document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 function buildPayload(){
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{}}));
+  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
 }
@@ -2662,6 +2725,7 @@ function sanitizeEnemyCfg(m){const out={};if(!m||typeof m!=='object')return out;
 function sanitizeDoorCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const key=(v.key==='none'||KEY_COLORS[v.key])?v.key:'none';const dir=(v.dir==='prev')?'prev':'next';out[k]={key,dir};}return out;}
 function sanitizeKeyCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={color};}return out;}
 function sanitizeSignCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const txt=(m[k]&&typeof m[k].text==='string')?m[k].text:'';out[k]={text:txt.slice(0,140)};}return out;}
+function sanitizeChestCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const contents=(v.contents==='stars'||v.contents==='key')?v.contents:'gems';const amount=Math.max(1,Math.min(20,parseInt(v.amount,10)||1));const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={contents,amount,color};}return out;}
 function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&L.waterGrid);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(_g[r][c]===T.WATER||_g[r][c]===T.WATER_TOP){if(!_w[r][c])_w[r][c]=_g[r][c];_g[r][c]=0;}}return{
   grid:_g,waterGrid:_w,
   theme:(L&&typeof L.theme==='string'&&THEMES[L.theme])?L.theme:'forest',
@@ -2670,7 +2734,8 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
   enemyCfg:sanitizeEnemyCfg(L&&L.enemyCfg),
   doorCfg:sanitizeDoorCfg(L&&L.doorCfg),
   keyCfg:sanitizeKeyCfg(L&&L.keyCfg),
-  signCfg:sanitizeSignCfg(L&&L.signCfg)
+  signCfg:sanitizeSignCfg(L&&L.signCfg),
+  chestCfg:sanitizeChestCfg(L&&L.chestCfg)
 };}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
@@ -3095,7 +3160,7 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
 let _testFromLevel=null;
 function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
 function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();}
@@ -3105,12 +3170,19 @@ function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e')
 function resumeFromDeath(){lives=gameConfig.lives;playing=true;hideOv();loadPlayLevel(playLevel);if(!musicMuted)startMusic();}
 function checkCheckpoint(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.CHECKPOINT){if(!checkpoint||checkpoint.level!==playLevel||checkpoint.c!==cc||checkpoint.r!==cr){checkpoint={level:playLevel,c:cc,r:cr};chirp(880,0.08,'square',0.05);toast('Checkpoint reached! ⛳','#10b981');}}}
 function updateCrumble(){for(const k in crumbleState){if(crumbleT[k]>0){crumbleT[k]--;continue;}if(crumbleState[k]==='shaking'){crumbleState[k]='gone';crumbleT[k]=150;chirp(170,0.18,'sawtooth',0.05);}else{delete crumbleState[k];delete crumbleT[k];}}}
-let signNear=null,upPrev=false; // sign the player is standing in front of
+let signNear=null,chestNear=null,upPrev=false; // sign/chest the player is standing in front of
 function readSign(){if(signNear&&signNear.text){toast('🪧 '+signNear.text,'#caa472');chirp(660,0.06,'sine',0.04);}}
-function checkSign(){signNear=null;if(!player)return;
+function openChest(){if(!chestNear)return;const k=chestNear.r+','+chestNear.c;if(chestOpened[k])return;chestOpened[k]=true;
+  const cfg=chestCfg[k]||{contents:'gems',amount:3,color:'yellow'};
+  if(cfg.contents==='key'){playerKeys[cfg.color]=true;chirp(1318,0.12,'square',0.06);toast('Chest opened — a '+(KEY_NAMES[cfg.color]||'')+' key! 🔑',KEY_COLORS[cfg.color]||'#fdd835');}
+  else{const n=Math.max(1,cfg.amount||1),star=cfg.contents==='stars';score+=(star?gameConfig.starPoints:gameConfig.gemPoints)*n;chirp(star?1047:784,0.1,'square',0.07);chirp(star?1318:988,0.1,'square',0.05);toast('Chest opened — '+n+' '+(star?'star':'gem')+(n>1?'s':'')+'! '+(star?'⭐':'💎'),'#c9a227');}
+}
+function checkSign(){signNear=null;chestNear=null;if(!player)return;
   const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);
-  if(tileAt(cc,cr)===T.SIGN){const cfg=signCfg[cr+','+cc];const txt=cfg&&cfg.text?cfg.text:'';if(txt)signNear={c:cc,r:cr,text:txt};}
-  const up=isUp();if(signNear&&up&&!upPrev)readSign();upPrev=up;}
+  const here=tileAt(cc,cr);
+  if(here===T.SIGN){const cfg=signCfg[cr+','+cc];const txt=cfg&&cfg.text?cfg.text:'';if(txt)signNear={c:cc,r:cr,text:txt};}
+  if(here===T.CHEST&&!chestOpened[cr+','+cc])chestNear={c:cc,r:cr};
+  const up=isUp();if(up&&!upPrev){if(signNear)readSign();if(chestNear)openChest();}upPrev=up;}
 // KS2 underwater air: deplete while head is in deep water, reset on surfacing, drown loses a life.
 function checkAir(){
   if(keyStage!=='ks2'||!player){return;}
@@ -3270,19 +3342,20 @@ function renderStaticLayer(){
   // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
   dynTiles=[];
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c]===T.WATER_TOP)dynTiles.push({c,r,tid:T.WATER_TOP}); // surface water behind items
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE)dynTiles.push({c,r,tid});}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE||tid===T.CHEST)dynTiles.push({c,r,tid});}
 }
 function drawPlay(){
   const t=th();
   ctx.drawImage(bgLayer,-camX,0); // sky + static tiles, pre-rendered
   for(const cell of dynTiles){const{c,r,tid}=cell;
     if(tid===T.GEM||tid===T.STAR||tid===T.KEY){const it=items.find(i=>i.c===c&&i.r===r);if(it&&it.got){if(it.pop>0&&tid!==T.KEY)drawPop(c,r,it.pop,tid);continue;}}
-    const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:tid===T.CRUMBLE?{state:crumbleState[r+','+c]}:null;drawTile(tid,px,r*TS,meta);}
+    const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:tid===T.CRUMBLE?{state:crumbleState[r+','+c]}:tid===T.CHEST?{opened:chestOpened[r+','+c]}:null;drawTile(tid,px,r*TS,meta);}
   movers.forEach(m=>{const px=m.x-camX;if(px+m.w<0||px>CW)return;const t2=th();ctx.save();ctx.fillStyle=t2.mover;ctx.fillRect(px,m.y,m.w,m.h);ctx.fillStyle=t2.moverHi;ctx.fillRect(px,m.y,m.w,7);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(px,m.y+m.h-5,m.w,5);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(px+1,m.y+1,m.w-2,m.h-2);ctx.fillStyle='rgba(255,255,255,'+(.5+.5*Math.sin(tick*.08))+')';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(m.vx>0?'▶':'◀',px+m.w/2,m.y+m.h/2+5);ctx.restore();});
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   if(player&&(!player.dead||tick%6<3))drawPlayer();
   // "Press ⬆️ to read" prompt above a sign the player is in front of
   if(signNear){const bx=signNear.c*TS-camX+TS/2,by=signNear.r*TS-10;ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText('⬆️ Read').width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText('⬆️ Read',bx,by-3);ctx.restore();}
+  if(chestNear){const bx=chestNear.c*TS-camX+TS/2,by=chestNear.r*TS-10;ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText('⬆️ Open').width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText('⬆️ Open',bx,by-3);ctx.restore();}
   drawAir();
   drawConfetti();drawHUD();
 }
@@ -3369,12 +3442,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.13';
+const CJ_VERSION='2026.06.14';
 const CJ_WHATSNEW=[
-  '🎓 Guided builds — open ❓ Help → “Try a guided build” and CodeJump walks you through making a game, step by step.',
-  '📖 A new in-app Guide — tap ❓ Help to learn what every block, tool and button does.',
-  '💡 Tooltips — hover or long-press any block or button for a quick explanation.',
-  '👩‍🏫 Teachers: a full Teacher Guide is now in the Teacher Hub (with a Print button).',
+  '🧰 Treasure chests! Place a chest, then tap it to fill it with gems, stars or a coloured key.',
+  '🔼 Players press Up (or tap the chest) to open it and grab the treasure — a great way to add rewards and challenge.',
+  '🎓 Guided builds, 📖 an in-app Guide, 💡 tooltips, and a 👩‍🏫 Teacher Guide are all in too — explore via ❓ Help.',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

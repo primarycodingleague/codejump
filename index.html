@@ -533,8 +533,8 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 }
 #toast.hide{opacity:0;}
 /* ── Moving-platform editor ─────────────────────────────────────────── */
-#mover-modal,#door-modal,#key-modal,#sign-modal,#chest-modal{position:fixed;inset:0;z-index:1550;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;}
-#mover-modal.hide,#door-modal.hide,#key-modal.hide,#sign-modal.hide,#chest-modal.hide{display:none;}
+#mover-modal,#door-modal,#key-modal,#sign-modal,#chest-modal,#tele-modal,#color-modal{position:fixed;inset:0;z-index:1550;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px;}
+#mover-modal.hide,#door-modal.hide,#key-modal.hide,#sign-modal.hide,#chest-modal.hide,#tele-modal.hide,#color-modal.hide{display:none;}
 #sign-text{width:100%;box-sizing:border-box;border:1px solid var(--gray);border-radius:8px;background:var(--black);color:#fff;font-family:var(--font);font-size:14px;padding:10px;resize:vertical;margin-bottom:6px;}
 #sign-text:focus{outline:none;border-color:var(--gold);}
 .mv-box{background:var(--dark);border:1px solid var(--gold);border-radius:12px;padding:22px 24px;max-width:360px;width:100%;text-align:center;}
@@ -967,7 +967,38 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
       <p>Key colour</p>
       <div class="dk-swatches" id="chest-colors"></div>
     </div>
+    <div id="chest-lock-row">
+      <p>🔒 Locked? Needs a key to open:</p>
+      <div class="dk-swatches" id="chest-locks"></div>
+    </div>
     <button class="mv-done" id="chest-done">Done</button>
+  </div>
+</div>
+
+<div id="tele-modal" class="hide">
+  <div class="mv-box">
+    <h3>🌀 Teleport Pad</h3>
+    <p>Place two pads of the same colour — step on one to zap to the other. Pick a colour:</p>
+    <div class="dk-swatches" id="tele-colors"></div>
+    <button class="mv-done" id="tele-done">Done</button>
+  </div>
+</div>
+
+<div id="color-modal" class="hide">
+  <div class="mv-box">
+    <h3 id="color-title">Colour</h3>
+    <p id="color-sub">Pick a colour</p>
+    <div class="dk-swatches" id="color-colors"></div>
+    <div id="color-dur-row">
+      <p>How long does it stay open?</p>
+      <div class="ch-types" id="color-durs">
+        <button class="ch-type" data-d="forever">♾️ Stays open</button>
+        <button class="ch-type" data-d="3">3s</button>
+        <button class="ch-type" data-d="5">5s</button>
+        <button class="ch-type" data-d="10">10s</button>
+      </div>
+    </div>
+    <button class="mv-done" id="color-done">Done</button>
   </div>
 </div>
 
@@ -1199,7 +1230,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 // ═══════════════════════════════════════════════════════════════════════
 const COLS=20,ROWS=12,TS=48,CW=960,CH=576;
 const GRID_PX=16,PPX=3;
-const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25,WATER_TOP:26,WATER:27,CHEST:28};
+const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25,WATER_TOP:26,WATER:27,CHEST:28,TELEPORT:29,BUTTON:30,GATE:31};
 const KEY_COLORS={red:'#e53935',blue:'#4a90d9',green:'#43a047',yellow:'#fdd835'};
 const KEY_NAMES={red:'Red',blue:'Blue',green:'Green',yellow:'Yellow'};
 const TILE_GROUPS=[['build','🧱 Blocks'],['hazard','⚠️ Hazards'],['water','💧 Water'],['item','💎 Pickups'],['marker','🚩 Markers'],['decor','🌳 Decorations']];
@@ -1208,12 +1239,13 @@ const TILES=[
   {id:T.ONEWAY,icon:'⏬',label:'One-Way',g:'build'},{id:T.CRUMBLE,icon:'🧱',label:'Crumble',g:'build'},
   {id:T.CONVEYOR_L,icon:'⏪',label:'Belt ◀',g:'build'},{id:T.CONVEYOR_R,icon:'⏩',label:'Belt ▶',g:'build'},
   {id:T.MOVER,icon:'➡️',label:'Moving',g:'build'},{id:T.BOUNCE,icon:'🍄',label:'Bounce!',g:'build'},
+  {id:T.BUTTON,icon:'🔘',label:'Button',g:'build'},{id:T.GATE,icon:'🚧',label:'Gate',g:'build'},
   {id:T.LADDER,icon:'🪜',label:'Ladder',g:'build'},{id:T.CLOUD,icon:'☁️',label:'Cloud',g:'build'},
   {id:T.SPIKE,icon:'🌵',label:'Spike',g:'hazard'},{id:T.LAVA,icon:'🔥',label:'Lava',g:'hazard'},
   {id:T.ENEMY,icon:'👾',label:'Enemy A',g:'hazard'},{id:T.ENEMY2,icon:'🐛',label:'Enemy B',g:'hazard'},
   {id:T.WATER_TOP,icon:'🌊',label:'Water Top',g:'water'},{id:T.WATER,icon:'💧',label:'Water',g:'water'},
   {id:T.GEM,icon:'💎',label:'Gem',g:'item'},{id:T.STAR,icon:'⭐',label:'Star',g:'item'},{id:T.KEY,icon:'🔑',label:'Key',g:'item'},
-  {id:T.START,icon:'🚩',label:'Start',g:'marker'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint',g:'marker'},{id:T.DOOR,icon:'🚪',label:'Door',g:'marker'},{id:T.SIGN,icon:'🪧',label:'Sign',g:'marker'},{id:T.CHEST,icon:'🧰',label:'Chest',g:'marker'},{id:T.GOAL,icon:'🏁',label:'Finish',g:'marker'},
+  {id:T.START,icon:'🚩',label:'Start',g:'marker'},{id:T.CHECKPOINT,icon:'⛳',label:'Checkpoint',g:'marker'},{id:T.DOOR,icon:'🚪',label:'Door',g:'marker'},{id:T.SIGN,icon:'🪧',label:'Sign',g:'marker'},{id:T.CHEST,icon:'🧰',label:'Chest',g:'marker'},{id:T.TELEPORT,icon:'🌀',label:'Teleport',g:'marker'},{id:T.GOAL,icon:'🏁',label:'Finish',g:'marker'},
   {id:T.TREE,icon:'🌳',label:'Tree',g:'decor'},{id:T.FLOWER,icon:'🌸',label:'Flower',g:'decor'},{id:T.BUSH,icon:'🌿',label:'Bush',g:'decor'},
 ];
 // Shared plain-English descriptions — used by tooltips, the User Guide and the Teacher's Guide.
@@ -1241,7 +1273,10 @@ const TILE_DESC={
   [T.CHECKPOINT]:'A checkpoint flag. Reach it and you respawn here instead of the start.',
   [T.DOOR]:'A door to another page. Tap it to choose which key it needs (if any) and whether it goes to the next or previous page.',
   [T.SIGN]:'A sign with your own message. The player presses Up (or taps the sign) to read it. Tap it to write the message.',
-  [T.CHEST]:'A treasure chest! Fill it with gems, stars or a key. The player presses Up (or taps it) to open it. Tap it to choose what’s inside.',
+  [T.CHEST]:'A treasure chest! Fill it with gems, stars or a key. The player presses Up (or taps it) to open it. Tap it to choose what’s inside — in Key Stage 2 you can also lock it so a matching key is needed first.',
+  [T.TELEPORT]:'A teleport pad (Key Stage 2). Place two pads of the same colour — step on one to zap instantly to the other. Tap it to choose its colour.',
+  [T.BUTTON]:'A button / pressure plate (Key Stage 2). Step on it to open every gate of the same colour. Tap it to choose its colour.',
+  [T.GATE]:'A gate (Key Stage 2). It blocks the whole passage (right up to the ceiling, so it can’t be jumped over) until a button of the same colour is pressed. Tap it to choose its colour and how long it stays open.',
   [T.GOAL]:'The Finish! Reach it to win the whole game.',
   [T.TREE]:'A big tree to decorate your level.',
   [T.FLOWER]:'A pretty flower for decoration.',
@@ -1282,6 +1317,9 @@ let doorCfg={};  // per-door: "r,c" -> {key:'none'|'red'..., dir:'next'|'prev'}
 let keyCfg={};   // per-key:  "r,c" -> {color:'red'|'blue'|'green'|'yellow'}
 let signCfg={};  // per-sign: "r,c" -> {text:'...'}
 let chestCfg={}; // per-chest:"r,c" -> {contents:'gems'|'stars'|'key', amount:N, color:'red'...}
+let teleCfg={};  // per-pad:  "r,c" -> {color:'red'...}  (pads of same colour are linked)
+let buttonCfg={};// per-button:"r,c" -> {color:'red'...}  (opens gates of same colour)
+let gateCfg={};  // per-gate: "r,c" -> {color:'red'...}
 let gemA=0,goalA=0,tick=0;
 let customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
 let customBg={top:null,bottom:null,art:null}; // top/bottom = gradient; art = 16×16 painted sky (overrides gradient)
@@ -1292,10 +1330,10 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // always mirror the page currently being edited (curLevel) or played (playLevel).
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
-function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg))};}
-function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{}};}
+function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg))};}
+function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{},teleCfg:{},buttonCfg:{},gateCfg:{}};}
 function commitLevel(){if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
-function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};teleCfg=L.teleCfg?JSON.parse(JSON.stringify(L.teleCfg)):{};buttonCfg=L.buttonCfg?JSON.parse(JSON.stringify(L.buttonCfg)):{};gateCfg=L.gateCfg?JSON.parse(JSON.stringify(L.gateCfg)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
@@ -1365,12 +1403,12 @@ const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks only · 'ks2' = full coding blocks + interpreter
-function setKeyStage(ks){keyStage=(ks==='ks1')?'ks1':'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
+function setKeyStage(ks){keyStage=(ks==='ks1')?'ks1':'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
 let gameConfig={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'normal',
-  enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
+  enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',enemyAChase:false,enemyBChase:false,stomp:false,
   lives:3,gemPoints:10,starPoints:50,
   gravity:'normal',jumpHeight:'normal',bounceHeight:'normal',moverRange:'medium',
-  winCondition:'goal',timerSeconds:60,music:'happy',doubleJump:false,winMessage:''};
+  winCondition:'goal',timerSeconds:60,targetScore:50,music:'happy',doubleJump:false,winMessage:''};
 let player=null,enemies=[],movers=[],items=[],confetti=[];
 let playerKeys={}; // colours of keys the player is holding this game
 let checkpoint=null; // {level,c,r} last checkpoint reached on the current page
@@ -1399,7 +1437,7 @@ function saveCurrentLevel(){
   if(name===null)return;
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{}),chestCfg:JSON.parse(JSON.stringify(L.chestCfg||{}))}));
+  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{}),chestCfg:JSON.parse(JSON.stringify(L.chestCfg||{})),teleCfg:JSON.parse(JSON.stringify(L.teleCfg||{})),buttonCfg:JSON.parse(JSON.stringify(L.buttonCfg||{})),gateCfg:JSON.parse(JSON.stringify(L.gateCfg||{}))}));
   const saves=getSaves();
   saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites});
   setSaves(saves.slice(0,12));clearDirty();
@@ -1421,7 +1459,7 @@ function drawMiniThumb(canvas,g,th_name,water){
   grd.addColorStop(0,t.sky[0]);grd.addColorStop(1,t.sky[1]);
   ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
   const cw=W/COLS,ch=H/ROWS;
-  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CHEST]:'#9c6630',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63',[T.WATER_TOP]:'#2a8cdc',[T.WATER]:'#2a8cdc'};
+  const clr={[T.PLATFORM]:t.ground,[T.GRASS]:t.grass,[T.GEM]:t.gem,[T.STAR]:t.star,[T.SPIKE]:t.spike,[T.ENEMY]:t.enemy,[T.ENEMY2]:t.enemy2,[T.START]:t.startCol,[T.MOVER]:t.mover,[T.BOUNCE]:t.bounce,[T.LADDER]:t.ladder,[T.GOAL]:'#ffffff',[T.DOOR]:'#6d4c2f',[T.KEY]:'#fdd835',[T.CHECKPOINT]:'#ffd24a',[T.ONEWAY]:t.ground,[T.LAVA]:'#ff5722',[T.TREE]:'#3d8b40',[T.FLOWER]:'#ec407a',[T.BUSH]:'#388e3c',[T.SIGN]:'#caa472',[T.CHEST]:'#9c6630',[T.TELEPORT]:'#4a90d9',[T.BUTTON]:'#e53935',[T.GATE]:'#e53935',[T.CONVEYOR_L]:'#666',[T.CONVEYOR_R]:'#666',[T.CRUMBLE]:'#a98c63',[T.WATER_TOP]:'#2a8cdc',[T.WATER]:'#2a8cdc'};
   if(Array.isArray(water)){ctx.fillStyle='rgba(42,140,220,.5)';water.forEach((row,r)=>row.forEach((cell,c)=>{if(cell)ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}));}
   g.forEach((row,r)=>row.forEach((cell,c)=>{if(cell&&clr[cell]){ctx.fillStyle=clr[cell];ctx.fillRect(c*cw,r*ch,Math.max(cw,1),Math.max(ch,1));}}));
 }
@@ -1822,6 +1860,18 @@ function defineBlocks(){
     this.appendDummyInput().appendField('set Enemy A speed').appendField(new Blockly.FieldDropdown(ESPEEDS),'SPEED');
     this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(260);
   }};
+  Blockly.Blocks['enemy_a_chase']={init:function(){
+    this.appendDummyInput().appendField('🎯 Enemy A chases the player');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(260);
+  }};
+  Blockly.Blocks['enemy_b_chase']={init:function(){
+    this.appendDummyInput().appendField('🎯 Enemy B chases the player');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(260);
+  }};
+  Blockly.Blocks['enemy_stomp']={init:function(){
+    this.appendDummyInput().appendField('🦶 jump on enemies to defeat them');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(260);
+  }};
   Blockly.Blocks['enemy_b_behaviour']={init:function(){
     this.appendDummyInput().appendField('🐛 Enemy B moves').appendField(new Blockly.FieldDropdown(PATTERNS),'PAT');
     this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(290);
@@ -1858,6 +1908,14 @@ function defineBlocks(){
   }};
   Blockly.Blocks['win_survive_timer']={init:function(){
     this.appendDummyInput().appendField('⏱️ win by surviving').appendField(new Blockly.FieldDropdown([['30','30'],['60','60'],['90','90']]),'SECS').appendField('seconds');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(20);
+  }};
+  Blockly.Blocks['win_reach_score']={init:function(){
+    this.appendDummyInput().appendField('🎯 win by reaching').appendField(new Blockly.FieldNumber(50,1,99999,1),'TARGET').appendField('points');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(20);
+  }};
+  Blockly.Blocks['win_beat_timer']={init:function(){
+    this.appendDummyInput().appendField('🏃 win by reaching the goal within').appendField(new Blockly.FieldDropdown([['15','15'],['30','30'],['45','45'],['60','60'],['90','90']]),'SECS').appendField('seconds');
     this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(20);
   }};
   // ── Sound ──
@@ -1947,14 +2005,14 @@ function getToolbox(){
     ]},
     {kind:'category',name:'🟣  Enemies',colour:'260',contents:keyStage==='ks1'
       ?[{kind:'block',type:'enemy_a_behaviour'},{kind:'block',type:'enemy_a_speed'}]
-      :[{kind:'block',type:'enemy_a_behaviour'},{kind:'block',type:'enemy_a_speed'},{kind:'block',type:'enemy_b_behaviour'},{kind:'block',type:'enemy_b_speed'}]},
+      :[{kind:'block',type:'enemy_a_behaviour'},{kind:'block',type:'enemy_a_speed'},{kind:'block',type:'enemy_a_chase'},{kind:'block',type:'enemy_b_behaviour'},{kind:'block',type:'enemy_b_speed'},{kind:'block',type:'enemy_b_chase'},{kind:'block',type:'enemy_stomp'}]},
     {kind:'category',name:'🟢  Physics',colour:'160',contents:[
       {kind:'block',type:'set_gravity'},{kind:'block',type:'set_jump_height'},
       {kind:'block',type:'set_bounce_height'},{kind:'block',type:'set_mover_range'},{kind:'block',type:'set_double_jump'}
     ]},
     {kind:'category',name:'🏁  Win',colour:'20',contents:keyStage==='ks1'
       ?[{kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_message'}]
-      :[{kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_collect_gems'},{kind:'block',type:'win_survive_timer'},{kind:'block',type:'win_message'}]},
+      :[{kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_collect_gems'},{kind:'block',type:'win_survive_timer'},{kind:'block',type:'win_reach_score'},{kind:'block',type:'win_beat_timer'},{kind:'block',type:'win_message'}]},
     {kind:'category',name:'🔴  Rules',colour:'0',contents:[
       {kind:'block',type:'set_lives'},{kind:'block',type:'set_gem_points'},{kind:'block',type:'set_star_points'}
     ]},
@@ -2081,10 +2139,10 @@ function initBlockly(){
 function readBlocklyConfig(){
   if(!blocklyWorkspace)return;
   const cfg={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'normal',
-    enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',
+    enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',enemyAChase:false,enemyBChase:false,stomp:false,
     lives:3,gemPoints:10,starPoints:50,
     gravity:'normal',jumpHeight:'normal',bounceHeight:'normal',moverRange:'medium',
-    winCondition:'goal',timerSeconds:60,music:'happy',doubleJump:false,winMessage:''};
+    winCondition:'goal',timerSeconds:60,targetScore:50,music:'happy',doubleJump:false,winMessage:''};
   blocklyWorkspace.getTopBlocks(false).forEach(block=>{
     if(block.type==='when_key_pressed'){
       const key=block.getFieldValue('KEY');
@@ -2105,6 +2163,9 @@ function readBlocklyConfig(){
         if(n.type==='enemy_a_speed')cfg.enemyASpeed=n.getFieldValue('SPEED');
         if(n.type==='enemy_b_behaviour')cfg.enemyBPattern=n.getFieldValue('PAT');
         if(n.type==='enemy_b_speed')cfg.enemyBSpeed=n.getFieldValue('SPEED');
+        if(n.type==='enemy_a_chase')cfg.enemyAChase=true;
+        if(n.type==='enemy_b_chase')cfg.enemyBChase=true;
+        if(n.type==='enemy_stomp')cfg.stomp=true;
         // Legacy enemy blocks → map to Enemy A
         if(n.type==='enemy_patrol_lr')cfg.enemyAPattern='leftRight';
         if(n.type==='enemy_patrol_ud')cfg.enemyAPattern='upDown';
@@ -2121,6 +2182,8 @@ function readBlocklyConfig(){
         if(n.type==='win_reach_goal')cfg.winCondition='goal';
         if(n.type==='win_collect_gems')cfg.winCondition='gems';
         if(n.type==='win_survive_timer'){cfg.winCondition='timer';cfg.timerSeconds=parseInt(n.getFieldValue('SECS'))||60;}
+        if(n.type==='win_reach_score'){cfg.winCondition='score';cfg.targetScore=parseInt(n.getFieldValue('TARGET'))||50;}
+        if(n.type==='win_beat_timer'){cfg.winCondition='beatTimer';cfg.timerSeconds=parseInt(n.getFieldValue('SECS'))||30;}
         // Rules
         if(n.type==='set_lives')cfg.lives=parseInt(n.getFieldValue('LIVES'))||3;
         if(n.type==='set_gem_points')cfg.gemPoints=parseInt(n.getFieldValue('POINTS'))||10;
@@ -2410,7 +2473,36 @@ function drawTile(id,px,py,meta){
         // closed lid (rounded top)
         c.fillStyle='#9c6630';c.beginPath();c.moveTo(x0,baseY);c.lineTo(x0,baseY-6);c.quadraticCurveTo(px+TS/2,baseY-15,x0+w,baseY-6);c.lineTo(x0+w,baseY);c.closePath();c.fill();c.stroke();
         c.fillStyle='#c9a227';c.fillRect(px+TS/2-3,baseY-9,6,16); // clasp
-        c.fillStyle='#4a2f17';c.fillRect(px+TS/2-2,baseY-2,4,5); // lock
+        const locked=meta&&meta.lock&&meta.lock!=='none';
+        c.fillStyle=locked?(KEY_COLORS[meta.lock]||'#4a2f17'):'#4a2f17';c.fillRect(px+TS/2-3,baseY-3,6,6); // lock (tinted if locked)
+        if(locked){c.strokeStyle='#fff';c.lineWidth=1.3;c.beginPath();c.arc(px+TS/2,baseY-3,2.6,Math.PI,0);c.stroke();} // shackle
+      }
+      break;}
+    case T.TELEPORT:{
+      const col=KEY_COLORS[(meta&&meta.color)||'blue']||'#4a90d9';
+      const cx=px+TS/2,cy=py+TS-8;
+      c.save();
+      c.fillStyle=col;c.globalAlpha=0.3;c.beginPath();c.ellipse(cx,cy,TS/2-2,8,0,0,Math.PI*2);c.fill();
+      c.globalAlpha=1;c.strokeStyle=col;c.lineWidth=2.5;c.beginPath();c.ellipse(cx,cy,TS/2-2,8,0,0,Math.PI*2);c.stroke();
+      c.fillStyle='#fff';c.globalAlpha=0.8;c.beginPath();c.ellipse(cx,cy,TS/2-7,4,0,0,Math.PI*2);c.fill();
+      c.fillStyle=col;c.globalAlpha=0.9;for(let i=0;i<3;i++){const ph=(tick*0.05+i/3)%1,y=cy-ph*22,rr=2.2*(1-ph);c.beginPath();c.arc(cx-6+i*6,y,Math.max(0.4,rr),0,Math.PI*2);c.fill();}
+      c.globalAlpha=1;c.restore();break;}
+    case T.BUTTON:{
+      const col=KEY_COLORS[(meta&&meta.color)||'red']||'#e53935';
+      const pressed=meta&&meta.pressed;
+      const w=TS-12,x0=px+6,h=pressed?5:10,y0=py+TS-h-1;
+      c.fillStyle='#2a2a2a';c.fillRect(x0-2,py+TS-4,w+4,4);
+      c.fillStyle=col;c.fillRect(x0,y0,w,h);
+      c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(x0,y0,w,h);
+      c.fillStyle='rgba(255,255,255,.45)';c.fillRect(x0+3,y0+2,w-6,2);
+      break;}
+    case T.GATE:{
+      const col=KEY_COLORS[(meta&&meta.color)||'red']||'#e53935';
+      if(meta&&meta.open){
+        c.globalAlpha=0.5;c.fillStyle=col;c.fillRect(px+3,py,TS-6,5);c.strokeStyle='#000';c.lineWidth=1.5;c.strokeRect(px+3,py,TS-6,5);c.globalAlpha=1;
+      }else{
+        c.fillStyle=col;c.fillRect(px+3,py+1,TS-6,TS-2);c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(px+3,py+1,TS-6,TS-2);
+        c.save();c.beginPath();c.rect(px+3,py+1,TS-6,TS-2);c.clip();c.strokeStyle='rgba(0,0,0,.28)';c.lineWidth=4;for(let i=-TS;i<TS;i+=10){c.beginPath();c.moveTo(px+i,py+TS);c.lineTo(px+i+TS,py);c.stroke();}c.restore();
       }
       break;}
     case T.CONVEYOR_L:
@@ -2456,10 +2548,10 @@ Object.keys(TOOL_DESC).forEach(id=>{const el=document.getElementById(id);if(el){
 // ═══════════════════════════════════════════════════════════════════════
 function tileReferenceHTML(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<div class="help-grouphead">'+name+'</div>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="help-ref"><span class="hr-ic">'+t.icon+'</span><span class="hr-tx"><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
 const HELP_TABS=[
- ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button>`],
+ ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button><button class="help-launch" onclick="startMission('gadgets')">🧩 Puzzle with buttons &amp; gates (KS2) →</button>`],
  ['build','🧱 Building',`<p>In <b>Build</b> mode, pick a tool at the top:</p><ul><li><b>🖌️ Paint</b> — place the selected block.</li><li><b>🪣 Fill Row</b> — fill a whole row (great for floors).</li><li><b>🧹 Erase</b> — remove blocks (peels the item first, then any water behind it).</li><li><b>↩️ Undo / ↪️ Redo</b>, <b>🗑️ Clear</b> the page, and <b>▶️ This Page</b> to test one page.</li></ul><p>Some blocks have extra settings — just <b>tap them after placing</b>: moving platforms, enemies, doors, keys and signs.</p><p>Use the <b>pages</b> strip to add, duplicate (⧉), reorder (▲▼) and delete pages for a multi-level adventure.</p><h3>Every block, explained</h3>`+tileReferenceHTML()],
  ['design','🎨 Designing',`<p>Open <b>🎨 Design</b> to draw your own 16×16 pictures for the player, enemies, blocks, keys and more.</p><ul><li>Pick a tab to choose what to draw.</li><li>It shows the <b>current design</b> — tweak it, <b>🗑️ Clear</b> to make something blank/invisible, or <b>↺ Reset</b> for the default.</li><li>Use <b>🪣 Fill all</b> to fill the canvas, and the eraser to rub out.</li><li>The <b>Background</b> tab lets you pick sky colours or paint your own sky.</li></ul>`],
- ['code','🧩 Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b>🟡 Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b>🔵 Player</b> — movement and speed.</li><li><b>🟣 Enemies</b> — how enemies move.</li><li><b>🟢 Physics</b> — gravity, jump height, bounce, double jump.</li><li><b>🏁 Win</b> — how to win, plus a custom win message.</li><li><b>🔴 Rules</b> — lives and points.</li><li><b>🎵 Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b>🗑️ Clear code</b> removes everything.</p><p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
+ ['code','🧩 Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b>🟡 Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b>🔵 Player</b> — movement and speed.</li><li><b>🟣 Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b>🟢 Physics</b> — gravity, jump height, bounce, double jump.</li><li><b>🏁 Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b>🔴 Rules</b> — lives and points.</li><li><b>🎵 Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b>🗑️ Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: 🔑 keys & 🚪 doors, 🧰 <b>chests</b> (lockable), 🌀 <b>teleport pads</b>, and 🔘 <b>buttons</b> that open 🚧 <b>gates</b> — see the <b>Building</b> tab for what each does.</p><p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
  ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game in “My Levels”. Your work also <b>auto-saves</b> as a draft.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to open later.</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen for lessons, worksheets, starter levels and the full guide.</p>`],
 ];
 let helpTab='start';
@@ -2487,6 +2579,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   `+guideTileRef()+`
   <h3>Coding blocks (Key Stage 2)</h3>
   <p>Events fire scripts (game start, collect a gem, touch an enemy, land on a page, every N seconds). Actions change score/lives, show a message, play a sound, go to a page, win, or end the game. These combine with standard Logic, Loops, Maths, Variables and Functions. A friendly limit stops runaway loops, so nothing freezes.</p>
+  <p><b>Win conditions</b> (Win category): reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b>, plus a custom win message. <b>Smart enemies</b> (Enemies category): make Enemy A/B <b>chase the player</b>, and enable <b>jump-to-defeat</b> (stomp).</p>
+  <p><b>Key Stage 2 grid extras:</b> keys &amp; doors, lockable <b>chests</b>, <b>teleport pads</b> (same-colour pairs), and <b>buttons</b> that open same-colour <b>gates</b> — all listed with the other blocks above.</p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
   <h3>Troubleshooting</h3>
@@ -2512,9 +2606,18 @@ const MISSIONS={
   {text:'Press <b>▶️ Play</b> at the top to test your game!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
   {text:'🎉 You made a game! Keep exploring — add more pages, draw your own pictures in 🎨 Design, or set rules in &lt;/&gt; Code.',final:true,check:()=>false},
  ]},
+ gadgets:{title:'Puzzle with buttons & gates',ks2:true,steps:[
+  {text:'First make a floor: pick <b>Grass Top 🌿</b> and click along the bottom.',hl:()=>_palItem('Grass'),check:_floorMade},
+  {text:'Add a <b>Start 🚩</b> and a <b>Finish 🏁</b> at each end.',hl:()=>_palItem('Start'),check:()=>_gridHas(T.START)&&_gridHas(T.GOAL)},
+  {text:'Place a <b>Gate 🚧</b> in the middle to block the way.',hl:()=>_palItem('Gate'),check:()=>_gridHas(T.GATE)},
+  {text:'Now place a <b>Button 🔘</b>. Tap each one to give the button and gate the <b>same colour</b>.',hl:()=>_palItem('Button'),check:()=>_gridHas(T.BUTTON)},
+  {text:'Add a <b>Chest 🧰</b> and tap it to put treasure inside.',hl:()=>_palItem('Chest'),check:()=>_gridHas(T.CHEST)},
+  {text:'Press <b>▶️ Play</b> — step on the button to open the gate, then dash to the finish!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
+  {text:'🎉 Brilliant puzzle! Try teleport pads 🌀 next, or set a points/time goal in &lt;/&gt; Code.',final:true,check:()=>false},
+ ]},
 };
 let missionId=null,missionStep=0,_missionTimer=null;
-function startMission(id){const m=MISSIONS[id];if(!m)return;document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
+function startMission(id){const m=MISSIONS[id];if(!m)return;if(m.ks2&&keyStage!=='ks2'){toast('Start a Key Stage 2 game to try this one 🙂','#ae853e');return;}document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
 function _clearHL(){document.querySelectorAll('.coach-hl').forEach(e=>e.classList.remove('coach-hl'));}
 function renderCoach(){const m=MISSIONS[missionId];if(!m)return;const st=m.steps[missionStep];document.getElementById('coach-step').innerHTML=st.text;document.getElementById('coach-dots').textContent=m.steps.map((_,i)=>i<missionStep?'·':i===missionStep?'●':'○').join('');document.getElementById('coach-skip').style.display=st.final?'none':'';_clearHL();if(st.hl){try{const el=st.hl();if(el)el.classList.add('coach-hl');}catch(e){}}}
 function advanceMission(){const m=MISSIONS[missionId];if(!m)return;if(missionStep<m.steps.length-1){missionStep++;chirp(880,0.08,'square',0.05);renderCoach();}else endMission();}
@@ -2529,7 +2632,9 @@ document.getElementById('coach-skip').onclick=()=>advanceMission();
 function drawBuild(){
   const t=th();paintSky(ctx);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c])drawTile(waterGrid[r][c],c*TS,r*TS);
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid&&tid!==T.ENEMY&&tid!==T.ENEMY2)drawTile(tid,c*TS,r*TS,tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:null);if(tid===T.ENEMY)drawEnemyAt(c*TS,r*TS,0,1,'A');if(tid===T.ENEMY2)drawEnemyAt(c*TS,r*TS,0,1,'B');}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid&&tid!==T.ENEMY&&tid!==T.ENEMY2)drawTile(tid,c*TS,r*TS,tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHEST?{lock:(chestCfg[r+','+c]||{}).lock}:tid===T.TELEPORT?{color:(teleCfg[r+','+c]||{}).color}:tid===T.BUTTON?{color:(buttonCfg[r+','+c]||{}).color}:tid===T.GATE?{color:(gateCfg[r+','+c]||{}).color}:null);if(tid===T.ENEMY)drawEnemyAt(c*TS,r*TS,0,1,'A');if(tid===T.ENEMY2)drawEnemyAt(c*TS,r*TS,0,1,'B');}
+  // Preview each gate's full-height barrier (it blocks up to the ceiling so it can't be jumped over)
+  for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){if(grid[r][c]===T.GATE){const col=(gateCfg[r+','+c]||{}).color;ctx.save();ctx.globalAlpha=0.32;for(let rr=r-1;rr>=0;rr--){if(grid[rr][c]!==T.EMPTY)break;drawTile(T.GATE,c*TS,rr*TS,{color:col,open:false});}ctx.restore();}}
   ctx.strokeStyle=t.grid;ctx.lineWidth=1;for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*TS,0);ctx.lineTo(c*TS,CH);ctx.stroke();}for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*TS);ctx.lineTo(CW,r*TS);ctx.stroke();}
   // Show each moving platform's travel range (build mode only)
   const def=moverDefaultTiles();
@@ -2556,7 +2661,7 @@ function drawBuild(){
 
 function buildPalette(){
   const pal=document.getElementById('palette');pal.innerHTML='';
-  const vis=TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2)));
+  const vis=TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2||ti.id===T.TELEPORT||ti.id===T.BUTTON||ti.id===T.GATE)));
   const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};attachTip(d,'<b>'+label+'</b>'+(TILE_DESC[ti.id]?'<br>'+TILE_DESC[ti.id]:''));return d;};
   if(keyStage==='ks2'){
     TILE_GROUPS.forEach(([g,name])=>{const items=vis.filter(ti=>ti.g===g);if(!items.length)return;const h=document.createElement('div');h.className='pal-group';h.textContent=name;pal.appendChild(h);items.forEach(ti=>pal.appendChild(mkItem(ti)));});
@@ -2575,8 +2680,8 @@ function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone! ↪️','#6366f1');}
 
 function cellFromEvent(e){const r=canvas.getBoundingClientRect();return{col:Math.floor((e.clientX-r.left)/r.width*COLS),row:Math.floor((e.clientY-r.top)/r.height*ROWS)};}
-function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN,wasChest=prev===T.CHEST;
-  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];if(wasChest)delete chestCfg[mk];};
+function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN,wasChest=prev===T.CHEST,wasTele=prev===T.TELEPORT,wasBtn=prev===T.BUTTON,wasGate=prev===T.GATE;
+  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];if(wasChest)delete chestCfg[mk];if(wasTele)delete teleCfg[mk];if(wasBtn)delete buttonCfg[mk];if(wasGate)delete gateCfg[mk];};
   if(erase){ // peel the foreground item first, then the water behind it
     if(grid[row][col]!==T.EMPTY){grid[row][col]=T.EMPTY;dropMeta();}
     else if(waterGrid[row][col]){waterGrid[row][col]=0;}
@@ -2590,9 +2695,12 @@ function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const
   if(selTile===T.DOOR&&!doorCfg[mk])doorCfg[mk]={key:'none',dir:'next'};
   if(selTile===T.KEY&&!keyCfg[mk])keyCfg[mk]={color:'yellow'};
   if(selTile===T.SIGN&&!signCfg[mk])signCfg[mk]={text:''};
-  if(selTile===T.CHEST&&!chestCfg[mk])chestCfg[mk]={contents:'gems',amount:3,color:'yellow'};}
+  if(selTile===T.CHEST&&!chestCfg[mk])chestCfg[mk]={contents:'gems',amount:3,color:'yellow',lock:'none'};
+  if(selTile===T.TELEPORT&&!teleCfg[mk])teleCfg[mk]={color:'blue'};
+  if(selTile===T.BUTTON&&!buttonCfg[mk])buttonCfg[mk]={color:'red'};
+  if(selTile===T.GATE&&!gateCfg[mk])gateCfg[mk]={color:'red',dur:'forever'};}
 // Tapping any placed moving platform OR enemy (in Paint mode) opens its travel editor.
-function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}if(t===T.CHEST){openChestEditor(row,col);return true;}return false;}
+function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}if(t===T.CHEST){openChestEditor(row,col);return true;}if(t===T.TELEPORT){openTeleEditor(row,col);return true;}if(t===T.BUTTON){openColorEditor('button',row,col);return true;}if(t===T.GATE){openColorEditor('gate',row,col);return true;}return false;}
 function enemyDefaultCfg(tid){return tid===T.ENEMY2?{l:0,r:0,u:2,d:2}:{l:3,r:3,u:0,d:0};}
 let mvKind='mover',mvKey=null;
 function mvMap(){return mvKind==='enemy'?enemyCfg:moverCfg;}
@@ -2627,14 +2735,31 @@ let dkSign=null;
 function openSignEditor(row,col){dkSign=row+','+col;if(!signCfg[dkSign])signCfg[dkSign]={text:''};document.getElementById('sign-text').value=signCfg[dkSign].text||'';document.getElementById('sign-modal').classList.remove('hide');setTimeout(()=>document.getElementById('sign-text').focus(),30);}
 document.getElementById('sign-done').onclick=()=>{if(dkSign)signCfg[dkSign].text=document.getElementById('sign-text').value.slice(0,140);document.getElementById('sign-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
 let dkChest=null;
-function openChestEditor(row,col){dkChest=row+','+col;if(!chestCfg[dkChest])chestCfg[dkChest]={contents:'gems',amount:3,color:'yellow'};renderChestEditor();document.getElementById('chest-modal').classList.remove('hide');}
-function renderChestEditor(){const cfg=chestCfg[dkChest];if(!cfg)return;const isKey=cfg.contents==='key';document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.classList.toggle('sel',b.dataset.c===cfg.contents));document.getElementById('chest-amount').textContent=cfg.amount;document.getElementById('chest-amount-row').style.display=isKey?'none':'';document.getElementById('chest-color-row').style.display=isKey?'':'none';const cs=document.getElementById('chest-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderChestEditor();};cs.appendChild(b);});}
+function openChestEditor(row,col){dkChest=row+','+col;if(!chestCfg[dkChest])chestCfg[dkChest]={contents:'gems',amount:3,color:'yellow',lock:'none'};if(keyStage==='ks1')chestCfg[dkChest].lock='none';renderChestEditor();document.getElementById('chest-modal').classList.remove('hide');}
+function renderChestEditor(){const cfg=chestCfg[dkChest];if(!cfg)return;const isKey=cfg.contents==='key';document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.classList.toggle('sel',b.dataset.c===cfg.contents));document.getElementById('chest-amount').textContent=cfg.amount;document.getElementById('chest-amount-row').style.display=isKey?'none':'';document.getElementById('chest-color-row').style.display=isKey?'':'none';const cs=document.getElementById('chest-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderChestEditor();};cs.appendChild(b);});
+  // Locked chests are a Key Stage 2 feature only
+  const lockRow=document.getElementById('chest-lock-row');lockRow.style.display=(keyStage==='ks2')?'':'none';
+  if(keyStage==='ks2'){const ls=document.getElementById('chest-locks');ls.innerHTML='';const opts=[['none','Not locked',null]].concat(Object.keys(KEY_COLORS).map(c=>[c,KEY_NAMES[c]+' key',KEY_COLORS[c]]));opts.forEach(([val,label,col])=>{const b=document.createElement('div');b.className='dk-sw'+((cfg.lock||'none')===val?' sel':'')+(val==='none'?' dk-none':'');b.style.background=col||'#555';b.textContent=val==='none'?'Open':'';b.title=label;b.onclick=()=>{cfg.lock=val;renderChestEditor();};ls.appendChild(b);});}}
 document.querySelectorAll('#chest-modal .ch-type').forEach(b=>b.onclick=()=>{if(!dkChest)return;chestCfg[dkChest].contents=b.dataset.c;renderChestEditor();});
 document.getElementById('chest-minus').onclick=()=>{if(!dkChest)return;const cfg=chestCfg[dkChest];cfg.amount=Math.max(1,cfg.amount-1);renderChestEditor();};
 document.getElementById('chest-plus').onclick=()=>{if(!dkChest)return;const cfg=chestCfg[dkChest];cfg.amount=Math.min(20,cfg.amount+1);renderChestEditor();};
 document.getElementById('chest-done').onclick=()=>{document.getElementById('chest-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
-function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);else if(t===T.DOOR)openDoorEditor(row,col);else if(t===T.KEY)openKeyEditor(row,col);else if(t===T.SIGN)openSignEditor(row,col);else if(t===T.CHEST)openChestEditor(row,col);}
-function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY||t===T.SIGN||t===T.CHEST;}
+let dkTele=null;
+function openTeleEditor(row,col){dkTele=row+','+col;if(!teleCfg[dkTele])teleCfg[dkTele]={color:'blue'};renderTeleEditor();document.getElementById('tele-modal').classList.remove('hide');}
+function renderTeleEditor(){const cfg=teleCfg[dkTele];if(!cfg)return;const cs=document.getElementById('tele-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderTeleEditor();};cs.appendChild(b);});}
+document.getElementById('tele-done').onclick=()=>{document.getElementById('tele-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
+let dkColor=null,dkColorMap=null,dkColorKind=null;
+function openColorEditor(kind,row,col){dkColor=row+','+col;dkColorKind=kind;dkColorMap=(kind==='button')?buttonCfg:gateCfg;if(!dkColorMap[dkColor])dkColorMap[dkColor]=(kind==='gate')?{color:'red',dur:'forever'}:{color:'red'};
+  document.getElementById('color-title').textContent=(kind==='button')?'🔘 Button':'🚧 Gate';
+  document.getElementById('color-sub').textContent=(kind==='button')?'Opens gates of this colour when stepped on:':'Opens when a button of this colour is pressed:';
+  document.getElementById('color-dur-row').style.display=(kind==='gate')?'':'none';
+  renderColorEditor();document.getElementById('color-modal').classList.remove('hide');}
+function renderColorEditor(){const cfg=dkColorMap[dkColor];if(!cfg)return;const cs=document.getElementById('color-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderColorEditor();};cs.appendChild(b);});
+  if(dkColorKind==='gate')document.querySelectorAll('#color-durs .ch-type').forEach(b=>b.classList.toggle('sel',b.dataset.d===String(cfg.dur||'forever')));}
+document.querySelectorAll('#color-durs .ch-type').forEach(b=>b.onclick=()=>{if(dkColorKind==='gate'&&dkColorMap[dkColor]){dkColorMap[dkColor].dur=b.dataset.d;renderColorEditor();}});
+document.getElementById('color-done').onclick=()=>{document.getElementById('color-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
+function openEditorFor(row,col){const t=grid[row][col];if(t===T.MOVER)openMoverEditor(row,col);else if(t===T.ENEMY||t===T.ENEMY2)openEnemyEditor(row,col);else if(t===T.DOOR)openDoorEditor(row,col);else if(t===T.KEY)openKeyEditor(row,col);else if(t===T.SIGN)openSignEditor(row,col);else if(t===T.CHEST)openChestEditor(row,col);else if(t===T.TELEPORT)openTeleEditor(row,col);else if(t===T.BUTTON)openColorEditor('button',row,col);else if(t===T.GATE)openColorEditor('gate',row,col);}
+function isTravelTile(t){return t===T.MOVER||t===T.ENEMY||t===T.ENEMY2||t===T.DOOR||t===T.KEY||t===T.SIGN||t===T.CHEST||t===T.TELEPORT||t===T.BUTTON||t===T.GATE;}
 // Fill an entire row with the selected tile (Fill Row tool).
 function fillRow(row,clickCol){if(row<0||row>=ROWS)return;
   if(selTile===T.WATER||selTile===T.WATER_TOP){for(let c=0;c<COLS;c++)waterGrid[row][c]=selTile;return;} // fill the water layer
@@ -2706,7 +2831,7 @@ document.getElementById('t-save') .onclick=()=>saveCurrentLevel();
 function buildPayload(){
   commitLevel();
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{}}));
+  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   return{version:2,keyStage,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,customSprites};
 }
@@ -2725,7 +2850,10 @@ function sanitizeEnemyCfg(m){const out={};if(!m||typeof m!=='object')return out;
 function sanitizeDoorCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const key=(v.key==='none'||KEY_COLORS[v.key])?v.key:'none';const dir=(v.dir==='prev')?'prev':'next';out[k]={key,dir};}return out;}
 function sanitizeKeyCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={color};}return out;}
 function sanitizeSignCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const txt=(m[k]&&typeof m[k].text==='string')?m[k].text:'';out[k]={text:txt.slice(0,140)};}return out;}
-function sanitizeChestCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const contents=(v.contents==='stars'||v.contents==='key')?v.contents:'gems';const amount=Math.max(1,Math.min(20,parseInt(v.amount,10)||1));const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={contents,amount,color};}return out;}
+function sanitizeChestCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const contents=(v.contents==='stars'||v.contents==='key')?v.contents:'gems';const amount=Math.max(1,Math.min(20,parseInt(v.amount,10)||1));const color=KEY_COLORS[v.color]?v.color:'yellow';const lock=KEY_COLORS[v.lock]?v.lock:'none';out[k]={contents,amount,color,lock};}return out;}
+function sanitizeTeleCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const color=KEY_COLORS[(m[k]||{}).color]?m[k].color:'blue';out[k]={color};}return out;}
+function sanitizeColorCfg(m,def){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const color=KEY_COLORS[(m[k]||{}).color]?m[k].color:def;out[k]={color};}return out;}
+function sanitizeGateCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'red';let dur=v.dur;dur=(dur===undefined||dur==='forever')?'forever':String(Math.max(1,Math.min(60,parseInt(dur,10)||5)));out[k]={color,dur};}return out;}
 function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&L.waterGrid);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(_g[r][c]===T.WATER||_g[r][c]===T.WATER_TOP){if(!_w[r][c])_w[r][c]=_g[r][c];_g[r][c]=0;}}return{
   grid:_g,waterGrid:_w,
   theme:(L&&typeof L.theme==='string'&&THEMES[L.theme])?L.theme:'forest',
@@ -2735,7 +2863,10 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
   doorCfg:sanitizeDoorCfg(L&&L.doorCfg),
   keyCfg:sanitizeKeyCfg(L&&L.keyCfg),
   signCfg:sanitizeSignCfg(L&&L.signCfg),
-  chestCfg:sanitizeChestCfg(L&&L.chestCfg)
+  chestCfg:sanitizeChestCfg(L&&L.chestCfg),
+  teleCfg:sanitizeTeleCfg(L&&L.teleCfg),
+  buttonCfg:sanitizeColorCfg(L&&L.buttonCfg,'red'),
+  gateCfg:sanitizeGateCfg(L&&L.gateCfg)
 };}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
@@ -3157,10 +3288,10 @@ function isRight(){return !!keys[KC[gameConfig.moveRight]];}
 function isJump() {return !!keys[KC[gameConfig.jump]];}
 function isUp()   {return keys['ArrowUp']||keys['KeyW'];}
 function isDown() {return keys['ArrowDown']||keys['KeyS'];}
-function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
+function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(gateBarrier[row+','+col])return true;if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+function loadPlayLevel(i){activateLevel(i);camX=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};teleCool=0;teleFrom=null;gateOpenUntil={};recomputeGateBarrier();upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
 let _testFromLevel=null;
 function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
 function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();}
@@ -3170,10 +3301,33 @@ function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e')
 function resumeFromDeath(){lives=gameConfig.lives;playing=true;hideOv();loadPlayLevel(playLevel);if(!musicMuted)startMusic();}
 function checkCheckpoint(){if(!player)return;const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);if(tileAt(cc,cr)===T.CHECKPOINT){if(!checkpoint||checkpoint.level!==playLevel||checkpoint.c!==cc||checkpoint.r!==cr){checkpoint={level:playLevel,c:cc,r:cr};chirp(880,0.08,'square',0.05);toast('Checkpoint reached! ⛳','#10b981');}}}
 function updateCrumble(){for(const k in crumbleState){if(crumbleT[k]>0){crumbleT[k]--;continue;}if(crumbleState[k]==='shaking'){crumbleState[k]='gone';crumbleT[k]=150;chirp(170,0.18,'sawtooth',0.05);}else{delete crumbleState[k];delete crumbleT[k];}}}
+let gateOpenUntil={}; // "r,c" -> tick when it auto-closes (Infinity = stays open)
+let gateBarrier={};   // "r,c" -> colour : invisible-to-jump solid cells above closed gates
+function isGateOpen(r,c){const t=gateOpenUntil[r+','+c];return t!==undefined&&tick<t;}
+function anyGateOpen(color){for(const k in gateOpenUntil){if(tick<gateOpenUntil[k]&&(gateCfg[k]||{}).color===color)return true;}return false;}
+// A closed gate blocks its whole column up to the ceiling so it can't be jumped over.
+function recomputeGateBarrier(){gateBarrier={};for(let c=0;c<COLS;c++)for(let r=0;r<ROWS;r++){if(grid[r][c]===T.GATE&&!isGateOpen(r,c)){const col=(gateCfg[r+','+c]||{}).color;for(let rr=r-1;rr>=0;rr--){if(grid[rr][c]!==T.EMPTY)break;gateBarrier[rr+','+c]=col;}}}}
+function openGatesOfColor(color){let newlyOpened=false;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.GATE&&(gateCfg[r+','+c]||{}).color===color){const cfg=gateCfg[r+','+c]||{};const dur=cfg.dur;const until=(dur===undefined||dur==='forever')?Infinity:tick+(parseInt(dur,10)||5)*60;if(!isGateOpen(r,c))newlyOpened=true;gateOpenUntil[r+','+c]=until;}}recomputeGateBarrier();return newlyOpened;}
+function checkButtons(){if(!player)return;const p=player;const cs=[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)],rs=[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)];
+  for(const c of cs)for(const r of rs){if(tileAt(c,r)===T.BUTTON){const col=(buttonCfg[r+','+c]||{}).color;if(col&&openGatesOfColor(col)){chirp(660,0.08,'square',0.06);chirp(990,0.09,'square',0.05);toast('A gate opened! 🚧',KEY_COLORS[col]||'#10b981');}}}}
+function checkGateTimers(){let changed=false;for(const k in gateOpenUntil){const t=gateOpenUntil[k];if(t!==Infinity&&tick>=t){delete gateOpenUntil[k];changed=true;}}if(changed){recomputeGateBarrier();chirp(280,0.12,'square',0.05);}}
+let teleCool=0,teleFrom=null; // teleport cooldown + the pad we just arrived on
+function checkTeleport(){if(!player)return;if(teleCool>0)teleCool--;
+  const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);
+  if(tileAt(cc,cr)!==T.TELEPORT){teleFrom=null;return;}
+  const key=cr+','+cc;if(teleCool>0||teleFrom===key)return;
+  const cfg=teleCfg[key];if(!cfg)return;
+  let partner=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.TELEPORT&&!(r===cr&&c===cc)&&(teleCfg[r+','+c]||{}).color===cfg.color)partner={r,c};}
+  if(!partner){if(tick-(checkTeleport._hintT||0)>120){checkTeleport._hintT=tick;toast('This pad needs a matching pad to zap to! 🌀',KEY_COLORS[cfg.color]||'#4a90d9');}return;}
+  player.x=partner.c*TS+(TS-PW)/2;player.y=partner.r*TS+(TS-PH)/2;player.vx=0;player.vy=Math.min(player.vy,0);
+  teleFrom=partner.r+','+partner.c;teleCool=18;camX=Math.max(0,Math.min(player.x-CW/2,COLS*TS-CW));
+  chirp(1200,0.08,'sine',0.06);chirp(1700,0.09,'sine',0.05);}
 let signNear=null,chestNear=null,upPrev=false; // sign/chest the player is standing in front of
 function readSign(){if(signNear&&signNear.text){toast('🪧 '+signNear.text,'#caa472');chirp(660,0.06,'sine',0.04);}}
-function openChest(){if(!chestNear)return;const k=chestNear.r+','+chestNear.c;if(chestOpened[k])return;chestOpened[k]=true;
-  const cfg=chestCfg[k]||{contents:'gems',amount:3,color:'yellow'};
+function openChest(){if(!chestNear)return;const k=chestNear.r+','+chestNear.c;if(chestOpened[k])return;
+  const cfg=chestCfg[k]||{contents:'gems',amount:3,color:'yellow',lock:'none'};
+  if(cfg.lock&&cfg.lock!=='none'&&!playerKeys[cfg.lock]){chirp(180,0.12,'square',0.05);toast('Locked! Find the '+(KEY_NAMES[cfg.lock]||'')+' key first 🔒',KEY_COLORS[cfg.lock]||'#ef4444');return;}
+  chestOpened[k]=true;
   if(cfg.contents==='key'){playerKeys[cfg.color]=true;chirp(1318,0.12,'square',0.06);toast('Chest opened — a '+(KEY_NAMES[cfg.color]||'')+' key! 🔑',KEY_COLORS[cfg.color]||'#fdd835');}
   else{const n=Math.max(1,cfg.amount||1),star=cfg.contents==='stars';score+=(star?gameConfig.starPoints:gameConfig.gemPoints)*n;chirp(star?1047:784,0.1,'square',0.07);chirp(star?1318:988,0.1,'square',0.05);toast('Chest opened — '+n+' '+(star?'star':'gem')+(n>1?'s':'')+'! '+(star?'⭐':'💎'),'#c9a227');}
 }
@@ -3181,7 +3335,7 @@ function checkSign(){signNear=null;chestNear=null;if(!player)return;
   const cc=Math.floor((player.x+PW/2)/TS),cr=Math.floor((player.y+PH/2)/TS);
   const here=tileAt(cc,cr);
   if(here===T.SIGN){const cfg=signCfg[cr+','+cc];const txt=cfg&&cfg.text?cfg.text:'';if(txt)signNear={c:cc,r:cr,text:txt};}
-  if(here===T.CHEST&&!chestOpened[cr+','+cc])chestNear={c:cc,r:cr};
+  if(here===T.CHEST&&!chestOpened[cr+','+cc]){const cc2=chestCfg[cr+','+cc]||{};const locked=cc2.lock&&cc2.lock!=='none'&&!playerKeys[cc2.lock];chestNear={c:cc,r:cr,locked};}
   const up=isUp();if(up&&!upPrev){if(signNear)readSign();if(chestNear)openChest();}upPrev=up;}
 // KS2 underwater air: deplete while head is in deep water, reset on surfacing, drown loses a life.
 function checkAir(){
@@ -3272,7 +3426,18 @@ function updatePlayer(){
 }
 function resolveX(p){const tr=Math.floor(p.y/TS),br=Math.floor((p.y+PH-1)/TS);if(p.vx>0){const rc=Math.floor((p.x+PW)/TS);if(isSolid(rc,tr)||isSolid(rc,br)){p.x=rc*TS-PW;p.vx=0;}}else if(p.vx<0){const lc=Math.floor(p.x/TS);if(isSolid(lc,tr)||isSolid(lc,br)){p.x=(lc+1)*TS;p.vx=0;}}}
 function resolveY(p){const lc=Math.floor((p.x+2)/TS),rc=Math.floor((p.x+PW-3)/TS);p.onGround=false;if(p.vy>0){const br=Math.floor((p.y+PH)/TS);const prevBottom=p.y+PH-p.vy;const onewayLand=(tileAt(lc,br)===T.ONEWAY||tileAt(rc,br)===T.ONEWAY)&&prevBottom<=br*TS+2;if(isSolid(lc,br)||isSolid(rc,br)){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(onewayLand){p.y=br*TS-PH;p.vy=0;p.onGround=true;}else if(tileAt(lc,br)===T.BOUNCE||tileAt(rc,br)===T.BOUNCE){p.y=br*TS-PH;p.vy=bounceForce();chirp(880,0.05,'square',0.08);}else{for(const m of movers){const prev=p.y+PH-p.vy;if(p.x+PW-4>m.x&&p.x+4<m.x+m.w&&prev<=m.y+2&&p.y+PH>=m.y){p.y=m.y-PH;p.vy=0;p.onGround=true;p.standingMover=m;break;}}}}else if(p.vy<0){const tr=Math.floor(p.y/TS);if(isSolid(lc,tr)||isSolid(rc,tr)){p.y=(tr+1)*TS;p.vy=0;}}}
-function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;
+function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;if(e.dead)return;
+  // KS2 "chase" — walk toward the player along the enemy's row, stopping at walls and ledges
+  const chasing=player&&(e.kind==='B'?gameConfig.enemyBChase:gameConfig.enemyAChase);
+  if(chasing){
+    const sp=eSpd(e.kind);e.y=e.originY;const row=Math.floor((e.originY+TS/2)/TS);
+    const pcx=player.x+PW/2,ecx=e.x+TS/2,dir=Math.sign(pcx-ecx)||1;
+    const nx=e.x+dir*sp,aheadCol=dir>0?Math.floor((nx+TS-1)/TS):Math.floor(nx/TS);
+    const wall=isSolid(aheadCol,row),floorAhead=(row+1>=ROWS)||isSolid(aheadCol,row+1);
+    if(!wall&&floorAhead&&Math.abs(pcx-ecx)>6)e.x=nx;
+    e.vx=dir*sp;if(e.x<0)e.x=0;if(e.x+TS>COLS*TS)e.x=COLS*TS-TS;
+    return;
+  }
   if(e.mode==='box'){
     if(e.vx&&e.maxX>e.minX){e.x+=e.vx;if(e.x<=e.minX){e.x=e.minX;e.vx=Math.abs(e.vx);}else if(e.x>=e.maxX){e.x=e.maxX;e.vx=-Math.abs(e.vx);}}
     if(e.vy&&e.maxY>e.minY){e.y+=e.vy;if(e.y<=e.minY){e.y=e.minY;e.vy=Math.abs(e.vy);}else if(e.y>=e.maxY){e.y=e.maxY;e.vy=-Math.abs(e.vy);}}
@@ -3283,7 +3448,12 @@ function updateMovers(){movers.forEach(m=>{if(!m.vx||m.maxX<=m.minX)return;m.x+=
 function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;
     if(it.type===T.KEY){playerKeys[it.color]=true;chirp(1318,0.1,'square',0.06);toast((KEY_NAMES[it.color]||'')+' key! 🔑',KEY_COLORS[it.color]||'#fdd835');return;}
     if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);if(it.type===T.GEM)cjRunHats('when_collect_gem');}});}
-function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{const tt=tileAt(c,r);if(tt===T.SPIKE||tt===T.LAVA)killPlayer();}));if(player.inv>0)return;for(const e of enemies)if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){killPlayer();cjRunHats('when_touch_enemy');break;}}
+function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{const tt=tileAt(c,r);if(tt===T.SPIKE||tt===T.LAVA)killPlayer();}));if(player.inv>0)return;let stomped=false;
+  for(const e of enemies){if(e.dead)continue;if(player.x<e.x+TS&&player.x+PW>e.x&&player.y<e.y+TS&&player.y+PH>e.y){
+    if(gameConfig.stomp&&player.vy>0&&(player.y+PH-e.y)<TS*0.7){e.dead=true;player.vy=jumpForce()*0.72;player.inv=Math.max(player.inv,8);score+=5;chirp(880,0.07,'square',0.06);chirp(1175,0.08,'square',0.05);stomped=true;continue;}
+    killPlayer();cjRunHats('when_touch_enemy');break;
+  }}
+  if(stomped)enemies=enemies.filter(e=>!e.dead);}
 let goalHintT=0;
 function winNow(title){playing=false;stopMusic();document.getElementById('final-score').textContent=score;const w=document.getElementById('ov-win');const h=w.querySelector('h2');if(h&&title)h.textContent=title;const pp=w.querySelector('p');if(pp&&gameConfig.winMessage)pp.innerHTML=gameConfig.winMessage.replace(/</g,'&lt;')+'<br>Score: <strong id="final-score">'+score+'</strong>';w.classList.remove('hide');spawnConfetti();endGamePromo();}
 // ── Promo popup: every now and then after a game ends, advertise PCL / Clubs ──
@@ -3318,7 +3488,8 @@ function checkGoal(){
     }
   }
 }
-function killPlayer(){if(player.inv>0)return;lives--;chirp(110,0.3,'sawtooth',0.06);if(lives<=0){playing=false;stopMusic();document.getElementById('ov-dead').classList.remove('hide');endGamePromo();return;}player.dead=true;player.deadTimer=50;player.inv=90;}
+function loseNow(title,msg){playing=false;stopMusic();const ov=document.getElementById('ov-dead');const h=ov.querySelector('h2');const p=ov.querySelector('p');if(h)h.textContent=title||'💀 Oh No!';if(p)p.textContent=msg||'You ran out of lives! Give it another go!';ov.classList.remove('hide');endGamePromo();}
+function killPlayer(){if(player.inv>0)return;lives--;chirp(110,0.3,'sawtooth',0.06);if(lives<=0){loseNow('💀 Oh No!','You ran out of lives! Give it another go!');return;}player.dead=true;player.deadTimer=50;player.inv=90;}
 function updateCam(){if(!player)return;const t=player.x-CW/2+PW/2;camX+=(t-camX)*.12;camX=Math.max(0,Math.min(camX,COLS*TS-CW));}
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -3342,20 +3513,21 @@ function renderStaticLayer(){
   // Pre-compute the dynamic tiles so drawPlay doesn't scan all 240 cells/frame
   dynTiles=[];
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(waterGrid[r][c]===T.WATER_TOP)dynTiles.push({c,r,tid:T.WATER_TOP}); // surface water behind items
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE||tid===T.CHEST)dynTiles.push({c,r,tid});}
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const tid=grid[r][c];if(tid===T.GEM||tid===T.STAR||tid===T.BOUNCE||tid===T.GOAL||tid===T.DOOR||tid===T.KEY||tid===T.CHECKPOINT||tid===T.LAVA||tid===T.CONVEYOR_L||tid===T.CONVEYOR_R||tid===T.CRUMBLE||tid===T.CHEST||tid===T.TELEPORT||tid===T.BUTTON||tid===T.GATE)dynTiles.push({c,r,tid});}
 }
 function drawPlay(){
   const t=th();
   ctx.drawImage(bgLayer,-camX,0); // sky + static tiles, pre-rendered
   for(const cell of dynTiles){const{c,r,tid}=cell;
     if(tid===T.GEM||tid===T.STAR||tid===T.KEY){const it=items.find(i=>i.c===c&&i.r===r);if(it&&it.got){if(it.pop>0&&tid!==T.KEY)drawPop(c,r,it.pop,tid);continue;}}
-    const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:tid===T.CRUMBLE?{state:crumbleState[r+','+c]}:tid===T.CHEST?{opened:chestOpened[r+','+c]}:null;drawTile(tid,px,r*TS,meta);}
+    const px=c*TS-camX;if(px+TS<0||px>CW)continue;const meta=tid===T.DOOR?doorCfg[r+','+c]:tid===T.KEY?keyCfg[r+','+c]:tid===T.CHECKPOINT?{active:checkpoint&&checkpoint.level===playLevel&&checkpoint.c===c&&checkpoint.r===r}:tid===T.CRUMBLE?{state:crumbleState[r+','+c]}:tid===T.CHEST?{opened:chestOpened[r+','+c],lock:(chestCfg[r+','+c]||{}).lock}:tid===T.TELEPORT?{color:(teleCfg[r+','+c]||{}).color}:tid===T.BUTTON?{color:(buttonCfg[r+','+c]||{}).color,pressed:anyGateOpen((buttonCfg[r+','+c]||{}).color)}:tid===T.GATE?{color:(gateCfg[r+','+c]||{}).color,open:isGateOpen(r,c)}:null;drawTile(tid,px,r*TS,meta);}
+  for(const k in gateBarrier){const ix=k.indexOf(','),r=+k.slice(0,ix),c=+k.slice(ix+1);const px=c*TS-camX;if(px+TS<0||px>CW)continue;drawTile(T.GATE,px,r*TS,{color:gateBarrier[k],open:false});}
   movers.forEach(m=>{const px=m.x-camX;if(px+m.w<0||px>CW)return;const t2=th();ctx.save();ctx.fillStyle=t2.mover;ctx.fillRect(px,m.y,m.w,m.h);ctx.fillStyle=t2.moverHi;ctx.fillRect(px,m.y,m.w,7);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(px,m.y+m.h-5,m.w,5);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(px+1,m.y+1,m.w-2,m.h-2);ctx.fillStyle='rgba(255,255,255,'+(.5+.5*Math.sin(tick*.08))+')';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(m.vx>0?'▶':'◀',px+m.w/2,m.y+m.h/2+5);ctx.restore();});
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   if(player&&(!player.dead||tick%6<3))drawPlayer();
   // "Press ⬆️ to read" prompt above a sign the player is in front of
   if(signNear){const bx=signNear.c*TS-camX+TS/2,by=signNear.r*TS-10;ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText('⬆️ Read').width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText('⬆️ Read',bx,by-3);ctx.restore();}
-  if(chestNear){const bx=chestNear.c*TS-camX+TS/2,by=chestNear.r*TS-10;ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText('⬆️ Open').width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText('⬆️ Open',bx,by-3);ctx.restore();}
+  if(chestNear){const bx=chestNear.c*TS-camX+TS/2,by=chestNear.r*TS-10;const lbl=chestNear.locked?'🔒 Locked':'⬆️ Open';ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText(lbl).width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText(lbl,bx,by-3);ctx.restore();}
   drawAir();
   drawConfetti();drawHUD();
 }
@@ -3381,6 +3553,12 @@ function drawHUD(){
   }else if(gameConfig.winCondition==='timer'){
     const secs=Math.ceil(gameTimer/60);
     hudText('⏱️ '+secs,CW/2,34,secs<=5?'#ff6b6b':'#fff');
+  }else if(gameConfig.winCondition==='beatTimer'){
+    const secs=Math.ceil(gameTimer/60);
+    hudText('🏃 '+secs+'s',CW/2,34,secs<=5?'#ff6b6b':'#fff');
+  }else if(gameConfig.winCondition==='score'){
+    const tgt=gameConfig.targetScore||50;
+    hudText('🎯 '+score+' / '+tgt,CW/2,34,score>=tgt?'#6bcb77':'#fff');
   }
   ctx.restore();
 }
@@ -3399,7 +3577,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
-  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}}}
+  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow('🎯 Target Reached!');}}
   drawPlay();
 }
 
@@ -3442,11 +3620,17 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.14';
+const CJ_VERSION='2026.06.15';
 const CJ_WHATSNEW=[
   '🧰 Treasure chests! Place a chest, then tap it to fill it with gems, stars or a coloured key.',
-  '🔼 Players press Up (or tap the chest) to open it and grab the treasure — a great way to add rewards and challenge.',
-  '🎓 Guided builds, 📖 an in-app Guide, 💡 tooltips, and a 👩‍🏫 Teacher Guide are all in too — explore via ❓ Help.',
+  '🔼 Players press Up (or tap the chest) to open it and grab the treasure.',
+  '🔒 Key Stage 2: lock a chest so a matching key is needed to open it.',
+  '🌀 Key Stage 2: teleport pads! Place two pads of the same colour — step on one to zap to the other.',
+  '🔘🚧 Key Stage 2: buttons & gates! Step on a button to open every gate of the same colour — great for puzzles.',
+  '🎯🏃 Key Stage 2: two new ways to win — reach a target number of points, or race to the finish before a countdown runs out!',
+  '👾 Key Stage 2: smarter enemies — make Enemy A or B chase the player, and turn on “jump on enemies to defeat them”.',
+  '📖 The in-app Guide, tooltips & Teacher Guide now cover all the new blocks, plus a new ❓ Help guided puzzle: “Buttons & gates”.',
+  '🚧 Gates now block the whole passage to the ceiling (no jumping over!), and you can choose how long they stay open — forever or 3/5/10 seconds.',
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

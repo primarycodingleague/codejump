@@ -547,8 +547,9 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .dk-sw.sel{border-color:#fff;box-shadow:0 0 0 3px var(--gold);}
 .dk-sw.dk-none{color:#fff;}
 .dk-dir{display:flex;gap:10px;justify-content:center;margin-top:4px;}
-.dk-dir-btn{flex:1;padding:11px 8px;border-radius:8px;border:2px solid var(--gray);background:var(--black);color:#fff;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;transition:border-color .12s,background .12s;}
-.dk-dir-btn.sel{border-color:var(--gold);background:rgba(174,133,62,.2);}
+.dk-dir-btn,.dk-mode-btn,.dk-dest-btn{flex:1;padding:11px 8px;border-radius:8px;border:2px solid var(--gray);background:var(--black);color:#fff;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;transition:border-color .12s,background .12s;}
+.dk-dir-btn.sel,.dk-mode-btn.sel,.dk-dest-btn.sel{border-color:var(--gold);background:rgba(174,133,62,.2);}
+#tele-dest{flex-wrap:wrap;}.dk-dest-btn{flex:0 1 auto;min-width:84px;}
 .mv-box h3{color:var(--gold);font-family:var(--display);font-size:22px;margin-bottom:4px;}
 .mv-box p{color:var(--white);opacity:.8;font-size:13px;margin-bottom:16px;}
 .mv-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;}
@@ -941,14 +942,23 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 <div id="door-modal" class="hide">
   <div class="mv-box">
     <h3>🚪 Door</h3>
+    <div id="door-mode-section">
+      <p>What does this door do?</p>
+      <div class="dk-dir">
+        <button class="dk-mode-btn" data-mode="travel">➡️ Go to another page</button>
+        <button class="dk-mode-btn" data-mode="barrier">🔒 Unlock &amp; walk through</button>
+      </div>
+    </div>
     <div id="door-key-section">
-      <p>Which key does it need?</p>
+      <p id="door-key-label">Which key does it need?</p>
       <div class="dk-swatches" id="door-keys"></div>
     </div>
-    <p style="margin-top:16px">Where does it go?</p>
-    <div class="dk-dir">
-      <button class="dk-dir-btn" data-dir="prev">⬅️ Previous page</button>
-      <button class="dk-dir-btn" data-dir="next">Next page ➡️</button>
+    <div id="door-dir-section">
+      <p style="margin-top:16px">Where does it go?</p>
+      <div class="dk-dir">
+        <button class="dk-dir-btn" data-dir="prev">⬅️ Previous page</button>
+        <button class="dk-dir-btn" data-dir="next">Next page ➡️</button>
+      </div>
     </div>
     <button class="mv-done" id="door-done">Done</button>
   </div>
@@ -1000,8 +1010,10 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 <div id="tele-modal" class="hide">
   <div class="mv-box">
     <h3>🌀 Teleport Pad</h3>
-    <p>Place two pads of the same colour — step on one to zap to the other. Pick a colour:</p>
+    <p>Pick a colour — pads of the same colour link up:</p>
     <div class="dk-swatches" id="tele-colors"></div>
+    <p style="margin-top:16px">Where does it zap to?</p>
+    <div class="dk-dir" id="tele-dest"></div>
     <button class="mv-done" id="tele-done">Done</button>
   </div>
 </div>
@@ -1319,10 +1331,10 @@ const TILE_DESC={
   [T.KEY]:'A coloured key. Collect it to open locked doors of the same colour. Tap it to choose its colour.',
   [T.START]:'Where the player begins. Every game needs a Start.',
   [T.CHECKPOINT]:'A checkpoint flag. Reach it and you respawn here instead of the start.',
-  [T.DOOR]:'A door to another page. Tap it to choose which key it needs (if any) and whether it goes to the next or previous page.',
+  [T.DOOR]:'A door. Tap it to choose what it does: travel to another page (next or previous, with an optional key), or — in Key Stage 2 & 3 — a locked gate that blocks the way on this page until you collect the matching key, then walk through.',
   [T.SIGN]:'A sign with your own message. The player presses Up (or taps the sign) to read it. Tap it to write the message.',
   [T.CHEST]:'A treasure chest! Fill it with gems, stars or a key. The player presses Up (or taps it) to open it. Tap it to choose what’s inside — in Key Stage 2 you can also lock it so a matching key is needed first.',
-  [T.TELEPORT]:'A teleport pad (Key Stage 2). Place two pads of the same colour — step on one to zap instantly to the other. Tap it to choose its colour.',
+  [T.TELEPORT]:'A teleport pad (Key Stage 2). Step on it to zap to the matching-colour pad. Tap it to choose its colour and whether it links to a pad on THIS page or jumps to another page.',
   [T.BUTTON]:'A button / pressure plate (Key Stage 2). Step on it to open every gate of the same colour. Tap it to choose its colour.',
   [T.GATE]:'A gate (Key Stage 2). A solid block that opens when a button of the same colour is pressed. Stack several to build a taller wall. Tap it to choose its colour and how long it stays open.',
   [T.GOAL]:'The Finish! Reach it to win the whole game.',
@@ -2685,9 +2697,12 @@ function drawTile(id,px,py,meta){
       c.fillStyle='rgba(255,215,0,.12)';c.fillRect(px,py,TS,TS);c.fillStyle='#aaa';c.fillRect(px+TS/2-2,py+4,4,TS-8);c.save();c.translate(px+TS/2+2,py+5);for(let fi=0;fi<4;fi++)for(let fj=0;fj<2;fj++){c.fillStyle=(fi+fj)%2===0?'#fff':'#111';c.fillRect(fj*10+Math.sin(goalA+fi*.8)*4,fi*5,10,5);}c.restore();break;}
     case T.DOOR:{
       const dx=px+8,dy=py+4,dw=TS-16,dh=TS-4,glow=0.5+0.5*Math.abs(Math.sin(goalA));
+      const barrier=meta&&meta.mode==='barrier';
+      const unlocked=barrier&&playing&&playerKeys&&playerKeys[meta.key];
       const lockKey=(meta&&meta.key&&meta.key!=='none')?meta.key:null;
       const dir=(meta&&meta.dir)||'next';
-      c.fillStyle='rgba(120,220,140,'+(0.10+0.12*glow)+')';c.fillRect(px,py,TS,TS);
+      c.save();if(unlocked)c.globalAlpha=0.35;
+      if(!barrier){c.fillStyle='rgba(120,220,140,'+(0.10+0.12*glow)+')';c.fillRect(px,py,TS,TS);} // green glow = travels to another page
       c.fillStyle='#6d4c2f';c.fillRect(dx,dy,dw,dh);
       c.fillStyle='#5a3d25';c.fillRect(dx+4,dy+4,dw-8,dh-8);
       c.strokeStyle='#000';c.lineWidth=2;c.strokeRect(dx,dy,dw,dh);
@@ -2700,6 +2715,7 @@ function drawTile(id,px,py,meta){
         else{c.moveTo(dx+dw*0.32,dy+dh*0.30);c.lineTo(dx+dw*0.68,dy+dh*0.50);c.lineTo(dx+dw*0.32,dy+dh*0.70);}
         c.closePath();c.fill();c.strokeStyle='#0a3d1f';c.lineWidth=1.5;c.stroke();
       }
+      c.restore();
       break;}
     case T.KEY:{
       const color=(meta&&meta.color)||'yellow';
@@ -3009,11 +3025,11 @@ function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const
   grid[row][col]=selTile;
   if(selTile===T.MOVER&&!moverCfg[mk])moverCfg[mk]={l:moverDefaultTiles(),r:moverDefaultTiles()};
   if((selTile===T.ENEMY||selTile===T.ENEMY2)&&!enemyCfg[mk])enemyCfg[mk]=enemyDefaultCfg(selTile);
-  if(selTile===T.DOOR&&!doorCfg[mk])doorCfg[mk]={key:'none',dir:'next'};
+  if(selTile===T.DOOR&&!doorCfg[mk])doorCfg[mk]={key:'none',dir:'next',mode:'travel'};
   if(selTile===T.KEY&&!keyCfg[mk])keyCfg[mk]={color:'yellow'};
   if(selTile===T.SIGN&&!signCfg[mk])signCfg[mk]={text:''};
   if(selTile===T.CHEST&&!chestCfg[mk])chestCfg[mk]={contents:'gems',amount:3,color:'yellow',lock:'none'};
-  if(selTile===T.TELEPORT&&!teleCfg[mk])teleCfg[mk]={color:'blue'};
+  if(selTile===T.TELEPORT&&!teleCfg[mk])teleCfg[mk]={color:'blue',dest:'here'};
   if(selTile===T.BUTTON&&!buttonCfg[mk])buttonCfg[mk]={color:'red'};
   if(selTile===T.GATE&&!gateCfg[mk])gateCfg[mk]={color:'red',dur:'forever'};}
 // Tapping any placed moving platform OR enemy (in Paint mode) opens its travel editor.
@@ -3030,16 +3046,25 @@ document.querySelectorAll('.mv-step').forEach(b=>b.onclick=()=>mvAdjust(b.datase
 document.getElementById('mv-done').onclick=()=>{document.getElementById('mover-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
 // ── Door editor ──
 let dkDoor=null;
-function openDoorEditor(row,col){dkDoor=row+','+col;if(!doorCfg[dkDoor])doorCfg[dkDoor]={key:'none',dir:'next'};
-  const ks1=keyStage==='ks1';if(ks1)doorCfg[dkDoor].key='none';
-  document.getElementById('door-key-section').style.display=ks1?'none':'';
+function openDoorEditor(row,col){dkDoor=row+','+col;if(!doorCfg[dkDoor])doorCfg[dkDoor]={key:'none',dir:'next',mode:'travel'};
+  const cfg=doorCfg[dkDoor];if(!cfg.mode)cfg.mode='travel';
+  const ks1=keyStage==='ks1';if(ks1){cfg.key='none';cfg.mode='travel';}
+  document.getElementById('door-mode-section').style.display=ks1?'none':''; // barrier mode is a KS2/KS3 idea (needs keys)
   renderDoorEditor();document.getElementById('door-modal').classList.remove('hide');}
 function renderDoorEditor(){
-  const cfg=doorCfg[dkDoor];const ks=document.getElementById('door-keys');ks.innerHTML='';
-  const opts=[['none','No key',null]].concat(Object.keys(KEY_COLORS).map(c=>[c,KEY_NAMES[c]+' key',KEY_COLORS[c]]));
+  const cfg=doorCfg[dkDoor];const ks1=keyStage==='ks1';const barrier=cfg.mode==='barrier';
+  document.querySelectorAll('#door-modal .dk-mode-btn').forEach(b=>b.classList.toggle('sel',b.dataset.mode===cfg.mode));
+  // A barrier door must have a key (no "None"); travel doors may be keyless.
+  if(barrier&&(!cfg.key||cfg.key==='none'))cfg.key='red';
+  document.getElementById('door-key-section').style.display=ks1?'none':'';
+  document.getElementById('door-key-label').textContent=barrier?'Which key unlocks it?':'Which key does it need?';
+  const ks=document.getElementById('door-keys');ks.innerHTML='';
+  const opts=(barrier?[]:[['none','No key',null]]).concat(Object.keys(KEY_COLORS).map(c=>[c,KEY_NAMES[c]+' key',KEY_COLORS[c]]));
   opts.forEach(([val,label,col])=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.key===val?' sel':'')+(val==='none'?' dk-none':'');b.style.background=col||'#555';b.textContent=val==='none'?'None':'';b.title=label;b.onclick=()=>{cfg.key=val;renderDoorEditor();};ks.appendChild(b);});
+  document.getElementById('door-dir-section').style.display=barrier?'none':''; // travel doors choose a page direction
   document.querySelectorAll('#door-modal .dk-dir-btn').forEach(b=>b.classList.toggle('sel',b.dataset.dir===cfg.dir));
 }
+document.querySelectorAll('#door-modal .dk-mode-btn').forEach(b=>b.onclick=()=>{if(dkDoor){doorCfg[dkDoor].mode=b.dataset.mode;renderDoorEditor();}});
 document.querySelectorAll('#door-modal .dk-dir-btn').forEach(b=>b.onclick=()=>{if(dkDoor){doorCfg[dkDoor].dir=b.dataset.dir;renderDoorEditor();}});
 document.getElementById('door-done').onclick=()=>{document.getElementById('door-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
 // ── Key editor ──
@@ -3063,7 +3088,12 @@ document.getElementById('chest-plus').onclick=()=>{if(!dkChest)return;const cfg=
 document.getElementById('chest-done').onclick=()=>{document.getElementById('chest-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
 let dkTele=null;
 function openTeleEditor(row,col){dkTele=row+','+col;if(!teleCfg[dkTele])teleCfg[dkTele]={color:'blue'};renderTeleEditor();document.getElementById('tele-modal').classList.remove('hide');}
-function renderTeleEditor(){const cfg=teleCfg[dkTele];if(!cfg)return;const cs=document.getElementById('tele-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderTeleEditor();};cs.appendChild(b);});}
+function renderTeleEditor(){const cfg=teleCfg[dkTele];if(!cfg)return;const cs=document.getElementById('tele-colors');cs.innerHTML='';Object.keys(KEY_COLORS).forEach(c=>{const b=document.createElement('div');b.className='dk-sw'+(cfg.color===c?' sel':'');b.style.background=KEY_COLORS[c];b.title=KEY_NAMES[c];b.onclick=()=>{cfg.color=c;renderTeleEditor();};cs.appendChild(b);});
+  if(cfg.dest===undefined)cfg.dest='here';
+  const ds=document.getElementById('tele-dest');ds.innerHTML='';
+  const mk=(label,val)=>{const b=document.createElement('button');b.className='dk-dest-btn'+(String(cfg.dest)===String(val)?' sel':'');b.textContent=label;b.onclick=()=>{cfg.dest=val;renderTeleEditor();};ds.appendChild(b);};
+  mk('🌀 This page','here');
+  LEVELS.forEach((L,i)=>{if(i===curLevel)return;mk('Page '+(i+1),i);});}
 document.getElementById('tele-done').onclick=()=>{document.getElementById('tele-modal').classList.add('hide');commitLevel();renderPagesStrip();markDirty();};
 let dkColor=null,dkColorMap=null,dkColorKind=null;
 function openColorEditor(kind,row,col){dkColor=row+','+col;dkColorKind=kind;dkColorMap=(kind==='button')?buttonCfg:gateCfg;if(!dkColorMap[dkColor])dkColorMap[dkColor]=(kind==='gate')?{color:'red',dur:'forever'}:{color:'red'};
@@ -3164,11 +3194,11 @@ function sanitizeGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;
   return out;}
 function sanitizeMoverCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const l=Math.max(0,Math.min(19,(v.l|0))),r=Math.max(0,Math.min(19,(v.r|0)));out[k]={l,r};}return out;}
 function sanitizeEnemyCfg(m){const out={};if(!m||typeof m!=='object')return out;const cl=x=>Math.max(0,Math.min(11,(x|0)));for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};out[k]={l:cl(v.l),r:cl(v.r),u:cl(v.u),d:cl(v.d)};}return out;}
-function sanitizeDoorCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const key=(v.key==='none'||KEY_COLORS[v.key])?v.key:'none';const dir=(v.dir==='prev')?'prev':'next';out[k]={key,dir};}return out;}
+function sanitizeDoorCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const key=(v.key==='none'||KEY_COLORS[v.key])?v.key:'none';const dir=(v.dir==='prev')?'prev':'next';const mode=(v.mode==='barrier')?'barrier':'travel';out[k]={key,dir,mode};}return out;}
 function sanitizeKeyCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'yellow';out[k]={color};}return out;}
 function sanitizeSignCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const txt=(m[k]&&typeof m[k].text==='string')?m[k].text:'';out[k]={text:txt.slice(0,140)};}return out;}
 function sanitizeChestCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const contents=(v.contents==='stars'||v.contents==='key')?v.contents:'gems';const amount=Math.max(1,Math.min(20,parseInt(v.amount,10)||1));const color=KEY_COLORS[v.color]?v.color:'yellow';const lock=KEY_COLORS[v.lock]?v.lock:'none';out[k]={contents,amount,color,lock};}return out;}
-function sanitizeTeleCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const color=KEY_COLORS[(m[k]||{}).color]?m[k].color:'blue';out[k]={color};}return out;}
+function sanitizeTeleCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'blue';let dest=(v.dest===undefined||v.dest==='here')?'here':(parseInt(v.dest,10));if(typeof dest==='number'&&(!isFinite(dest)||dest<0||dest>99))dest='here';out[k]={color,dest};}return out;}
 function sanitizeColorCfg(m,def){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const color=KEY_COLORS[(m[k]||{}).color]?m[k].color:def;out[k]={color};}return out;}
 function sanitizeGateCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const color=KEY_COLORS[v.color]?v.color:'red';let dur=v.dur;dur=(dur===undefined||dur==='forever')?'forever':String(Math.max(1,Math.min(60,parseInt(dur,10)||5)));out[k]={color,dur};}return out;}
 function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&L.waterGrid);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(_g[r][c]===T.WATER||_g[r][c]===T.WATER_TOP){if(!_w[r][c])_w[r][c]=_g[r][c];_g[r][c]=0;}}return{
@@ -3611,7 +3641,7 @@ function isRight(){return !!keys[KC[gameConfig.moveRight]]||ks3Input.right;}
 function isJump() {return !!keys[KC[gameConfig.jump]]||ks3Input.jump;}
 function isUp()   {return keys['ArrowUp']||keys['KeyW'];}
 function isDown() {return keys['ArrowDown']||keys['KeyS'];}
-function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
+function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);if(t===T.DOOR){const dc=doorCfg[row+','+col];if(dc&&dc.mode==='barrier')return !playerKeys[dc.key];return false;}return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
 function loadPlayLevel(i){activateLevel(i);camX=0;camY=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};teleCool=0;teleFrom=null;gateOpenUntil={};upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
@@ -3637,6 +3667,14 @@ function checkTeleport(){if(!player)return;if(teleCool>0)teleCool--;
   if(tileAt(cc,cr)!==T.TELEPORT){teleFrom=null;return;}
   const key=cr+','+cc;if(teleCool>0||teleFrom===key)return;
   const cfg=teleCfg[key];if(!cfg)return;
+  // Cross-page: zap to the matching-colour pad on another page (or that page's start)
+  if(cfg.dest!=='here'&&typeof cfg.dest==='number'&&cfg.dest!==playLevel&&cfg.dest>=0&&cfg.dest<LEVELS.length){
+    const col=cfg.color,destPage=cfg.dest;playLevel=destPage;loadPlayLevel(destPage);
+    let target=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.TELEPORT&&(teleCfg[r+','+c]||{}).color===col)target={r,c};
+    if(target){player.x=target.c*TS+(TS-PW)/2;player.y=target.r*TS+(TS-PH)/2;player.vx=0;player.vy=0;teleFrom=target.r+','+target.c;}
+    teleCool=20;camX=Math.max(0,Math.min(player.x-CW/2,Math.max(0,worldW()-CW)));camY=Math.max(0,Math.min(player.y-CH/2,Math.max(0,worldH()-CH)));
+    chirp(1200,0.08,'sine',0.06);chirp(1700,0.09,'sine',0.05);toast('Zapped to page '+(destPage+1)+'! 🌀',KEY_COLORS[col]||'#4a90d9');return;
+  }
   let partner=null;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.TELEPORT&&!(r===cr&&c===cc)&&(teleCfg[r+','+c]||{}).color===cfg.color)partner={r,c};}
   if(!partner){if(tick-(checkTeleport._hintT||0)>120){checkTeleport._hintT=tick;toast('This pad needs a matching pad to zap to! 🌀',KEY_COLORS[cfg.color]||'#4a90d9');}return;}
   player.x=partner.c*TS+(TS-PW)/2;player.y=partner.r*TS+(TS-PH)/2;player.vx=0;player.vy=Math.min(player.vy,0);
@@ -3677,7 +3715,8 @@ function drawAir(){
 }
 let doorHintT=0;
 function checkDoor(){if(!player)return;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.DOOR){const gx=c*TS,gy=r*TS;if(player.x<gx+TS&&player.x+PW>gx&&player.y<gy+TS&&player.y+PH>gy){
-    const cfg=doorCfg[r+','+c]||{key:'none',dir:'next'};
+    const cfg=doorCfg[r+','+c]||{key:'none',dir:'next',mode:'travel'};
+    if(cfg.mode==='barrier')continue; // a locked gate on this page — handled by collision (isSolid), not travel
     if(cfg.key&&cfg.key!=='none'&&!playerKeys[cfg.key]){if(tick-doorHintT>90){doorHintT=tick;toast('Find the '+(KEY_NAMES[cfg.key]||'')+' key first! 🔑',KEY_COLORS[cfg.key]||'#ef4444');}return;}
     if(cfg.dir==='prev')prevLevel();else nextLevel();return;
   }}}
@@ -3942,9 +3981,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.17';
+const CJ_VERSION='2026.06.18';
 const CJ_WHATSNEW=[
-  '📐 NEW: choose a bigger game size (Standard, Wide, Large or Huge) when you start a Key Stage 2 or 3 game — make much larger adventures!',
+  '🌀 Teleport pads can now zap to a pad on THIS page OR jump to another page — tap a pad to choose (KS2 & KS3).',
+  '🚪 Doors can now be a locked gate that blocks the way on the same page and opens when you collect the matching key — or still travel to another page (KS2 & KS3).',
+  '📐 Choose a bigger game size (Standard, Wide, Large or Huge) when you start a Key Stage 2 or 3 game — make much larger adventures!',
   '🛟 Fixed: your level designs are now safe — pages no longer get overwritten when you play after editing.',
   '👩‍🔬 Key Stage 3! Choose it for a new game and write real <b>Python-style code</b> in a built-in editor to control your game.',
   '⌨️ KS3 code runs your game with on_start, on_update, on_key, on_gem and on_enemy — with variables, loops, lists, functions and friendly error messages.',

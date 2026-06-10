@@ -619,6 +619,12 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .tut-btn:hover{background:#c99a4a;}
 .tut-skip{margin-top:10px;background:transparent;border:none;color:var(--white);opacity:.5;font-family:var(--font);font-size:13px;cursor:pointer;text-decoration:underline;}
 .tut-skip:hover{opacity:.8;}
+/* Key Stage 1 — bigger, friendlier palette for little ones */
+body.ks1mode .pal-item{padding:10px 4px;}
+body.ks1mode .pal-icon{font-size:30px;}
+body.ks1mode .pal-item span:last-child{font-size:12px;}
+body.ks1mode .pal-group{font-size:13px;}
+body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
 /* Commands reference */
 #cmd-modal{position:fixed;inset:0;z-index:1585;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;}
 #cmd-modal.hide{display:none;}
@@ -1117,6 +1123,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
     <button class="tbtn" id="t-mute">🔊</button>
     <button class="tbtn" id="t-hand" title="Switch controls to left/right hand">🤚 Hand</button>
     <button class="mode-btn" id="btn-design">🎨 Design</button>
+    <button class="mode-btn" id="btn-read" title="Read words out loud">🔊 Read</button>
     <button class="mode-btn" id="btn-help">❓ Help</button>
   </div>
 
@@ -1468,7 +1475,7 @@ let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
 function isKS3(){return keyStage==='ks3';}
-function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}if(typeof updateCodeModeUI==='function')updateCodeModeUI();}
+function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}document.body.classList.toggle('ks1mode',keyStage==='ks1');if(typeof updateCodeModeUI==='function')updateCodeModeUI();if(typeof updateReadBtn==='function')updateReadBtn();}
 let gameConfig={moveLeft:'left',moveRight:'right',jump:'space',playerSpeed:'normal',
   enemyAPattern:'leftRight',enemyASpeed:'normal',enemyBPattern:'upDown',enemyBSpeed:'normal',enemyAChase:false,enemyBChase:false,stomp:false,
   lives:3,gemPoints:10,starPoints:50,
@@ -2087,7 +2094,13 @@ function getToolbox(){
       {kind:'block',type:'set_music'}
     ]},
   ];
-  if(keyStage==='ks1')return{kind:'categoryToolbox',contents:game};
+  if(keyStage==='ks1')return{kind:'categoryToolbox',contents:[
+    {kind:'category',name:'🟡  When…',colour:'45',contents:[{kind:'block',type:'when_key_pressed'},{kind:'block',type:'when_game_starts'}]},
+    {kind:'category',name:'🔵  Move',colour:'210',contents:[{kind:'block',type:'player_move_left'},{kind:'block',type:'player_move_right'},{kind:'block',type:'player_jump'},{kind:'block',type:'player_speed'}]},
+    {kind:'category',name:'🟣  Enemies',colour:'260',contents:[{kind:'block',type:'enemy_a_behaviour'}]},
+    {kind:'category',name:'🏁  Win',colour:'20',contents:[{kind:'block',type:'win_reach_goal'},{kind:'block',type:'win_message'}]},
+    {kind:'category',name:'🎵  Sound',colour:'330',contents:[{kind:'block',type:'set_music'}]},
+  ]};
   // KS2 — full coding blocks that the interpreter runs.
   const code=[
     {kind:'sep'},
@@ -2859,7 +2872,7 @@ Object.keys(TOOL_DESC).forEach(id=>{const el=document.getElementById(id);if(el){
 // ═══════════════════════════════════════════════════════════════════════
 function tileReferenceHTML(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<div class="help-grouphead">'+name+'</div>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="help-ref"><span class="hr-ic">'+t.icon+'</span><span class="hr-tx"><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
 const HELP_TABS=[
- ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button><button class="help-launch" onclick="startMission('gadgets')">🧩 Puzzle with buttons &amp; gates (KS2) →</button><button class="help-launch" onclick="startMission('ks3')">👩‍🔬 Your first Python game (KS3) →</button>`],
+ ['start','🚀 Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b>🏗️ Build</b> — place blocks on the grid to make your level.</li><li><b>▶️ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b>🎨 Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start 🚩</b> and a <b>Finish 🏁</b>.</li><li>Press <b>▶️ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('ks1')">🎈 Let’s make a game! (KS1) →</button><button class="help-launch" onclick="ks1Starter()">🎁 Give me a starter game (KS1) →</button><button class="help-launch" onclick="startMission('first')">🎓 Try a guided build →</button><button class="help-launch" onclick="startMission('gadgets')">🧩 Puzzle with buttons &amp; gates (KS2) →</button><button class="help-launch" onclick="startMission('ks3')">👩‍🔬 Your first Python game (KS3) →</button>`],
  ['build','🧱 Building',`<p>In <b>Build</b> mode, pick a tool at the top:</p><ul><li><b>🖌️ Paint</b> — place the selected block.</li><li><b>🪣 Fill Row</b> — fill a whole row (great for floors).</li><li><b>🧹 Erase</b> — remove blocks (peels the item first, then any water behind it).</li><li><b>↩️ Undo / ↪️ Redo</b>, <b>🗑️ Clear</b> the page, and <b>▶️ This Page</b> to test one page.</li></ul><p>Some blocks have extra settings — just <b>tap them after placing</b>: moving platforms, enemies, doors, keys and signs.</p><p>Use the <b>pages</b> strip to add, duplicate (⧉), reorder (▲▼) and delete pages for a multi-level adventure.</p><h3>📐 Game size (Key Stage 2 &amp; 3)</h3><p>When you start a new game you can choose its size — <b>Standard</b>, <b>Wide</b>, <b>Large</b> or <b>Huge</b> — for much bigger adventures. In Build you see the whole level at once; when you Play, the camera follows the player around the larger world.</p><h3>Every block, explained</h3>`+tileReferenceHTML()],
  ['design','🎨 Designing',`<p>Open <b>🎨 Design</b> to draw your own 16×16 pictures for the player, enemies, blocks, keys and more.</p><ul><li>Pick a tab to choose what to draw.</li><li>It shows the <b>current design</b> — tweak it, <b>🗑️ Clear</b> to make something blank/invisible, or <b>↺ Reset</b> for the default.</li><li>Use <b>🪣 Fill all</b> to fill the canvas, and the eraser to rub out.</li><li>The <b>Background</b> tab lets you pick sky colours or paint your own sky.</li></ul>`],
  ['code','🧩 Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b>🟡 Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b>🔵 Player</b> — movement and speed.</li><li><b>🟣 Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b>🟢 Physics</b> — gravity, jump height, bounce, double jump.</li><li><b>🏁 Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b>🔴 Rules</b> — lives and points.</li><li><b>🎵 Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b>🗑️ Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: 🔑 keys & 🚪 doors, 🧰 <b>chests</b> (lockable), 🌀 <b>teleport pads</b>, and 🔘 <b>buttons</b> that open 🚧 <b>gates</b> — see the <b>Building</b> tab for what each does.</p>
@@ -2875,6 +2888,12 @@ let helpTab='start';
 function openHelp(){buildHelpTabs();selHelpTab('start');document.getElementById('help-modal').classList.remove('hide');}
 function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';HELP_TABS.forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
 function selHelpTab(k){helpTab=k;document.querySelectorAll('.help-tab').forEach((b,i)=>b.classList.toggle('active',HELP_TABS[i][0]===k));const tab=HELP_TABS.find(t=>t[0]===k);const el=document.getElementById('help-content');el.innerHTML=tab?tab[2]:'';el.scrollTop=0;}
+// ── Read-aloud (text-to-speech) — helps Key Stage 1 early/pre-readers ──
+let readAloud=false;try{readAloud=localStorage.getItem('bap_read_aloud')!=='off';}catch(e){readAloud=true;}
+function speak(text){if(keyStage!=='ks1'||!readAloud||!text||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g,''));u.rate=0.92;u.pitch=1.08;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+function updateReadBtn(){const b=document.getElementById('btn-read');if(!b)return;b.style.display=(keyStage==='ks1')?'':'none';b.classList.toggle('active',readAloud);b.textContent=readAloud?'🔊 Read':'🔇 Read';}
+document.getElementById('btn-read').onclick=()=>{readAloud=!readAloud;try{localStorage.setItem('bap_read_aloud',readAloud?'on':'off');}catch(e){}if(!readAloud&&window.speechSynthesis)speechSynthesis.cancel();updateReadBtn();if(readAloud)speak('Reading out loud is on');};
+updateReadBtn();
 document.getElementById('btn-help').onclick=openHelp;
 document.getElementById('help-close').onclick=()=>document.getElementById('help-modal').classList.add('hide');
 
@@ -2889,7 +2908,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <ul><li><b>🏗️ Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶️ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b>🎨 Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
   <h3>Key Stage 1 vs Key Stage 2</h3>
   <p>Pupils choose a key stage when starting a new game — it sets which blocks they see:</p>
-  <ul><li><b>Key Stage 1</b> — the simple game blocks only (controls, physics, enemies, win, sound). One generic Enemy, no keys, and a simpler Win choice. Great for sequencing and cause-and-effect.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real block-coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li><li><b>Key Stage 3</b> — swaps the blocks for a <b>text editor</b> where pupils write a safe <b>Python-style language</b> (see below). All the KS2 building blocks are still available.</li></ul>
+  <ul><li><b>Key Stage 1</b> — designed for ages 5–7: a trimmed, friendly block set (When… / Move / Enemies / Win / Sound) with bigger blocks &amp; palette, a <b>🔊 Read aloud</b> button that speaks blocks, signs and messages for early readers, a gentle “Let’s make a game!” guided activity, and a one-tap starter game.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real block-coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li><li><b>Key Stage 3</b> — swaps the blocks for a <b>text editor</b> where pupils write a safe <b>Python-style language</b> (see below). All the KS2 building blocks are still available.</li></ul>
   <h3>Game size</h3>
   <p>Key Stage 2 &amp; 3 games can be created at different grid sizes (Standard 20×12, Wide, Large, or Huge 48×24) for bigger projects. The build view scales to show the whole level; play uses a camera that follows the player in both directions. Key Stage 1 stays at the standard size.</p>
   <h3>Running a lesson</h3>
@@ -2944,16 +2963,30 @@ const MISSIONS={
   {text:'Read it: <code>on_update()</code> moves the player. Press <b>▶️ Play</b> and use the arrow keys + space!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
   {text:'🎉 You ran a Python game! Back in Code, try changing <code>add_score(10)</code> to a bigger number, or add <code>say("Hello!")</code> inside <code>on_start</code>.',final:true,check:()=>false},
  ]},
+ ks1:{title:'Let’s make a game!',ks1:true,steps:[
+  {text:'Tap <b>Grass Top 🌿</b>, then tap along the bottom to make the ground.',hl:()=>_palItem('Grass'),check:_floorMade},
+  {text:'Tap <b>Start 🚩</b> and tap where your player begins.',hl:()=>_palItem('Start'),check:()=>_gridHas(T.START)},
+  {text:'Tap <b>Finish 🏁</b> and put it at the other end.',hl:()=>_palItem('Finish'),check:()=>_gridHas(T.GOAL)},
+  {text:'Tap <b>Gem 💎</b> and add some shiny gems to collect!',hl:()=>_palItem('Gem'),check:()=>_gridHas(T.GEM)},
+  {text:'Now tap <b>▶️ Play</b> and use the arrow keys to move!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
+  {text:'🎉 You made a game! Great job! Tap Build to keep adding things.',final:true,check:()=>false},
+ ]},
 };
 let missionId=null,missionStep=0,_missionTimer=null;
-function startMission(id){const m=MISSIONS[id];if(!m)return;if(m.ks2&&keyStage!=='ks2'){toast('Start a Key Stage 2 game to try this one 🙂','#ae853e');return;}if(m.ks3&&!isKS3()){toast('Start a Key Stage 3 game to try this one 🙂','#ae853e');return;}document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
+function startMission(id){const m=MISSIONS[id];if(!m)return;if(m.ks2&&keyStage!=='ks2'){toast('Start a Key Stage 2 game to try this one 🙂','#ae853e');return;}if(m.ks3&&!isKS3()){toast('Start a Key Stage 3 game to try this one 🙂','#ae853e');return;}if(m.ks1&&keyStage!=='ks1'){toast('Start a Key Stage 1 game to try this one 🙂','#ae853e');return;}document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');missionId=id;missionStep=0;document.getElementById('coach').classList.remove('hide');renderCoach();clearInterval(_missionTimer);_missionTimer=setInterval(missionTick,500);}
 function _clearHL(){document.querySelectorAll('.coach-hl').forEach(e=>e.classList.remove('coach-hl'));}
-function renderCoach(){const m=MISSIONS[missionId];if(!m)return;const st=m.steps[missionStep];document.getElementById('coach-step').innerHTML=st.text;document.getElementById('coach-dots').textContent=m.steps.map((_,i)=>i<missionStep?'·':i===missionStep?'●':'○').join('');document.getElementById('coach-skip').style.display=st.final?'none':'';_clearHL();if(st.hl){try{const el=st.hl();if(el)el.classList.add('coach-hl');}catch(e){}}}
+function renderCoach(){const m=MISSIONS[missionId];if(!m)return;const st=m.steps[missionStep];document.getElementById('coach-step').innerHTML=st.text;document.getElementById('coach-dots').textContent=m.steps.map((_,i)=>i<missionStep?'·':i===missionStep?'●':'○').join('');document.getElementById('coach-skip').style.display=st.final?'none':'';_clearHL();if(st.hl){try{const el=st.hl();if(el)el.classList.add('coach-hl');}catch(e){}}speak(st.text.replace(/<[^>]+>/g,''));}
 function advanceMission(){const m=MISSIONS[missionId];if(!m)return;if(missionStep<m.steps.length-1){missionStep++;chirp(880,0.08,'square',0.05);renderCoach();}else endMission();}
 function missionTick(){const m=MISSIONS[missionId];if(!m){endMission();return;}const st=m.steps[missionStep];if(st.final)return;try{if(st.check())advanceMission();}catch(e){}}
 function endMission(){clearInterval(_missionTimer);_missionTimer=null;_clearHL();missionId=null;const c=document.getElementById('coach');if(c)c.classList.add('hide');}
 document.getElementById('coach-exit').onclick=endMission;
 document.getElementById('coach-skip').onclick=()=>advanceMission();
+// One-tap ready-made level for little ones to play with straight away.
+function ks1Starter(){if(keyStage!=='ks1'){toast('Start a Key Stage 1 game first 🙂','#ae853e');return;}
+  document.getElementById('help-modal').classList.add('hide');if(mode!=='build')switchMode('build');pushHistory();
+  grid=mkGrid();waterGrid=mkGrid();for(let c=0;c<COLS;c++)grid[ROWS-1][c]=T.GRASS;
+  grid[ROWS-3][1]=T.START;grid[ROWS-3][18]=T.GOAL;[5,9,13].forEach(c=>grid[ROWS-3][c]=T.GEM);[7,8].forEach(c=>grid[ROWS-4][c]=T.GRASS);grid[ROWS-4][7]=T.GRASS;grid[ROWS-2][15]=T.ENEMY;enemyCfg[(ROWS-2)+',15']=enemyDefaultCfg(T.ENEMY);
+  commitLevel();renderPagesStrip();markDirty();toast('Here’s a starter game — tap ▶️ Play! 🎈','#10b981');speak('Here is a starter game. Tap Play to try it.');}
 
 // ═══════════════════════════════════════════════════════════════════════
 // BUILD
@@ -2993,7 +3026,7 @@ function drawBuild(){
 function buildPalette(){
   const pal=document.getElementById('palette');pal.innerHTML='';
   const vis=TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2||ti.id===T.TELEPORT||ti.id===T.BUTTON||ti.id===T.GATE)));
-  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');};attachTip(d,'<b>'+label+'</b>'+(TILE_DESC[ti.id]?'<br>'+TILE_DESC[ti.id]:''));return d;};
+  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');if(keyStage==='ks1')speak(label+'. '+(TILE_DESC[ti.id]||''));};attachTip(d,'<b>'+label+'</b>'+(TILE_DESC[ti.id]?'<br>'+TILE_DESC[ti.id]:''));return d;};
   if(keyStage==='ks2'){
     TILE_GROUPS.forEach(([g,name])=>{const items=vis.filter(ti=>ti.g===g);if(!items.length)return;const h=document.createElement('div');h.className='pal-group';h.textContent=name;pal.appendChild(h);items.forEach(ti=>pal.appendChild(mkItem(ti)));});
   }else{
@@ -3022,6 +3055,7 @@ function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const
   if(selTile===T.WATER||selTile===T.WATER_TOP){waterGrid[row][col]=selTile;return;} // water is a background layer
   if(selTile===T.START||selTile===T.GOAL){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===selTile)grid[r][c]=T.EMPTY;}
   if(prev!==selTile)dropMeta();
+  if(keyStage==='ks1'&&prev!==selTile)chirp(640+Math.random()*160,0.05,'sine',0.04); // gentle 'pop' for little ones
   grid[row][col]=selTile;
   if(selTile===T.MOVER&&!moverCfg[mk])moverCfg[mk]={l:moverDefaultTiles(),r:moverDefaultTiles()};
   if((selTile===T.ENEMY||selTile===T.ENEMY2)&&!enemyCfg[mk])enemyCfg[mk]=enemyDefaultCfg(selTile);
@@ -3145,7 +3179,7 @@ function switchMode(m){
   document.getElementById('app').classList.toggle('mode-play',m==='play');
   document.getElementById('gc').style.display=m==='code'?'none':'block';
   const cp=document.getElementById('code-panel');
-  if(m==='code'){cp.classList.add('show');if(isKS3()){showKs3Editor();}else{updateCodeModeUI();setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);},50);}}
+  if(m==='code'){cp.classList.add('show');if(isKS3()){showKs3Editor();}else{updateCodeModeUI();setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);if(blocklyWorkspace&&blocklyWorkspace.setScale)blocklyWorkspace.setScale(keyStage==='ks1'?1.25:0.85);},50);}}
   else cp.classList.remove('show');
   ['t-paint','t-fill','t-erase','t-undo','t-redo','t-clear','t-testpage'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
   if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!musicMuted)startMusic();}
@@ -3681,7 +3715,7 @@ function checkTeleport(){if(!player)return;if(teleCool>0)teleCool--;
   teleFrom=partner.r+','+partner.c;teleCool=18;camX=Math.max(0,Math.min(player.x-CW/2,Math.max(0,worldW()-CW)));camY=Math.max(0,Math.min(player.y-CH/2,Math.max(0,worldH()-CH)));
   chirp(1200,0.08,'sine',0.06);chirp(1700,0.09,'sine',0.05);}
 let signNear=null,chestNear=null,upPrev=false; // sign/chest the player is standing in front of
-function readSign(){if(signNear&&signNear.text){toast('🪧 '+signNear.text,'#caa472');chirp(660,0.06,'sine',0.04);}}
+function readSign(){if(signNear&&signNear.text){toast('🪧 '+signNear.text,'#caa472');chirp(660,0.06,'sine',0.04);speak(signNear.text);}}
 function openChest(){if(!chestNear)return;const k=chestNear.r+','+chestNear.c;if(chestOpened[k])return;
   const cfg=chestCfg[k]||{contents:'gems',amount:3,color:'yellow',lock:'none'};
   if(cfg.lock&&cfg.lock!=='none'&&!playerKeys[cfg.lock]){chirp(180,0.12,'square',0.05);toast('Locked! Find the '+(KEY_NAMES[cfg.lock]||'')+' key first 🔒',KEY_COLORS[cfg.lock]||'#ef4444');return;}
@@ -3814,7 +3848,7 @@ function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS
   }}
   if(stomped)enemies=enemies.filter(e=>!e.dead);}
 let goalHintT=0;
-function winNow(title){playing=false;stopMusic();document.getElementById('final-score').textContent=score;const w=document.getElementById('ov-win');const h=w.querySelector('h2');if(h&&title)h.textContent=title;const pp=w.querySelector('p');if(pp&&gameConfig.winMessage)pp.innerHTML=gameConfig.winMessage.replace(/</g,'&lt;')+'<br>Score: <strong id="final-score">'+score+'</strong>';w.classList.remove('hide');spawnConfetti();endGamePromo();}
+function winNow(title){playing=false;stopMusic();document.getElementById('final-score').textContent=score;const w=document.getElementById('ov-win');const h=w.querySelector('h2');if(h&&title)h.textContent=title;const pp=w.querySelector('p');if(pp&&gameConfig.winMessage)pp.innerHTML=gameConfig.winMessage.replace(/</g,'&lt;')+'<br>Score: <strong id="final-score">'+score+'</strong>';w.classList.remove('hide');spawnConfetti();playSfx('win');endGamePromo();speak((title||'You win')+'. '+(gameConfig.winMessage||''));}
 // ── Promo popup: every now and then after a game ends, advertise PCL / Clubs ──
 const PROMOS=[
   {logo:'pcl-mark',title:'Primary Coding League',msg:'Loving CodeJump? Come and represent your school in Primary Coding League! The award-winning global coding competition for primary-aged children!',btn:'Visit Primary Coding League →',url:'https://www.primarycodingleague.co.uk'},
@@ -3847,7 +3881,7 @@ function checkGoal(){
     }
   }
 }
-function loseNow(title,msg){playing=false;stopMusic();const ov=document.getElementById('ov-dead');const h=ov.querySelector('h2');const p=ov.querySelector('p');if(h)h.textContent=title||'💀 Oh No!';if(p)p.textContent=msg||'You ran out of lives! Give it another go!';ov.classList.remove('hide');endGamePromo();}
+function loseNow(title,msg){playing=false;stopMusic();const ov=document.getElementById('ov-dead');const h=ov.querySelector('h2');const p=ov.querySelector('p');if(h)h.textContent=title||'💀 Oh No!';if(p)p.textContent=msg||'You ran out of lives! Give it another go!';ov.classList.remove('hide');endGamePromo();speak((title||'Oh no')+'. '+(msg||'Give it another go'));}
 function killPlayer(){if(player.inv>0)return;lives--;chirp(110,0.3,'sawtooth',0.06);if(lives<=0){loseNow('💀 Oh No!','You ran out of lives! Give it another go!');return;}player.dead=true;player.deadTimer=50;player.inv=90;}
 function updateCam(){if(!player)return;
   const tx=player.x-CW/2+PW/2;camX+=(tx-camX)*.12;camX=Math.max(0,Math.min(camX,Math.max(0,worldW()-CW)));
@@ -3981,8 +4015,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.18';
+const CJ_VERSION='2026.06.19';
 const CJ_WHATSNEW=[
+  '🧒 Key Stage 1 made friendlier for ages 5–7: a 🔊 “Read aloud” button speaks blocks, signs & messages; simpler, bigger blocks; a “Let’s make a game!” walkthrough and a one-tap starter game.',
   '🌀 Teleport pads can now zap to a pad on THIS page OR jump to another page — tap a pad to choose (KS2 & KS3).',
   '🚪 Doors can now be a locked gate that blocks the way on the same page and opens when you collect the matching key — or still travel to another page (KS2 & KS3).',
   '📐 Choose a bigger game size (Standard, Wide, Large or Huge) when you start a Key Stage 2 or 3 game — make much larger adventures!',

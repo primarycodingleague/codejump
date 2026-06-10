@@ -615,6 +615,14 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .tut-btn:hover{background:#c99a4a;}
 .tut-skip{margin-top:10px;background:transparent;border:none;color:var(--white);opacity:.5;font-family:var(--font);font-size:13px;cursor:pointer;text-decoration:underline;}
 .tut-skip:hover{opacity:.8;}
+/* Commands reference */
+#cmd-modal{position:fixed;inset:0;z-index:1585;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;}
+#cmd-modal.hide{display:none;}
+#cmd-close{position:absolute;top:12px;right:14px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:19px;cursor:pointer;}
+#cmd-close:hover{background:var(--gold);color:#000;}
+.cmd-row{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.cmd-row code{flex:0 0 auto;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:13px;background:rgba(154,209,255,.12);color:#9ad1ff;padding:2px 7px;border-radius:5px;}
+.cmd-row span{flex:1;min-width:160px;color:#cfd6df;font-size:13px;}
 /* User Guide / Help */
 #help-modal{position:fixed;inset:0;z-index:1580;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;}
 #help-modal.hide{display:none;}
@@ -1110,6 +1118,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
         </div>
         <div class="cp-run-bar">
           <button class="cp-run" id="cp-run">▶️ Test it — switch to Play!</button>
+          <button class="cp-clear" id="cp-cmds" title="See every command you can use">📖 Commands</button>
           <button class="cp-clear" id="cp-clear" title="Clear the code">🗑️ Clear code</button>
         </div>
       </div>
@@ -1160,6 +1169,15 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 </div>
 
 <!-- ══ DESIGNER ═══════════════════════════════════════════════════════════ -->
+<div id="cmd-modal" class="hide">
+  <div class="help-box">
+    <button id="cmd-close" title="Close" aria-label="Close">✕</button>
+    <h2>🐍 Python Commands</h2>
+    <p style="text-align:center;color:#9aa4b2;font-size:13px;margin-top:-8px;margin-bottom:8px;">Everything you can use in Key Stage 3 code</p>
+    <div class="help-content" id="cmd-content"></div>
+  </div>
+</div>
+
 <div id="help-modal" class="hide">
   <div class="help-box">
     <button id="help-close" title="Close" aria-label="Close">✕</button>
@@ -2317,7 +2335,7 @@ const CJPy=(function(){
       int:x=>Math.trunc(Number(x))||0,float:x=>Number(x)||0,abs:Math.abs,round:Math.round,
       min:(...a)=>Math.min(...(a.length===1&&Array.isArray(a[0])?a[0]:a)),max:(...a)=>Math.max(...(a.length===1&&Array.isArray(a[0])?a[0]:a)),
       sum:a=>(Array.isArray(a)?a.reduce((s,x)=>s+x,0):0),
-      randint:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,
+      randint:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,random:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,
     },api&&api.funcs||{});
     function truthy(v){return !(v===false||v===null||v===0||v===''||v===undefined||(Array.isArray(v)&&v.length===0));}
     function Ret(v){this.v=v;}const BREAK={},CONT={};
@@ -2365,6 +2383,7 @@ let ks3Code='';let ks3Runtime=null,ks3Error=false;
 let ks3Input={left:false,right:false,jump:false};
 const KS3_DEFAULT=[
 "# Key Stage 3 — write Python-style code to control your game!",
+"# Tap the 'Commands' button below to see everything you can use.",
 "# These special functions run automatically:",
 "",
 "def on_start():",
@@ -2384,7 +2403,7 @@ const KS3_DEFAULT=[
 function ks3SetStatus(kind,msg,line){const el=document.getElementById('ks3-status');if(!el)return;if(kind==='ok'){el.classList.remove('err');el.textContent='✓ Your code looks good';}else{el.classList.add('err');el.textContent='⚠️ '+(msg||'Error')+(line?(' — line '+line):'');}}
 function ks3RefreshGutter(){const ta=document.getElementById('ks3-code'),g=document.getElementById('ks3-gutter');if(!ta||!g)return;const n=ta.value.split('\n').length;let s='';for(let i=1;i<=n;i++)s+=i+'\n';g.textContent=s;g.scrollTop=ta.scrollTop;}
 function ks3LiveCheck(){const r=CJPy.check(document.getElementById('ks3-code').value);if(r.ok)ks3SetStatus('ok');else ks3SetStatus('err',r.msg,r.line);}
-function updateCodeModeUI(){const ed=document.getElementById('ks3-editor'),bd=document.getElementById('blockly-div');if(!ed||!bd)return;if(isKS3()){ed.classList.remove('hide');bd.style.display='none';}else{ed.classList.add('hide');bd.style.display='';}}
+function updateCodeModeUI(){const ed=document.getElementById('ks3-editor'),bd=document.getElementById('blockly-div');if(!ed||!bd)return;const cmds=document.getElementById('cp-cmds');if(cmds)cmds.style.display=isKS3()?'':'none';if(isKS3()){ed.classList.remove('hide');bd.style.display='none';}else{ed.classList.add('hide');bd.style.display='';}}
 function showKs3Editor(){const ta=document.getElementById('ks3-code');ta.value=(ks3Code==null?KS3_DEFAULT:ks3Code);ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();updateCodeModeUI();setTimeout(()=>ta.focus(),40);}
 function wireKs3Editor(){const ta=document.getElementById('ks3-code');if(!ta)return;
   ta.addEventListener('input',()=>{ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();});
@@ -2392,22 +2411,68 @@ function wireKs3Editor(){const ta=document.getElementById('ks3-code');if(!ta)ret
   ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.slice(0,s)+'    '+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+4;ks3Code=ta.value;ks3RefreshGutter();}});
 }
 function ks3KeyHeld(name){name=String(name).toLowerCase();const m={left:['ArrowLeft','KeyA'],right:['ArrowRight','KeyD'],up:['ArrowUp','KeyW'],down:['ArrowDown','KeyS'],space:['Space'],jump:['Space','ArrowUp','KeyW']}[name];return m?m.some(k=>keys[k]):false;}
-function ks3MakeApi(){return {funcs:{
-  move_left:()=>{ks3Input.left=true;},move_right:()=>{ks3Input.right=true;},jump:()=>{ks3Input.jump=true;},
-  is_key:n=>ks3KeyHeld(n),
-  set_score:n=>{score=Math.max(0,Math.floor(+n||0));},add_score:n=>{score=Math.max(0,score+Math.floor(+n||0));},get_score:()=>score,
-  set_lives:n=>{lives=Math.max(0,Math.floor(+n||0));},add_lives:n=>{lives=Math.max(0,lives+Math.floor(+n||0));},get_lives:()=>lives,
-  say:m=>toast('💬 '+(m===true?'True':m===false?'False':String(m)),'#4a90d9'),
-  win:()=>{if(playing)winNow('🎉 You Win!');},game_over:()=>{if(playing)loseNow('💀 Game Over','Your code ended the game.');},
-  next_page:()=>nextLevel(),prev_page:()=>prevLevel(),
-  player_x:()=>player?Math.floor((player.x+PW/2)/TS):0,player_y:()=>player?Math.floor((player.y+PH/2)/TS):0,
-  on_ground:()=>!!(player&&player.onGround),gems_collected:()=>gemsGot,gems_total:()=>gemsTotal,
-  random:(a,b)=>Math.floor(Math.random()*((b|0)-(a|0)+1))+(a|0),
-  beep:f=>chirp(Math.max(80,Math.min(2000,+f||440)),0.1,'square',0.05),
-}};}
+// Single source of truth for the KS3 game API — powers both the runtime AND the in-app reference.
+const KS3_EVENTS=[
+  {sig:'def on_start():',desc:'Runs once when the game begins.'},
+  {sig:'def on_update():',desc:'Runs every frame (about 60×/second).'},
+  {sig:'def on_key(key):',desc:'Runs when a key is pressed (key is the name).'},
+  {sig:'def on_gem():',desc:'Runs when the player collects a gem.'},
+  {sig:'def on_enemy():',desc:'Runs when the player touches an enemy.'},
+];
+const KS3_API=[
+  {cat:'🏃 Move the player',items:[
+    {name:'move_left',sig:'move_left()',desc:'Walk left (use inside on_update).',fn:()=>{ks3Input.left=true;}},
+    {name:'move_right',sig:'move_right()',desc:'Walk right.',fn:()=>{ks3Input.right=true;}},
+    {name:'jump',sig:'jump()',desc:'Jump, if on the ground.',fn:()=>{ks3Input.jump=true;}},
+    {name:'is_key',sig:'is_key(name)',desc:'True while a key is held: "left","right","up","down","space".',fn:n=>ks3KeyHeld(n)},
+  ]},
+  {cat:'⭐ Score & lives',items:[
+    {name:'add_score',sig:'add_score(n)',desc:'Add n to the score.',fn:n=>{score=Math.max(0,score+Math.floor(+n||0));}},
+    {name:'set_score',sig:'set_score(n)',desc:'Set the score to n.',fn:n=>{score=Math.max(0,Math.floor(+n||0));}},
+    {name:'get_score',sig:'get_score()',desc:'The current score.',fn:()=>score},
+    {name:'add_lives',sig:'add_lives(n)',desc:'Add or remove lives.',fn:n=>{lives=Math.max(0,lives+Math.floor(+n||0));}},
+    {name:'set_lives',sig:'set_lives(n)',desc:'Set how many lives.',fn:n=>{lives=Math.max(0,Math.floor(+n||0));}},
+    {name:'get_lives',sig:'get_lives()',desc:'How many lives are left.',fn:()=>lives},
+  ]},
+  {cat:'🎮 Game actions',items:[
+    {name:'say',sig:'say(message)',desc:'Show a message on screen.',fn:m=>toast('💬 '+(m===true?'True':m===false?'False':String(m)),'#4a90d9')},
+    {name:'win',sig:'win()',desc:'Win the game now.',fn:()=>{if(playing)winNow('🎉 You Win!');}},
+    {name:'game_over',sig:'game_over()',desc:'End the game (a loss).',fn:()=>{if(playing)loseNow('💀 Game Over','Your code ended the game.');}},
+    {name:'next_page',sig:'next_page()',desc:'Go to the next page.',fn:()=>nextLevel()},
+    {name:'prev_page',sig:'prev_page()',desc:'Go to the previous page.',fn:()=>prevLevel()},
+    {name:'play_sound',sig:'play_sound(name)',desc:'Play a sound: "coin","jump","zap","win","power".',fn:n=>playSfx(String(n))},
+    {name:'beep',sig:'beep(freq)',desc:'Beep at a frequency (80–2000).',fn:f=>chirp(Math.max(80,Math.min(2000,+f||440)),0.1,'square',0.05)},
+  ]},
+  {cat:'📡 Sensing',items:[
+    {name:'player_x',sig:'player_x()',desc:'The player column (how far across).',fn:()=>player?Math.floor((player.x+PW/2)/TS):0},
+    {name:'player_y',sig:'player_y()',desc:'The player row (how far down).',fn:()=>player?Math.floor((player.y+PH/2)/TS):0},
+    {name:'on_ground',sig:'on_ground()',desc:'True if the player is on solid ground.',fn:()=>!!(player&&player.onGround)},
+    {name:'gems_collected',sig:'gems_collected()',desc:'How many gems collected so far.',fn:()=>gemsGot},
+    {name:'gems_total',sig:'gems_total()',desc:'How many gems are in this page.',fn:()=>gemsTotal},
+  ]},
+  {cat:'⚙️ Settings',items:[
+    {name:'set_speed',sig:'set_speed(name)',desc:'Player speed: "slow","normal","fast".',fn:v=>{if(['slow','normal','fast'].indexOf(v)>=0)gameConfig.playerSpeed=v;}},
+    {name:'set_jump',sig:'set_jump(name)',desc:'Jump height: "low","normal","high".',fn:v=>{if(['low','normal','high'].indexOf(v)>=0)gameConfig.jumpHeight=v;}},
+    {name:'set_gravity',sig:'set_gravity(name)',desc:'Gravity: "floaty","normal","heavy".',fn:v=>{if(['floaty','normal','heavy'].indexOf(v)>=0)gameConfig.gravity=v;}},
+    {name:'double_jump',sig:'double_jump(on)',desc:'Turn double jump on or off (True/False).',fn:b=>{gameConfig.doubleJump=!!b;}},
+  ]},
+];
+const KS3_BUILTINS=[
+  {sig:'range(n) · range(a,b)',desc:'A list of numbers, e.g. for i in range(5):'},
+  {sig:'len(list)',desc:'How many items in a list or piece of text.'},
+  {sig:'sum(list)',desc:'Adds up a list of numbers.'},
+  {sig:'min(a,b) · max(a,b)',desc:'Smallest / largest value.'},
+  {sig:'randint(a,b) · random(a,b)',desc:'A random whole number from a to b.'},
+  {sig:'str(x) · int(x) · float(x)',desc:'Change between text and numbers.'},
+  {sig:'abs(x) · round(x)',desc:'Absolute value / round to nearest whole.'},
+  {sig:'mylist.append(x)',desc:'Add x to the end of a list.'},
+];
+function ks3MakeApi(){const funcs={};KS3_API.forEach(g=>g.items.forEach(it=>{funcs[it.name]=it.fn;}));return{funcs};}
 function ks3Compile(){ks3Runtime=null;ks3Error=false;if(!isKS3())return;try{ks3Runtime=CJPy.run(ks3Code||'',ks3MakeApi(),{maxOps:200000});ks3SetStatus('ok');}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast('⚠️ '+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
 function ks3Call(name,args){if(!ks3Runtime||ks3Error||!ks3Runtime.has(name))return;try{ks3Runtime.resetOps();ks3Runtime.call(name,args||[]);}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast('⚠️ '+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
 function ks3Frame(){if(!isKS3())return;ks3Input.left=ks3Input.right=ks3Input.jump=false;ks3Call('on_update');}
+function cmdRow(sig,desc){return '<div class="cmd-row"><code>'+sig.replace(/</g,'&lt;')+'</code><span>'+desc+'</span></div>';}
+function openCommands(){let h='<h3>✨ Special functions (events)</h3><p style="font-size:12px;opacity:.7;margin-bottom:4px;">Write these with <code>def</code> and the game calls them for you.</p>';KS3_EVENTS.forEach(e=>h+=cmdRow(e.sig,e.desc));KS3_API.forEach(g=>{h+='<h3>'+g.cat+'</h3>';g.items.forEach(it=>h+=cmdRow(it.sig,it.desc));});h+='<h3>🧮 Built-in helpers &amp; lists</h3>';KS3_BUILTINS.forEach(b=>h+=cmdRow(b.sig,b.desc));h+='<h3>🔁 Language</h3>'+cmdRow('if / elif / else','Make choices.')+cmdRow('while … :','Repeat while something is true.')+cmdRow('for x in … :','Repeat over a range or list.')+cmdRow('def name(a, b):','Make your own function.')+cmdRow('= == != &lt; &gt; &lt;= &gt;=','Set a value / compare values.')+cmdRow('and  or  not','Combine True/False.');document.getElementById('cmd-content').innerHTML=h;document.getElementById('cmd-content').scrollTop=0;document.getElementById('cmd-modal').classList.remove('hide');}
 function ks3KeyName(code){const m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',Space:'space',Enter:'enter'};if(m[code])return m[code];if(code.indexOf('Key')===0)return code.slice(3).toLowerCase();if(code.indexOf('Digit')===0)return code.slice(5);return code.toLowerCase();}
 function ks3OnKey(name){if(isKS3())ks3Call('on_key',[name]);}
 
@@ -2771,6 +2836,7 @@ const HELP_TABS=[
    <p>KS3 games swap the blocks for a real <b>code editor</b>. You write Python-style code, and these functions run by themselves:</p>
    <ul><li><code>on_start()</code> — once when the game begins.</li><li><code>on_update()</code> — every frame (~60×/second).</li><li><code>on_key(key)</code> — when a key is pressed, e.g. <code>"left"</code>, <code>"space"</code>.</li><li><code>on_gem()</code> / <code>on_enemy()</code> — collecting a gem / touching an enemy.</li></ul>
    <p>Handy commands: <code>move_left() move_right() jump() is_key("right") add_score(10) set_lives(3) say("hi") win() game_over() player_x() on_ground() random(1,6)</code> — plus variables, <code>if/elif/else</code>, <code>while</code>, <code>for … in range()</code>, lists, and your own functions with <code>def</code>. The editor checks your code as you type and shows friendly errors with line numbers.</p>
+   <p>🔎 <b>Don't remember a command?</b> Tap <b>📖 Commands</b> in the code editor for the full, searchable list of everything you can use — grouped by what it does.</p>
    <p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
  ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game in “My Levels”. Your work also <b>auto-saves</b> as a draft.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to open later.</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen for lessons, worksheets, starter levels and the full guide.</p>`],
 ];
@@ -2803,6 +2869,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p><b>Key Stage 2 grid extras:</b> keys &amp; doors, lockable <b>chests</b>, <b>teleport pads</b> (same-colour pairs), and <b>buttons</b> that open same-colour <b>gates</b> — all listed with the other blocks above.</p>
   <h3>Key Stage 3 — text coding (Python-style)</h3>
   <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python-style language (no <code>eval</code>; capped loops so nothing freezes) featuring variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, and <b>functions</b> with <code>def</code>. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>, <code>random</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
+  <p>Pupils don't need to memorise anything: the <b>📖 Commands</b> button in the editor opens a complete, grouped reference of every command and event, each with a one-line explanation — so the whole API (movement, scoring, sensing, settings and sound) is always one tap away.</p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
   <h3>Troubleshooting</h3>
@@ -3219,6 +3286,8 @@ document.getElementById('cp-clear').onclick=()=>{
   }
 };
 wireKs3Editor();
+document.getElementById('cp-cmds').onclick=openCommands;
+document.getElementById('cmd-close').onclick=()=>document.getElementById('cmd-modal').classList.add('hide');
 document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
 document.getElementById('o-retry') .onclick=()=>{hideOv();resumeFromDeath();};
@@ -3850,6 +3919,7 @@ const CJ_VERSION='2026.06.16';
 const CJ_WHATSNEW=[
   '👩‍🔬 NEW Key Stage 3! Choose it for a new game and write real <b>Python-style code</b> in a built-in editor to control your game.',
   '⌨️ KS3 code runs your game with on_start, on_update, on_key, on_gem and on_enemy — with variables, loops, lists, functions and friendly error messages.',
+  '📖 New “Commands” button in the KS3 editor lists every command you can use (movement, score, sensing, settings & sound) — no need to memorise anything.',
   '🧰 Treasure chests — fill them with gems, stars or a key; in KS2 you can lock them.',
   '🌀 Teleport pads, 🔘🚧 buttons & gates, 🎯🏃 points/time win goals, and 👾 chasing + stomp-able enemies (all Key Stage 2).',
   '📖 The in-app Guide, tooltips & Teacher Guide cover everything new, with two new ❓ Help guided activities.',

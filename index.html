@@ -1887,7 +1887,13 @@ function openProjector(){const ch=dailyChallenge();
   thProjLeft=600;document.getElementById('projector').classList.add('on');thTickProj();thProjInt=setInterval(()=>{thProjLeft=Math.max(0,thProjLeft-1);thTickProj();},1000);}
 function thTickProj(){const m=Math.floor(thProjLeft/60),s=thProjLeft%60;document.getElementById('ptimer').textContent=m+':'+String(s).padStart(2,'0');}
 function closeProjector(){document.getElementById('projector').classList.remove('on');clearInterval(thProjInt);}
-document.getElementById('h-teacher').onclick=()=>showTeacher();
+document.getElementById('h-teacher').onclick=()=>{
+  if(typeof cloudOn==='function'&&cloudOn()){
+    if(typeof isTeacher==='function'&&isTeacher())showTeacher();
+    else if(typeof isSignedIn==='function'&&isSignedIn())toast('The Teacher Hub is for teacher accounts — sign out and make a teacher account to use it.','#ae853e');
+    else{openCloud();toast('Please sign in with a teacher account to open the Teacher Hub','#ae853e');}
+  }else showTeacher();
+};
 
 // ═══════════════════════════════════════════════════════════════════════
 // CANVAS
@@ -2962,7 +2968,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python-style language (no <code>eval</code>; capped loops so nothing freezes) featuring variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, and <b>functions</b> with <code>def</code>. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>, <code>random</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
   <p>Pupils don't need to memorise anything: the <b>📖 Commands</b> button in the editor opens a complete, grouped reference of every command and event, each with a one-line explanation — so the whole API (movement, scoring, sensing, settings and sound) is always one tap away.</p>
   <h3>Cloud save &amp; classes (optional)</h3>
-  <p>If your organisation sets up the (free) cloud backend, an <b>☁️ Cloud</b> button appears and the <b>Teacher Hub → 🗂 Pupils' work</b> panel becomes a class manager. <b>Teachers</b> make a <b>username + password account</b>, so their classes appear on <b>any device</b> — open <b>My classes → a class → a child → their work</b>. <b>Pupils</b> keep one personal <b>6-digit code</b> and <b>self-join</b> a class by typing its code &amp; their name, so a child can be in <b>several classes</b> (e.g. their class and a club). When saving, a pupil chooses <b>👤 My own work</b> (private) or <b>🏫 My class work</b> (handed in); teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames only</b>; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
+  <p>If your organisation sets up the (free) cloud backend, an <b>☁️ Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes → a class → a child → their work</b>. <b>Pupils</b> join classes in <b>☁️ Cloud → ⚙️ Settings</b> (a child can be in several), then when saving choose <b>👤 My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
   <h3>Troubleshooting</h3>
@@ -3425,133 +3431,129 @@ document.getElementById('cp-cmds').onclick=openCommands;
 document.getElementById('cmd-close').onclick=()=>document.getElementById('cmd-modal').classList.add('hide');
 
 // ═══════════════════════════════════════════════════════════════════════
-// CLOUD SAVE — pupil PINs, classes, teacher dashboard (Cloudflare Worker)
+// CLOUD ACCOUNTS — sign in, classes, save personal/class work (Cloudflare Worker)
 // Set CLOUD_URL to your deployed Worker URL. Blank = cloud options hidden.
 // ═══════════════════════════════════════════════════════════════════════
 let CLOUD_URL='https://codejump-cloud.primarycodingleague.workers.dev'; // your Cloudflare Worker
 function cloudOn(){return !!CLOUD_URL;}
-let cloudPin=null,cloudProjectId=null,cloudProjectTitle='',cloudClassCode=null,cloudProjectClass=null,cloudTeacherUser=null,cloudTeacherPass=null;
-try{cloudPin=localStorage.getItem('bap_cloud_pin')||null;cloudClassCode=localStorage.getItem('bap_cloud_class')||null;cloudTeacherUser=localStorage.getItem('bap_cloud_teacher')||null;}catch(e){}
-async function cloudApi(path,method,body){
-  const r=await fetch(CLOUD_URL.replace(/\/$/,'')+path,{method:method||'GET',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});
-  let data={};try{data=await r.json();}catch(e){}
-  if(!r.ok)throw new Error(data.error||('Something went wrong ('+r.status+')'));return data;}
-function showCloudBtns(){const t=document.getElementById('t-cloud'),h=document.getElementById('h-cloud');if(t)t.style.display=cloudOn()?'':'none';if(h)h.style.display=cloudOn()?'':'none';}
+let cloudToken=null,cloudMe=null,cloudProjectId=null,cloudProjectTitle='',cloudProjectClass=null;
+try{cloudToken=localStorage.getItem('bap_cloud_token')||null;}catch(e){}
+function isSignedIn(){return !!(cloudToken&&cloudMe);}
+function isTeacher(){return !!(cloudMe&&cloudMe.role==='teacher');}
+async function cloudApi(path,body){const r=await fetch(CLOUD_URL.replace(/\/$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let d={};try{d=await r.json();}catch(e){}if(!r.ok)throw new Error(d.error||('Something went wrong ('+r.status+')'));return d;}
 const _cb=()=>document.getElementById('cloud-body');
 function cesc(s){return String(s==null?'':s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
-function openCloud(){if(!cloudOn())return;document.getElementById('cloud-modal').classList.remove('hide');cloudHome();}
 function closeCloud(){document.getElementById('cloud-modal').classList.add('hide');}
-function cloudError(e){_cb().innerHTML=`<h2>😕 Oops</h2><p style="text-align:center">${cesc(e&&e.message||'Something went wrong')}</p><button class="cloud-btn" id="c-back">← Back</button>`;document.getElementById('c-back').onclick=cloudHome;}
-function cloudHome(){_cb().innerHTML=`<h2>☁️ Cloud</h2><p style="text-align:center">Save your games online and open them on any device.</p>
-  <button class="cloud-btn gold" id="c-save">💾 Save this game online</button>
-  <button class="cloud-btn" id="c-openpin">🔑 Open my games<span class="sub">Type your 6-digit code</span></button>
-  <button class="cloud-btn" id="c-class">🏫 Join a class<span class="sub">Type the class code and your name</span></button>
-  <button class="cloud-btn" id="c-teacher">🧑‍🏫 For teachers<span class="sub">Make a class or see your pupils' work</span></button>`;
+function cloudError(e){_cb().innerHTML=`<h2>😕 Oops</h2><p style="text-align:center">${cesc(e&&e.message||'Something went wrong')}</p><button class="cloud-btn" id="c-back">← Back</button>`;document.getElementById('c-back').onclick=openCloud;}
+function showCloudBtns(){const t=document.getElementById('t-cloud'),h=document.getElementById('h-cloud');if(t)t.style.display=cloudOn()?'':'none';if(h)h.style.display=cloudOn()?'':'none';}
+function cloudSignOut(){cloudToken=null;cloudMe=null;try{localStorage.removeItem('bap_cloud_token');}catch(e){}cloudProjectId=null;cloudProjectClass=null;}
+async function cloudRefresh(){if(!cloudToken)return;try{cloudMe=await cloudApi('/me',{token:cloudToken});}catch(e){cloudSignOut();}}
+function cloudSetSession(r){cloudToken=r.token;cloudMe={uid:r.uid,displayName:r.displayName,realName:r.realName,role:r.role,classes:r.classes||[],projects:r.projects||[]};try{localStorage.setItem('bap_cloud_token',cloudToken);}catch(e){}}
+function openCloud(){if(!cloudOn())return;document.getElementById('cloud-modal').classList.remove('hide');if(isSignedIn())cloudMyHome();else cloudAuthHome();}
+// ---- AUTH ----
+function cloudAuthHome(){_cb().innerHTML=`<h2>☁️ Cloud</h2><p style="text-align:center">Sign in to save your games and open them on any device.</p>
+  <button class="cloud-btn gold" id="c-login">🔑 Sign in</button>
+  <button class="cloud-btn" id="c-signup">✨ Create an account</button>`;
+  document.getElementById('c-login').onclick=cloudLoginView;document.getElementById('c-signup').onclick=cloudSignupView;}
+function cloudLoginView(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>🔑 Sign in</h2>
+  <p>Display name:</p><input class="cloud-input" id="li-u" autocapitalize="off" autocomplete="username" style="text-transform:lowercase">
+  <p>Password:</p><input class="cloud-input" id="li-p" type="password" autocomplete="current-password">
+  <button class="cloud-btn gold" id="li-go">Sign in →</button>`;
+  document.getElementById('c-bk').onclick=cloudAuthHome;
+  document.getElementById('li-go').onclick=async()=>{const u=document.getElementById('li-u').value.trim();const pw=document.getElementById('li-p').value;if(!u||!pw){toast('Type your display name and password','#ef4444');return;}try{const r=await cloudApi('/login',{displayName:u,password:pw});cloudSetSession(r);cloudMyHome();}catch(e){cloudError(e);}};}
+function cloudSignupView(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>✨ Create an account</h2>
+  <p>I am a:</p><div class="ch-types" id="su-role"><button class="ch-type sel" data-r="student">🧒 Student</button><button class="ch-type" data-r="teacher">🧑‍🏫 Teacher</button></div>
+  <p style="margin-top:12px">Your name:</p><input class="cloud-input" id="su-real" placeholder="e.g. Alex" maxlength="40">
+  <p>Choose a display name <small>(must be free)</small>:</p><input class="cloud-input" id="su-u" placeholder="e.g. alex-oak" autocapitalize="off" style="text-transform:lowercase">
+  <p>Choose a password:</p><input class="cloud-input" id="su-p" type="password">
+  <button class="cloud-btn gold" id="su-go">Create account →</button>`;
+  let role='student';document.getElementById('c-bk').onclick=cloudAuthHome;
+  _cb().querySelectorAll('#su-role .ch-type').forEach(b=>b.onclick=()=>{role=b.dataset.r;_cb().querySelectorAll('#su-role .ch-type').forEach(x=>x.classList.toggle('sel',x===b));});
+  document.getElementById('su-go').onclick=async()=>{const realName=document.getElementById('su-real').value.trim();const u=document.getElementById('su-u').value.trim();const pw=document.getElementById('su-p').value;if(!realName||!u||pw.length<4){toast('Add your name, a display name, and a 4+ character password','#ef4444');return;}try{const r=await cloudApi('/signup',{displayName:u,password:pw,realName,role});cloudSetSession(r);toast('Welcome, '+cesc(r.realName)+'! 🎉','#10b981');cloudMyHome();}catch(e){cloudError(e);}};}
+// ---- SIGNED-IN HOME ----
+function cloudMyHome(){let h=`<button id="c-out" class="cloud-back" style="float:right">Sign out</button><h2>👋 Hi ${cesc(cloudMe.realName||cloudMe.displayName)}!</h2><p style="text-align:center">Signed in as <b>${cesc(cloudMe.displayName)}</b>${isTeacher()?' · teacher':''}</p>
+   <button class="cloud-btn gold" id="c-save">💾 Save this game</button>
+   <button class="cloud-btn" id="c-mine">📂 My games</button>`;
+  if(isTeacher())h+=`<button class="cloud-btn" id="c-classes">🏫 My classes &amp; pupils' work</button>`;
+  h+=`<button class="cloud-btn" id="c-settings">⚙️ Settings</button>`;
+  _cb().innerHTML=h;
+  document.getElementById('c-out').onclick=()=>{cloudSignOut();cloudAuthHome();};
   document.getElementById('c-save').onclick=cloudSaveFlow;
-  document.getElementById('c-openpin').onclick=cloudOpenPinView;
-  document.getElementById('c-class').onclick=cloudClassView;
-  document.getElementById('c-teacher').onclick=cloudTeacherView;}
-// Step 1: choose where this game is saved — personal or a class
-function cloudSaveFlow(){const inClass=cloudProjectClass||cloudClassCode;
-  _cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>💾 Save this game</h2><p>Where should it go?</p>
-    <button class="cloud-btn" id="c-personal">👤 My own work<span class="sub">Private — only you can open it with your code</span></button>
-    <button class="cloud-btn" id="c-classwork">🏫 My class work<span class="sub">${inClass?('Hand it in to class '+inClass):'Hand it in to your class so your teacher can see it'}</span></button>`;
-  document.getElementById('c-bk').onclick=cloudHome;
-  document.getElementById('c-personal').onclick=()=>cloudDoSave(null);
-  document.getElementById('c-classwork').onclick=cloudSaveClassPick;}
-// Step 2 (class): confirm / enter the class code
-function cloudSaveClassPick(){const known=cloudProjectClass||cloudClassCode||'';
-  _cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>🏫 Save to my class</h2><p>Type your class code:</p>
-    <input class="cloud-input" id="c-cls" maxlength="8" value="${known}" placeholder="e.g. OAK7" style="text-transform:uppercase;text-align:center;letter-spacing:4px;font-weight:800;">
-    <button class="cloud-btn gold" id="c-go">Save to this class →</button>`;
-  document.getElementById('c-bk').onclick=cloudSaveFlow;
-  document.getElementById('c-go').onclick=()=>{const code=(document.getElementById('c-cls').value||'').trim().toUpperCase();if(!code){toast('Type your class code','#ef4444');return;}cloudDoSave(code);};}
-// Step 3: actually save, tagged personal (null) or with a class code
+  document.getElementById('c-mine').onclick=cloudMyGames;
+  if(isTeacher())document.getElementById('c-classes').onclick=cloudTeacherClasses;
+  document.getElementById('c-settings').onclick=cloudSettings;}
+async function cloudMyGames(){await cloudRefresh();const projs=(cloudMe&&cloudMe.projects)||[];
+  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>📂 My games</h2>`;
+  if(!projs.length)h+='<p style="text-align:center">No saved games yet. Build one, then tap “Save this game”.</p>';
+  projs.forEach(pr=>{const tag=pr.class?('🏫 '+cesc(pr.class)):'👤 my own';h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${tag} · ${new Date(pr.updated).toLocaleDateString('en-GB')}</small></div><button data-del="${pr.id}" title="Delete">🗑️</button></div>`;});
+  _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
+  _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudOpenProject(cloudMe.uid,el.dataset.id,projs.find(p=>p.id===el.dataset.id)));
+  _cb().querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this game?'))return;try{await cloudApi('/project/delete',{token:cloudToken,id:b.dataset.del});await cloudRefresh();cloudMyGames();}catch(e){cloudError(e);}});}
+async function cloudOpenProject(owner,id,meta){try{const data=await cloudApi('/project/load',{token:cloudToken,id,owner:owner!==cloudMe.uid?owner:undefined});applyPayload(data.payload);cloudProjectId=(owner===cloudMe.uid)?id:null;cloudProjectTitle=(meta&&meta.title)||data.title||'My Game';cloudProjectClass=(meta&&meta.class)||data.class||null;const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof readBlocklyConfig==='function')readBlocklyConfig();closeCloud();if(typeof hideHome==='function')hideHome();if(typeof hideTeacher==='function')hideTeacher();switchMode('build');toast('Opened “'+cesc(cloudProjectTitle)+'” ☁️','#10b981');}catch(e){cloudError(e);}}
+// ---- SAVE (personal or a joined class) ----
+function cloudSaveFlow(){if(!isSignedIn()){cloudAuthHome();return;}const classes=cloudMe.classes||[];
+  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>💾 Save this game</h2><p>Where should it go?</p>
+   <button class="cloud-btn" id="sv-own">👤 My own work<span class="sub">Private — just for you</span></button>`;
+  classes.forEach(c=>{h+=`<button class="cloud-btn" data-cls="${cesc(c.code)}">🏫 ${cesc(c.name)}<span class="sub">Hand in to this class (${cesc(c.code)})</span></button>`;});
+  if(!classes.length)h+='<p class="cloud-note">Join a class in ⚙️ Settings to hand work in to a teacher.</p>';
+  _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
+  document.getElementById('sv-own').onclick=()=>cloudDoSave(null);
+  _cb().querySelectorAll('[data-cls]').forEach(b=>b.onclick=()=>cloudDoSave(b.dataset.cls));}
 async function cloudDoSave(classCode){try{commitLevel();
-  if(!cloudPin){const res=await cloudApi('/pupil/new','POST',{});cloudPin=res.pin;try{localStorage.setItem('bap_cloud_pin',cloudPin);}catch(e){}}
-  // changing destination makes a new copy rather than moving the existing slot
   if(cloudProjectId&&classCode!==cloudProjectClass)cloudProjectId=null;
   let title=cloudProjectTitle;if(!cloudProjectId){title=prompt('Name your game:',cloudProjectTitle||'My Game');if(title===null)return;}
   cloudProjectTitle=title||'My Game';
-  if(classCode){cloudClassCode=classCode;try{localStorage.setItem('bap_cloud_class',classCode);}catch(e){}}
   _cb().innerHTML='<h2>☁️ Saving…</h2><p style="text-align:center">Please wait…</p>';
-  const res=await cloudApi('/project/'+cloudPin,'POST',{id:cloudProjectId,title:cloudProjectTitle,class:classCode,payload:buildPayload()});
-  cloudProjectId=res.id;cloudProjectClass=classCode||null;
-  const where=classCode?('handed in to class <b style="color:var(--gold)">'+cesc(classCode)+'</b>'):'in your own work';
-  _cb().innerHTML=`<h2>✅ Saved!</h2><p style="text-align:center">“${cesc(cloudProjectTitle)}” is ${where}.</p><p style="text-align:center">Your personal code is:</p><div class="cloud-code-big">${cloudPin}</div>
-    <p style="text-align:center">Write it down! Type it on any device to open your games.</p><button class="cloud-btn gold" id="c-done">Done</button>`;
-  document.getElementById('c-done').onclick=closeCloud;}catch(e){cloudError(e);}}
-function cloudOpenPinView(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>🔑 Open my games</h2><p>Type your 6-digit code:</p>
-  <input class="cloud-input pin" id="c-pin" inputmode="numeric" maxlength="6" placeholder="––––––" value="${cloudPin||''}">
-  <button class="cloud-btn gold" id="c-go">Open my games →</button>`;
-  document.getElementById('c-bk').onclick=cloudHome;
-  document.getElementById('c-go').onclick=async()=>{const pin=(document.getElementById('c-pin').value||'').replace(/\D/g,'').slice(0,6);if(pin.length!==6){toast('Type your 6 numbers','#ef4444');return;}try{const data=await cloudApi('/pupil/'+pin);cloudPin=pin;try{localStorage.setItem('bap_cloud_pin',pin);}catch(e){}cloudProjectList(pin,data,false);}catch(e){cloudError(e);}};}
-function cloudProjectList(pin,data,readOnly){const projs=data.projects||[];
-  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>📂 ${cesc(data.name||'My')} games</h2><p style="text-align:center">Your code: <b style="color:var(--gold);letter-spacing:2px">${pin}</b></p>`;
-  if(!projs.length)h+='<p style="text-align:center">No saved games yet. Build one, then tap “Save this game online”.</p>';
-  projs.forEach(pr=>{const tag=pr.class?('🏫 '+cesc(pr.class)):'👤 my own';h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${tag} · saved ${new Date(pr.updated).toLocaleDateString('en-GB')}</small></div>${readOnly?'':`<button data-del="${pr.id}" title="Delete">🗑️</button>`}</div>`;});
-  _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudHome;
-  _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudLoadProject(pin,el.dataset.id,projs.find(p=>p.id===el.dataset.id)));
-  _cb().querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this game from the cloud?'))return;try{await cloudApi('/project/'+pin+'/'+b.dataset.del,'DELETE');const fresh=await cloudApi('/pupil/'+pin);cloudProjectList(pin,fresh,readOnly);}catch(e){cloudError(e);}});}
-async function cloudLoadProject(pin,id,meta){try{const data=await cloudApi('/project/'+pin+'/'+id);applyPayload(data.payload);cloudPin=pin;cloudProjectId=id;cloudProjectTitle=(meta&&meta.title)||data.title||'My Game';cloudProjectClass=(meta&&meta.class)||null;try{localStorage.setItem('bap_cloud_pin',pin);}catch(e){}const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof readBlocklyConfig==='function')readBlocklyConfig();closeCloud();if(typeof hideHome==='function')hideHome();switchMode('build');toast('Opened “'+cloudProjectTitle+'” ☁️','#10b981');}catch(e){cloudError(e);}}
-// ---- PUPIL: self-join a class (links their personal PIN to the class) ----
-function cloudClassView(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>🏫 Join a class</h2><p>Type your class code:</p>
-  <input class="cloud-input" id="c-code" maxlength="8" placeholder="e.g. OAK7" style="text-transform:uppercase;text-align:center;letter-spacing:4px;font-weight:800;">
-  <p>Your first name:</p><input class="cloud-input" id="c-nm" maxlength="30" placeholder="e.g. Alex">
-  <button class="cloud-btn gold" id="c-go">Join →</button>
-  <button class="cloud-btn" id="c-find">🔎 Already joined? Find my games</button>`;
-  document.getElementById('c-bk').onclick=cloudHome;
-  document.getElementById('c-go').onclick=async()=>{const code=(document.getElementById('c-code').value||'').trim().toUpperCase();const nm=(document.getElementById('c-nm').value||'').trim();if(!code||!nm){toast('Type the class code and your name','#ef4444');return;}try{const res=await cloudApi('/class/'+code+'/join','POST',{pin:cloudPin||undefined,name:nm});cloudPin=res.pin;cloudClassCode=code;try{localStorage.setItem('bap_cloud_pin',res.pin);localStorage.setItem('bap_cloud_class',code);}catch(e){}const list=await cloudApi('/pupil/'+res.pin);cloudJoinedDone(res,list);}catch(e){cloudError(e);}};
-  document.getElementById('c-find').onclick=async()=>{const code=(document.getElementById('c-code').value||'').trim().toUpperCase();if(!code){toast('Type the class code first','#ef4444');return;}try{const data=await cloudApi('/class/'+code);cloudPickName(code,data);}catch(e){cloudError(e);}};}
-function cloudJoinedDone(res,list){_cb().innerHTML=`<h2>✅ Joined ${cesc(res.className||'')}!</h2><p style="text-align:center">Hi ${cesc(res.name)}! Your personal code is:</p><div class="cloud-code-big">${res.pin}</div><p style="text-align:center">Write it down. Now you can save games to this class.</p><button class="cloud-btn gold" id="c-see">See my games</button><button class="cloud-btn" id="c-done">Done</button>`;document.getElementById('c-see').onclick=()=>cloudProjectList(res.pin,list,false);document.getElementById('c-done').onclick=closeCloud;}
-function cloudPickName(code,data){let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>🔎 ${cesc(data.name||'Class')}</h2><p>Tap your name:</p>`;(data.pupils||[]).forEach(p=>{h+=`<button class="cloud-btn" data-name="${cesc(p.name)}">${cesc(p.name)}</button>`;});if(!(data.pupils||[]).length)h+='<p>No one has joined this class yet.</p>';_cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudClassView;_cb().querySelectorAll('[data-name]').forEach(b=>b.onclick=async()=>{try{const who=await cloudApi('/class/'+code+'/whoami','POST',{name:b.dataset.name});cloudPin=who.pin;cloudClassCode=code;try{localStorage.setItem('bap_cloud_pin',who.pin);localStorage.setItem('bap_cloud_class',code);}catch(e){}const list=await cloudApi('/pupil/'+who.pin);cloudProjectList(who.pin,list,false);}catch(e){cloudError(e);}});}
-// ---- TEACHER: account login + class manager ----
-function cloudTeacherView(){if(cloudTeacherUser&&cloudTeacherPass){cloudTeacherClasses();return;}
-  _cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>🧑‍🏫 Teachers</h2><p>Log in to see your classes on any device.</p>
-   <input class="cloud-input" id="tu" placeholder="username" value="${cesc(cloudTeacherUser||'')}" autocomplete="username" style="text-transform:lowercase">
-   <input class="cloud-input" id="tp" type="password" placeholder="password" autocomplete="current-password">
-   <button class="cloud-btn gold" id="t-login">Log in →</button>
-   <button class="cloud-btn" id="t-signup">➕ Create a teacher account</button>
-   <p class="cloud-note">Pupils' first names &amp; work are stored online. Use first names only.</p>`;
-  document.getElementById('c-bk').onclick=cloudHome;
-  document.getElementById('t-login').onclick=async()=>{const u=document.getElementById('tu').value.trim().toLowerCase();const pw=document.getElementById('tp').value;try{const data=await cloudApi('/teacher/login','POST',{username:u,password:pw});cloudTeacherUser=u;cloudTeacherPass=pw;try{localStorage.setItem('bap_cloud_teacher',u);}catch(e){}cloudTeacherClasses(data);}catch(e){cloudError(e);}};
-  document.getElementById('t-signup').onclick=cloudTeacherSignup;}
-function cloudTeacherSignup(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>➕ Teacher account</h2><p>Choose a username <small>(letters, numbers, hyphens)</small>:</p>
-   <input class="cloud-input" id="su" placeholder="e.g. mr-smith-oak" style="text-transform:lowercase">
-   <p>Choose a password:</p><input class="cloud-input" id="sp" type="password" placeholder="password">
-   <button class="cloud-btn gold" id="s-go">Create account →</button>`;
-  document.getElementById('c-bk').onclick=cloudTeacherView;
-  document.getElementById('s-go').onclick=async()=>{const u=document.getElementById('su').value.trim().toLowerCase();const pw=document.getElementById('sp').value;try{await cloudApi('/teacher/signup','POST',{username:u,password:pw});cloudTeacherUser=u;cloudTeacherPass=pw;try{localStorage.setItem('bap_cloud_teacher',u);}catch(e){}toast('Account made! 🎉','#10b981');const data=await cloudApi('/teacher/login','POST',{username:u,password:pw});cloudTeacherClasses(data);}catch(e){cloudError(e);}};}
-async function cloudTeacherClasses(data){try{if(!data)data=await cloudApi('/teacher/login','POST',{username:cloudTeacherUser,password:cloudTeacherPass});}catch(e){cloudError(e);return;}
-  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>📋 My classes</h2><p style="text-align:center">Signed in as <b>${cesc(cloudTeacherUser)}</b></p>`;
-  (data.classes||[]).forEach(c=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-code="${cesc(c.code)}"><b>${cesc(c.name)}</b><small>code ${cesc(c.code)} · ${c.pupilCount} pupil${c.pupilCount===1?'':'s'}</small></div></div>`;});
-  if(!(data.classes||[]).length)h+='<p style="text-align:center">No classes yet — make one below!</p>';
-  h+=`<button class="cloud-btn gold" id="t-make">➕ Make a new class</button><button class="cloud-btn" id="t-out">Log out</button>`;
-  _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudHome;
+  const res=await cloudApi('/project/save',{token:cloudToken,id:cloudProjectId,title:cloudProjectTitle,class:classCode,payload:buildPayload()});
+  cloudProjectId=res.id;cloudProjectClass=classCode||null;await cloudRefresh();
+  const where=classCode?'handed in to your class':'in your own work';
+  _cb().innerHTML=`<h2>✅ Saved!</h2><p style="text-align:center">“${cesc(cloudProjectTitle)}” is ${where}.</p><button class="cloud-btn gold" id="c-done">Done</button><button class="cloud-btn" id="c-mine">📂 See my games</button>`;
+  document.getElementById('c-done').onclick=closeCloud;document.getElementById('c-mine').onclick=cloudMyGames;}catch(e){cloudError(e);}}
+// ---- SETTINGS (edit names, join classes) ----
+function cloudSettings(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>⚙️ Settings</h2>
+  <p>Your name:</p><input class="cloud-input" id="se-real" value="${cesc(cloudMe.realName||'')}" maxlength="40">
+  <p>Your display name:</p><input class="cloud-input" id="se-disp" value="${cesc(cloudMe.displayName||'')}" autocapitalize="off" style="text-transform:lowercase">
+  <button class="cloud-btn" id="se-save">Save changes</button>
+  <h3>My classes</h3><div id="se-classes"></div>
+  <p>Join a class with its code:</p><div class="cloud-row"><input class="cloud-input" id="se-code" placeholder="CODE" maxlength="8" style="text-transform:uppercase;text-align:center;letter-spacing:3px;font-weight:800;margin-bottom:0"><button class="cloud-btn gold" id="se-join" style="margin:0;width:auto;padding:12px 16px">Join</button></div>
+  <button class="cloud-btn" id="se-out" style="margin-top:16px">Sign out</button>`;
+  document.getElementById('c-bk').onclick=cloudMyHome;
+  cloudRenderSettingsClasses();
+  document.getElementById('se-save').onclick=async()=>{const realName=document.getElementById('se-real').value.trim();const displayName=document.getElementById('se-disp').value.trim();try{const r=await cloudApi('/account',{token:cloudToken,realName,displayName});cloudMe.realName=r.realName;cloudMe.displayName=r.displayName;cloudMe.classes=r.classes;toast('Saved! ✅','#10b981');cloudSettings();}catch(e){cloudError(e);}};
+  document.getElementById('se-join').onclick=async()=>{const code=document.getElementById('se-code').value.trim().toUpperCase();if(!code){toast('Type a class code','#ef4444');return;}try{const r=await cloudApi('/class/join',{token:cloudToken,code});await cloudRefresh();toast('Joined '+cesc(r.name)+'! 🏫','#10b981');cloudSettings();}catch(e){cloudError(e);}};
+  document.getElementById('se-out').onclick=()=>{cloudSignOut();cloudAuthHome();};}
+function cloudRenderSettingsClasses(){const box=document.getElementById('se-classes');if(!box)return;const cs=cloudMe.classes||[];if(!cs.length){box.innerHTML='<p style="font-size:13px;opacity:.7">You haven’t joined any classes yet.</p>';return;}box.innerHTML=cs.map(c=>`<div class="cloud-list-item"><div class="ci-main"><b>${cesc(c.name)}</b><small>${cesc(c.code)}</small></div><button data-leave="${cesc(c.code)}">Leave</button></div>`).join('');box.querySelectorAll('[data-leave]').forEach(b=>b.onclick=async()=>{if(!confirm('Leave this class?'))return;try{await cloudApi('/class/leave',{token:cloudToken,code:b.dataset.leave});await cloudRefresh();cloudSettings();}catch(e){cloudError(e);}});}
+// ---- TEACHER: classes → pupils → work ----
+function cloudTeacherClasses(){const cs=(cloudMe&&cloudMe.classes)||[];
+  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>🏫 My classes</h2><p style="text-align:center">${cesc(cloudMe.displayName)} · teacher</p>`;
+  cs.forEach(c=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-code="${cesc(c.code)}"><b>${cesc(c.name)}</b><small>code ${cesc(c.code)}</small></div></div>`;});
+  if(!cs.length)h+='<p style="text-align:center">No classes yet — make one below!</p>';
+  h+=`<button class="cloud-btn gold" id="t-make">➕ Make a new class</button>`;
+  _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherRoster(el.dataset.code));
-  document.getElementById('t-make').onclick=cloudTeacherMakeClass;
-  document.getElementById('t-out').onclick=()=>{cloudTeacherUser=null;cloudTeacherPass=null;try{localStorage.removeItem('bap_cloud_teacher');}catch(e){}cloudTeacherView();};}
+  document.getElementById('t-make').onclick=cloudTeacherMakeClass;}
 function cloudTeacherMakeClass(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>➕ Make a class</h2><p>Class name:</p><input class="cloud-input" id="mc" placeholder="e.g. Year 3 Oak" maxlength="40"><button class="cloud-btn gold" id="mc-go">Create →</button>`;
-  document.getElementById('c-bk').onclick=()=>cloudTeacherClasses();
-  document.getElementById('mc-go').onclick=async()=>{const name=document.getElementById('mc').value.trim()||'My Class';try{const res=await cloudApi('/teacher/class','POST',{username:cloudTeacherUser,password:cloudTeacherPass,name});cloudClassMade(res);}catch(e){cloudError(e);}};}
-function cloudClassMade(res){_cb().innerHTML=`<h2>✅ Class made!</h2><p style="text-align:center">Class code:</p><div class="cloud-code-big">${cesc(res.code)}</div><p>Pupils join by opening ☁️ Cloud → 🏫 Join a class → typing <b>${cesc(res.code)}</b> and their name. Then they can hand work in to your class.</p><button class="cloud-btn gold" id="c-done">See my classes</button>`;document.getElementById('c-done').onclick=()=>cloudTeacherClasses();}
-async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/'+code+'/roster','POST',{username:cloudTeacherUser,password:cloudTeacherPass});
+  document.getElementById('c-bk').onclick=cloudTeacherClasses;
+  document.getElementById('mc-go').onclick=async()=>{const name=document.getElementById('mc').value.trim()||'My Class';try{const res=await cloudApi('/class/create',{token:cloudToken,name});await cloudRefresh();cloudClassMade(res);}catch(e){cloudError(e);}};}
+function cloudClassMade(res){_cb().innerHTML=`<h2>✅ Class made!</h2><p style="text-align:center">Class code:</p><div class="cloud-code-big">${cesc(res.code)}</div><p>Pupils sign in → ⚙️ Settings → Join a class → type <b>${cesc(res.code)}</b>. Then they can hand work in to your class.</p><button class="cloud-btn gold" id="c-done">See my classes</button>`;document.getElementById('c-done').onclick=cloudTeacherClasses;}
+async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/roster',{token:cloudToken,code});
   let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>👨‍👧 ${cesc(data.name||'Class')}</h2><p style="text-align:center">Code: <b style="color:var(--gold)">${cesc(code)}</b> · ${(data.pupils||[]).length} pupil${(data.pupils||[]).length===1?'':'s'}</p>`;
   if(!(data.pupils||[]).length)h+='<p style="text-align:center">No pupils have joined yet — share the class code!</p>';
-  (data.pupils||[]).forEach(pu=>{const n=(pu.projects||[]).length;h+=`<div class="cloud-list-item"><div class="ci-main" data-pin="${pu.pin}"><b>${cesc(pu.name)}</b><small>${n} game${n===1?'':'s'} handed in</small></div></div>`;});
-  _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherClasses();
-  _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherPupil(code,(data.pupils||[]).find(x=>x.pin===el.dataset.pin)));
+  (data.pupils||[]).forEach(pu=>{const n=(pu.projects||[]).length;h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${n} game${n===1?'':'s'} handed in</small></div></div>`;});
+  _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudTeacherClasses;
+  _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherPupil(code,(data.pupils||[]).find(x=>x.uid===el.dataset.uid)));
 }catch(e){cloudError(e);}}
-function cloudTeacherPupil(code,pu){if(!pu)return;let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>🎒 ${cesc(pu.name)}</h2>`;
+function cloudTeacherPupil(code,pu){if(!pu)return;let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>🎒 ${cesc(pu.realName||pu.displayName)}</h2><p style="text-align:center">@${cesc(pu.displayName)}</p>`;
   if(!(pu.projects||[]).length)h+='<p style="text-align:center">No games handed in to this class yet.</p>';
-  (pu.projects||[]).forEach(pr=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-pin="${pu.pin}" data-id="${pr.id}" data-title="${cesc(pr.title||'')}"><b>${cesc(pr.title||'My Game')}</b><small>${new Date(pr.updated).toLocaleDateString('en-GB')} · tap to open</small></div></div>`;});
+  (pu.projects||[]).forEach(pr=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${new Date(pr.updated).toLocaleDateString('en-GB')} · tap to open</small></div></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherRoster(code);
-  _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudLoadProject(el.dataset.pin,el.dataset.id,{title:el.dataset.title}));}
-function openCloudTeacher(){if(!cloudOn())return;document.getElementById('cloud-modal').classList.remove('hide');cloudTeacherView();}
+  _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudOpenProject(pu.uid,el.dataset.id,(pu.projects||[]).find(x=>x.id===el.dataset.id)));}
+function openCloudTeacher(){if(!cloudOn())return;document.getElementById('cloud-modal').classList.remove('hide');if(isTeacher())cloudTeacherClasses();else cloudAuthHome();}
 document.getElementById('t-cloud').onclick=openCloud;
 document.getElementById('h-cloud').onclick=openCloud;
 document.getElementById('cloud-close').onclick=closeCloud;
 showCloudBtns();
+if(cloudToken)cloudRefresh();
 document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
 document.getElementById('o-retry') .onclick=()=>{hideOv();resumeFromDeath();};
@@ -4191,9 +4193,10 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.21';
+const CJ_VERSION='2026.06.22';
 const CJ_WHATSNEW=[
-  '🏫 Teachers: the Teacher Hub now has a class manager — make a username & password, create classes, and see every child’s handed-in work on any device. Pupils join a class with its code (and can be in more than one).',
+  '👤 Accounts! Sign in (or create an account) to save your games online and open them on any device — no more codes to remember. Choose 👤 your own work or 🏫 hand it in to a class you’ve joined.',
+  '🏫 Teachers: create a teacher account to make classes and see every pupil’s work (with their real & display names) on any device. Pupils join classes in ⚙️ Settings; the Teacher Hub is teacher-only.',
   '☁️ Cloud save (if your school turns it on): tap 💾 Save → save online and open your games on ANY device with your 6-digit code. Choose 👤 my own work (private) or 🏫 hand it in to your class for your teacher to see.',
   '🧒 Key Stage 1 made friendlier for ages 5–7: a 🔊 “Read aloud” button speaks blocks, signs & messages; simpler, bigger blocks; a “Let’s make a game!” walkthrough and a one-tap starter game.',
   '🌀 Teleport pads can now zap to a pad on THIS page OR jump to another page — tap a pad to choose (KS2 & KS3).',

@@ -172,6 +172,7 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .th-panel{background:var(--dark);border:1px solid var(--gray);border-radius:6px;padding:18px;}
 .th-panel h3{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
 .th-span3{grid-column:span 3;}
+.th-span2{grid-column:span 2;}
 .th-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;}
 .th-row:last-child{border-bottom:none;}.th-row .grow{flex:1;}.th-row.clk{cursor:pointer;}.th-row.clk:hover{color:var(--gold);}
 .th-tag{font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:20px;text-transform:uppercase;}
@@ -625,6 +626,12 @@ body.ks1mode .pal-icon{font-size:30px;}
 body.ks1mode .pal-item span:last-child{font-size:12px;}
 body.ks1mode .pal-group{font-size:13px;}
 body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
+/* Home account bar (top-left) + toolbar chip */
+#home-account{position:absolute;top:18px;left:18px;z-index:6;display:flex;gap:8px;align-items:center;}
+#home-account .acc-chip{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.35);border:1px solid var(--gold);color:#fff;border-radius:22px;padding:7px 14px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;}
+#home-account .acc-chip:hover{background:var(--gold);color:#000;}
+#home-account .acc-chip.plain{border-color:var(--gray);}
+#home-account .acc-chip.plain:hover{border-color:var(--gold);background:rgba(0,0,0,.35);color:#fff;}
 /* Cloud save (PIN / class) */
 #cloud-modal{position:fixed;inset:0;z-index:1590;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;}
 #cloud-modal.hide{display:none;}
@@ -788,6 +795,7 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
     <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
   </div>
   <div class="teacher-link"><button id="h-teacher">👩‍🏫 &nbsp;For Teachers →</button></div>
+  <div id="home-account"></div>
   <div class="home-logo">
     <svg class="home-logomark" viewBox="0 0 200 152" role="img" aria-label="CodeJump by Primary Coding League">
       <rect x="66" y="8"  width="68" height="10" rx="2" fill="#ffffff"/>
@@ -891,37 +899,24 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
       </span>
       <span class="spacer"></span>
       <button class="th-chip" onclick="openTeacherGuide()">📖 Teacher Guide</button>
-      <button class="th-chip" onclick="printPack()">🖨 Print pack</button>
       <button class="th-chip gold" onclick="hideTeacher()">← Back to CodeJump</button>
     </div>
     <div class="th-wrap">
       <div class="th-grid">
-        <div class="th-panel">
-          <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px;">📅 Challenge of the day
-            <button class="th-expand" onclick="openProjector()" title="Show full screen for the class">⛶ Expand</button>
-          </h3>
-          <div id="th-chal-day" class="th-muted" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;"></div>
-          <div id="th-chal-title" style="font-weight:800;font-size:16px;margin-bottom:6px;">"Marble Run"</div>
-          <p id="th-chal-desc" class="th-muted" style="margin-bottom:6px;">Build a level using at least one moving platform and a bounce mushroom.</p>
-          <button class="th-btn" onclick="loadChallenge()">▶ Load starter level</button>
-          <button class="th-btn ghost" onclick="printChallengeCard()">🖨 Print challenge card</button>
-        </div>
-        <div class="th-panel">
-          <h3>📚 This unit</h3>
-          <div id="th-unit-name" style="font-weight:800;font-size:14px;color:var(--white);margin-bottom:4px;"></div>
-          <div class="th-muted" id="th-unit-big" style="margin-bottom:10px;font-style:italic;"></div>
-          <div id="th-unit"></div>
-          <p class="th-muted" style="margin-top:8px;">Tap any lesson to open it.</p>
-        </div>
-        <div class="th-panel">
-          <h3>🗂 Pupils' work</h3>
-          <p class="th-muted" style="margin-bottom:12px;">See your classes, create new ones, and open the work pupils have handed in — on any device.</p>
-          <button class="th-btn" id="th-classes" onclick="teacherHubClasses()">🏫 My classes &amp; pupils' work →</button>
+        <div class="th-panel th-span2">
+          <h3>🗂 My classes &amp; pupils' work</h3>
+          <p class="th-muted" style="margin-bottom:12px;">Create classes, manage pupils, send games to a class, and open the work pupils have handed in — on any device.</p>
+          <button class="th-btn" id="th-classes" onclick="teacherHubClasses()">🏫 Open my classes →</button>
           <button class="th-btn ghost" style="margin-top:8px" onclick="openSubmission()">📂 …or open a level file</button>
         </div>
-        <div class="th-panel th-span3">
-          <h3>🧩 Lesson library</h3>
-          <div class="th-lessons" id="th-lessonGrid"></div>
+        <div class="th-panel">
+          <h3>📚 Lesson resources</h3>
+          <p class="th-muted" style="margin-bottom:6px;">Lesson plans, worksheets, challenges and starter levels.</p>
+          <div style="text-align:center;padding:18px 8px;">
+            <div style="font-size:30px;">🚧</div>
+            <div style="font-weight:800;color:var(--gold);font-size:18px;margin-top:6px;">Coming soon</div>
+            <p class="th-muted" style="margin-top:6px;font-size:12px;">We're putting together brilliant teaching resources — check back shortly.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1147,6 +1142,7 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
     <div class="sep"></div>
     <button class="tbtn" id="t-save">💾 Save</button>
     <button class="tbtn" id="t-cloud" style="display:none;">☁️ Cloud</button>
+    <button class="tbtn" id="t-account" style="display:none;">👤</button>
     <button class="tbtn" id="t-share">🔗 Share</button>
     <div class="sep"></div>
     <select id="theme-sel"><option value="forest">🌲 Forest</option><option value="space">🚀 Space</option><option value="water">🐠 Underwater</option></select>
@@ -1815,22 +1811,8 @@ function hideTeacher(){document.getElementById('teacher').classList.add('hide');
 function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
 function thSetYear(y){thYear=y;thRenderHub();}
 function thRenderHub(){
+  // Lesson resources are "Coming soon" — only the year toggle remains in the hub for now.
   document.querySelectorAll('.th-year').forEach(b=>b.classList.toggle('active',(+b.dataset.year)===thYear));
-  const U=TH_UNITS[thYear];
-  document.getElementById('th-unit-name').textContent=U.name;
-  document.getElementById('th-unit-big').textContent='“'+U.big+'”';
-  const ch=dailyChallenge();
-  document.getElementById('th-chal-day').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
-  document.getElementById('th-chal-title').textContent='“'+ch.title+'”';
-  document.getElementById('th-chal-desc').textContent=ch.desc;
-  const circ=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
-  const u=document.getElementById('th-unit');u.innerHTML='';
-  thLessons().forEach((L,i)=>{const d=document.createElement('div');d.className='th-row clk';d.onclick=()=>thOpenLesson(i);
-    d.innerHTML='<span class="grow">'+circ[i]+' '+L.title+'</span>';u.appendChild(d);});
-  const g=document.getElementById('th-lessonGrid');g.innerHTML='';
-  thLessons().forEach((L,i)=>{const d=document.createElement('div');d.className='th-lcard';d.onclick=()=>thOpenLesson(i);
-    d.innerHTML='<div class="lnum">'+L.num+'</div><div class="ltitle">'+L.title+'</div><div class="lobj"><span class="th-tag now">'+L.ks+'</span><br><br>'+L.obj+'</div><div class="th-openhint">Open lesson →</div>';
-    g.appendChild(d);});
 }
 function thSheetHTML(L){return '<div class="th-sheet">'+
   '<div class="ks">'+L.ks+'</div>'+
@@ -3445,10 +3427,17 @@ const _cb=()=>document.getElementById('cloud-body');
 function cesc(s){return String(s==null?'':s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
 function closeCloud(){document.getElementById('cloud-modal').classList.add('hide');}
 function cloudError(e){_cb().innerHTML=`<h2>😕 Oops</h2><p style="text-align:center">${cesc(e&&e.message||'Something went wrong')}</p><button class="cloud-btn" id="c-back">← Back</button>`;document.getElementById('c-back').onclick=openCloud;}
-function showCloudBtns(){const t=document.getElementById('t-cloud'),h=document.getElementById('h-cloud');if(t)t.style.display=cloudOn()?'':'none';if(h)h.style.display=cloudOn()?'':'none';}
-function cloudSignOut(){cloudToken=null;cloudMe=null;try{localStorage.removeItem('bap_cloud_token');}catch(e){}cloudProjectId=null;cloudProjectClass=null;}
-async function cloudRefresh(){if(!cloudToken)return;try{cloudMe=await cloudApi('/me',{token:cloudToken});}catch(e){cloudSignOut();}}
-function cloudSetSession(r){cloudToken=r.token;cloudMe={uid:r.uid,displayName:r.displayName,realName:r.realName,role:r.role,classes:r.classes||[],projects:r.projects||[]};try{localStorage.setItem('bap_cloud_token',cloudToken);}catch(e){}}
+function showCloudBtns(){const t=document.getElementById('t-cloud'),h=document.getElementById('h-cloud');if(t)t.style.display=cloudOn()?'':'none';if(h)h.style.display=cloudOn()?'':'none';updateAccountChips();}
+function updateAccountChips(){
+  const ha=document.getElementById('home-account'),ta=document.getElementById('t-account');
+  if(ha){if(!cloudOn())ha.innerHTML='';else if(isSignedIn())ha.innerHTML=`<button class="acc-chip" id="ha-me">👤 ${cesc(cloudMe.displayName)}${isTeacher()?' 🧑‍🏫':''}</button><button class="acc-chip plain" id="ha-set">⚙️ Settings</button>`;else ha.innerHTML=`<button class="acc-chip" id="ha-in">🔑 Sign in</button>`;
+    const me=document.getElementById('ha-me'),set=document.getElementById('ha-set'),inb=document.getElementById('ha-in');
+    if(me)me.onclick=openCloud;if(set)set.onclick=()=>{openCloud();if(isSignedIn())cloudSettings();};if(inb)inb.onclick=openCloud;}
+  if(ta){ta.style.display=(cloudOn()&&isSignedIn())?'':'none';ta.textContent='👤 '+(cloudMe?cloudMe.displayName:'');ta.title='Account & settings';ta.onclick=()=>{openCloud();cloudSettings();};}
+}
+function cloudSignOut(){cloudToken=null;cloudMe=null;try{localStorage.removeItem('bap_cloud_token');}catch(e){}cloudProjectId=null;cloudProjectClass=null;updateAccountChips();}
+async function cloudRefresh(){if(!cloudToken)return;try{cloudMe=await cloudApi('/me',{token:cloudToken});}catch(e){cloudSignOut();}updateAccountChips();}
+function cloudSetSession(r){cloudToken=r.token;cloudMe={uid:r.uid,displayName:r.displayName,realName:r.realName,role:r.role,classes:r.classes||[],projects:r.projects||[]};try{localStorage.setItem('bap_cloud_token',cloudToken);}catch(e){}updateAccountChips();}
 function openCloud(){if(!cloudOn())return;document.getElementById('cloud-modal').classList.remove('hide');if(isSignedIn())cloudMyHome();else cloudAuthHome();}
 // ---- AUTH ----
 function cloudAuthHome(){_cb().innerHTML=`<h2>☁️ Cloud</h2><p style="text-align:center">Sign in to save your games and open them on any device.</p>
@@ -3514,6 +3503,7 @@ function cloudSettings(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">�
   <p>Your name:</p><input class="cloud-input" id="se-real" value="${cesc(cloudMe.realName||'')}" maxlength="40">
   <p>Your display name:</p><input class="cloud-input" id="se-disp" value="${cesc(cloudMe.displayName||'')}" autocapitalize="off" style="text-transform:lowercase">
   <button class="cloud-btn" id="se-save">Save changes</button>
+  <button class="cloud-btn" id="se-pw">🔑 Change my password</button>
   <h3>My classes</h3><div id="se-classes"></div>
   <p>Join a class with its code:</p><div class="cloud-row"><input class="cloud-input" id="se-code" placeholder="CODE" maxlength="8" style="text-transform:uppercase;text-align:center;letter-spacing:3px;font-weight:800;margin-bottom:0"><button class="cloud-btn gold" id="se-join" style="margin:0;width:auto;padding:12px 16px">Join</button></div>
   <button class="cloud-btn" id="se-out" style="margin-top:16px">Sign out</button>`;
@@ -3521,7 +3511,14 @@ function cloudSettings(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">�
   cloudRenderSettingsClasses();
   document.getElementById('se-save').onclick=async()=>{const realName=document.getElementById('se-real').value.trim();const displayName=document.getElementById('se-disp').value.trim();try{const r=await cloudApi('/account',{token:cloudToken,realName,displayName});cloudMe.realName=r.realName;cloudMe.displayName=r.displayName;cloudMe.classes=r.classes;toast('Saved! ✅','#10b981');cloudSettings();}catch(e){cloudError(e);}};
   document.getElementById('se-join').onclick=async()=>{const code=document.getElementById('se-code').value.trim().toUpperCase();if(!code){toast('Type a class code','#ef4444');return;}try{const r=await cloudApi('/class/join',{token:cloudToken,code});await cloudRefresh();toast('Joined '+cesc(r.name)+'! 🏫','#10b981');cloudSettings();}catch(e){cloudError(e);}};
+  document.getElementById('se-pw').onclick=cloudChangePassword;
   document.getElementById('se-out').onclick=()=>{cloudSignOut();cloudAuthHome();};}
+function cloudChangePassword(){_cb().innerHTML=`<button class="cloud-back" id="c-bk">← Back</button><h2>🔑 Change password</h2>
+  <p>Current password:</p><input class="cloud-input" id="pw-old" type="password">
+  <p>New password:</p><input class="cloud-input" id="pw-new" type="password">
+  <button class="cloud-btn gold" id="pw-go">Change password →</button>`;
+  document.getElementById('c-bk').onclick=cloudSettings;
+  document.getElementById('pw-go').onclick=async()=>{const oldPassword=document.getElementById('pw-old').value;const newPassword=document.getElementById('pw-new').value;if(newPassword.length<4){toast('New password must be at least 4 characters','#ef4444');return;}try{await cloudApi('/password',{token:cloudToken,oldPassword,newPassword});toast('Password changed ✅','#10b981');cloudSettings();}catch(e){cloudError(e);}};}
 function cloudRenderSettingsClasses(){const box=document.getElementById('se-classes');if(!box)return;const cs=cloudMe.classes||[];if(!cs.length){box.innerHTML='<p style="font-size:13px;opacity:.7">You haven’t joined any classes yet.</p>';return;}box.innerHTML=cs.map(c=>`<div class="cloud-list-item"><div class="ci-main"><b>${cesc(c.name)}</b><small>${cesc(c.code)}</small></div><button data-leave="${cesc(c.code)}">Leave</button></div>`).join('');box.querySelectorAll('[data-leave]').forEach(b=>b.onclick=async()=>{if(!confirm('Leave this class?'))return;try{await cloudApi('/class/leave',{token:cloudToken,code:b.dataset.leave});await cloudRefresh();cloudSettings();}catch(e){cloudError(e);}});}
 // ---- TEACHER: classes → pupils → work ----
 function cloudTeacherClasses(){const cs=(cloudMe&&cloudMe.classes)||[];
@@ -3537,11 +3534,17 @@ function cloudTeacherMakeClass(){_cb().innerHTML=`<button class="cloud-back" id=
   document.getElementById('mc-go').onclick=async()=>{const name=document.getElementById('mc').value.trim()||'My Class';try{const res=await cloudApi('/class/create',{token:cloudToken,name});await cloudRefresh();cloudClassMade(res);}catch(e){cloudError(e);}};}
 function cloudClassMade(res){_cb().innerHTML=`<h2>✅ Class made!</h2><p style="text-align:center">Class code:</p><div class="cloud-code-big">${cesc(res.code)}</div><p>Pupils sign in → ⚙️ Settings → Join a class → type <b>${cesc(res.code)}</b>. Then they can hand work in to your class.</p><button class="cloud-btn gold" id="c-done">See my classes</button>`;document.getElementById('c-done').onclick=cloudTeacherClasses;}
 async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/roster',{token:cloudToken,code});
-  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>👨‍👧 ${cesc(data.name||'Class')}</h2><p style="text-align:center">Code: <b style="color:var(--gold)">${cesc(code)}</b> · ${(data.pupils||[]).length} pupil${(data.pupils||[]).length===1?'':'s'}</p>`;
-  if(!(data.pupils||[]).length)h+='<p style="text-align:center">No pupils have joined yet — share the class code!</p>';
-  (data.pupils||[]).forEach(pu=>{const n=(pu.projects||[]).length;h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${n} game${n===1?'':'s'} handed in</small></div></div>`;});
+  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>👨‍👧 ${cesc(data.name||'Class')}</h2><p style="text-align:center">Code: <b style="color:var(--gold)">${cesc(code)}</b> · ${(data.pupils||[]).length} pupil${(data.pupils||[]).length===1?'':'s'}</p>
+   <button class="cloud-btn gold" id="cr-send">📤 Send the game I'm building to this class</button>
+   <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-rename" style="margin:0;flex:1">✏️ Rename</button><button class="cloud-btn" id="cr-del" style="margin:0;flex:1">🗑️ Delete class</button></div>`;
+  if(!(data.pupils||[]).length)h+='<p style="text-align:center;margin-top:10px">No pupils have joined yet — share the class code!</p>';
+  (data.pupils||[]).forEach(pu=>{const n=(pu.projects||[]).length;h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${n} game${n===1?'':'s'} handed in</small></div><button data-remove="${cesc(pu.uid)}" title="Remove from class">✖</button></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudTeacherClasses;
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherPupil(code,(data.pupils||[]).find(x=>x.uid===el.dataset.uid)));
+  _cb().querySelectorAll('[data-remove]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();if(!confirm('Remove this pupil from the class? Their work stays in their own account.'))return;try{await cloudApi('/class/remove',{token:cloudToken,code,uid:b.dataset.remove});cloudTeacherRoster(code);}catch(err){cloudError(err);}});
+  document.getElementById('cr-send').onclick=async()=>{const title=prompt('Name the game you’re sending:','Class activity');if(title===null)return;try{commitLevel();_cb().innerHTML='<h2>📤 Sending…</h2>';const res=await cloudApi('/class/assign',{token:cloudToken,code,title,payload:buildPayload()});_cb().innerHTML=`<h2>✅ Sent!</h2><p style="text-align:center">“${cesc(title)}” is now in ${res.count} pupil${res.count===1?'':'s'}’ class work.</p><button class="cloud-btn gold" id="c-done">Back to class</button>`;document.getElementById('c-done').onclick=()=>cloudTeacherRoster(code);}catch(err){cloudError(err);}};
+  document.getElementById('cr-rename').onclick=async()=>{const name=prompt('New class name:',data.name||'');if(!name)return;try{await cloudApi('/class/update',{token:cloudToken,code,name});await cloudRefresh();cloudTeacherRoster(code);}catch(err){cloudError(err);}};
+  document.getElementById('cr-del').onclick=async()=>{if(!confirm('Delete this class for everyone? Pupils’ own games are kept, but the class is removed.'))return;try{await cloudApi('/class/delete',{token:cloudToken,code});await cloudRefresh();cloudTeacherClasses();toast('Class deleted','#585555');}catch(err){cloudError(err);}};
 }catch(e){cloudError(e);}}
 function cloudTeacherPupil(code,pu){if(!pu)return;let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>🎒 ${cesc(pu.realName||pu.displayName)}</h2><p style="text-align:center">@${cesc(pu.displayName)}</p>`;
   if(!(pu.projects||[]).length)h+='<p style="text-align:center">No games handed in to this class yet.</p>';
@@ -4193,8 +4196,10 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.22';
+const CJ_VERSION='2026.06.23';
 const CJ_WHATSNEW=[
+  '⚙️ Your account is now front-and-centre: a “Sign in / Settings” chip on the home screen, change your password, edit your name, and join classes in Settings.',
+  '🧑‍🏫 Teachers can now rename & delete classes, remove pupils, and 📤 send a game straight to a class (it lands in every pupil’s class work).',
   '👤 Accounts! Sign in (or create an account) to save your games online and open them on any device — no more codes to remember. Choose 👤 your own work or 🏫 hand it in to a class you’ve joined.',
   '🏫 Teachers: create a teacher account to make classes and see every pupil’s work (with their real & display names) on any device. Pupils join classes in ⚙️ Settings; the Teacher Hub is teacher-only.',
   '☁️ Cloud save (if your school turns it on): tap 💾 Save → save online and open your games on ANY device with your 6-digit code. Choose 👤 my own work (private) or 🏫 hand it in to your class for your teacher to see.',

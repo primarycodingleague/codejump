@@ -3314,7 +3314,11 @@ function applyPayload(d){
   }
   if(typeof d.blocklyXml==='string'){
     window._pendingXml=d.blocklyXml;
-    if(blocklyWorkspace){blocklyWorkspace.clear();try{_suppressBlocklyDirty=true;Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(d.blocklyXml),blocklyWorkspace);window._pendingXml=null;}catch(e){}_suppressBlocklyDirty=false;}
+    if(blocklyWorkspace){
+      let cur=null;try{cur=Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));}catch(e){}
+      if(cur!==d.blocklyXml){blocklyWorkspace.clear();try{_suppressBlocklyDirty=true;Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(d.blocklyXml),blocklyWorkspace);window._pendingXml=null;}catch(e){}_suppressBlocklyDirty=false;} // only reload blocks when they actually changed (avoids jank during live collab)
+      else window._pendingXml=null;
+    }
   }
 }
 function payloadCode(){return btoa(unescape(encodeURIComponent(JSON.stringify(buildPayload()))));}
@@ -3603,11 +3607,17 @@ function collabOnMessage(m){
 function collabApplyOp(op){if(!op||op.k!=='cell')return;const lvl=op.lvl||0;
   if(lvl===curLevel){const g=op.layer==='water'?waterGrid:grid;if(g[op.r])g[op.r][op.c]=op.t;}
   else if(LEVELS[lvl]){const g=op.layer==='water'?LEVELS[lvl].waterGrid:LEVELS[lvl].grid;if(g&&g[op.r])g[op.r][op.c]=op.t;}}
-function collabApplyDoc(doc){commitLevel();applyPayload(doc);}
+function collabApplyDoc(doc){commitLevel();applyPayload(doc);collabRefreshCode();}
+function collabRefreshCode(){ // live-update the open code editor (KS3 text; KS2 Blockly handled in applyPayload)
+  const ed=document.getElementById('ks3-editor'),ta=document.getElementById('ks3-code');
+  if(ed&&!ed.classList.contains('hide')&&ta&&typeof ks3Code==='string'&&ta.value!==ks3Code){
+    const pos=ta.selectionStart;ta.value=ks3Code;if(typeof ks3RefreshGutter==='function')ks3RefreshGutter();if(typeof ks3LiveCheck==='function')ks3LiveCheck();try{ta.selectionStart=ta.selectionEnd=Math.min(pos,ta.value.length);}catch(e){}
+  }
+}
 function collabCell(r,c,layer){if(!collabActive||collabApplyingRemote)return;
   if(layer==='both'){collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:'grid',r,c,t:grid[r][c]}});collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:'water',r,c,t:waterGrid[r][c]}});}
   else collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:layer||'grid',r,c,t:(layer==='water'?waterGrid:grid)[r][c]}});}
-function collabSnapshotSoon(){if(!collabActive||collabApplyingRemote)return;clearTimeout(_collabSnapT);_collabSnapT=setTimeout(collabSnapshotNow,700);}
+function collabSnapshotSoon(){if(!collabActive||collabApplyingRemote)return;clearTimeout(_collabSnapT);_collabSnapT=setTimeout(collabSnapshotNow,450);}
 function collabSnapshotNow(){if(!collabActive)return;commitLevel();collabSend({type:'snapshot',doc:buildPayload()});}
 function collabCursor(c,r){if(!collabActive)return;const now=Date.now();if(now-_collabCurT<70)return;_collabCurT=now;collabSend({type:'cursor',cell:{r,c,lvl:curLevel}});}
 // Presence bar + Leave button (built on the fly)
@@ -4278,7 +4288,7 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 const CJ_VERSION='2026.06.24';
 const CJ_WHATSNEW=[
-  '🤝 NEW: build together, LIVE! Open a game → Share → 🤝 Collaborate → invite classmates by display name. Up to 6 of you build the same game at once and see each other’s blocks (and coloured cursors) appear instantly.',
+  '🤝 NEW: build together, LIVE! Open a game → Share → 🤝 Collaborate → invite classmates by display name. Up to 6 of you work on the same game at once — on BOTH the Build and Code screens — and see each other’s blocks, code and coloured cursors appear instantly.',
   '📂 Find shared projects under ☁️ Cloud → 🤝 Collaborations.',
   '⚙️ Your account is now front-and-centre: a “Sign in / Settings” chip on the home screen, change your password, edit your name, and join classes in Settings.',
   '🧑‍🏫 Teachers can now rename & delete classes, remove pupils, and 📤 send a game straight to a class (it lands in every pupil’s class work).',

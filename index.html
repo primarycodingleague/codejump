@@ -394,6 +394,62 @@ body.is-touch #t-hand{display:inline-block;}
 #code-panel.show{display:flex;}
 #blockly-div{flex:1;height:0;}
 .cp-run-bar{flex-shrink:0;padding:10px 12px;background:var(--dark);border-top:1px solid var(--gray);display:flex;gap:8px;align-items:stretch;}
+
+/* ── Stage (Scratch-style) unified layout — everything in one screen ── */
+.stage-only{display:none;}
+#stage-right{display:none;}
+#btn-greenflag.active,#btn-greenflag{background:#3fae5e;color:#fff;border-color:#3fae5e;}
+body.stage-mode .stage-only{display:inline-block;}
+/* hide platformer-only chrome while in Stage mode */
+body.stage-mode #btn-build,body.stage-mode #btn-play,body.stage-mode #btn-code,
+body.stage-mode #t-paint,body.stage-mode #t-fill,body.stage-mode #t-erase,body.stage-mode #t-undo,
+body.stage-mode #t-redo,body.stage-mode #t-clear,body.stage-mode #t-testpage,body.stage-mode #theme-sel,
+body.stage-mode #btn-design,body.stage-mode #btn-read,body.stage-mode #palette,body.stage-mode #pages,
+body.stage-mode #play-mute,body.stage-mode #play-sfx,body.stage-mode #hint,body.stage-mode #touch-controls,
+body.stage-mode .cp-run-bar,body.stage-mode #ks3-editor{display:none !important;}
+body.stage-mode #cwrap{display:flex;flex-direction:row;align-items:stretch;justify-content:flex-start;gap:10px;padding:10px;background:#1e1e1e;}
+body.stage-mode #code-panel{display:flex !important;position:relative;inset:auto;width:auto;height:auto;flex:1 1 auto;min-width:0;min-height:0;border-radius:10px;overflow:hidden;}
+body.stage-mode #stage-right{display:flex;flex-direction:column;width:420px;min-width:0;gap:10px;}
+@media(max-width:1100px){body.stage-mode #stage-right{width:360px;}}
+@media(max-width:900px){body.stage-mode #stage-right{width:300px;}}
+/* Narrow / portrait tablets & phones: stack the stage on top, blocks fill the rest */
+@media(max-width:820px){
+  body.stage-mode #cwrap{flex-direction:column;gap:8px;padding:8px;}
+  body.stage-mode #stage-right{width:100%;flex-direction:row;align-items:stretch;max-height:40vh;}
+  body.stage-mode #stage-canvas-holder{width:auto;max-width:60%;}
+  body.stage-mode #sprite-panel{flex:1;min-height:0;}
+  body.stage-mode #code-panel{flex:1 1 auto;min-height:300px;}
+  body.stage-mode #rotate-hint{display:none !important;}
+}
+#stage-canvas-holder{width:100%;aspect-ratio:16/9;background:#bfe3ff;border-radius:10px;overflow:hidden;border:2px solid var(--gray);display:flex;position:relative;}
+#stage-ask{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.95);border:2px solid var(--gold);border-radius:10px;padding:6px 8px;z-index:5;}
+#stage-ask.hide{display:none;}
+#stage-ask-q{font-family:var(--font);font-weight:700;font-size:13px;color:#222;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#stage-ask-in{flex:1;font-family:var(--font);font-size:14px;padding:6px 8px;border-radius:7px;border:2px solid var(--gray);}
+#stage-ask-ok{background:var(--gold);color:#111;border:none;border-radius:7px;width:34px;height:32px;font-size:15px;cursor:pointer;}
+body.stage-mode #gc{width:100%!important;height:100%!important;display:block;cursor:grab;}
+body.stage-mode #gc:active{cursor:grabbing;}
+#sprite-panel{flex:1;min-height:120px;background:#2b2b2b;border-radius:10px;border:1px solid var(--gray);padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+#sprite-panel-head{display:flex;align-items:center;justify-content:space-between;color:#fff;font-family:var(--font);font-weight:800;font-size:14px;}
+#add-sprite{background:var(--gold);color:#111;border:none;border-radius:7px;padding:6px 12px;font-family:var(--font);font-weight:800;font-size:13px;cursor:pointer;}
+#add-sprite:hover{filter:brightness(1.08);}
+#sprite-info{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;background:#222;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-family:var(--font);font-size:12px;color:#ccc;}
+#sprite-info.hide{display:none;}
+#sprite-info .si-lab{font-weight:800;color:#fff;}
+#sprite-info input{width:46px;font-family:var(--font);font-size:12px;padding:3px 5px;border-radius:6px;border:1px solid var(--gray);background:var(--black);color:#fff;}
+#sprite-info .si-eye{cursor:pointer;font-size:16px;background:none;border:none;}
+#sprite-cols{display:flex;gap:8px;flex:1;min-height:0;overflow:hidden;}
+#sprite-list{display:flex;flex-wrap:wrap;gap:8px;overflow-y:auto;align-content:flex-start;flex:1;}
+#stage-pane{flex-shrink:0;width:78px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--black);border:2px solid var(--gray);border-radius:10px;padding:6px 4px;cursor:pointer;align-self:flex-start;}
+#stage-pane:hover{border-color:var(--gold);}
+#stage-pane canvas{width:64px;height:40px;border-radius:5px;border:1px solid var(--gray);}
+#stage-pane span{font-family:var(--font);font-weight:800;font-size:11px;color:#ccc;}
+.sprite-card{position:relative;width:72px;height:72px;background:var(--black);border:2px solid var(--gray);border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+.sprite-card.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(174,133,62,.4);}
+.sprite-card canvas{width:44px;height:44px;}
+.sprite-card .sp-name{font-size:10px;color:#ccc;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sprite-card .sp-del{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:#c0392b;color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;display:none;}
+.sprite-card:hover .sp-del{display:block;}
 .cp-run{
   flex:1;background:var(--gold);color:var(--black);
   border:none;border-radius:3px;font-family:var(--font);font-weight:800;
@@ -464,8 +520,65 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .share-close:hover{opacity:1;}
 /* ── SPRITE DESIGNER ────────────────────────────────────────────────── */
 /* ── KS1/KS2 chooser ──────────────────────────────────────────────── */
-#ks-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;}
-#ks-modal.hide{display:none;}
+#ks-modal,#pt-modal,#costume-modal,#backdrop-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;}
+#ks-modal.hide,#pt-modal.hide,#costume-modal.hide,#backdrop-modal.hide{display:none;}
+#bd-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;max-height:200px;overflow-y:auto;}
+.bd-cos{position:relative;width:96px;background:var(--black);border:2px solid var(--gray);border-radius:10px;cursor:pointer;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.bd-cos.sel{border-color:var(--gold);background:rgba(174,133,62,.18);}
+.bd-cos canvas{width:88px;height:50px;border-radius:5px;}
+.bd-cos .cc-n{font-size:9px;color:#ccc;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bd-cos .cc-del{position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;background:#c0392b;color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;display:none;}
+.bd-cos:hover .cc-del{display:block;}
+#cm-name-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 14px;color:#fff;font-family:var(--font);font-weight:700;}
+#cm-name{font-family:var(--font);font-size:15px;font-weight:700;padding:8px 12px;border-radius:8px;border:2px solid var(--gold);background:var(--black);color:#fff;width:220px;}
+#cm-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.cm-opt{background:var(--black);border:2px solid var(--gray);border-radius:10px;padding:8px 4px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:border-color .12s,transform .12s;}
+.cm-opt:hover{border-color:var(--gold);transform:translateY(-2px);}
+.cm-opt.sel{border-color:var(--gold);background:rgba(174,133,62,.18);}
+.cm-opt canvas{width:48px;height:48px;}
+.cm-opt span{font-size:11px;color:#ccc;}
+#cm-colors{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px;}
+.cm-color{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
+.cm-color.sel{border-color:#fff;box-shadow:0 0 0 2px #000;}
+#cm-costume-btn{background:#4d96ff;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-family:var(--font);font-weight:800;font-size:13px;cursor:pointer;}
+#cm-costume-btn:hover{filter:brightness(1.08);}
+#cm-costumes-label{color:#bbb;font-family:var(--font);font-size:12px;margin:4px 0 6px;}
+#cm-costume-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;max-height:170px;overflow-y:auto;}
+.cm-cos{position:relative;width:70px;background:var(--black);border:2px solid var(--gray);border-radius:10px;cursor:pointer;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cm-cos.sel{border-color:var(--gold);background:rgba(174,133,62,.18);}
+.cm-cos canvas{width:46px;height:46px;background:#fff;border-radius:5px;}
+.cm-cos .cc-n{font-size:9px;color:#ccc;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cm-cos .cc-del{position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;background:#c0392b;color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;display:none;}
+.cm-cos:hover .cc-del{display:block;}
+#cm-add-row{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+#cm-add-row button{background:var(--gold);color:#111;border:none;border-radius:7px;padding:7px 14px;font-family:var(--font);font-weight:800;font-size:13px;cursor:pointer;}
+#cm-add-row button:hover{filter:brightness(1.08);}
+#cm-edit{min-height:10px;}
+#cm-edit .cm-editbtn{background:#4d96ff;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-family:var(--font);font-weight:800;font-size:13px;cursor:pointer;margin-bottom:8px;}
+
+/* ── Bitmap paint editor ── */
+#paint-modal{position:fixed;inset:0;background:rgba(10,10,12,.96);z-index:1600;display:flex;align-items:center;justify-content:center;padding:14px;}
+#paint-modal.hide{display:none;}
+.paint-box{width:100%;max-width:1100px;height:100%;max-height:820px;background:#262629;border:1px solid var(--gray);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;}
+.paint-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;background:#2f2f33;border-bottom:1px solid var(--gray);}
+#paint-name{font-family:var(--font);font-weight:700;font-size:14px;padding:6px 10px;border-radius:8px;border:2px solid var(--gold);background:var(--black);color:#fff;width:150px;}
+.paint-btn,.paint-tool{background:var(--black);border:2px solid var(--gray);border-radius:8px;width:38px;height:38px;font-size:17px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;}
+.paint-btn:hover,.paint-tool:hover{border-color:var(--gold);}
+.paint-tools{display:flex;gap:4px;}
+.paint-tool.sel{border-color:var(--gold);background:rgba(174,133,62,.25);}
+.paint-lab{display:flex;align-items:center;gap:5px;color:#ddd;font-family:var(--font);font-size:12px;font-weight:700;}
+.paint-lab input[type=color]{width:34px;height:30px;border:none;background:none;cursor:pointer;padding:0;}
+.paint-lab input[type=range]{width:90px;}
+.paint-sep{width:1px;height:30px;background:var(--gray);margin:0 4px;}
+.paint-grow{flex:1;}
+.paint-done{background:#3fae5e;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:var(--font);font-weight:800;font-size:14px;cursor:pointer;}
+.paint-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;background:repeating-conic-gradient(#3a3a3e 0% 25%,#313135 0% 50%) 50%/24px 24px;}
+#paint-canvas{background:repeating-conic-gradient(#e9e9ec 0% 25%,#fff 0% 50%) 50%/18px 18px;box-shadow:0 4px 20px rgba(0,0,0,.5);cursor:crosshair;touch-action:none;max-width:100%;max-height:100%;}
+.paint-canvas-wrap{position:relative;}
+#paint-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:rgba(120,120,120,.45);font-size:22px;pointer-events:none;}
+#paint-swatches{display:flex;gap:3px;flex-wrap:wrap;max-width:230px;}
+.paint-sw{width:20px;height:20px;border-radius:4px;border:1px solid rgba(255,255,255,.3);cursor:pointer;}
+.paint-sw:hover{transform:scale(1.12);}
 #ks-size-row{margin-top:16px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;color:#fff;font-family:var(--font);font-weight:700;font-size:14px;}
 #ks-size-row small{opacity:.6;font-weight:400;}
 #ks-size{font-family:var(--font);font-size:14px;font-weight:700;padding:8px 12px;border-radius:8px;border:2px solid var(--gold);background:var(--black);color:#fff;cursor:pointer;}
@@ -1122,6 +1235,74 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
   </div>
 </div>
 
+<div id="pt-modal" class="hide">
+  <div class="ks-box">
+    <h2>What do you want to make?</h2>
+    <p>Pick the kind of project. You can't change this later, so choose what you'd like to build!</p>
+    <div class="ks-opts">
+      <button class="ks-opt" data-pt="platformer"><span class="ks-emoji">🏃</span><b>Platformer</b><small>Build a level on a grid<br>and jump through it</small></button>
+      <button class="ks-opt" data-pt="stage"><span class="ks-emoji">🎭</span><b>Stage</b><small>Sprites on a stage<br>(like Scratch) — NEW!</small></button>
+    </div>
+    <button class="ks-cancel" id="pt-cancel">Back</button>
+  </div>
+</div>
+
+<div id="costume-modal" class="hide">
+  <div class="ks-box" style="max-width:620px;">
+    <h2>🎭 Costumes</h2>
+    <div id="cm-name-row"><label for="cm-name">Sprite name</label><input id="cm-name" maxlength="20" autocomplete="off"></div>
+    <div id="cm-costumes-label">This sprite's costumes (click to switch):</div>
+    <div id="cm-costume-list"></div>
+    <div id="cm-add-row"><button id="cm-add-paint">🎨 Paint new</button><button id="cm-add-char">🐱 Add character</button></div>
+    <div id="cm-edit"></div>
+    <button class="ks-cancel" id="cm-done">Done</button>
+  </div>
+</div>
+
+<div id="paint-modal" class="hide">
+  <div class="paint-box">
+    <div class="paint-top">
+      <input id="paint-name" maxlength="24" autocomplete="off" placeholder="costume name">
+      <button class="paint-btn" id="paint-undo" title="Undo">↩️</button>
+      <button class="paint-btn" id="paint-redo" title="Redo">↪️</button>
+      <span class="paint-sep"></span>
+      <div class="paint-tools">
+        <button class="paint-tool" data-tool="brush" title="Brush">🖌️</button>
+        <button class="paint-tool" data-tool="erase" title="Eraser">🩹</button>
+        <button class="paint-tool" data-tool="fill" title="Fill">🪣</button>
+        <button class="paint-tool" data-tool="line" title="Line">📏</button>
+        <button class="paint-tool" data-tool="rect" title="Rectangle">▭</button>
+        <button class="paint-tool" data-tool="ellipse" title="Circle">⬭</button>
+        <button class="paint-tool" data-tool="text" title="Text">🅣</button>
+      </div>
+      <span class="paint-sep"></span>
+      <label class="paint-lab">Fill <input type="color" id="paint-fill" value="#9b6dff"></label>
+      <label class="paint-lab">Line <input type="color" id="paint-outline" value="#000000"></label>
+      <label class="paint-lab">Size <input type="range" id="paint-size" min="1" max="60" value="8"></label>
+      <div id="paint-swatches"></div>
+      <span class="paint-sep"></span>
+      <button class="paint-btn" id="paint-flh" title="Flip horizontal">↔️</button>
+      <button class="paint-btn" id="paint-flv" title="Flip vertical">↕️</button>
+      <button class="paint-btn" id="paint-clear" title="Clear all">🗑️</button>
+      <span class="paint-grow"></span>
+      <button class="paint-done" id="paint-save">✓ Done</button>
+      <button class="paint-btn" id="paint-cancel" title="Cancel">✕</button>
+    </div>
+    <div class="paint-canvas-wrap"><canvas id="paint-canvas"></canvas><div id="paint-center">✛</div></div>
+  </div>
+</div>
+
+<div id="backdrop-modal" class="hide">
+  <div class="ks-box" style="max-width:620px;">
+    <h2>🖼️ Backdrops</h2>
+    <div id="cm-costumes-label">The stage's backdrops (click to switch):</div>
+    <div id="bd-list"></div>
+    <div id="cm-add-row"><button id="bd-add-paint">🎨 Paint new</button><button id="bd-add-solid">🎨 Solid colour</button></div>
+    <div id="bd-edit"></div>
+    <button class="ks-cancel" id="bd-done">Done</button>
+  </div>
+</div>
+
 <div id="print-area"></div>
 
 <!-- ══ APP ════════════════════════════════════════════════════════════════ -->
@@ -1138,6 +1319,9 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
     <button class="mode-btn active" id="btn-build">🏗️ Build</button>
     <button class="mode-btn"        id="btn-play">▶️ Play</button>
     <button class="mode-btn"        id="btn-code">&lt;/&gt; Code</button>
+    <button class="mode-btn stage-only" id="btn-greenflag" title="Run all scripts">🟢 Go</button>
+    <button class="mode-btn stage-only" id="btn-stopall" title="Stop">⏹️ Stop</button>
+    <button class="mode-btn stage-only" id="btn-backdrops" title="Stage backdrops">🖼️ Backdrops</button>
     <div class="sep"></div>
     <button class="tbtn active" id="t-paint">🖌️ Paint</button>
     <button class="tbtn"        id="t-fill">🪣 Fill Row</button>
@@ -1178,6 +1362,19 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
           <button class="cp-run" id="cp-run">▶️ Test it — switch to Play!</button>
           <button class="cp-clear" id="cp-cmds" title="See every command you can use">📖 Commands</button>
           <button class="cp-clear" id="cp-clear" title="Clear the code">🗑️ Clear code</button>
+        </div>
+      </div>
+      <div id="stage-right" class="hide">
+        <div id="stage-canvas-holder"><!-- #gc is moved in here in Stage mode -->
+          <div id="stage-ask" class="hide"><span id="stage-ask-q"></span><input id="stage-ask-in" autocomplete="off"><button id="stage-ask-ok">✓</button></div>
+        </div>
+        <div id="sprite-panel">
+          <div id="sprite-panel-head"><span>🎭 Sprites</span><div style="display:flex;gap:6px;"><button id="cm-costume-btn" title="Change the selected sprite's costume">🎨 Costume</button><button id="add-sprite" title="Add a new sprite">＋ Add</button></div></div>
+          <div id="sprite-info"></div>
+          <div id="sprite-cols">
+            <div id="sprite-list"></div>
+            <div id="stage-pane" title="Stage backdrops"><canvas id="stage-pane-thumb" width="64" height="40"></canvas><span>Stage</span></div>
+          </div>
         </div>
       </div>
       <button id="play-mute" title="Music on / off" aria-label="Toggle music">🎵</button>
@@ -1450,7 +1647,7 @@ function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
-function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote)collabSnapshotSoon();}
+function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote&&projectType!=='stage')collabSnapshotSoon();} // Stage uses granular ops, not full snapshots
 function clearDirty(){dirty=false;}
 function autoSaveDraft(){if(!dirty)return;try{commitLevel();localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload()}));}catch(e){}}
 setInterval(autoSaveDraft,15000);
@@ -1517,6 +1714,7 @@ const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
+let projectType='platformer'; // 'platformer' = the grid game (default, all existing work) · 'stage' = sprite/stage projects (Scratch-style). The seam every future engine plugs into.
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
 function isKS3(){return keyStage==='ks3';}
 function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}document.body.classList.toggle('ks1mode',keyStage==='ks1');if(typeof updateCodeModeUI==='function')updateCodeModeUI();if(typeof updateReadBtn==='function')updateReadBtn();}
@@ -1584,6 +1782,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 // HOME SCREEN
 // ═══════════════════════════════════════════════════════════════════════
 function showHome(){
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.getElementById('home').classList.remove('hide');
   document.getElementById('app').classList.add('hide');
   renderHomeSaves();
@@ -1658,8 +1857,19 @@ const DEMOS={
 
 document.getElementById('h-new').onclick=()=>document.getElementById('ks-modal').classList.remove('hide');
 document.getElementById('ks-cancel').onclick=()=>document.getElementById('ks-modal').classList.add('hide');
-document.querySelectorAll('.ks-opt').forEach(b=>b.onclick=()=>startNewProject(b.dataset.ks));
-function startNewProject(ks){clearDirty();
+let _pendingKs='ks2',_pendingSize='standard';
+document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
+  _pendingKs=b.dataset.ks;const szEl=document.getElementById('ks-size');_pendingSize=(_pendingKs==='ks1')?'standard':(szEl?szEl.value:'standard');
+  document.getElementById('ks-modal').classList.add('hide');
+  document.getElementById('pt-modal').classList.remove('hide');
+});
+document.getElementById('pt-cancel').onclick=()=>{document.getElementById('pt-modal').classList.add('hide');document.getElementById('ks-modal').classList.remove('hide');};
+document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=()=>{
+  document.getElementById('pt-modal').classList.add('hide');
+  if(b.dataset.pt==='stage')startNewStage(_pendingKs);
+  else startNewProject(_pendingKs);
+});
+function startNewProject(ks){clearDirty();projectType='platformer';
   setKeyStage(ks);
   const szEl=document.getElementById('ks-size');setGridSize((ks==='ks1')?'standard':(szEl?szEl.value:'standard'));
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}
@@ -1674,6 +1884,610 @@ function startNewProject(ks){clearDirty();
   hideHome();switchMode('build');
   maybeShowTutorial();
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// STAGE PROJECTS (Scratch-style) — sprites on a stage. Gated behind
+// projectType==='stage'; the platformer is completely untouched.
+// MVP slice 1: one sprite, green-flag run, arrow-key movement, live render.
+// ═══════════════════════════════════════════════════════════════════════
+let stageState=null;       // {sprites:[...]} — the whole stage document
+let stagePlaying=false;    // true while the green flag is "running"
+let stageSel=0;            // index of the sprite whose scripts are in the Blockly workspace
+const SPRITE_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a'];
+function emptyStageXml(){return'<xml xmlns="https://developers.google.com/blockly/xml"></xml>';}
+function sid(){return 's'+Math.random().toString(36).slice(2,9);}  // stable per-sprite id for collab ops
+function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:COSTUME_KEYS[i%COSTUME_KEYS.length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]}],costumeIdx:0,xml:'',say:'',sayT:0};}
+function stageNew(){const s0=blankSprite('Sprite1',0);s0.xml=stageDefaultXml();stageState={sprites:[s0],bg:'#bfe3ff',vars:[],lists:[],backdrops:[{name:'backdrop1',color:'#bfe3ff'}],backdropIdx:0};stageSel=0;stVars={};stVarShown={};stLists={};stListShown={};}
+// Coerce one untrusted costume object into a safe builtin-or-bitmap costume.
+function sanitizeCostume(c){if(!c||typeof c!=='object')return null;const name=(typeof c.name==='string'?c.name:'costume').slice(0,24);
+  if(typeof c.img==='string'&&/^data:image\/(png|jpeg);/.test(c.img)&&c.img.length<600000)return{name,img:c.img};
+  return{name,builtin:(STAGE_COSTUMES[c.builtin]?c.builtin:'cat'),color:safeColor(c.color)||'#ff922b'};}
+// Coerce an untrusted stage document into a safe one (for load/share/collab).
+function sanitizeStage(d){if(!d||typeof d!=='object'){const s=blankSprite('Sprite1',0);s.xml=stageDefaultXml();return{sprites:[s],bg:'#bfe3ff'};}
+  const num=(v,def,lo,hi)=>{v=(typeof v==='number'&&isFinite(v))?v:def;return Math.max(lo,Math.min(hi,v));};
+  let sprites=Array.isArray(d.sprites)?d.sprites.slice(0,40):[];
+  sprites=sprites.map((s,i)=>{s=s||{};
+    let costumes=Array.isArray(s.costumes)?s.costumes.map(sanitizeCostume).filter(Boolean):null;
+    if(!costumes||!costumes.length)costumes=[{name:'costume1',builtin:(STAGE_COSTUMES[s.costume]?s.costume:'cat'),color:safeColor(s.color)||SPRITE_COLORS[i%SPRITE_COLORS.length]}]; // migrate legacy single costume
+    return{id:(typeof s.id==='string'&&s.id)?s.id:sid(),name:(typeof s.name==='string'?s.name:'Sprite'+(i+1)).slice(0,30),
+    x:num(s.x,CW/2,-200,CW+200),y:num(s.y,CH/2,-200,CH+200),dir:num(s.dir,90,-360,360),size:num(s.size,100,10,400),
+    visible:s.visible!==false,costumes,costumeIdx:Math.max(0,Math.min((s.costumeIdx|0),costumes.length-1)),
+    xml:(typeof s.xml==='string'&&s.xml.indexOf('<xml')>-1)?s.xml.slice(0,200000):'',say:'',sayT:0};});
+  if(!sprites.length){const s=blankSprite('Sprite1',0);s.xml=stageDefaultXml();sprites=[s];}
+  const cleanNames=x=>Array.isArray(x)?x.filter(n=>typeof n==='string').slice(0,200).map(n=>n.slice(0,40)):[];
+  let backdrops=Array.isArray(d.backdrops)?d.backdrops.map(sanitizeBackdrop).filter(Boolean):null;
+  if(!backdrops||!backdrops.length)backdrops=[{name:'backdrop1',color:safeColor(d.bg)||'#bfe3ff'}];
+  const backdropIdx=Math.max(0,Math.min((d.backdropIdx|0),backdrops.length-1));
+  return{sprites,bg:safeColor(d.bg)||'#bfe3ff',vars:cleanNames(d.vars),lists:cleanNames(d.lists),backdrops,backdropIdx};}
+function sanitizeBackdrop(b){if(!b||typeof b!=='object')return null;const name=(typeof b.name==='string'?b.name:'backdrop').slice(0,24);
+  if(typeof b.img==='string'&&/^data:image\/(png|jpeg);/.test(b.img)&&b.img.length<1000000)return{name,img:b.img};
+  return{name,color:safeColor(b.color)||'#bfe3ff'};}
+function startNewStage(ks){clearDirty();projectType='stage';
+  setKeyStage(ks);
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}
+  document.getElementById('pt-modal').classList.add('hide');
+  stageNew();hideHome();enterStageUI();
+}
+
+// ── Unified Scratch-style Stage view (no separate Build/Play/Code modes) ──
+function enterStageUI(){
+  if(!stageState)stageNew();
+  document.getElementById('app').classList.remove('hide');
+  mode='code'; // neutral: the loop() dispatches on projectType==='stage' before any mode check
+  document.body.classList.add('stage-mode');
+  // Move the shared canvas into the right-hand stage dock.
+  const holder=document.getElementById('stage-canvas-holder'),gc=document.getElementById('gc');
+  if(gc.parentElement!==holder)holder.appendChild(gc);
+  document.getElementById('stage-right').classList.remove('hide');
+  document.getElementById('code-panel').classList.add('show');
+  document.getElementById('ks3-editor').classList.add('hide');
+  document.getElementById('blockly-div').style.display='';
+  const rb=document.querySelector('.cp-run-bar');if(rb)rb.style.display='none'; // Stage uses 🟢 Go / ⏹️ Stop, not the platformer run-bar
+  // Blockly with the Stage toolbox, showing the selected sprite's scripts.
+  defineStageBlocks();
+  if(!blocklyWorkspace)initBlockly();else{try{blocklyWorkspace.updateToolbox(stageToolbox());}catch(e){}}
+  stageSel=Math.max(0,Math.min(stageSel,stageState.sprites.length-1));
+  stageLoadSpriteScripts(stageSel);
+  renderSpritePanel();
+  setTimeout(()=>{try{Blockly.svgResize(blocklyWorkspace);}catch(e){}resize();},60);
+}
+function exitStageUI(){
+  if(!document.body.classList.contains('stage-mode'))return;
+  stageStop();
+  document.body.classList.remove('stage-mode');
+  document.getElementById('stage-right').classList.add('hide');
+  document.getElementById('code-panel').classList.remove('show');
+  const rb=document.querySelector('.cp-run-bar');if(rb)rb.style.display='';
+  const cwrap=document.getElementById('cwrap'),gc=document.getElementById('gc');
+  if(gc.parentElement!==cwrap)cwrap.insertBefore(gc,cwrap.firstChild);
+  if(blocklyWorkspace&&projectType!=='stage'){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}
+}
+// Save the workspace into the currently-selected sprite, and load another sprite's scripts.
+function stageSaveCurrent(){if(blocklyWorkspace&&stageState&&stageState.sprites[stageSel]){try{stageState.sprites[stageSel].xml=Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));}catch(e){}}}
+function stageLoadSpriteScripts(i){if(!blocklyWorkspace||!stageState||!stageState.sprites[i])return;
+  _suppressBlocklyDirty=true;blocklyWorkspace.clear();
+  try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(stageState.sprites[i].xml||emptyStageXml()),blocklyWorkspace);}catch(e){}
+  stageSyncVars();
+  _suppressBlocklyDirty=false;}
+// Keep variables global across sprites: every sprite's editor knows all variable names.
+function stageSyncVars(){if(!blocklyWorkspace||!stageState)return;
+  if(!stageState.vars)stageState.vars=[];if(!stageState.lists)stageState.lists=[];let added=false;
+  try{stageState.vars.forEach(n=>{if(!blocklyWorkspace.getVariable(n,''))blocklyWorkspace.createVariable(n,'');});
+    stageState.lists.forEach(n=>{if(!blocklyWorkspace.getVariable(n,'list'))blocklyWorkspace.createVariable(n,'list');});
+    blocklyWorkspace.getAllVariables().forEach(v=>{const arr=(v.type==='list')?stageState.lists:stageState.vars;if(arr.indexOf(v.name)<0){arr.push(v.name);added=true;}});}catch(e){}
+  if(added&&typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote&&typeof collabVars==='function')collabVars();}
+function stageSelectSprite(i){if(!stageState||!stageState.sprites[i]||i===stageSel){if(stageState&&stageState.sprites[i]&&i===stageSel)return;}
+  if(!stageState||!stageState.sprites[i])return;stageSaveCurrent();stageSel=i;stageLoadSpriteScripts(i);renderSpritePanel();}
+function stageAddSprite(){if(!stageState)return;stageSaveCurrent();const i=stageState.sprites.length;const ns=blankSprite('Sprite'+(i+1),i);stageState.sprites.push(ns);stageSel=i;stageLoadSpriteScripts(i);renderSpritePanel();markDirty();if(typeof collabSpriteAdd==='function')collabSpriteAdd(ns);}
+function stageDeleteSprite(i){if(!stageState||stageState.sprites.length<=1||!stageState.sprites[i])return;
+  const delId=stageState.sprites[i].id;
+  stageState.sprites.splice(i,1);if(stageSel>=stageState.sprites.length)stageSel=stageState.sprites.length-1;
+  stageLoadSpriteScripts(stageSel);renderSpritePanel();markDirty();if(typeof collabSpriteDel==='function')collabSpriteDel(delId);}
+function renderSpritePanel(){const list=document.getElementById('sprite-list');if(!list||!stageState)return;list.innerHTML='';
+  stageState.sprites.forEach((s,i)=>{const card=document.createElement('div');card.className='sprite-card'+(i===stageSel?' sel':'');
+    const cv=document.createElement('canvas');cv.width=44;cv.height=44;drawSpriteThumb(cv,s);card.appendChild(cv);
+    const nm=document.createElement('div');nm.className='sp-name';nm.textContent=s.name;card.appendChild(nm);
+    if(stageState.sprites.length>1){const del=document.createElement('button');del.className='sp-del';del.textContent='×';del.title='Delete sprite';del.onclick=e=>{e.stopPropagation();stageDeleteSprite(i);};card.appendChild(del);}
+    card.onclick=()=>stageSelectSprite(i);card.ondblclick=()=>{stageSelectSprite(i);openCostumePicker();};list.appendChild(card);});
+  renderSpriteInfo();renderStagePane();
+}
+function renderSpriteInfo(){const el=document.getElementById('sprite-info');if(!el||!stageState)return;const s=stageState.sprites[stageSel];
+  if(!s){el.classList.add('hide');return;}el.classList.remove('hide');el.innerHTML='';
+  const nm=document.createElement('span');nm.className='si-lab';nm.textContent=s.name;el.appendChild(nm);
+  const eye=document.createElement('button');eye.className='si-eye';eye.textContent=(s.visible!==false)?'👁️':'🙈';eye.title='Show / hide this sprite';eye.onclick=()=>{s.visible=(s.visible===false);renderSpriteInfo();markDirty();if(typeof collabSprite==='function')collabSprite(s);};el.appendChild(eye);
+  const mk=(label,val,on)=>{const w=document.createElement('span');w.style.cssText='display:inline-flex;align-items:center;gap:3px;';w.appendChild(document.createTextNode(label));const inp=document.createElement('input');inp.type='number';inp.value=val;inp.onchange=()=>{on(parseFloat(inp.value)||0);markDirty();if(typeof collabSprite==='function')collabSprite(s);};w.appendChild(inp);el.appendChild(w);};
+  mk('x',Math.round(s.x-CW/2),v=>{s.x=Math.max(16,Math.min(CW-16,CW/2+v));});
+  mk('y',Math.round(CH/2-s.y),v=>{s.y=Math.max(16,Math.min(CH-16,CH/2-v));});
+  mk('size',Math.round(s.size||100),v=>{s.size=Math.max(10,Math.min(400,v));});
+  mk('dir',Math.round(s.dir||90),v=>{s.dir=v;});}
+function renderStagePane(){const cv=document.getElementById('stage-pane-thumb');if(!cv||!stageState||typeof drawBackdropThumb!=='function')return;drawBackdropThumb(cv,curBackdrop());}
+function drawSpriteThumb(cv,s){const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.save();c.translate(cv.width/2,cv.height/2);paintSpriteCostume(c,s,40);c.restore();}
+// ── Costume / character picker ──
+const CM_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a','#ffffff','#7e57c2','#8d6e63','#222222'];
+// ── Costume model helpers ──
+function curCostume(s){return (s&&s.costumes&&s.costumes[s.costumeIdx||0])||{builtin:'cat',color:'#ff922b'};}
+function cmEmitCostumes(){if(stageState&&stageState.sprites[stageSel]&&typeof collabSpriteCostumes==='function')collabSpriteCostumes(stageState.sprites[stageSel]);}
+function costumeImgEl(co){if(!co||!co.img)return null;if(co._el&&co._elSrc===co.img)return co._el;const im=new Image();im.src=co.img;co._el=im;co._elSrc=co.img;return im;}
+// Paint a sprite's CURRENT costume centred at the origin (built-in vector or a painted bitmap).
+function paintSpriteCostume(c,s,box){const co=curCostume(s);if(co.img){const im=costumeImgEl(co);if(im&&im.complete&&im.naturalWidth){const b=box||110,k=b/Math.max(im.naturalWidth,im.naturalHeight);c.drawImage(im,-im.naturalWidth*k/2,-im.naturalHeight*k/2,im.naturalWidth*k,im.naturalHeight*k);return;}}
+  paintCostume(c,co.builtin||'cat',co.color||'#ff922b');}
+// ── Costume manager (the 🎨 Costume modal) ──
+function openCostumePicker(){if(!stageState||!stageState.sprites[stageSel])return;
+  document.getElementById('cm-name').value=stageState.sprites[stageSel].name;
+  renderCostumeManager();
+  document.getElementById('costume-modal').classList.remove('hide');}
+function renderCostumeManager(){const s=stageState&&stageState.sprites[stageSel];if(!s)return;
+  if(!s.costumes||!s.costumes.length){s.costumes=[{name:'costume1',builtin:'cat',color:'#ff922b'}];s.costumeIdx=0;}
+  if(s.costumeIdx>=s.costumes.length)s.costumeIdx=s.costumes.length-1;
+  const list=document.getElementById('cm-costume-list');list.innerHTML='';
+  s.costumes.forEach((co,i)=>{const card=document.createElement('div');card.className='cm-cos'+(i===(s.costumeIdx||0)?' sel':'');
+    const cv=document.createElement('canvas');cv.width=46;cv.height=46;const c=cv.getContext('2d');c.save();c.translate(23,23);paintSpriteCostume(c,{costumes:[co],costumeIdx:0},38);c.restore();card.appendChild(cv);
+    const nm=document.createElement('div');nm.className='cc-n';nm.textContent=co.name;card.appendChild(nm);
+    if(s.costumes.length>1){const del=document.createElement('button');del.className='cc-del';del.textContent='×';del.onclick=e=>{e.stopPropagation();s.costumes.splice(i,1);renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};card.appendChild(del);}
+    card.onclick=()=>{s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};list.appendChild(card);});
+  renderCostumeEdit();}
+function renderCostumeEdit(){const s=stageState.sprites[stageSel];const co=s.costumes[s.costumeIdx||0];const ed=document.getElementById('cm-edit');ed.innerHTML='';
+  const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:10px;color:#bbb;font-size:12px;';row.appendChild(document.createTextNode('Costume name: '));
+  const ni=document.createElement('input');ni.value=co.name;ni.maxLength=24;ni.style.cssText='font-family:var(--font);padding:5px 8px;border-radius:6px;border:2px solid var(--gold);background:var(--black);color:#fff;';
+  ni.onchange=()=>{co.name=ni.value.slice(0,24)||'costume';renderCostumeManager();markDirty();cmEmitCostumes();};row.appendChild(ni);ed.appendChild(row);
+  if(co.img){const eb=document.createElement('button');eb.className='cm-editbtn';eb.textContent='✏️ Edit drawing';eb.onclick=()=>paintCostumeEditor(co);ed.appendChild(eb);}
+  else{const grid=document.createElement('div');grid.id='cm-grid';ed.appendChild(grid);const colors=document.createElement('div');colors.id='cm-colors';ed.appendChild(colors);renderCostumeGrid();renderCostumeColors();}}
+function renderCostumeGrid(){const grid=document.getElementById('cm-grid');if(!grid)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];grid.innerHTML='';
+  COSTUME_KEYS.forEach(k=>{const opt=document.createElement('div');opt.className='cm-opt'+(co.builtin===k?' sel':'');
+    const cv=document.createElement('canvas');cv.width=48;cv.height=48;const c=cv.getContext('2d');c.save();c.translate(24,26);c.scale(0.95,0.95);paintCostume(c,k,co.color||'#ff922b');c.restore();opt.appendChild(cv);
+    const sp=document.createElement('span');sp.textContent=STAGE_COSTUMES[k].e;opt.appendChild(sp);
+    opt.onclick=()=>{co.builtin=k;delete co.img;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};grid.appendChild(opt);});}
+function renderCostumeColors(){const wrap=document.getElementById('cm-colors');if(!wrap)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];wrap.innerHTML='';
+  CM_COLORS.forEach(col=>{const b=document.createElement('div');b.className='cm-color'+(co.color===col?' sel':'');b.style.background=col;
+    b.onclick=()=>{co.color=col;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};wrap.appendChild(b);});}
+function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:COSTUME_KEYS[i%COSTUME_KEYS.length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
+function cmPaintNew(){const s=stageState.sprites[stageSel];openPaintEditor({w:300,h:300,name:'costume'+(s.costumes.length+1),onSave:(dataURL,name)=>{s.costumes.push({name:name||'costume',img:dataURL});s.costumeIdx=s.costumes.length-1;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
+function paintCostumeEditor(co){openPaintEditor({w:300,h:300,img:co.img,name:co.name,onSave:(dataURL,name)=>{co.img=dataURL;co.name=name||co.name;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
+
+// ── Bitmap paint editor ───────────────────────────────────────────────────
+const paintState={tool:'brush',size:8,onSave:null,drawing:false,start:null,snap:null,undo:[],redo:[]};
+let _pcv,_pctx,_paintBound=false;
+function paintBind(){if(_paintBound)return;_paintBound=true;_pcv=document.getElementById('paint-canvas');_pctx=_pcv.getContext('2d');
+  document.querySelectorAll('#paint-modal .paint-tool').forEach(b=>b.onclick=()=>setPaintTool(b.dataset.tool));
+  document.getElementById('paint-size').oninput=e=>paintState.size=+e.target.value;
+  const sw=document.getElementById('paint-swatches');if(sw){['#000000','#ffffff','#e53935','#fb8c00','#fdd835','#43a047','#1e88e5','#3949ab','#8e24aa','#ec407a','#6d4c41','#bdbdbd'].forEach(col=>{const b=document.createElement('div');b.className='paint-sw';b.style.background=col;b.title=col;b.onclick=()=>{document.getElementById('paint-fill').value=col;};sw.appendChild(b);});}
+  document.getElementById('paint-undo').onclick=paintUndo;
+  document.getElementById('paint-redo').onclick=paintRedo;
+  document.getElementById('paint-clear').onclick=()=>{_pctx.clearRect(0,0,_pcv.width,_pcv.height);paintPush();};
+  document.getElementById('paint-flh').onclick=()=>paintFlip(true);
+  document.getElementById('paint-flv').onclick=()=>paintFlip(false);
+  document.getElementById('paint-cancel').onclick=()=>document.getElementById('paint-modal').classList.add('hide');
+  document.getElementById('paint-save').onclick=()=>{const cb=paintState.onSave;document.getElementById('paint-modal').classList.add('hide');if(cb)cb(_pcv.toDataURL('image/png'),document.getElementById('paint-name').value.trim()||'costume');};
+  const down=e=>{e.preventDefault();paintDown(paintPt(e));};const move=e=>{if(paintState.drawing){e.preventDefault();paintMove(paintPt(e));}};const up=e=>{if(paintState.drawing){paintUp(paintPt(e));}};
+  _pcv.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+  _pcv.addEventListener('touchstart',e=>{if(e.touches[0])down(e.touches[0]);},{passive:false});
+  _pcv.addEventListener('touchmove',e=>{if(e.touches[0])move(e.touches[0]);},{passive:false});
+  _pcv.addEventListener('touchend',e=>up((e.changedTouches&&e.changedTouches[0])||{clientX:0,clientY:0}));
+}
+function pcol(id){return document.getElementById(id).value;}
+function setPaintTool(t){paintState.tool=t;document.querySelectorAll('#paint-modal .paint-tool').forEach(b=>b.classList.toggle('sel',b.dataset.tool===t));}
+function openPaintEditor(opts){paintBind();_pcv.width=opts.w||300;_pcv.height=opts.h||300;_pctx.clearRect(0,0,_pcv.width,_pcv.height);
+  paintState.onSave=opts.onSave;paintState.undo=[];paintState.redo=[];
+  document.getElementById('paint-name').value=opts.name||'costume1';setPaintTool('brush');
+  document.getElementById('paint-modal').classList.remove('hide');
+  if(opts.img){const im=new Image();im.onload=()=>{_pctx.drawImage(im,0,0,_pcv.width,_pcv.height);paintPush();};im.onerror=()=>paintPush();im.src=opts.img;}else paintPush();}
+function paintPt(e){const r=_pcv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*_pcv.width,y:(e.clientY-r.top)/r.height*_pcv.height};}
+function paintPush(){try{paintState.undo.push(_pctx.getImageData(0,0,_pcv.width,_pcv.height));if(paintState.undo.length>24)paintState.undo.shift();paintState.redo=[];}catch(e){}}
+function paintUndo(){if(paintState.undo.length<2)return;paintState.redo.push(paintState.undo.pop());_pctx.putImageData(paintState.undo[paintState.undo.length-1],0,0);}
+function paintRedo(){if(!paintState.redo.length)return;const d=paintState.redo.pop();paintState.undo.push(d);_pctx.putImageData(d,0,0);}
+function paintFlip(horiz){const tmp=document.createElement('canvas');tmp.width=_pcv.width;tmp.height=_pcv.height;tmp.getContext('2d').drawImage(_pcv,0,0);
+  _pctx.save();_pctx.clearRect(0,0,_pcv.width,_pcv.height);_pctx.translate(horiz?_pcv.width:0,horiz?0:_pcv.height);_pctx.scale(horiz?-1:1,horiz?1:-1);_pctx.drawImage(tmp,0,0);_pctx.restore();paintPush();}
+function paintDown(p){const t=paintState.tool;paintState.drawing=true;paintState.start=p;
+  if(t==='text'){paintState.drawing=false;const txt=prompt('Type your text:');if(txt){_pctx.fillStyle=pcol('paint-fill');_pctx.font='bold '+(paintState.size*4)+'px sans-serif';_pctx.textBaseline='top';_pctx.fillText(txt,p.x,p.y);paintPush();}return;}
+  if(t==='fill'){paintFloodFill(Math.round(p.x),Math.round(p.y),pcol('paint-fill'));paintPush();paintState.drawing=false;return;}
+  if(t==='brush'||t==='erase'){_pctx.lineCap='round';_pctx.lineJoin='round';_pctx.lineWidth=paintState.size;_pctx.strokeStyle=pcol('paint-fill');_pctx.globalCompositeOperation=(t==='erase')?'destination-out':'source-over';_pctx.beginPath();_pctx.moveTo(p.x,p.y);_pctx.lineTo(p.x+0.1,p.y);_pctx.stroke();return;}
+  // shapes: snapshot for live preview
+  try{paintState.snap=_pctx.getImageData(0,0,_pcv.width,_pcv.height);}catch(e){paintState.snap=null;}}
+function paintMove(p){const t=paintState.tool;
+  if(t==='brush'||t==='erase'){_pctx.lineTo(p.x,p.y);_pctx.stroke();return;}
+  if(t==='line'||t==='rect'||t==='ellipse'){if(paintState.snap)_pctx.putImageData(paintState.snap,0,0);_pctx.globalCompositeOperation='source-over';const s=paintState.start;
+    if(t==='line'){_pctx.strokeStyle=pcol('paint-outline');_pctx.lineWidth=paintState.size;_pctx.lineCap='round';_pctx.beginPath();_pctx.moveTo(s.x,s.y);_pctx.lineTo(p.x,p.y);_pctx.stroke();}
+    else if(t==='rect'){_pctx.fillStyle=pcol('paint-fill');_pctx.fillRect(s.x,s.y,p.x-s.x,p.y-s.y);_pctx.strokeStyle=pcol('paint-outline');_pctx.lineWidth=paintState.size;_pctx.strokeRect(s.x,s.y,p.x-s.x,p.y-s.y);}
+    else{const cx=(s.x+p.x)/2,cy=(s.y+p.y)/2,rx=Math.abs(p.x-s.x)/2,ry=Math.abs(p.y-s.y)/2;_pctx.beginPath();_pctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);_pctx.fillStyle=pcol('paint-fill');_pctx.fill();_pctx.strokeStyle=pcol('paint-outline');_pctx.lineWidth=paintState.size;_pctx.stroke();}}}
+function paintUp(p){if(!paintState.drawing)return;paintState.drawing=false;_pctx.globalCompositeOperation='source-over';paintPush();}
+function paintFloodFill(x,y,hex){const w=_pcv.width,h=_pcv.height;if(x<0||y<0||x>=w||y>=h)return;const img=_pctx.getImageData(0,0,w,h),d=img.data;
+  const idx=(x,y)=>(y*w+x)*4;const t=idx(x,y);const tr=d[t],tg=d[t+1],tb=d[t+2],ta=d[t+3];
+  const fc=hexToRgb(hex);if(tr===fc.r&&tg===fc.g&&tb===fc.b&&ta===255)return;
+  const match=i=>d[i]===tr&&d[i+1]===tg&&d[i+2]===tb&&d[i+3]===ta;
+  const stack=[[x,y]];while(stack.length){const[cx,cy]=stack.pop();const i=idx(cx,cy);if(!match(i))continue;d[i]=fc.r;d[i+1]=fc.g;d[i+2]=fc.b;d[i+3]=255;
+    if(cx>0)stack.push([cx-1,cy]);if(cx<w-1)stack.push([cx+1,cy]);if(cy>0)stack.push([cx,cy-1]);if(cy<h-1)stack.push([cx,cy+1]);}
+  _pctx.putImageData(img,0,0);}
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return{r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};}
+
+// ── Backdrops (the stage background; a list like costumes) ──
+function curBackdrop(){const b=stageState&&stageState.backdrops&&stageState.backdrops[stageState.backdropIdx||0];return b||{color:(stageState&&stageState.bg)||'#bfe3ff'};}
+function backdropImgEl(bd){if(!bd||!bd.img)return null;if(bd._el&&bd._elSrc===bd.img)return bd._el;const im=new Image();im.src=bd.img;bd._el=im;bd._elSrc=bd.img;return im;}
+function stSetBackdrop(i){if(!stageState||!stageState.backdrops||i<0||i>=stageState.backdrops.length)return;stageState.backdropIdx=i;
+  const nm=stageState.backdrops[i].name;if(stagePlaying)stBackdropHats.forEach(h=>{if(h.name===nm)stStartScript(h.first,h.s,null);});}
+function openBackdropManager(){if(!stageState)return;if(!stageState.backdrops||!stageState.backdrops.length){stageState.backdrops=[{name:'backdrop1',color:(stageState.bg||'#bfe3ff')}];stageState.backdropIdx=0;}renderBackdropManager();document.getElementById('backdrop-modal').classList.remove('hide');}
+function drawBackdropThumb(cv,bd){const c=cv.getContext('2d');if(bd.img){const im=backdropImgEl(bd);if(im&&im.complete&&im.naturalWidth){c.drawImage(im,0,0,cv.width,cv.height);return;}}c.fillStyle=bd.color||'#bfe3ff';c.fillRect(0,0,cv.width,cv.height);}
+function renderBackdropManager(){const list=document.getElementById('bd-list');if(!list)return;list.innerHTML='';
+  stageState.backdrops.forEach((bd,i)=>{const card=document.createElement('div');card.className='bd-cos'+(i===(stageState.backdropIdx||0)?' sel':'');
+    const cv=document.createElement('canvas');cv.width=88;cv.height=50;drawBackdropThumb(cv,bd);card.appendChild(cv);
+    const nm=document.createElement('div');nm.className='cc-n';nm.textContent=bd.name;card.appendChild(nm);
+    if(stageState.backdrops.length>1){const del=document.createElement('button');del.className='cc-del';del.textContent='×';del.onclick=e=>{e.stopPropagation();stageState.backdrops.splice(i,1);if(stageState.backdropIdx>=stageState.backdrops.length)stageState.backdropIdx=stageState.backdrops.length-1;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();};card.appendChild(del);}
+    card.onclick=()=>{stageState.backdropIdx=i;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();};list.appendChild(card);});
+  renderBackdropEdit();if(typeof renderStagePane==='function')renderStagePane();}
+function renderBackdropEdit(){const bd=stageState.backdrops[stageState.backdropIdx||0];const ed=document.getElementById('bd-edit');ed.innerHTML='';
+  const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:10px;color:#bbb;font-size:12px;';row.appendChild(document.createTextNode('Backdrop name: '));
+  const ni=document.createElement('input');ni.value=bd.name;ni.maxLength=24;ni.style.cssText='font-family:var(--font);padding:5px 8px;border-radius:6px;border:2px solid var(--gold);background:var(--black);color:#fff;';ni.onchange=()=>{bd.name=ni.value.slice(0,24)||'backdrop';renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();};row.appendChild(ni);ed.appendChild(row);
+  if(bd.img){const eb=document.createElement('button');eb.className='cm-editbtn';eb.textContent='✏️ Edit drawing';eb.onclick=()=>bdPaintEdit(bd);ed.appendChild(eb);}
+  else{const lab=document.createElement('label');lab.style.cssText='color:#bbb;font-size:13px;display:flex;gap:8px;justify-content:center;align-items:center;';lab.appendChild(document.createTextNode('Colour: '));const ci=document.createElement('input');ci.type='color';ci.value=bd.color||'#bfe3ff';ci.oninput=()=>{bd.color=ci.value;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();};lab.appendChild(ci);ed.appendChild(lab);}}
+function bdAddSolid(){const i=stageState.backdrops.length;stageState.backdrops.push({name:'backdrop'+(i+1),color:'#87ceeb'});stageState.backdropIdx=i;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();}
+function bdPaintNew(){openPaintEditor({w:480,h:288,name:'backdrop'+(stageState.backdrops.length+1),onSave:(url,name)=>{stageState.backdrops.push({name:name||'backdrop',img:url});stageState.backdropIdx=stageState.backdrops.length-1;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();}});}
+function bdPaintEdit(bd){openPaintEditor({w:480,h:288,img:bd.img,name:bd.name,onSave:(url,name)=>{bd.img=url;bd.name=name||bd.name;delete bd._el;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();}});}
+function stBackdropOptions(){const opts=(stageState&&stageState.backdrops)?stageState.backdrops.map(b=>[b.name,b.name]):[];return opts.length?opts:[['backdrop1','backdrop1']];}
+// ── Stage block interpreter ──────────────────────────────────────────────
+// Scripts run as generator "fibers" (one step per frame) so wait / repeat /
+// forever work without freezing the page — same idea as the platformer's cjFire.
+let stFibers=[];     // live scripts: {gen, wait, hat}
+let stKeyHats=[];    // {key, first, s} — "when key pressed" hats
+let stScore=0;       // the one built-in game score (🏆)
+let stScoreUsed=false; // only show the 🏆 badge once a score block runs
+let stClickHats=[];  // {first, s} — "when this sprite clicked" hats
+let stRecvHats=[];   // {msg, first, s} — "when I receive" hats
+let stCloneHats=[];  // {first, s} — "when I start as a clone" hats (s = original editor sprite)
+let stBackdropHats=[]; // {name, first, s} — "when backdrop switches to" hats
+let stClones=[];     // runtime clone sprites (drawn + run during play, gone at stop)
+let stTimerBase=0;   // performance.now() at green-flag, for the ⏱️ timer
+let stAnswer='';     // last "ask and wait" answer
+let stAsking=false;  // true while an ask input is open
+const stageMouse={x:CW/2,y:CH/2,down:false};
+function stStartAsk(q){const bar=document.getElementById('stage-ask'),inp=document.getElementById('stage-ask-in');if(!bar)return;
+  document.getElementById('stage-ask-q').textContent=q||'';inp.value='';bar.classList.remove('hide');stAsking=true;setTimeout(()=>inp.focus(),30);}
+function stFinishAsk(){const bar=document.getElementById('stage-ask'),inp=document.getElementById('stage-ask-in');if(bar){stAnswer=inp.value;bar.classList.add('hide');}stAsking=false;}
+let stVars={};       // global variables (name → value), shared across all sprites
+let stVarShown={};   // which variables show a monitor on the stage
+let stPenCanvas=null,stPenCtx=null;   // the pen layer (persistent marks, drawn under sprites)
+function stPen(){if(!stPenCanvas){stPenCanvas=document.createElement('canvas');stPenCanvas.width=CW;stPenCanvas.height=CH;stPenCtx=stPenCanvas.getContext('2d');}return stPenCtx;}
+function stPenClear(){stPen().clearRect(0,0,CW,CH);}
+function stStampSprite(s){const c=stPen();c.save();c.translate(s.x,s.y);const sc=(s.size||100)/100;c.scale(sc,sc);if(s.visible!==false)paintSpriteCostume(c,s);c.restore();}
+// ── Sound (built-in synthesized sounds via Web Audio — no asset files) ──
+let stAudio=null,stMasterGain=null,stVolume=100,stSources=[];
+function stAudioCtx(){if(!stAudio){try{stAudio=new (window.AudioContext||window.webkitAudioContext)();stMasterGain=stAudio.createGain();stMasterGain.gain.value=stVolume/100;stMasterGain.connect(stAudio.destination);}catch(e){return null;}}if(stAudio.state==='suspended'){try{stAudio.resume();}catch(e){}}return stAudio;}
+function stTone(ac,t,f0,f1,dur,type,vol){const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f0,t);if(f1!=null)o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+dur);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol||0.3,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(stMasterGain);o.start(t);o.stop(t+dur+0.03);stSources.push(o);}
+function stNoise(ac,t,dur,vol){const n=Math.floor(ac.sampleRate*dur),buf=ac.createBuffer(1,n,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);const src=ac.createBufferSource();src.buffer=buf;const g=ac.createGain();g.gain.value=vol||0.4;src.connect(g);g.connect(stMasterGain);src.start(t);stSources.push(src);}
+const ST_SOUNDS={
+  pop:(ac,t)=>{stTone(ac,t,500,900,0.1,'sine',0.35);return 0.12;},
+  beep:(ac,t)=>{stTone(ac,t,440,null,0.2,'square',0.25);return 0.22;},
+  meow:(ac,t)=>{stTone(ac,t,650,500,0.18,'sawtooth',0.25);stTone(ac,t+0.16,520,700,0.22,'sawtooth',0.25);return 0.4;},
+  boing:(ac,t)=>{stTone(ac,t,500,120,0.3,'sine',0.35);return 0.32;},
+  drum:(ac,t)=>{stNoise(ac,t,0.15,0.5);stTone(ac,t,160,60,0.15,'sine',0.4);return 0.18;},
+  coin:(ac,t)=>{stTone(ac,t,880,null,0.08,'square',0.25);stTone(ac,t+0.08,1320,null,0.16,'square',0.25);return 0.26;},
+  laser:(ac,t)=>{stTone(ac,t,1200,200,0.25,'sawtooth',0.25);return 0.26;},
+  magic:(ac,t)=>{[523,659,784,1047].forEach((f,i)=>stTone(ac,t+i*0.07,f,null,0.18,'triangle',0.22));return 0.4;}
+};
+const ST_SOUND_KEYS=Object.keys(ST_SOUNDS);
+function stSoundOptions(){return ST_SOUND_KEYS.map(k=>[k,k]);}
+function stPlaySound(name){const ac=stAudioCtx();if(!ac)return 0.2;return (ST_SOUNDS[name]||ST_SOUNDS.pop)(ac,ac.currentTime);}
+function stStopSounds(){stSources.forEach(o=>{try{o.stop();}catch(e){}});stSources=[];}
+function stSetVolume(v){stVolume=Math.max(0,Math.min(100,v));if(stMasterGain)stMasterGain.gain.value=stVolume/100;}
+let stLists={};      // global lists (name → array)
+let stListShown={};  // which lists show a monitor on the stage
+function stList(n){if(!stLists[n])stLists[n]=[];return stLists[n];}
+const ST_KEYMAP={up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',space:'Space',w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD'};
+function stClamp(s){s.x=Math.max(16,Math.min(CW-16,s.x));s.y=Math.max(16,Math.min(CH-16,s.y));}
+function* stRunSeq(block,s,depth){let b=block;while(b&&stagePlaying){yield* stRunOne(b,s,depth);b=b.getNextBlock();}}
+function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{const v=Number(b.getFieldValue(f));return isFinite(v)?v:0;};
+  switch(t){
+    case'st_move':{const n=num('N'),rad=s.dir*Math.PI/180;s.x+=n*Math.sin(rad);s.y+=-n*Math.cos(rad);stClamp(s);break;}
+    case'st_turn_r':s.dir+=num('N');break;
+    case'st_turn_l':s.dir-=num('N');break;
+    case'st_point':s.dir=num('N');break;
+    case'st_change_x':s.x+=num('N');stClamp(s);break;
+    case'st_change_y':s.y-=num('N');stClamp(s);break;            // Scratch: +y is up
+    case'st_set_x':s.x=CW/2+num('X');stClamp(s);break;
+    case'st_set_y':s.y=CH/2-num('Y');stClamp(s);break;
+    case'st_goto_xy':s.x=CW/2+num('X');s.y=CH/2-num('Y');stClamp(s);break;
+    case'st_goto_center':s.x=CW/2;s.y=CH/2;break;
+    case'st_goto':{const p=stTargetPos(s,b.getFieldValue('WHERE'));s.x=p.x;s.y=p.y;stClamp(s);break;}
+    case'st_point_towards':{const p=stTargetPos(s,b.getFieldValue('TARGET'));s.dir=Math.atan2(p.x-s.x,-(p.y-s.y))*180/Math.PI;break;}
+    case'st_glide_xy':{const fr=Math.max(1,Math.round(num('SECS')*60)),tx=CW/2+num('X'),ty=CH/2-num('Y'),x0=s.x,y0=s.y;for(let f=1;f<=fr&&stagePlaying;f++){const t=f/fr;s.x=x0+(tx-x0)*t;s.y=y0+(ty-y0)*t;yield 0;}stClamp(s);break;}
+    case'st_glide_to':{const p=stTargetPos(s,b.getFieldValue('WHERE')),fr=Math.max(1,Math.round(num('SECS')*60)),x0=s.x,y0=s.y;for(let f=1;f<=fr&&stagePlaying;f++){const t=f/fr;s.x=x0+(p.x-x0)*t;s.y=y0+(p.y-y0)*t;yield 0;}stClamp(s);break;}
+    case'st_goto_layer':{const zs=stageState.sprites.map(x=>x._z||0);s._z=(b.getFieldValue('LAYER')==='front')?Math.max(0,...zs)+1:Math.min(0,...zs)-1;break;}
+    case'st_go_layers':{const n=num('N');s._z=(s._z||0)+(b.getFieldValue('DIR')==='forward'?n:-n);break;}
+    case'st_set_drag':s.draggable=(b.getFieldValue('MODE')==='on');break;
+    case'st_edge_bounce':{let bounced=false;if(s.x<18){s.x=18;bounced=true;}else if(s.x>CW-18){s.x=CW-18;bounced=true;}if(s.y<18){s.y=18;bounced=true;}else if(s.y>CH-18){s.y=CH-18;bounced=true;}if(bounced)s.dir=(540-s.dir)%360;break;}
+    case'st_say':{s.say=String(b.getFieldValue('TXT')||'');s.sayT=99999;s.thinking=false;break;}
+    case'st_say_secs':{s.say=String(b.getFieldValue('TXT')||'');s.thinking=false;let f=Math.round(num('SECS')*60);s.sayT=f+1;while(f-->0&&stagePlaying)yield 0;s.say='';s.sayT=0;break;}
+    case'st_think':{s.say=String(b.getFieldValue('TXT')||'');s.sayT=99999;s.thinking=true;break;}
+    case'st_think_secs':{s.say=String(b.getFieldValue('TXT')||'');s.thinking=true;let f=Math.round(num('SECS')*60);s.sayT=f+1;while(f-->0&&stagePlaying)yield 0;s.say='';s.sayT=0;break;}
+    case'st_show':s.visible=true;break;
+    case'st_hide':s.visible=false;break;
+    case'st_change_size':s.size=Math.max(10,Math.min(400,s.size+num('N')));break;
+    case'st_set_size':s.size=Math.max(10,Math.min(400,num('N')));break;
+    case'st_next_costume':if(s.costumes&&s.costumes.length)s.costumeIdx=((s.costumeIdx||0)+1)%s.costumes.length;break;
+    case'st_switch_costume':{const nm=b.getFieldValue('COS');if(s.costumes){const i=s.costumes.findIndex(c=>c.name===nm);if(i>=0)s.costumeIdx=i;}break;}
+    case'st_next_backdrop':if(stageState.backdrops&&stageState.backdrops.length)stSetBackdrop(((stageState.backdropIdx||0)+1)%stageState.backdrops.length);break;
+    case'st_switch_backdrop':{const nm=b.getFieldValue('BD');if(stageState.backdrops){const i=stageState.backdrops.findIndex(x=>x.name===nm);if(i>=0)stSetBackdrop(i);}break;}
+    case'st_wait':{let f=Math.round(num('N')*60);while(f-->0&&stagePlaying)yield 0;break;}
+    case'st_repeat':{const times=Math.max(0,Math.floor(num('N'))),body=b.getInputTargetBlock('DO');for(let i=0;i<times&&stagePlaying;i++){yield* stRunSeq(body,s,depth+1);yield 0;}break;}
+    case'st_forever':{const body=b.getInputTargetBlock('DO');while(stagePlaying){yield* stRunSeq(body,s,depth+1);yield 0;}break;}
+    case'st_if':{if(stTruthy(stEval(b.getInputTargetBlock('COND'),s)))yield* stRunSeq(b.getInputTargetBlock('DO'),s,depth+1);break;}
+    case'st_if_else':{if(stTruthy(stEval(b.getInputTargetBlock('COND'),s)))yield* stRunSeq(b.getInputTargetBlock('DO'),s,depth+1);else yield* stRunSeq(b.getInputTargetBlock('ELSE'),s,depth+1);break;}
+    case'st_wait_until':{while(stagePlaying&&!stTruthy(stEval(b.getInputTargetBlock('COND'),s)))yield 0;break;}
+    case'st_repeat_until':{const body=b.getInputTargetBlock('DO');while(stagePlaying&&!stTruthy(stEval(b.getInputTargetBlock('COND'),s))){yield* stRunSeq(body,s,depth+1);yield 0;}break;}
+    case'st_stop':{if(b.getFieldValue('WHAT')==='all'){stageStopRun();}else{throw{__stopThis:true};}break;}
+    case'st_reset_timer':stTimerBase=performance.now();break;
+    case'st_ask':{stStartAsk(b.getFieldValue('Q'));while(stagePlaying&&stAsking)yield 0;break;}
+    case'st_change_effect':{const fx=b.getFieldValue('FX');s.fx=s.fx||{};s.fx[fx]=(s.fx[fx]||0)+num('N');break;}
+    case'st_set_effect':{const fx=b.getFieldValue('FX');s.fx=s.fx||{};s.fx[fx]=num('N');break;}
+    case'st_clear_effects':s.fx={};break;
+    case'st_change_score':stScore+=num('N');stScoreUsed=true;break;
+    case'st_set_score':stScore=num('N');stScoreUsed=true;break;
+    case'variables_set':{const n=stVarName(b);if(n)stVars[n]=stEval(b.getInputTargetBlock('VALUE'),s);break;}
+    case'math_change':{const n=stVarName(b);if(n)stVars[n]=stNum(stVars[n])+stNum(stEval(b.getInputTargetBlock('DELTA'),s));break;}
+    case'st_show_var':{const n=stVarName(b);if(n)stVarShown[n]=true;break;}
+    case'st_hide_var':{const n=stVarName(b);if(n)stVarShown[n]=false;break;}
+    case'st_list_add':{const n=stVarName(b,'LIST');if(n)stList(n).push(stEval(b.getInputTargetBlock('ITEM'),s));break;}
+    case'st_list_delete':{const n=stVarName(b,'LIST');if(n){const a=stList(n),i=Math.round(stNum(stEval(b.getInputTargetBlock('INDEX'),s)))-1;if(i>=0&&i<a.length)a.splice(i,1);}break;}
+    case'st_list_delete_all':{const n=stVarName(b,'LIST');if(n)stLists[n]=[];break;}
+    case'st_list_insert':{const n=stVarName(b,'LIST');if(n){const a=stList(n),i=Math.round(stNum(stEval(b.getInputTargetBlock('INDEX'),s)))-1,item=stEval(b.getInputTargetBlock('ITEM'),s);a.splice(Math.max(0,Math.min(a.length,i)),0,item);}break;}
+    case'st_list_replace':{const n=stVarName(b,'LIST');if(n){const a=stList(n),i=Math.round(stNum(stEval(b.getInputTargetBlock('INDEX'),s)))-1;if(i>=0&&i<a.length)a[i]=stEval(b.getInputTargetBlock('ITEM'),s);}break;}
+    case'st_show_list':{const n=stVarName(b,'LIST');if(n)stListShown[n]=true;break;}
+    case'st_hide_list':{const n=stVarName(b,'LIST');if(n)stListShown[n]=false;break;}
+    case'st_play_sound':stPlaySound(b.getFieldValue('SND'));break;
+    case'st_play_sound_wait':{let f=Math.round(stPlaySound(b.getFieldValue('SND'))*60);while(f-->0&&stagePlaying)yield 0;break;}
+    case'st_stop_sounds':stStopSounds();break;
+    case'st_set_volume':stSetVolume(num('N'));break;
+    case'st_change_volume':stSetVolume(stVolume+num('N'));break;
+    case'st_pen_clear':stPenClear();break;
+    case'st_pen_stamp':stStampSprite(s);break;
+    case'st_pen_down':s.penDown=true;s._plx=s.x;s._ply=s.y;break;
+    case'st_pen_up':s.penDown=false;break;
+    case'st_pen_setcolor':s.penColor=b.getFieldValue('COLOR')||'#ff0000';break;
+    case'st_pen_changesize':s.penSize=Math.max(1,Math.min(100,(s.penSize||4)+num('N')));break;
+    case'st_pen_setsize':s.penSize=Math.max(1,Math.min(100,num('N')));break;
+    case'st_broadcast':stBroadcast(b.getFieldValue('MSG'));break;
+    case'st_broadcast_wait':{const msg=b.getFieldValue('MSG'),tok={};let any=false;stRecvHats.forEach(h=>{if(h.msg===msg){stFibers.push({gen:stRunSeq(h.first,h.s,0),wait:0,bcast:tok,sp:h.s});any=true;}});if(any)while(stagePlaying&&stFibers.some(f=>f.bcast===tok))yield 0;break;}
+    case'st_clone':{const w=b.getFieldValue('WHICH');const orig=(!w||w==='_myself')?s:(stageState.sprites.find(o=>o.name===w)||s);stSpawnClone(orig);break;}
+    case'st_delete_clone':if(s&&s.isClone){s._deleted=true;throw{__stopThis:true};}break;
+  }}
+// Resolve a Blockly variable/list field to its name (works in headless play workspaces too).
+function stVarName(b,field){const f=b.getField&&b.getField(field||'VAR');if(!f)return null;try{const v=f.getVariable&&f.getVariable();if(v&&v.name)return v.name;}catch(e){}try{return f.getText();}catch(e){}return null;}
+function stTruthy(v){return !(v===false||v===0||v===''||v==null||v==='false');}
+function stNum(v){const n=parseFloat(v);return isFinite(n)?n:0;}
+function stBothNum(a,b){return isFinite(parseFloat(a))&&isFinite(parseFloat(b));}
+// Evaluate a value / boolean reporter block for sprite s — handles st_* blocks AND
+// the standard Scratch-style Blockly operator/logic/text blocks.
+function stEval(b,s){if(!b)return 0;const t=b.type;const inp=n=>stEval(b.getInputTargetBlock(n),s);
+  switch(t){
+    // ── stage reporters ──
+    case'st_score':return stScore;
+    case'st_size':return s?s.size||100:100;
+    case'st_costume_num':return s?(s.costumeIdx||0)+1:1;
+    case'st_backdrop_num':return (stageState&&stageState.backdropIdx||0)+1;
+    case'st_volume':return stVolume;
+    case'st_xpos':return s?Math.round(s.x-CW/2):0;
+    case'st_ypos':return s?Math.round(CH/2-s.y):0;
+    case'st_direction':return s?Math.round(((s.dir%360)+360)%360):90;
+    case'st_mouse_x':return Math.round(stageMouse.x-CW/2);
+    case'st_mouse_y':return Math.round(CH/2-stageMouse.y);
+    case'st_mouse_down':return !!stageMouse.down;
+    case'st_timer':return Math.round((performance.now()-stTimerBase)/100)/10;
+    case'st_answer':return stAnswer;
+    case'st_username':return (typeof cloudMe!=='undefined'&&cloudMe&&cloudMe.displayName)||'player';
+    case'st_days_2000':return Math.floor((Date.now()-Date.UTC(2000,0,1))/86400000);
+    case'st_current':{const d=new Date(),u=b.getFieldValue('UNIT');return u==='year'?d.getFullYear():u==='month'?d.getMonth()+1:u==='date'?d.getDate():u==='dow'?d.getDay()+1:u==='hour'?d.getHours():u==='minute'?d.getMinutes():d.getSeconds();}
+    case'st_attr_of':{const tgt=b.getFieldValue('TARGET'),attr=b.getFieldValue('ATTR');
+      if(tgt==='_stage')return attr==='backdrop'?((stageState.backdropIdx||0)+1):0;
+      const o=stageState.sprites.find(x=>x.name===tgt);if(!o)return 0;
+      return attr==='xpos'?Math.round(o.x-CW/2):attr==='ypos'?Math.round(CH/2-o.y):attr==='dir'?Math.round(((o.dir%360)+360)%360):attr==='costume'?(o.costumeIdx||0)+1:attr==='size'?(o.size||100):attr==='backdrop'?((stageState.backdropIdx||0)+1):0;}
+    case'st_letter_of':{const i=Math.round(stNum(inp('INDEX')))-1,t=String(inp('TEXT')??'');return (i>=0&&i<t.length)?t[i]:'';}
+    case'st_str_contains':return String(inp('A')??'').toLowerCase().indexOf(String(inp('B')??'').toLowerCase())>-1;
+    case'math_trig':{const n=stNum(inp('NUM')),op=b.getFieldValue('OP'),r=n*Math.PI/180;return op==='SIN'?Math.round(Math.sin(r)*1e6)/1e6:op==='COS'?Math.round(Math.cos(r)*1e6)/1e6:op==='TAN'?Math.round(Math.tan(r)*1e6)/1e6:op==='ASIN'?Math.asin(n)*180/Math.PI:op==='ACOS'?Math.acos(n)*180/Math.PI:op==='ATAN'?Math.atan(n)*180/Math.PI:0;}
+    case'st_distance_to':{const p=stTargetPos(s,b.getFieldValue('TARGET'));return Math.round(Math.hypot(p.x-s.x,p.y-s.y));}
+    case'st_key_pressed':{const code=ST_KEYMAP[b.getFieldValue('KEY')];return !!(code&&keys[code]);}
+    case'st_touching':return stTouching(s,b.getFieldValue('TARGET'));
+    case'st_compare':{const a=inp('A'),c=inp('B'),op=b.getFieldValue('OP');return op==='>'?stNum(a)>stNum(c):op==='<'?stNum(a)<stNum(c):a==c;}
+    // ── standard Blockly operators ──
+    case'math_number':return Number(b.getFieldValue('NUM'))||0;
+    case'math_arithmetic':{const a=stNum(inp('A')),c=stNum(inp('B')),op=b.getFieldValue('OP');return op==='ADD'?a+c:op==='MINUS'?a-c:op==='MULTIPLY'?a*c:op==='DIVIDE'?(c?a/c:0):op==='POWER'?Math.pow(a,c):0;}
+    case'math_modulo':{const a=stNum(inp('DIVIDEND')),c=stNum(inp('DIVISOR'));return c?((a%c)+c)%c:0;}
+    case'math_random_int':{let a=Math.round(stNum(inp('FROM'))),c=Math.round(stNum(inp('TO')));if(a>c){const tmp=a;a=c;c=tmp;}return a+Math.floor(Math.random()*(c-a+1));}
+    case'math_single':{const n=stNum(inp('NUM')),op=b.getFieldValue('OP');return op==='ROOT'?Math.sqrt(n):op==='ABS'?Math.abs(n):op==='NEG'?-n:op==='LN'?Math.log(n):op==='LOG10'?Math.log10(n):op==='EXP'?Math.exp(n):op==='POW10'?Math.pow(10,n):n;}
+    case'logic_compare':{const a=inp('A'),c=inp('B'),op=b.getFieldValue('OP');const numc=stBothNum(a,c);const A=numc?stNum(a):a,C=numc?stNum(c):c;return op==='EQ'?A==C:op==='NEQ'?A!=C:op==='LT'?A<C:op==='LTE'?A<=C:op==='GT'?A>C:op==='GTE'?A>=C:false;}
+    case'logic_operation':{const op=b.getFieldValue('OP');return op==='AND'?(stTruthy(inp('A'))&&stTruthy(inp('B'))):(stTruthy(inp('A'))||stTruthy(inp('B')));}
+    case'logic_negate':return !stTruthy(inp('BOOL'));
+    case'logic_boolean':return b.getFieldValue('BOOL')==='TRUE';
+    case'text':return b.getFieldValue('TEXT')||'';
+    case'text_length':return String(inp('VALUE')??'').length;
+    case'text_join':{let out='';for(let i=0;i<10;i++){const c=b.getInputTargetBlock('ADD'+i);if(c)out+=stEval(c,s);}return out;}
+    case'variables_get':{const n=stVarName(b);return n?(stVars[n]??0):0;}
+    case'st_list_item':{const a=stList(stVarName(b,'LIST')),i=Math.round(stNum(inp('INDEX')))-1;return (i>=0&&i<a.length)?a[i]:'';}
+    case'st_list_itemnum':{const a=stList(stVarName(b,'LIST')),it=inp('ITEM');for(let i=0;i<a.length;i++)if(a[i]==it)return i+1;return 0;}
+    case'st_list_length':return stList(stVarName(b,'LIST')).length;
+    case'st_list_contains':{const a=stList(stVarName(b,'LIST')),it=inp('ITEM');return a.some(x=>x==it);}
+  }return 0;}
+function stTouching(s,target){if(!stageState||!target||target==='_none')return false;
+  if(target==='_edge')return s.x<18||s.x>CW-18||s.y<18||s.y>CH-18;
+  const o=stageState.sprites.find(o=>o!==s&&o.name===target&&o.visible);if(!o||!s.visible)return false;
+  const r1=22*(s.size||100)/100,r2=22*(o.size||100)/100;return Math.hypot(s.x-o.x,s.y-o.y)<(r1+r2);}
+function stTargetPos(s,target){if(target==='_mouse')return{x:stageMouse.x,y:stageMouse.y};
+  if(target==='_random')return{x:20+Math.random()*(CW-40),y:20+Math.random()*(CH-40)};
+  const o=stageState&&stageState.sprites.find(o=>o!==s&&o.name===target);return o?{x:o.x,y:o.y}:{x:s.x,y:s.y};}
+function stageStopRun(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.remove('active');}
+function stStartScript(first,s,hat){if(first)stFibers.push({gen:stRunSeq(first,s,0),wait:0,hat,sp:s});}
+function stBroadcast(msg){stRecvHats.forEach(h=>{if(h.msg===msg)stStartScript(h.first,h.s,null);});}
+function stSpawnClone(orig){if(!orig||stClones.length>=300)return;const src=orig._src||orig;
+  const clone={name:src.name,x:orig.x,y:orig.y,dir:orig.dir,size:orig.size,visible:orig.visible,costumes:src.costumes,costumeIdx:orig.costumeIdx||0,penDown:orig.penDown||false,penColor:orig.penColor||'#ff0000',penSize:orig.penSize||4,_plx:orig.x,_ply:orig.y,fx:Object.assign({},orig.fx),say:'',sayT:0,thinking:false,isClone:true,_src:src};
+  stClones.push(clone);stCloneHats.forEach(h=>{if(h.s===src)stStartScript(h.first,clone,null);});}
+function stPump(){if(!stFibers.length)return;const next=[];for(const f of stFibers){if(!stagePlaying)break;if(f.wait>0){f.wait--;next.push(f);continue;}let r;try{r=f.gen.next();}catch(e){continue;}if(!r.done){f.wait=(r.value|0);next.push(f);}}stFibers=next;}
+
+function stageStart(){if(!stageState)return;
+  stageSaveCurrent();           // capture the selected sprite's latest edits first
+  stagePlaying=true;stFibers=[];stKeyHats=[];stClickHats=[];stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];stScore=0;stScoreUsed=false;stTimerBase=performance.now();stAnswer='';stFinishAsk();
+  defineStageBlocks();
+  // First pass: build each sprite's headless workspace and collect ALL hats (so broadcasts/clones see every sprite).
+  stPenClear();
+  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;
+    if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}
+    if(s.xml){try{const ws=new Blockly.Workspace();Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(s.xml),ws);s._ws=ws; // headless copy so every sprite's scripts run, not just the selected one
+      ws.getTopBlocks(true).forEach(b=>{
+        if(b.type==='st_when_flag')stStartScript(b.getNextBlock(),s,null);
+        else if(b.type==='st_when_key')stKeyHats.push({key:b.getFieldValue('KEY'),first:b.getNextBlock(),s});
+        else if(b.type==='st_when_clicked')stClickHats.push({first:b.getNextBlock(),s});
+        else if(b.type==='st_when_receive')stRecvHats.push({msg:b.getFieldValue('MSG'),first:b.getNextBlock(),s});
+        else if(b.type==='st_when_clone_start')stCloneHats.push({first:b.getNextBlock(),s});
+        else if(b.type==='st_when_backdrop')stBackdropHats.push({name:b.getFieldValue('BD'),first:b.getNextBlock(),s});
+      });
+    }catch(e){}}
+  });
+  const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.add('active');
+}
+function stageStop(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];if(typeof stStopSounds==='function')stStopSounds();if(typeof stFinishAsk==='function')stFinishAsk();
+  const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.remove('active');
+  if(stageState)stageState.sprites.forEach(s=>{if(s._sx!=null){s.x=s._sx;s.y=s._sy;s.dir=s._sdir;s.visible=(s._svis!==false);s.size=s._ssize||100;}s.say='';s.sayT=0;if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}});
+}
+function stageFrame(){if(!stagePlaying||!stageState)return;
+  // "when key pressed" hats: while a key is held, (re)start its script once it's finished.
+  stKeyHats.forEach(h=>{const code=ST_KEYMAP[h.key];if(code&&keys[code]&&!stFibers.some(f=>f.hat===h))stStartScript(h.first,h.s,h);});
+  stPump();
+  // remove deleted clones and their fibers
+  if(stClones.some(c=>c._deleted)){stClones=stClones.filter(c=>!c._deleted);stFibers=stFibers.filter(f=>!(f.sp&&f.sp._deleted));}
+  stageState.sprites.forEach(s=>{stPenTrace(s);if(s.sayT>0&&s.sayT<99999)s.sayT--;});
+  stClones.forEach(s=>{stPenTrace(s);if(s.sayT>0&&s.sayT<99999)s.sayT--;});
+}
+// Draw a pen line from a sprite's previous position to its current one (when its pen is down).
+function stPenTrace(s){if(!s.penDown){s._plx=s.x;s._ply=s.y;return;}const lx=s._plx,ly=s._ply;
+  if(lx!=null&&(lx!==s.x||ly!==s.y)){const c=stPen();c.strokeStyle=s.penColor||'#ff0000';c.lineWidth=s.penSize||4;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(lx,ly);c.lineTo(s.x,s.y);c.stroke();}
+  s._plx=s.x;s._ply=s.y;}
+function stageFireClick(x,y){if(!stagePlaying||!stageState)return;const i=stageSpriteAt(x,y);if(i<0)return;const s=stageState.sprites[i];stClickHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});}
+// The cat costume, drawn centred at the current origin in the given colour.
+function paintCat(c,color){c.fillStyle=color||'#ff922b';c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.moveTo(-14,-12);c.lineTo(-7,-22);c.lineTo(-2,-12);c.closePath();c.fill();c.stroke();
+  c.beginPath();c.moveTo(14,-12);c.lineTo(7,-22);c.lineTo(2,-12);c.closePath();c.fill();c.stroke();
+  c.beginPath();c.ellipse(0,2,18,16,0,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#fff';c.beginPath();c.ellipse(-6,-1,4,5,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(6,-1,4,5,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#000';c.beginPath();c.arc(-6,0,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(6,0,2,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(0,7,2,0,Math.PI*2);c.fill();}
+function paintDog(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.ellipse(-16,-3,6,12,0.35,0,Math.PI*2);c.fill();c.stroke();
+  c.beginPath();c.ellipse(16,-3,6,12,-0.35,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle=color;c.beginPath();c.ellipse(0,0,17,16,0,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#fff';c.beginPath();c.ellipse(0,7,9,7,0,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#000';c.beginPath();c.arc(0,4,2.6,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(-6,-3,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
+function paintBear(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.arc(-12,-13,6,0,Math.PI*2);c.fill();c.stroke();c.beginPath();c.arc(12,-13,6,0,Math.PI*2);c.fill();c.stroke();
+  c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#ffe0b2';c.beginPath();c.ellipse(0,6,8,6,0,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#000';c.beginPath();c.arc(0,3,2.5,0,Math.PI*2);c.fill();
+  c.beginPath();c.arc(-6,-3,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
+function paintBunny(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.ellipse(-7,-20,4,13,0.1,0,Math.PI*2);c.fill();c.stroke();
+  c.beginPath();c.ellipse(7,-20,4,13,-0.1,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle=color;c.beginPath();c.ellipse(0,2,15,15,0,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#000';c.beginPath();c.arc(-5,0,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(5,0,2,0,Math.PI*2);c.fill();
+  c.fillStyle='#e57373';c.beginPath();c.arc(0,6,2,0,Math.PI*2);c.fill();}
+function paintRobot(c,color){c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.moveTo(0,-16);c.lineTo(0,-23);c.stroke();c.fillStyle='#ff5252';c.beginPath();c.arc(0,-25,3,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle=color;c.fillRect(-15,-16,30,30);c.strokeRect(-15,-16,30,30);
+  c.fillStyle='#fff';c.fillRect(-10,-8,8,8);c.fillRect(2,-8,8,8);c.strokeRect(-10,-8,8,8);c.strokeRect(2,-8,8,8);
+  c.fillStyle='#000';c.fillRect(-8,-6,4,4);c.fillRect(4,-6,4,4);
+  c.strokeRect(-8,5,16,4);}
+function paintBall(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='rgba(255,255,255,.5)';c.beginPath();c.ellipse(-5,-6,5,4,-0.5,0,Math.PI*2);c.fill();}
+function paintGhost(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.arc(0,-2,15,Math.PI,0);c.lineTo(15,12);c.lineTo(10,8);c.lineTo(5,12);c.lineTo(0,8);c.lineTo(-5,12);c.lineTo(-10,8);c.lineTo(-15,12);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#fff';c.beginPath();c.arc(-5,-2,3.5,0,Math.PI*2);c.fill();c.beginPath();c.arc(5,-2,3.5,0,Math.PI*2);c.fill();
+  c.fillStyle='#000';c.beginPath();c.arc(-5,-2,1.8,0,Math.PI*2);c.fill();c.beginPath();c.arc(5,-2,1.8,0,Math.PI*2);c.fill();}
+function paintStar(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();for(let i=0;i<10;i++){const r=i%2?8:18,a=Math.PI/5*i-Math.PI/2;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();
+  c.fillStyle='#000';c.beginPath();c.arc(-4,-2,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(4,-2,2,0,Math.PI*2);c.fill();}
+function paintBird(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
+  c.beginPath();c.ellipse(0,2,15,14,0,0,Math.PI*2);c.fill();c.stroke();
+  c.fillStyle='#ffb300';c.beginPath();c.moveTo(13,0);c.lineTo(22,3);c.lineTo(13,6);c.closePath();c.fill();c.stroke();
+  c.fillStyle='#fff';c.beginPath();c.arc(5,-3,4,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#000';c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
+// Built-in costume library — name → {emoji, paint}. The single source of truth.
+const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot}};
+const COSTUME_KEYS=Object.keys(STAGE_COSTUMES);
+function paintCostume(c,name,color){(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f(c,color);}
+function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save();ctx.translate(s.x,s.y);
+  if(!s.visible){ctx.globalAlpha=0.3;} // dim (not hidden) when stopped so kids can still find & move it
+  const fx=s.fx||{};
+  if(fx.ghost)ctx.globalAlpha*=Math.max(0,Math.min(100,100-fx.ghost))/100;
+  const sc=(s.size||100)/100;ctx.save();ctx.scale(sc,sc);
+  if(fx.brightness)ctx.filter='brightness('+(1+Math.max(-100,Math.min(100,fx.brightness))/100)+')';
+  paintSpriteCostume(ctx,s);ctx.restore();
+  if(selected&&!stagePlaying){ctx.strokeStyle='#ae853e';ctx.lineWidth=2.5;ctx.setLineDash([5,4]);ctx.strokeRect(-24*sc,-26*sc,48*sc,52*sc);ctx.setLineDash([]);}
+  ctx.restore();
+  if(s.say&&s.sayT>0){ctx.save();ctx.font='bold 16px sans-serif';const w=ctx.measureText(s.say).width+20;const bx=Math.min(CW-w-4,s.x+12),by=Math.max(4,s.y-46);
+    ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.lineWidth=2;
+    if(s.thinking){[[bx-2,by+34,4],[bx+4,by+40,3]].forEach(([cx,cy,r])=>{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();ctx.stroke();});}
+    else{ctx.beginPath();ctx.moveTo(bx+6,by+28);ctx.lineTo(bx+2,by+40);ctx.lineTo(bx+18,by+29);ctx.closePath();ctx.fill();ctx.stroke();}
+    ctx.beginPath();ctx.roundRect(bx,by,w,30,8);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#000';ctx.textBaseline='middle';ctx.fillText(s.say,bx+10,by+16);ctx.restore();}
+}
+function drawRemotePointer(x,y,color,name){ctx.save();ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.fillStyle=color;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+19);ctx.lineTo(x+5,y+14);ctx.lineTo(x+12,y+14);ctx.closePath();ctx.fill();ctx.stroke();
+  if(name){ctx.font='bold 13px sans-serif';ctx.textBaseline='top';const w=ctx.measureText(name).width+12;ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x+11,y+15,w,18,5);ctx.fill();ctx.fillStyle='#000';ctx.fillText(name,x+17,y+18);}
+  ctx.restore();}
+function drawStage(){ctx.save();const bd=curBackdrop();
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,CW,CH); // always clear to opaque first (a painted backdrop may be transparent → would otherwise leave trails)
+  if(bd.img){const im=backdropImgEl(bd);if(im&&im.complete&&im.naturalWidth)ctx.drawImage(im,0,0,CW,CH);}
+  else{ctx.fillStyle=bd.color||'#bfe3ff';ctx.fillRect(0,0,CW,CH);}
+  if(stPenCanvas)ctx.drawImage(stPenCanvas,0,0); // pen layer under the sprites
+  stClones.forEach(c=>drawStageSprite(c,false));
+  if(stageState){const ord=stageState.sprites.map((s,i)=>({s,i})).sort((a,b)=>((a.s._z||0)-(b.s._z||0))||(a.i-b.i));ord.forEach(o=>drawStageSprite(o.s,o.i===stageSel));}
+  if(stagePlaying&&stScoreUsed){ctx.font='bold 26px sans-serif';ctx.textBaseline='top';ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.fillStyle='#ffd93d';const txt='🏆 '+stScore;ctx.strokeText(txt,14,12);ctx.fillText(txt,14,12);}
+  // variable monitors (top-right)
+  let my=12;ctx.font='bold 15px sans-serif';ctx.textBaseline='top';
+  Object.keys(stVarShown).forEach(n=>{if(!stVarShown[n])return;const val=stVars[n]??0;const txt=n+' = '+val;const w=ctx.measureText(txt).width+18;
+    ctx.fillStyle='rgba(0,0,0,.55)';ctx.beginPath();ctx.roundRect(CW-w-12,my,w,24,6);ctx.fill();
+    ctx.fillStyle='#ffd93d';ctx.fillText(txt,CW-w-3,my+5);my+=28;});
+  // list monitors (top-right, under the variables)
+  Object.keys(stListShown).forEach(n=>{if(!stListShown[n])return;const a=stLists[n]||[];const txt=n+': '+(a.length?a.slice(0,12).join(', ')+(a.length>12?' …':''):'(empty)');const w=Math.min(CW-24,ctx.measureText(txt).width+18);
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.beginPath();ctx.roundRect(CW-w-12,my,w,24,6);ctx.fill();
+    ctx.fillStyle='#9be7ff';ctx.fillText(txt,CW-w-3,my+5);my+=28;});
+  // live collaborators' pointers (Google-Docs-style cursors)
+  if(typeof collabActive!=='undefined'&&collabActive){for(const uid in collabRemoteCursors){const cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.sx==null)continue;drawRemotePointer(cu.cell.sx,cu.cell.sy,cu.color||'#fff',cu.name||'');}}
+  ctx.restore();
+}
+// Drag the selected sprite around the stage (when not running).
+let _stageDrag=null;
+function stagePtr(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*CW,y:(e.clientY-r.top)/r.height*CH};}
+function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100;if(Math.abs(x-s.x)<26*sc&&Math.abs(y-s.y)<28*sc)return i;}return -1;}
+function stageDragStart(e){if(projectType!=='stage')return;const p=stagePtr(e);const i=stageSpriteAt(p.x,p.y);if(i<0)return;const sp=stageState.sprites[i];
+  if(stagePlaying){if(!sp.draggable)return;}else if(i!==stageSel)stageSelectSprite(i); // during play only draggable sprites move
+  _stageDrag={i:i,dx:p.x-sp.x,dy:p.y-sp.y};e.preventDefault();}
+function stageDragMove(e){if(!_stageDrag||!stageState)return;const s=stageState.sprites[_stageDrag.i!=null?_stageDrag.i:stageSel];if(!s)return;const p=stagePtr(e);s.x=Math.max(16,Math.min(CW-16,p.x-_stageDrag.dx));s.y=Math.max(16,Math.min(CH-16,p.y-_stageDrag.dy));if(typeof collabSpriteThrottled==='function')collabSpriteThrottled(s);e.preventDefault();}
+function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_stageDrag.i!=null?_stageDrag.i:stageSel];_stageDrag=null;markDirty();if(s&&typeof collabSprite==='function')collabSprite(s);}}
+// NB: the shared `canvas` const is declared later in the file, so bind via getElementById here.
+(function bindStageControls(){const gc=document.getElementById('gc');
+  gc.addEventListener('mousedown',stageDragStart);
+  window.addEventListener('mousemove',stageDragMove);
+  window.addEventListener('mouseup',stageDragEnd);
+  // mouse tracking + sprite clicks for Sensing / "when this sprite clicked"
+  gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;if(typeof collabStageCursor==='function')collabStageCursor(p.x,p.y);}});
+  gc.addEventListener('mouseleave',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
+  gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);stageFireClick(p.x,p.y);}});
+  window.addEventListener('mouseup',()=>{stageMouse.down=false;});
+  gc.addEventListener('touchstart',e=>{if(projectType==='stage'&&!stagePlaying&&e.touches[0]){stageDragStart(e.touches[0]);}},{passive:false});
+  gc.addEventListener('touchmove',e=>{if(_stageDrag&&e.touches[0]){stageDragMove(e.touches[0]);}},{passive:false});
+  gc.addEventListener('touchend',stageDragEnd);
+  const gf=document.getElementById('btn-greenflag');if(gf)gf.onclick=()=>stageStart();
+  const st=document.getElementById('btn-stopall');if(st)st.onclick=()=>stageStop();
+  const as=document.getElementById('add-sprite');if(as)as.onclick=()=>stageAddSprite();
+  const cb=document.getElementById('cm-costume-btn');if(cb)cb.onclick=()=>openCostumePicker();
+  const cd=document.getElementById('cm-done');if(cd)cd.onclick=()=>document.getElementById('costume-modal').classList.add('hide');
+  const ap=document.getElementById('cm-add-paint');if(ap)ap.onclick=()=>cmPaintNew();
+  const ac=document.getElementById('cm-add-char');if(ac)ac.onclick=()=>cmAddCharacter();
+  const ok=document.getElementById('stage-ask-ok');if(ok)ok.onclick=()=>stFinishAsk();
+  const ain=document.getElementById('stage-ask-in');if(ain)ain.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();stFinishAsk();}};
+  const bb=document.getElementById('btn-backdrops');if(bb)bb.onclick=()=>openBackdropManager();
+  const spane=document.getElementById('stage-pane');if(spane)spane.onclick=()=>openBackdropManager();
+  const bd=document.getElementById('bd-done');if(bd)bd.onclick=()=>document.getElementById('backdrop-modal').classList.add('hide');
+  const bp=document.getElementById('bd-add-paint');if(bp)bp.onclick=()=>bdPaintNew();
+  const bs=document.getElementById('bd-add-solid');if(bs)bs.onclick=()=>bdAddSolid();
+  const cn=document.getElementById('cm-name');if(cn)cn.oninput=()=>{if(stageState&&stageState.sprites[stageSel]){const s=stageState.sprites[stageSel];s.name=cn.value.slice(0,20)||('Sprite'+(stageSel+1));renderSpritePanel();markDirty();if(typeof collabSprite==='function')collabSprite(s);}};
+})();
 // ── First-time builder tutorial (shown once) ──
 const TUTORIAL=[
   {emoji:'🎮',title:'Welcome to CodeJump!',text:'Let’s make your very own platform game in a few easy steps.'},
@@ -2103,7 +2917,202 @@ function defineBlocks(){
   }};
 }
 
+// ── Stage (Scratch-style) blocks ──────────────────────────────────────────
+let _stageBlocksDefined=false;
+function defineStageBlocks(){
+  if(_stageBlocksDefined)return;_stageBlocksDefined=true;
+  const stmt=(b)=>{b.setPreviousStatement(true);b.setNextStatement(true);};
+  Blockly.Blocks['st_when_flag']={init:function(){this.appendDummyInput().appendField('🟢 when green flag clicked');this.setNextStatement(true);this.setColour(120);}};
+  Blockly.Blocks['st_when_key']={init:function(){this.appendDummyInput().appendField('👇 when').appendField(new Blockly.FieldDropdown([['⬆️ up arrow','up'],['⬇️ down arrow','down'],['⬅️ left arrow','left'],['➡️ right arrow','right'],['␣ space','space'],['W','w'],['A','a'],['S','s'],['D','d']]),'KEY').appendField('key pressed');this.setNextStatement(true);this.setColour(45);}};
+  Blockly.Blocks['st_move']={init:function(){this.appendDummyInput().appendField('🏃 move').appendField(new Blockly.FieldNumber(10,-500,500),'N').appendField('steps');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_turn_r']={init:function(){this.appendDummyInput().appendField('↻ turn right').appendField(new Blockly.FieldNumber(15,0,360),'N').appendField('degrees');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_turn_l']={init:function(){this.appendDummyInput().appendField('↺ turn left').appendField(new Blockly.FieldNumber(15,0,360),'N').appendField('degrees');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_point']={init:function(){this.appendDummyInput().appendField('🧭 point in direction').appendField(new Blockly.FieldDropdown([['⬆️ up (0)','0'],['➡️ right (90)','90'],['⬇️ down (180)','180'],['⬅️ left (-90)','-90']]),'N');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_change_x']={init:function(){this.appendDummyInput().appendField('↔️ change x by').appendField(new Blockly.FieldNumber(10,-960,960),'N');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_change_y']={init:function(){this.appendDummyInput().appendField('↕️ change y by').appendField(new Blockly.FieldNumber(10,-576,576),'N');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_goto_center']={init:function(){this.appendDummyInput().appendField('🎯 go to the middle');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_say']={init:function(){this.appendDummyInput().appendField('💬 say').appendField(new Blockly.FieldTextInput('Hello!'),'TXT');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_show']={init:function(){this.appendDummyInput().appendField('👁️ show');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_hide']={init:function(){this.appendDummyInput().appendField('🚫 hide');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_change_size']={init:function(){this.appendDummyInput().appendField('🔍 change size by').appendField(new Blockly.FieldNumber(10,-400,400),'N');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_set_size']={init:function(){this.appendDummyInput().appendField('📏 set size to').appendField(new Blockly.FieldNumber(100,10,400),'N').appendField('%');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_wait']={init:function(){this.appendDummyInput().appendField('⏳ wait').appendField(new Blockly.FieldNumber(1,0,60,0.1),'N').appendField('seconds');stmt(this);this.setColour(40);}};
+  Blockly.Blocks['st_repeat']={init:function(){this.appendDummyInput().appendField('🔁 repeat').appendField(new Blockly.FieldNumber(10,0,1000),'N');this.appendStatementInput('DO');stmt(this);this.setColour(40);}};
+  Blockly.Blocks['st_forever']={init:function(){this.appendDummyInput().appendField('♾️ forever');this.appendStatementInput('DO');this.setPreviousStatement(true);this.setColour(40);}};
+  // Conditions
+  Blockly.Blocks['st_if']={init:function(){this.appendValueInput('COND').appendField('🔀 if');this.appendDummyInput().appendField('then');this.appendStatementInput('DO');stmt(this);this.setColour(40);}};
+  Blockly.Blocks['st_if_else']={init:function(){this.appendValueInput('COND').appendField('🔀 if');this.appendStatementInput('DO').appendField('then');this.appendStatementInput('ELSE').appendField('else');stmt(this);this.setColour(40);}};
+  // Sensing (boolean reporters)
+  Blockly.Blocks['st_touching']={init:function(){this.appendDummyInput().appendField('🤚 touching').appendField(new Blockly.FieldDropdown(stTouchOptions),'TARGET').appendField('?');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_key_pressed']={init:function(){this.appendDummyInput().appendField('⌨️ key').appendField(new Blockly.FieldDropdown([['⬆️ up','up'],['⬇️ down','down'],['⬅️ left','left'],['➡️ right','right'],['␣ space','space']]),'KEY').appendField('pressed?');this.setOutput(true,null);this.setColour(200);}};
+  // Operators
+  Blockly.Blocks['st_compare']={init:function(){this.appendValueInput('A');this.appendDummyInput().appendField(new Blockly.FieldDropdown([['>','>'],['=','='],['<','<']]),'OP');this.appendValueInput('B');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
+  // Score
+  Blockly.Blocks['st_change_score']={init:function(){this.appendDummyInput().appendField('🏆 change score by').appendField(new Blockly.FieldNumber(1,-100000,100000),'N');stmt(this);this.setColour(330);}};
+  Blockly.Blocks['st_set_score']={init:function(){this.appendDummyInput().appendField('🏆 set score to').appendField(new Blockly.FieldNumber(0,-100000,100000),'N');stmt(this);this.setColour(330);}};
+  Blockly.Blocks['st_score']={init:function(){this.appendDummyInput().appendField('🏆 score');this.setOutput(true,null);this.setColour(330);}};
+  // ── Motion (more) ──
+  Blockly.Blocks['st_goto_xy']={init:function(){this.appendDummyInput().appendField('📍 go to x').appendField(new Blockly.FieldNumber(0,-CW,CW),'X').appendField('y').appendField(new Blockly.FieldNumber(0,-CH,CH),'Y');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_goto']={init:function(){this.appendDummyInput().appendField('📍 go to').appendField(new Blockly.FieldDropdown(stGotoTargets),'WHERE');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_glide_xy']={init:function(){this.appendDummyInput().appendField('🛝 glide').appendField(new Blockly.FieldNumber(1,0,60,0.1),'SECS').appendField('secs to x').appendField(new Blockly.FieldNumber(0,-CW,CW),'X').appendField('y').appendField(new Blockly.FieldNumber(0,-CH,CH),'Y');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_point_towards']={init:function(){this.appendDummyInput().appendField('🧭 point towards').appendField(new Blockly.FieldDropdown(stPointTargets),'TARGET');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_set_x']={init:function(){this.appendDummyInput().appendField('↔️ set x to').appendField(new Blockly.FieldNumber(0,-CW,CW),'X');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_set_y']={init:function(){this.appendDummyInput().appendField('↕️ set y to').appendField(new Blockly.FieldNumber(0,-CH,CH),'Y');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_edge_bounce']={init:function(){this.appendDummyInput().appendField('🪃 if on edge, bounce');stmt(this);this.setColour(210);}};
+  Blockly.Blocks['st_xpos']={init:function(){this.appendDummyInput().appendField('x position');this.setOutput(true,null);this.setColour(210);}};
+  Blockly.Blocks['st_ypos']={init:function(){this.appendDummyInput().appendField('y position');this.setOutput(true,null);this.setColour(210);}};
+  Blockly.Blocks['st_direction']={init:function(){this.appendDummyInput().appendField('direction');this.setOutput(true,null);this.setColour(210);}};
+  // ── Looks (more) ──
+  Blockly.Blocks['st_say_secs']={init:function(){this.appendDummyInput().appendField('💬 say').appendField(new Blockly.FieldTextInput('Hello!'),'TXT').appendField('for').appendField(new Blockly.FieldNumber(2,0,60,0.1),'SECS').appendField('secs');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_think']={init:function(){this.appendDummyInput().appendField('💭 think').appendField(new Blockly.FieldTextInput('Hmm...'),'TXT');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_think_secs']={init:function(){this.appendDummyInput().appendField('💭 think').appendField(new Blockly.FieldTextInput('Hmm...'),'TXT').appendField('for').appendField(new Blockly.FieldNumber(2,0,60,0.1),'SECS').appendField('secs');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_size']={init:function(){this.appendDummyInput().appendField('📏 size');this.setOutput(true,null);this.setColour(290);}};
+  Blockly.Blocks['st_switch_costume']={init:function(){this.appendDummyInput().appendField('🎭 switch costume to').appendField(new Blockly.FieldDropdown(stCostumeOptions),'COS');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_next_costume']={init:function(){this.appendDummyInput().appendField('🎭 next costume');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_costume_num']={init:function(){this.appendDummyInput().appendField('🎭 costume number');this.setOutput(true,null);this.setColour(290);}};
+  Blockly.Blocks['st_switch_backdrop']={init:function(){this.appendDummyInput().appendField('🖼️ switch backdrop to').appendField(new Blockly.FieldDropdown(stBackdropOptions),'BD');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_next_backdrop']={init:function(){this.appendDummyInput().appendField('🖼️ next backdrop');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_backdrop_num']={init:function(){this.appendDummyInput().appendField('🖼️ backdrop number');this.setOutput(true,null);this.setColour(290);}};
+  Blockly.Blocks['st_when_backdrop']={init:function(){this.appendDummyInput().appendField('🖼️ when backdrop switches to').appendField(new Blockly.FieldDropdown(stBackdropOptions),'BD');this.setNextStatement(true);this.setColour(45);}};
+  // ── Control (more) ──
+  Blockly.Blocks['st_wait_until']={init:function(){this.appendValueInput('COND').appendField('⏳ wait until');stmt(this);this.setColour(40);}};
+  Blockly.Blocks['st_repeat_until']={init:function(){this.appendValueInput('COND').appendField('🔁 repeat until');this.appendStatementInput('DO');stmt(this);this.setColour(40);}};
+  Blockly.Blocks['st_stop']={init:function(){this.appendDummyInput().appendField('🛑 stop').appendField(new Blockly.FieldDropdown([['all','all'],['this script','this']]),'WHAT');this.setPreviousStatement(true);this.setColour(40);}};
+  // ── Sensing (more) ──
+  Blockly.Blocks['st_mouse_down']={init:function(){this.appendDummyInput().appendField('🖱️ mouse down?');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_mouse_x']={init:function(){this.appendDummyInput().appendField('🖱️ mouse x');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_mouse_y']={init:function(){this.appendDummyInput().appendField('🖱️ mouse y');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_distance_to']={init:function(){this.appendDummyInput().appendField('📏 distance to').appendField(new Blockly.FieldDropdown(stPointTargets),'TARGET');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_timer']={init:function(){this.appendDummyInput().appendField('⏱️ timer');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_reset_timer']={init:function(){this.appendDummyInput().appendField('⏱️ reset timer');stmt(this);this.setColour(200);}};
+  // ── Events (more) ──
+  Blockly.Blocks['st_when_clicked']={init:function(){this.appendDummyInput().appendField('👆 when this sprite clicked');this.setNextStatement(true);this.setColour(45);}};
+  // ── Variables (set/change/get reuse standard Blockly blocks; these add monitors) ──
+  Blockly.Blocks['st_show_var']={init:function(){this.appendDummyInput().appendField('👁️ show variable').appendField(new Blockly.FieldVariable('my variable'),'VAR');stmt(this);this.setColour(330);}};
+  Blockly.Blocks['st_hide_var']={init:function(){this.appendDummyInput().appendField('🙈 hide variable').appendField(new Blockly.FieldVariable('my variable'),'VAR');stmt(this);this.setColour(330);}};
+  // ── Lists (list-typed Blockly variables) ──
+  const lf=()=>new Blockly.FieldVariable(null,null,['list'],'list');
+  Blockly.Blocks['st_list_add']={init:function(){this.appendValueInput('ITEM').appendField('📃 add');this.appendDummyInput().appendField('to').appendField(lf(),'LIST');this.setInputsInline(true);stmt(this);this.setColour(15);}};
+  Blockly.Blocks['st_list_delete']={init:function(){this.appendValueInput('INDEX').appendField('📃 delete item');this.appendDummyInput().appendField('of').appendField(lf(),'LIST');this.setInputsInline(true);stmt(this);this.setColour(15);}};
+  Blockly.Blocks['st_list_delete_all']={init:function(){this.appendDummyInput().appendField('📃 delete all of').appendField(lf(),'LIST');stmt(this);this.setColour(15);}};
+  Blockly.Blocks['st_list_insert']={init:function(){this.appendValueInput('ITEM').appendField('📃 insert');this.appendValueInput('INDEX').appendField('at');this.appendDummyInput().appendField('of').appendField(lf(),'LIST');this.setInputsInline(true);stmt(this);this.setColour(15);}};
+  Blockly.Blocks['st_list_replace']={init:function(){this.appendValueInput('INDEX').appendField('📃 replace item');this.appendDummyInput().appendField('of').appendField(lf(),'LIST');this.appendValueInput('ITEM').appendField('with');this.setInputsInline(true);stmt(this);this.setColour(15);}};
+  Blockly.Blocks['st_list_item']={init:function(){this.appendValueInput('INDEX').appendField('📃 item');this.appendDummyInput().appendField('of').appendField(lf(),'LIST');this.setInputsInline(true);this.setOutput(true,null);this.setColour(15);}};
+  Blockly.Blocks['st_list_itemnum']={init:function(){this.appendValueInput('ITEM').appendField('📃 item # of');this.appendDummyInput().appendField('in').appendField(lf(),'LIST');this.setInputsInline(true);this.setOutput(true,null);this.setColour(15);}};
+  Blockly.Blocks['st_list_length']={init:function(){this.appendDummyInput().appendField('📃 length of').appendField(lf(),'LIST');this.setOutput(true,null);this.setColour(15);}};
+  Blockly.Blocks['st_list_contains']={init:function(){this.appendDummyInput().appendField('📃 list').appendField(lf(),'LIST').appendField('contains');this.appendValueInput('ITEM');this.appendDummyInput().appendField('?');this.setInputsInline(true);this.setOutput(true,null);this.setColour(15);}};
+  Blockly.Blocks['st_show_list']={init:function(){this.appendDummyInput().appendField('👁️ show list').appendField(lf(),'LIST');stmt(this);this.setColour(15);}};
+  Blockly.Blocks['st_hide_list']={init:function(){this.appendDummyInput().appendField('🙈 hide list').appendField(lf(),'LIST');stmt(this);this.setColour(15);}};
+  // ── Broadcast / receive ──
+  Blockly.Blocks['st_broadcast']={init:function(){this.appendDummyInput().appendField('📣 broadcast').appendField(new Blockly.FieldTextInput('message1'),'MSG');stmt(this);this.setColour(45);}};
+  Blockly.Blocks['st_broadcast_wait']={init:function(){this.appendDummyInput().appendField('📣 broadcast').appendField(new Blockly.FieldTextInput('message1'),'MSG').appendField('and wait');stmt(this);this.setColour(45);}};
+  Blockly.Blocks['st_when_receive']={init:function(){this.appendDummyInput().appendField('📩 when I receive').appendField(new Blockly.FieldTextInput('message1'),'MSG');this.setNextStatement(true);this.setColour(45);}};
+  // ── Clones ──
+  Blockly.Blocks['st_clone']={init:function(){this.appendDummyInput().appendField('🧬 create clone of').appendField(new Blockly.FieldDropdown(stCloneTargets),'WHICH');stmt(this);this.setColour(40);}};
+  Blockly.Blocks['st_when_clone_start']={init:function(){this.appendDummyInput().appendField('🧬 when I start as a clone');this.setNextStatement(true);this.setColour(40);}};
+  Blockly.Blocks['st_delete_clone']={init:function(){this.appendDummyInput().appendField('🧬 delete this clone');this.setPreviousStatement(true);this.setColour(40);}};
+  // ── Pen ──
+  Blockly.Blocks['st_pen_clear']={init:function(){this.appendDummyInput().appendField('🖊️ erase all');stmt(this);this.setColour(160);}};
+  Blockly.Blocks['st_pen_stamp']={init:function(){this.appendDummyInput().appendField('🖊️ stamp');stmt(this);this.setColour(160);}};
+  Blockly.Blocks['st_pen_down']={init:function(){this.appendDummyInput().appendField('🖊️ pen down');stmt(this);this.setColour(160);}};
+  Blockly.Blocks['st_pen_up']={init:function(){this.appendDummyInput().appendField('🖊️ pen up');stmt(this);this.setColour(160);}};
+  Blockly.Blocks['st_pen_setcolor']={init:function(){const fld=(Blockly.FieldColour)?new Blockly.FieldColour('#ff0000'):new Blockly.FieldTextInput('#ff0000');this.appendDummyInput().appendField('🖊️ set pen colour to').appendField(fld,'COLOR');stmt(this);this.setColour(160);}};
+  Blockly.Blocks['st_pen_changesize']={init:function(){this.appendDummyInput().appendField('🖊️ change pen size by').appendField(new Blockly.FieldNumber(1,-100,100),'N');stmt(this);this.setColour(160);}};
+  Blockly.Blocks['st_pen_setsize']={init:function(){this.appendDummyInput().appendField('🖊️ set pen size to').appendField(new Blockly.FieldNumber(4,1,100),'N');stmt(this);this.setColour(160);}};
+  // ── Sound ──
+  Blockly.Blocks['st_play_sound']={init:function(){this.appendDummyInput().appendField('🔊 play sound').appendField(new Blockly.FieldDropdown(stSoundOptions),'SND');stmt(this);this.setColour(300);}};
+  Blockly.Blocks['st_play_sound_wait']={init:function(){this.appendDummyInput().appendField('🔊 play sound').appendField(new Blockly.FieldDropdown(stSoundOptions),'SND').appendField('until done');stmt(this);this.setColour(300);}};
+  Blockly.Blocks['st_stop_sounds']={init:function(){this.appendDummyInput().appendField('🔇 stop all sounds');stmt(this);this.setColour(300);}};
+  Blockly.Blocks['st_set_volume']={init:function(){this.appendDummyInput().appendField('🔊 set volume to').appendField(new Blockly.FieldNumber(100,0,100),'N').appendField('%');stmt(this);this.setColour(300);}};
+  Blockly.Blocks['st_change_volume']={init:function(){this.appendDummyInput().appendField('🔊 change volume by').appendField(new Blockly.FieldNumber(-10,-100,100),'N');stmt(this);this.setColour(300);}};
+  Blockly.Blocks['st_volume']={init:function(){this.appendDummyInput().appendField('🔊 volume');this.setOutput(true,null);this.setColour(300);}};
+  // ── Sensing: ask / answer ──
+  Blockly.Blocks['st_ask']={init:function(){this.appendDummyInput().appendField('❓ ask').appendField(new Blockly.FieldTextInput("What's your name?"),'Q').appendField('and wait');stmt(this);this.setColour(200);}};
+  Blockly.Blocks['st_answer']={init:function(){this.appendDummyInput().appendField('💬 answer');this.setOutput(true,null);this.setColour(200);}};
+  // ── Looks: graphic effects ──
+  const FX=[['👻 ghost','ghost'],['☀️ brightness','brightness']];
+  Blockly.Blocks['st_change_effect']={init:function(){this.appendDummyInput().appendField('🎚️ change').appendField(new Blockly.FieldDropdown(FX),'FX').appendField('effect by').appendField(new Blockly.FieldNumber(25,-1000,1000),'N');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_set_effect']={init:function(){this.appendDummyInput().appendField('🎚️ set').appendField(new Blockly.FieldDropdown(FX),'FX').appendField('effect to').appendField(new Blockly.FieldNumber(0,-1000,1000),'N');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_clear_effects']={init:function(){this.appendDummyInput().appendField('🎚️ clear graphic effects');stmt(this);this.setColour(290);}};
+  // ── Looks: layers ──
+  Blockly.Blocks['st_goto_layer']={init:function(){this.appendDummyInput().appendField('🗂️ go to').appendField(new Blockly.FieldDropdown([['front','front'],['back','back']]),'LAYER').appendField('layer');stmt(this);this.setColour(290);}};
+  Blockly.Blocks['st_go_layers']={init:function(){this.appendDummyInput().appendField('🗂️ go').appendField(new Blockly.FieldDropdown([['forward','forward'],['backward','backward']]),'DIR').appendField(new Blockly.FieldNumber(1,1,50),'N').appendField('layers');stmt(this);this.setColour(290);}};
+  // ── Motion: glide to target ──
+  Blockly.Blocks['st_glide_to']={init:function(){this.appendDummyInput().appendField('🛝 glide').appendField(new Blockly.FieldNumber(1,0,60,0.1),'SECS').appendField('secs to').appendField(new Blockly.FieldDropdown(stGotoTargets),'WHERE');stmt(this);this.setColour(210);}};
+  // ── Sensing: extras ──
+  Blockly.Blocks['st_username']={init:function(){this.appendDummyInput().appendField('🙋 username');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_current']={init:function(){this.appendDummyInput().appendField('📅 current').appendField(new Blockly.FieldDropdown([['year','year'],['month','month'],['date','date'],['day of week','dow'],['hour','hour'],['minute','minute'],['second','second']]),'UNIT');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_days_2000']={init:function(){this.appendDummyInput().appendField('📅 days since 2000');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_attr_of']={init:function(){this.appendDummyInput().appendField('🔎').appendField(new Blockly.FieldDropdown([['x position','xpos'],['y position','ypos'],['direction','dir'],['costume #','costume'],['size','size'],['backdrop #','backdrop']]),'ATTR').appendField('of').appendField(new Blockly.FieldDropdown(stAttrTargets),'TARGET');this.setOutput(true,null);this.setColour(200);}};
+  Blockly.Blocks['st_set_drag']={init:function(){this.appendDummyInput().appendField('🖐️ set drag mode').appendField(new Blockly.FieldDropdown([['draggable','on'],['not draggable','off']]),'MODE');stmt(this);this.setColour(200);}};
+  // ── Operators: extras ──
+  Blockly.Blocks['st_letter_of']={init:function(){this.appendValueInput('INDEX').appendField('🔤 letter');this.appendValueInput('TEXT').appendField('of');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
+  Blockly.Blocks['st_str_contains']={init:function(){this.appendValueInput('A');this.appendValueInput('B').appendField('contains');this.appendDummyInput().appendField('?');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
+}
+function stGotoTargets(){const opts=[['🎲 random position','_random'],['🖱️ mouse-pointer','_mouse']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
+function stAttrTargets(){const opts=[['Stage','_stage']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
+function stCloneTargets(){const opts=[['myself','_myself']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
+function stCostumeOptions(){const s=(typeof stageState!=='undefined'&&stageState)?stageState.sprites[stageSel]:null;const opts=(s&&s.costumes)?s.costumes.map(c=>[c.name,c.name]):[];return opts.length?opts:[['costume1','costume1']];}
+// Dropdown of targets for "point towards / distance to" — the mouse + every sprite.
+function stPointTargets(){const opts=[['🖱️ mouse-pointer','_mouse']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
+// Dynamic dropdown for "touching [▾]?" — every sprite by name + the edge.
+// (We list ALL sprites, not just "others", so a saved target stays a valid option
+//  when the script is loaded into a per-sprite headless workspace at play time —
+//  Blockly resets a dropdown to its first option if the stored value isn't listed.)
+function stTouchOptions(){const opts=[];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));opts.push(['the edge','_edge']);if(!opts.length)opts.push(['(a sprite)','_edge']);return opts;}
+function stageToolbox(){const blk=t=>({kind:'block',type:t});
+  const N=v=>({shadow:{type:'math_number',fields:{NUM:v}}});
+  return{kind:'categoryToolbox',contents:[
+  {kind:'category',name:'🔵  Motion',colour:'210',contents:[blk('st_move'),blk('st_turn_r'),blk('st_turn_l'),blk('st_point'),blk('st_point_towards'),blk('st_goto'),blk('st_goto_xy'),blk('st_goto_center'),blk('st_glide_xy'),blk('st_glide_to'),blk('st_change_x'),blk('st_set_x'),blk('st_change_y'),blk('st_set_y'),blk('st_edge_bounce'),blk('st_xpos'),blk('st_ypos'),blk('st_direction')]},
+  {kind:'category',name:'🟣  Looks',colour:'290',contents:[blk('st_say'),blk('st_say_secs'),blk('st_think'),blk('st_think_secs'),blk('st_switch_costume'),blk('st_next_costume'),blk('st_costume_num'),blk('st_switch_backdrop'),blk('st_next_backdrop'),blk('st_backdrop_num'),blk('st_change_effect'),blk('st_set_effect'),blk('st_clear_effects'),blk('st_goto_layer'),blk('st_go_layers'),blk('st_show'),blk('st_hide'),blk('st_change_size'),blk('st_set_size'),blk('st_size')]},
+  {kind:'category',name:'🔊  Sound',colour:'300',contents:[blk('st_play_sound'),blk('st_play_sound_wait'),blk('st_stop_sounds'),blk('st_set_volume'),blk('st_change_volume'),blk('st_volume')]},
+  {kind:'category',name:'🟡  Events',colour:'45',contents:[blk('st_when_flag'),blk('st_when_key'),blk('st_when_clicked'),blk('st_when_backdrop'),blk('st_when_receive'),blk('st_broadcast'),blk('st_broadcast_wait')]},
+  {kind:'category',name:'🟠  Control',colour:'40',contents:[blk('st_wait'),blk('st_wait_until'),blk('st_repeat'),blk('st_repeat_until'),blk('st_forever'),blk('st_if'),blk('st_if_else'),blk('st_stop'),blk('st_clone'),blk('st_when_clone_start'),blk('st_delete_clone')]},
+  {kind:'category',name:'🟦  Sensing',colour:'200',contents:[blk('st_touching'),blk('st_key_pressed'),blk('st_ask'),blk('st_answer'),blk('st_mouse_down'),blk('st_mouse_x'),blk('st_mouse_y'),blk('st_distance_to'),blk('st_timer'),blk('st_reset_timer'),blk('st_set_drag'),blk('st_attr_of'),blk('st_username'),blk('st_current'),blk('st_days_2000')]},
+  {kind:'category',name:'🟩  Operators',colour:'120',contents:[
+    {kind:'block',type:'math_arithmetic',inputs:{A:N(1),B:N(1)}},
+    {kind:'block',type:'math_random_int',inputs:{FROM:N(1),TO:N(10)}},
+    {kind:'block',type:'logic_compare',inputs:{A:N(0),B:N(10)}},
+    {kind:'block',type:'logic_operation'},
+    blk('logic_negate'),blk('logic_boolean'),
+    {kind:'block',type:'math_modulo',inputs:{DIVIDEND:N(7),DIVISOR:N(3)}},
+    {kind:'block',type:'math_single',inputs:{NUM:N(9)}},
+    {kind:'block',type:'math_trig',inputs:{NUM:N(45)}},
+    blk('math_number'),blk('text'),
+    {kind:'block',type:'text_join'},
+    {kind:'block',type:'text_length'},
+    {kind:'block',type:'st_letter_of',inputs:{INDEX:N(1),TEXT:{shadow:{type:'text',fields:{TEXT:'world'}}}}},
+    {kind:'block',type:'st_str_contains',inputs:{A:{shadow:{type:'text',fields:{TEXT:'apple'}}},B:{shadow:{type:'text',fields:{TEXT:'a'}}}}}]},
+  {kind:'category',name:'📦  Variables',colour:'330',contents:[
+    {kind:'button',text:'➕ Make a Variable',callbackKey:'CREATE_VARIABLE'},
+    {kind:'block',type:'variables_set'},
+    {kind:'block',type:'math_change',inputs:{DELTA:N(1)}},
+    blk('variables_get'),blk('st_show_var'),blk('st_hide_var')]},
+  {kind:'category',name:'📃  Lists',colour:'15',contents:[
+    {kind:'button',text:'➕ Make a List',callbackKey:'CREATE_LIST'},
+    {kind:'block',type:'st_list_add',inputs:{ITEM:{shadow:{type:'text',fields:{TEXT:'thing'}}}}},
+    {kind:'block',type:'st_list_delete',inputs:{INDEX:N(1)}},
+    blk('st_list_delete_all'),
+    {kind:'block',type:'st_list_insert',inputs:{ITEM:{shadow:{type:'text',fields:{TEXT:'thing'}}},INDEX:N(1)}},
+    {kind:'block',type:'st_list_replace',inputs:{INDEX:N(1),ITEM:{shadow:{type:'text',fields:{TEXT:'thing'}}}}},
+    {kind:'block',type:'st_list_item',inputs:{INDEX:N(1)}},
+    {kind:'block',type:'st_list_itemnum',inputs:{ITEM:{shadow:{type:'text',fields:{TEXT:'thing'}}}}},
+    blk('st_list_length'),
+    {kind:'block',type:'st_list_contains',inputs:{ITEM:{shadow:{type:'text',fields:{TEXT:'thing'}}}}},
+    blk('st_show_list'),blk('st_hide_list')]},
+  {kind:'category',name:'🖊️  Pen',colour:'160',contents:[blk('st_pen_clear'),blk('st_pen_stamp'),blk('st_pen_down'),blk('st_pen_up'),blk('st_pen_setcolor'),blk('st_pen_changesize'),blk('st_pen_setsize')]},
+  {kind:'category',name:'🏆  Score',colour:'330',contents:[blk('st_change_score'),blk('st_set_score'),blk('st_score')]},
+]};}
+function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/blockly/xml">
+<block type="st_when_flag" x="20" y="20"><next><block type="st_goto_center"><next><block type="st_say"><field name="TXT">Use the arrow keys!</field></block></next></block></next></block>
+<block type="st_when_key" x="20" y="160"><field name="KEY">left</field><next><block type="st_change_x"><field name="N">-10</field></block></next></block>
+<block type="st_when_key" x="260" y="160"><field name="KEY">right</field><next><block type="st_change_x"><field name="N">10</field></block></next></block>
+<block type="st_when_key" x="20" y="280"><field name="KEY">up</field><next><block type="st_change_y"><field name="N">10</field></block></next></block>
+<block type="st_when_key" x="260" y="280"><field name="KEY">down</field><next><block type="st_change_y"><field name="N">-10</field></block></next></block>
+</xml>`;}
+
 function getToolbox(){
+  if(projectType==='stage')return stageToolbox();
   // Game blocks — shown for every key stage.
   const events=[{kind:'block',type:'when_key_pressed'},{kind:'block',type:'when_game_starts'}];
   if(keyStage==='ks2')events.push(
@@ -2186,6 +3195,7 @@ function getToolbox(){
 }
 
 function getDefaultXml(){
+  if(projectType==='stage')return stageDefaultXml();
   return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="when_key_pressed" x="20" y="20"><field name="KEY">left</field>
   <next><block type="player_move_left"></block></next></block>
@@ -2226,7 +3236,7 @@ function getDefaultXml(){
 
 function initBlockly(){
   if(blocklyWorkspace)return;
-  defineBlocks();
+  defineBlocks();defineStageBlocks();
   // Custom theme — set the font HERE so Blockly measures block sizes with the
   // real font (Montserrat). Doing it via CSS instead desyncs measurement from
   // rendering and makes the text sit off-centre.
@@ -2246,11 +3256,13 @@ function initBlockly(){
   // input (e.g. a number into an "if", a reporter into "and"). The interpreter
   // coerces types at runtime, so this is friendlier for young coders.
   try{blocklyWorkspace.connectionChecker.doTypeChecks=function(){return true;};}catch(e){}
+  try{blocklyWorkspace.registerButtonCallback('CREATE_VARIABLE',function(btn){Blockly.Variables.createVariableButtonHandler(btn.getTargetWorkspace());});}catch(e){}
+  try{blocklyWorkspace.registerButtonCallback('CREATE_LIST',function(btn){Blockly.Variables.createVariableButtonHandler(btn.getTargetWorkspace(),null,'list');});}catch(e){}
   const xml=Blockly.utils.xml.textToDom(window._pendingXml||getDefaultXml());
   window._pendingXml=null;
   Blockly.Xml.domToWorkspace(xml,blocklyWorkspace);
   blocklyReady=true;
-  blocklyWorkspace.addChangeListener(()=>{readBlocklyConfig();if(blocklyReady&&!_suppressBlocklyDirty)markDirty();});
+  blocklyWorkspace.addChangeListener(()=>{readBlocklyConfig();if(blocklyReady&&!_suppressBlocklyDirty){markDirty();if(projectType==='stage'){if(typeof collabStageXmlSoon==='function')collabStageXmlSoon();if(typeof collabActive!=='undefined'&&collabActive&&typeof stageSyncVars==='function')stageSyncVars();}}});
   Blockly.svgResize(blocklyWorkspace);
 }
 
@@ -2920,7 +3932,11 @@ const HELP_TABS=[
    <p>Handy commands: <code>move_left() move_right() jump() is_key("right") add_score(10) set_lives(3) say("hi") win() game_over() player_x() on_ground() random(1,6)</code> — plus variables, <code>if/elif/else</code>, <code>while</code>, <code>for … in range()</code>, lists, and your own functions with <code>def</code>. The editor checks your code as you type and shows friendly errors with line numbers.</p>
    <p>🔎 <b>Don't remember a command?</b> Tap <b>📖 Commands</b> in the code editor for the full, searchable list of everything you can use — grouped by what it does.</p>
    <p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
- ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game in “My Levels”. Your work also <b>auto-saves</b> as a draft.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to open later.</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen for lessons, worksheets, starter levels and the full guide.</p>`],
+ ['cloud','☁️ Cloud & Teamwork',`<h3>Your account</h3><p>If your school has cloud saving switched on, tap <b>🔑 Sign in</b> (top of the home screen, or the <b>☁️ Cloud</b> button) and make an account — a <b>display name</b>, a password, your name, and whether you're a <b>student</b> or <b>teacher</b>. Then your games follow you to <b>any device</b> — no codes to remember.</p>
+   <h3>💾 Saving online</h3><ul><li>Tap <b>💾 Save → ☁️ Save online</b>, then choose <b>👤 My own work</b> (private to you) or a <b>🏫 class</b> you've joined (so your teacher can see it).</li><li>Open your saved games any time under <b>☁️ Cloud → 📂 My games</b>.</li></ul>
+   <h3>🏫 Joining a class</h3><p>Go to <b>☁️ Cloud → ⚙️ Settings → Join a class</b> and type the class code your teacher gives you (you can be in more than one). Settings is also where you change your name or password.</p>
+   <h3>🤝 Build together, LIVE!</h3><ul><li>Open a game, then <b>Share → 🤝 Collaborate</b> and invite classmates by their <b>display name</b> — up to 6 of you.</li><li>You all edit the <b>same game at the same time</b> — on the <b>Build</b> and <b>Code</b> screens — and see each other's blocks, code and <b>coloured cursors</b> appear instantly, like magic.</li><li>The <b>🤝 Live</b> bar shows who's in the room (tap <b>Leave</b> to stop). Friends you invite find it under <b>☁️ Cloud → 🤝 Collaborations</b>.</li></ul>`],
+ ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game on this device (and it <b>auto-saves</b> as a draft). If cloud saving is on, you can also <b>save online</b> to open it anywhere — see the <b>☁️ Cloud &amp; Teamwork</b> tab.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to build on later.</li><li><b>🤝 Collaborate</b> — build the same game together, live (see the Cloud &amp; Teamwork tab).</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen (you'll need a teacher account if cloud is on) to manage classes and see pupils' work. The Teacher Hub has its own full guide via <b>📖 Teacher Guide</b>.</p>`],
 ];
 let helpTab='start';
 function openHelp(){buildHelpTabs();selHelpTab('start');document.getElementById('help-modal').classList.remove('hide');}
@@ -2950,7 +3966,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>Game size</h3>
   <p>Key Stage 2 &amp; 3 games can be created at different grid sizes (Standard 20×12, Wide, Large, or Huge 48×24) for bigger projects. The build view scales to show the whole level; play uses a camera that follows the player in both directions. Key Stage 1 stays at the standard size.</p>
   <h3>Running a lesson</h3>
-  <ul><li>Use the <b>Lesson library</b> and <b>Challenge of the day</b> on the hub — each has a worksheet and a starter level.</li><li><b>Project</b> a challenge full-screen with the ⛶ Expand button and the built-in timer.</li><li>Collect pupils' games via <b>“Open a pupil's level”</b> (.codejump or .html files).</li><li>Suggested flow: <i>predict → place a few blocks → play → improve</i>.</li></ul>
+  <ul><li>Collect pupils' work two ways: have them <b>hand it in to your class</b> (cloud), or <b>open a level file</b> (.codejump / .html) they share.</li><li><b>Send a starter</b> to a class in one tap (My classes → a class → 📤 Send the game I'm building), or use the in-app guided activities in <b>❓ Help</b>.</li><li>Suggested flow: <i>predict → place a few blocks → play → improve</i>.</li><li>Ready-made <b>lesson plans &amp; worksheets are coming soon</b> — for now the guided activities and starter games (❓ Help) give pupils a head start.</li></ul>
   <h3>Every block &amp; tile</h3>
   `+guideTileRef()+`
   <h3>Coding blocks (Key Stage 2)</h3>
@@ -2962,6 +3978,10 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>Pupils don't need to memorise anything: the <b>📖 Commands</b> button in the editor opens a complete, grouped reference of every command and event, each with a one-line explanation — so the whole API (movement, scoring, sensing, settings and sound) is always one tap away.</p>
   <h3>Cloud save &amp; classes (optional)</h3>
   <p>If your organisation sets up the (free) cloud backend, an <b>☁️ Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes → a class → a child → their work</b>. <b>Pupils</b> join classes in <b>☁️ Cloud → ⚙️ Settings</b> (a child can be in several), then when saving choose <b>👤 My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
+  <h3>Managing your classes</h3>
+  <p>In <b>Teacher Hub → 🗂 My classes &amp; pupils' work</b> you can <b>make a class</b> (share its code so pupils self-join), <b>rename</b> or <b>delete</b> a class, <b>remove</b> a pupil, open any child's <b>handed-in work</b>, and <b>📤 send the game you're building straight to a whole class</b> (it lands in every pupil's class work — handy for starters/templates). Pupils show by <b>real name + display name</b>.</p>
+  <h3>🤝 Live collaboration</h3>
+  <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game → <b>Share → 🤝 Collaborate</b> → invites classmates by display name; everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b>☁️ Cloud → 🤝 Collaborations</b>. Great for pair-programming and group projects. <i>(Needs the optional cloud backend — including its Durable Object “rooms” setup; see <code>cloud/COLLAB.md</code>.)</i></p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
   <h3>Troubleshooting</h3>
@@ -3211,6 +4231,9 @@ canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellF
 // MODE SWITCH
 // ═══════════════════════════════════════════════════════════════════════
 function switchMode(m){
+  // Stage projects use the unified Scratch-style view, not Build/Play/Code modes.
+  if(projectType==='stage'){enterStageUI();return;}
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   if(m==='play'&&!validate())return;
   mode=m;
   ['btn-build','btn-play','btn-code'].forEach(id=>document.getElementById(id).classList.remove('active'));
@@ -3222,7 +4245,7 @@ function switchMode(m){
   document.getElementById('app').classList.toggle('mode-play',m==='play');
   document.getElementById('gc').style.display=m==='code'?'none':'block';
   const cp=document.getElementById('code-panel');
-  if(m==='code'){cp.classList.add('show');if(isKS3()){showKs3Editor();}else{updateCodeModeUI();setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);if(blocklyWorkspace&&blocklyWorkspace.setScale)blocklyWorkspace.setScale(keyStage==='ks1'?1.25:0.85);},50);}}
+  if(m==='code'){cp.classList.add('show');if(isKS3()&&projectType!=='stage'){showKs3Editor();}else{updateCodeModeUI();setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);if(blocklyWorkspace&&blocklyWorkspace.setScale)blocklyWorkspace.setScale(keyStage==='ks1'?1.25:0.85);},50);}}
   else cp.classList.remove('show');
   ['t-paint','t-fill','t-erase','t-undo','t-redo','t-clear','t-testpage'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
   if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!musicMuted)startMusic();}
@@ -3259,10 +4282,12 @@ function openSaveChooser(){document.getElementById('cloud-modal').classList.remo
 // ═══════════════════════════════════════════════════════════════════════
 function buildPayload(){
   commitLevel();
+  if(projectType==='stage'&&typeof stageSaveCurrent==='function'){stageSaveCurrent();stageSyncVars();} // flush the on-screen sprite's edits + variable names into stageState
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
-  return{version:2,keyStage,cols:COLS,rows:ROWS,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,ks3Code,customSprites};
+  const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
+  return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -3301,6 +4326,12 @@ function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;} // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
+  projectType=(d.projectType==='stage')?'stage':'platformer'; // legacy payloads (no field) are always platformer
+  if(projectType==='stage'){stagePlaying=false;stageState=sanitizeStage(d.stage);
+    stageSel=collabActive?Math.max(0,Math.min(stageSel,stageState.sprites.length-1)):0; // keep your selected sprite during live collab
+    if(!collabActive){stVars={};stVarShown={};stLists={};stListShown={};}
+    if(!collabActive&&typeof enterStageUI==='function')enterStageUI(); // loaded a stage project → show the unified view
+  }else if(typeof exitStageUI==='function')exitStageUI();
   COLS=(d.cols>=20&&d.cols<=80)?(d.cols|0):20;ROWS=(d.rows>=12&&d.rows<=40)?(d.rows|0):12; // set size BEFORE cleaning levels
   ks3Code=(typeof d.ks3Code==='string')?d.ks3Code:(d.keyStage==='ks3'?KS3_DEFAULT:'');
   if(d.customSprites&&typeof d.customSprites==='object')Object.assign(customSprites,d.customSprites);
@@ -3363,12 +4394,21 @@ async function exportPlayableHTML(){
 }
 function shareSelfURL(){return location.href.split('#')[0];}
 // — Copy Link —
-function copyShareLink(){
+function copyText(url,msg){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>toast(msg,'#10b981')).catch(()=>prompt('Copy this link:',url));}else prompt('Copy this link:',url);}
+async function copyShareLink(){
+  // Cloud short link — a tiny URL that works for ANY project (even big ones with drawings).
+  if(typeof cloudOn==='function'&&cloudOn()){
+    try{
+      toast('Making your share link… 🔗','#3b82f6');
+      const d=await cloudApi('/share',{payload:buildPayload()});
+      copyText(shareBaseURL()+'?s='+d.code,'Share link copied! 🔗');
+      return;
+    }catch(e){ /* fall back to an embedded link below */ }
+  }
+  // Fallback (cloud off / failed): pack the project into the URL — only OK for small projects.
   const url=shareBaseURL()+'?lvl='+encodeURIComponent(payloadCode());
-  if(url.length>7000)toast('Tip: this level is big — a file share is more reliable.','#f59e0b');
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(url).then(()=>toast('Share link copied! 🔗','#10b981')).catch(()=>prompt('Copy this link:',url));
-  }else prompt('Copy this link:',url);
+  if(url.length>7000){toast('This project is too big for a link here — use 💾 Save or share the file.','#f59e0b');return;}
+  copyText(url,'Share link copied! 🔗');
 }
 // — Import (.codejump or baked .html) —
 function importFromFile(file){
@@ -3394,7 +4434,7 @@ function importFromFile(file){
 }
 // — Wire up the share modal —
 function openShareModal(){
-  if(!validate())return; // needs start + goal to be worth sharing
+  if(projectType!=='stage'&&!validate())return; // platformer needs start + goal; Stage can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
   const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none';
   const fs=document.getElementById('sh-fullscreen');
@@ -3555,9 +4595,48 @@ function cloudTeacherMakeClass(){_cb().innerHTML=`<button class="cloud-back" id=
   document.getElementById('c-bk').onclick=cloudTeacherClasses;
   document.getElementById('mc-go').onclick=async()=>{const name=document.getElementById('mc').value.trim()||'My Class';try{const res=await cloudApi('/class/create',{token:cloudToken,name});await cloudRefresh();cloudClassMade(res);}catch(e){cloudError(e);}};}
 function cloudClassMade(res){_cb().innerHTML=`<h2>✅ Class made!</h2><p style="text-align:center">Class code:</p><div class="cloud-code-big">${cesc(res.code)}</div><p>Pupils sign in → ⚙️ Settings → Join a class → type <b>${cesc(res.code)}</b>. Then they can hand work in to your class.</p><button class="cloud-btn gold" id="c-done">See my classes</button>`;document.getElementById('c-done').onclick=cloudTeacherClasses;}
+// ── Bulk add pupils from a CSV (Name, Display name, Password) ──
+function _splitCSVLine(line){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}out.push(cur);return out;}
+function parseStudentCSV(text){const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);const out=[];let start=0;
+  if(lines[0]&&/name/i.test(lines[0])&&/pass/i.test(lines[0]))start=1; // skip a header row
+  for(let i=start;i<lines.length;i++){const c=_splitCSVLine(lines[i]);if(c.length<3)continue;const realName=(c[0]||'').trim(),displayName=(c[1]||'').trim(),password=(c[2]||'').trim();if(realName&&displayName&&password)out.push({realName,displayName,password});}
+  return out;}
+function teacherBulkCSV(code){const inp=document.createElement('input');inp.type='file';inp.accept='.csv,text/csv,text/plain';
+  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const students=parseStudentCSV(String(rd.result||''));if(!students.length){toast('No pupils found. Use 3 columns: Name, Display name, Password','#ef4444');return;}teacherBulkConfirm(code,students);};rd.readAsText(f);};
+  inp.click();}
+function teacherBulkConfirm(code,students){
+  let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>👥 Add ${students.length} pupil${students.length===1?'':'s'}</h2><p style="text-align:center">From your file. Each gets an account and joins this class.</p>
+   <div style="max-height:230px;overflow:auto;text-align:left;font-size:13px;background:var(--black);border-radius:8px;padding:8px">${students.slice(0,150).map(s=>`<div class="cloud-pinrow"><span>${cesc(s.realName)} · @${cesc(s.displayName)} · ${cesc(s.password)}</span></div>`).join('')}${students.length>150?'<div class="cloud-pinrow"><span>…and more</span></div>':''}</div>
+   <button class="cloud-btn gold" id="bk-go">✅ Create ${students.length} account${students.length===1?'':'s'}</button>`;
+  _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherRoster(code);
+  document.getElementById('bk-go').onclick=async()=>{try{_cb().innerHTML='<h2>⏳ Creating accounts…</h2>';const res=await cloudApi('/class/bulk',{token:cloudToken,code,students});
+    _cb().innerHTML=`<h2>✅ Done!</h2><p style="text-align:center"><b>${res.created}</b> created${res.added?` · <b>${res.added}</b> already existed (added)`:''}${res.skipped?` · <b>${res.skipped}</b> skipped (name 3+ chars, password 4+ chars)`:''}.</p>
+      <button class="cloud-btn gold" id="bk-cards">🪪 Print login cards now</button><button class="cloud-btn" id="bk-back">Back to class</button>`;
+    document.getElementById('bk-cards').onclick=()=>teacherPrintCards(code);document.getElementById('bk-back').onclick=()=>cloudTeacherRoster(code);
+  }catch(err){cloudError(err);}};}
+// ── Printable login cards (always reflect each pupil's current name / display name / password) ──
+async function teacherPrintCards(code){try{const data=await cloudApi('/class/cards',{token:cloudToken,code});
+  if(!(data.students||[]).length){toast('No pupils in this class yet.','#ae853e');return;}
+  const cards=data.students.map(s=>`<div class="lc"><div class="lc-h">🎮 CodeJump login</div><div class="lc-n">${cesc(s.realName||'')}</div>
+    <div class="lc-r"><span>Display name</span><b>${cesc(s.displayName)}</b></div>
+    <div class="lc-r"><span>Password</span><b>${s.password?cesc(s.password):'(set their own)'}</b></div>
+    <div class="lc-r"><span>Class code</span><b>${cesc(data.code)}</b></div>
+    <div class="lc-f">Open CodeJump → 🔑 Sign in</div></div>`).join('');
+  doPrint(`<style>
+    .lc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .lc{border:2px dashed #888;border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;page-break-inside:avoid;}
+    .lc-h{font-size:12px;color:#ae853e;font-weight:bold;letter-spacing:.5px;}
+    .lc-n{font-size:20px;font-weight:bold;margin:4px 0 8px;}
+    .lc-r{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;border-bottom:1px solid #eee;}
+    .lc-r span{color:#666;} .lc-r b{font-family:'Courier New',monospace;}
+    .lc-f{margin-top:8px;font-size:11px;color:#888;}
+    h3.lc-title{font-family:Arial;margin:0 0 10px;}
+  </style><h3 class="lc-title">${cesc(data.className||'Class')} — login cards (${cesc(data.code)})</h3><div class="lc-grid">${cards}</div>`);
+}catch(err){cloudError(err);}}
 async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/roster',{token:cloudToken,code});
   let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>👨‍👧 ${cesc(data.name||'Class')}</h2><p style="text-align:center">Code: <b style="color:var(--gold)">${cesc(code)}</b> · ${(data.pupils||[]).length} pupil${(data.pupils||[]).length===1?'':'s'}</p>
    <button class="cloud-btn gold" id="cr-send">📤 Send the game I'm building to this class</button>
+   <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-bulk" style="margin:0;flex:1">👥 Add pupils (CSV)</button><button class="cloud-btn" id="cr-cards" style="margin:0;flex:1">🪪 Login cards</button></div>
    <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-rename" style="margin:0;flex:1">✏️ Rename</button><button class="cloud-btn" id="cr-del" style="margin:0;flex:1">🗑️ Delete class</button></div>`;
   if(!(data.pupils||[]).length)h+='<p style="text-align:center;margin-top:10px">No pupils have joined yet — share the class code!</p>';
   (data.pupils||[]).forEach(pu=>{const n=(pu.projects||[]).length;h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${n} game${n===1?'':'s'} handed in</small></div><button data-remove="${cesc(pu.uid)}" title="Remove from class">✖</button></div>`;});
@@ -3565,6 +4644,8 @@ async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/ro
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherPupil(code,(data.pupils||[]).find(x=>x.uid===el.dataset.uid)));
   _cb().querySelectorAll('[data-remove]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();if(!confirm('Remove this pupil from the class? Their work stays in their own account.'))return;try{await cloudApi('/class/remove',{token:cloudToken,code,uid:b.dataset.remove});cloudTeacherRoster(code);}catch(err){cloudError(err);}});
   document.getElementById('cr-send').onclick=async()=>{const title=prompt('Name the game you’re sending:','Class activity');if(title===null)return;try{commitLevel();_cb().innerHTML='<h2>📤 Sending…</h2>';const res=await cloudApi('/class/assign',{token:cloudToken,code,title,payload:buildPayload()});_cb().innerHTML=`<h2>✅ Sent!</h2><p style="text-align:center">“${cesc(title)}” is now in ${res.count} pupil${res.count===1?'':'s'}’ class work.</p><button class="cloud-btn gold" id="c-done">Back to class</button>`;document.getElementById('c-done').onclick=()=>cloudTeacherRoster(code);}catch(err){cloudError(err);}};
+  document.getElementById('cr-bulk').onclick=()=>teacherBulkCSV(code);
+  document.getElementById('cr-cards').onclick=()=>teacherPrintCards(code);
   document.getElementById('cr-rename').onclick=async()=>{const name=prompt('New class name:',data.name||'');if(!name)return;try{await cloudApi('/class/update',{token:cloudToken,code,name});await cloudRefresh();cloudTeacherRoster(code);}catch(err){cloudError(err);}};
   document.getElementById('cr-del').onclick=async()=>{if(!confirm('Delete this class for everyone? Pupils’ own games are kept, but the class is removed.'))return;try{await cloudApi('/class/delete',{token:cloudToken,code});await cloudRefresh();cloudTeacherClasses();toast('Class deleted','#585555');}catch(err){cloudError(err);}};
 }catch(e){cloudError(e);}}
@@ -3604,10 +4685,50 @@ function collabOnMessage(m){
   else if(m.type==='snapshot'){collabApplyRemote(()=>collabApplyDoc(m.doc));}
   else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];}
   else if(m.type==='full'){toast('That live room is full (max 6 people)','#ef4444');collabDisconnect(true);}}
-function collabApplyOp(op){if(!op||op.k!=='cell')return;const lvl=op.lvl||0;
+function collabApplyOp(op){if(!op)return;
+  if(op.k!=='cell'){applyStageOp(op);return;} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
+  const lvl=op.lvl||0;
   if(lvl===curLevel){const g=op.layer==='water'?waterGrid:grid;if(g[op.r])g[op.r][op.c]=op.t;}
   else if(LEVELS[lvl]){const g=op.layer==='water'?LEVELS[lvl].waterGrid:LEVELS[lvl].grid;if(g&&g[op.r])g[op.r][op.c]=op.t;}}
-function collabApplyDoc(doc){commitLevel();applyPayload(doc);collabRefreshCode();}
+// ── Stage collaboration: granular ops (Google-Docs-style, like the platformer's tile ops) ──
+function collabStageOp(op){if(!collabActive||collabApplyingRemote)return;collabSend({type:'op',op});}
+function collabSprite(s){if(s)collabStageOp({k:'st_sprite',id:s.id,name:s.name,x:Math.round(s.x),y:Math.round(s.y),dir:s.dir,size:s.size,visible:s.visible!==false});}
+let _stMoveT=null;
+function collabSpriteThrottled(s){if(!collabActive||collabApplyingRemote||_stMoveT)return;_stMoveT=setTimeout(()=>{_stMoveT=null;collabSprite(s);},80);}
+function collabSpriteCostumes(s){if(s)collabStageOp({k:'st_cos',id:s.id,costumes:s.costumes,costumeIdx:s.costumeIdx|0});}
+function collabSpriteAdd(s){if(s)collabStageOp({k:'st_add',sprite:{id:s.id,name:s.name,x:s.x,y:s.y,dir:s.dir,size:s.size,visible:s.visible,costumes:s.costumes,costumeIdx:s.costumeIdx,xml:s.xml||''}});}
+function collabSpriteDel(id){collabStageOp({k:'st_del',id});}
+function collabBackdrops(){if(stageState)collabStageOp({k:'st_bd',backdrops:stageState.backdrops,backdropIdx:stageState.backdropIdx|0});}
+function collabVars(){if(stageState)collabStageOp({k:'st_var',vars:stageState.vars||[],lists:stageState.lists||[]});}
+function collabStageCursor(x,y){if(!collabActive)return;const now=Date.now();if(now-_collabCurT<60)return;_collabCurT=now;collabSend({type:'cursor',cell:{sx:Math.round(x),sy:Math.round(y)}});}
+function collabStageCursorGone(){if(collabActive)collabSend({type:'cursor'});} // no cell → remote clears your pointer
+let _stXmlT=null;
+function collabStageXmlSoon(){if(!collabActive||collabApplyingRemote||projectType!=='stage')return;clearTimeout(_stXmlT);_stXmlT=setTimeout(()=>{if(!stageState)return;stageSaveCurrent();const s=stageState.sprites[stageSel];if(s)collabStageOp({k:'st_xml',id:s.id,xml:s.xml||''});},350);}
+function _stById(id){return stageState&&stageState.sprites.find(s=>s.id===id);}
+function _sanCostumes(arr){const out=Array.isArray(arr)?arr.map(sanitizeCostume).filter(Boolean):[];return out.length?out:[{name:'costume1',builtin:'cat',color:'#ff922b'}];}
+function _sanSprite(s){if(!s||typeof s!=='object')return null;const n=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;const c=_sanCostumes(s.costumes);
+  return{id:(typeof s.id==='string'&&s.id)?s.id:sid(),name:(typeof s.name==='string'?s.name:'Sprite').slice(0,30),x:n(s.x,CW/2),y:n(s.y,CH/2),dir:n(s.dir,90),size:n(s.size,100),visible:s.visible!==false,costumes:c,costumeIdx:Math.max(0,Math.min(n(s.costumeIdx,0)|0,c.length-1)),xml:(typeof s.xml==='string')?s.xml.slice(0,200000):'',say:'',sayT:0};}
+function applyStageOp(op){if(!stageState||!op)return;
+  if(op.k==='st_sprite'){const s=_stById(op.id);if(s){if(op.name!=null)s.name=String(op.name).slice(0,30);if(op.x!=null)s.x=op.x;if(op.y!=null)s.y=op.y;if(op.dir!=null)s.dir=op.dir;if(op.size!=null)s.size=op.size;if(op.visible!=null)s.visible=op.visible!==false;renderSpritePanel();}}
+  else if(op.k==='st_cos'){const s=_stById(op.id);if(s){s.costumes=_sanCostumes(op.costumes);s.costumeIdx=Math.max(0,Math.min(op.costumeIdx|0,s.costumes.length-1));renderSpritePanel();}}
+  else if(op.k==='st_xml'){const s=_stById(op.id);if(s){s.xml=(typeof op.xml==='string')?op.xml.slice(0,200000):'';const sel=stageState.sprites[stageSel];if(sel&&sel.id===op.id){const dragging=blocklyWorkspace&&blocklyWorkspace.isDragging&&blocklyWorkspace.isDragging();if(!dragging)stageLoadSpriteScripts(stageSel);}}}
+  else if(op.k==='st_add'){const sp=_sanSprite(op.sprite);if(sp&&!_stById(sp.id)){stageState.sprites.push(sp);renderSpritePanel();}}
+  else if(op.k==='st_del'){const i=stageState.sprites.findIndex(s=>s.id===op.id);if(i>=0&&stageState.sprites.length>1){stageState.sprites.splice(i,1);if(stageSel>=stageState.sprites.length)stageSel=stageState.sprites.length-1;stageLoadSpriteScripts(stageSel);renderSpritePanel();}}
+  else if(op.k==='st_bd'){let bds=Array.isArray(op.backdrops)?op.backdrops.map(sanitizeBackdrop).filter(Boolean):[];if(!bds.length)bds=[{name:'backdrop1',color:'#bfe3ff'}];stageState.backdrops=bds;stageState.backdropIdx=Math.max(0,Math.min(op.backdropIdx|0,bds.length-1));if(typeof renderStagePane==='function')renderStagePane();const bm=document.getElementById('backdrop-modal');if(bm&&!bm.classList.contains('hide'))renderBackdropManager();}
+  else if(op.k==='st_var'){stageState.vars=Array.isArray(op.vars)?op.vars.filter(x=>typeof x==='string'):[];stageState.lists=Array.isArray(op.lists)?op.lists.filter(x=>typeof x==='string'):[];if(typeof stageSyncVars==='function')stageSyncVars();}
+}
+function collabApplyDoc(doc){commitLevel();applyPayload(doc);collabRefreshCode();
+  if(projectType==='stage'){ // keep the live Stage view in sync (canvas auto-redraws via the loop)
+    if(typeof renderSpritePanel==='function')renderSpritePanel();
+    if(typeof renderStagePane==='function')renderStagePane();
+    // reload the open sprite's blocks only if they changed remotely AND you're not dragging one (so co-editing different sprites doesn't disrupt you)
+    if(blocklyWorkspace&&stageState&&stageState.sprites[stageSel]){
+      const want=stageState.sprites[stageSel].xml||'';let cur='';try{cur=Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));}catch(e){}
+      const dragging=blocklyWorkspace.isDragging&&blocklyWorkspace.isDragging();
+      if(want&&cur!==want&&!dragging){_suppressBlocklyDirty=true;blocklyWorkspace.clear();try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(want),blocklyWorkspace);}catch(e){}_suppressBlocklyDirty=false;}
+    }
+  }
+}
 function collabRefreshCode(){ // live-update the open code editor (KS3 text; KS2 Blockly handled in applyPayload)
   const ed=document.getElementById('ks3-editor'),ta=document.getElementById('ks3-code');
   if(ed&&!ed.classList.contains('hide')&&ta&&typeof ks3Code==='string'&&ta.value!==ks3Code){
@@ -4241,6 +5362,7 @@ function loop(){
   if(!document.getElementById('design-modal').classList.contains('hide'))return;
   if(!document.getElementById('share-modal').classList.contains('hide'))return;
   gemA+=0.07;goalA+=0.055;tick++;
+  if(projectType==='stage'){if(stagePlaying)stageFrame();drawStage();return;} // unified Stage view: always render, run only when 🟢 Go is on
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
   if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{ks3Frame();updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow('🎉 You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow('🎯 Target Reached!');}}
@@ -4267,18 +5389,41 @@ if(savedSprites)try{Object.assign(customSprites,JSON.parse(savedSprites));}catch
 const savedBg=localStorage.getItem('bap_bg');
 if(savedBg)try{Object.assign(customBg,JSON.parse(savedBg));}catch(e){}
 
-const fromUrl=checkURL();
-if(fromUrl){
-  // Go straight to the app with the shared/baked level already applied
+// Apply a project payload that's already in hand, then show the app in the right mode.
+function openSharedPayload(d){
   hideHome();
-  switchMode('build');
-  if(window._pendingXml){
-    initBlockly();
-    try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(window._pendingXml),blocklyWorkspace);window._pendingXml=null;}catch(e){}
+  applyPayload(d); // stage projects enter their own UI inside applyPayload
+  if(projectType!=='stage'){
+    switchMode('build');
+    if(window._pendingXml){initBlockly();try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(window._pendingXml),blocklyWorkspace);window._pendingXml=null;}catch(e){}}
   }
-} else {
-  // Show home screen
-  showHome();
+}
+// Fetch a cloud short-link share (?s=<code>) and open it.
+async function loadSharedCode(code){
+  showHome();toast('Opening shared project… ⏳','#3b82f6');
+  try{
+    const r=await fetch(CLOUD_URL.replace(/\/$/,'')+'/share/'+encodeURIComponent(code));
+    const d=await r.json();
+    if(!r.ok||!d.payload)throw new Error(d.error||'not found');
+    openSharedPayload(d.payload);
+    toast('Shared project loaded! 🎉','#10b981');
+  }catch(e){showHome();toast('Sorry — that share link could not be opened.','#ef4444');}
+}
+const _shareCode=new URLSearchParams(location.search).get('s');
+if(_shareCode&&typeof CLOUD_URL!=='undefined'&&CLOUD_URL){
+  loadSharedCode(_shareCode); // async — manages its own UI
+}else{
+  const fromUrl=checkURL();
+  if(fromUrl){
+    // Baked file or legacy ?lvl= embedded link — already applied in checkURL
+    hideHome();
+    if(projectType!=='stage'){
+      switchMode('build');
+      if(window._pendingXml){initBlockly();try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(window._pendingXml),blocklyWorkspace);window._pendingXml=null;}catch(e){}}
+    }
+  } else {
+    showHome();
+  }
 }
 resize();
 loop();
@@ -4286,9 +5431,31 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.06.24';
+const CJ_VERSION='2026.07.16';
 const CJ_WHATSNEW=[
-  '🤝 NEW: build together, LIVE! Open a game → Share → 🤝 Collaborate → invite classmates by display name. Up to 6 of you work on the same game at once — on BOTH the Build and Code screens — and see each other’s blocks, code and coloured cursors appear instantly.',
+  '🧑‍🏫 Teachers: add a whole class at once! In a class, tap 👥 Add pupils (CSV) and upload a file with three columns — Name, Display name, Password — to create all their accounts in one go. Then tap 🪪 Login cards to print a card for each pupil. The cards always show the current details, even if a pupil later changes their name or password.',
+  '👆 You can now see your classmates’ pointers move around the 🎭 Stage while you collaborate — each shown with their name and colour, just like Google Docs!',
+  '🤝 Live collaboration now works fully on the 🎭 Stage — just like Google Docs! Up to 6 of you edit the same Stage game at once: move sprites, change costumes & backdrops, and drag blocks, and everyone sees it happen live. Each person can work on a different sprite without overwriting anyone else. Open a Stage game → 🔗 Share → 🤝 Collaborate.',
+  '🔗 Share links are fixed and work for EVERYTHING now! Tap 🔗 Share → Copy Link to get a short link to your game — it works no matter how big your project is (even Stage games with painted costumes and backdrops). Send it to a friend or teacher and they open your exact project in one click.',
+  '✨ Stage polish: the block categories are now in the familiar Scratch order (Motion, Looks, Sound, Events…), the stage is less cluttered (the 🏆 score only shows when you use score blocks), and the 🎨 paint editor is friendlier — quick-pick colour swatches, a centre guide so your drawing sits in the middle of the sprite, and a see-through (checkerboard) canvas so you can tell what’s transparent.',
+  '🎭 Tidier Stage workspace: each sprite now has an info bar showing its name, 👁️ show/hide, and its x, y, size and direction (type to set them exactly), and there’s a 🖼️ Stage panel showing your backdrop — click it to change backdrops.',
+  '📱 The 🎭 Stage now works much better on tablets! On smaller screens (like iPads in portrait) the blocks sit across the top with the stage and sprites below, so there’s plenty of room to code. On big screens it stays side-by-side as before.',
+  '🧩 The Stage now has (almost!) every Scratch block! New this update: 🗂️ layers (go to front/back, go forward/backward), 🛝 glide to / go to another sprite, and lots of Sensing & Operators — 🔎 [x/y/size/…] of another sprite, 🙋 username, 📅 current date & days since 2000, 🖐️ set drag mode, 🔤 letter of / contains, and 📐 sin/cos/tan. Build almost anything you can in Scratch!',
+  '❓ NEW: Ask & Answer + graphic effects! ❓ ask […] and wait pops up a box for the player to type into, and 💬 answer remembers what they said — perfect for quizzes and names. 🎚️ Graphic effects let you fade sprites with the 👻 ghost effect or change ☀️ brightness (change/set effect, clear graphic effects).',
+  '🔊 NEW: Sound! Sprites can play built-in sounds — 🔊 pop, beep, meow, boing, drum, coin, laser and magic — with 🔊 play sound (and play sound until done). Control the 🔊 volume (set / change / volume reporter) and 🔇 stop all sounds.',
+  '🖊️ Pen — sprites draw as they move: 🖊️ pen down / pen up, pen colour & size, 🖊️ stamp the sprite onto the stage, and 🖊️ erase all. Great for spirographs, drawing games and trails!',
+  '🖼️ NEW: Backdrops for the Stage! Tap 🖼️ Backdrops (top bar) to add backdrops — 🎨 Paint your own or pick a 🎨 Solid colour — switch between them, rename and delete. New blocks: 🖼️ switch backdrop / next backdrop / backdrop number, plus a 🖼️ when backdrop switches to… hat. Perfect for scene changes, levels and title screens!',
+  '🎨 NEW: Paint your own costumes! Click a sprite → 🎨 Costume → 🎨 Paint new to draw your own character with a full paint editor — brush, eraser, fill bucket, line, rectangle, circle, text, colours, sizes, undo/redo and flip. Sprites can have MANY costumes; switch between them with the new 🎭 switch costume / next costume / costume number blocks (great for animation!).',
+  '📣 Broadcasts & Clones — 📣 broadcast / 📩 when I receive let sprites trigger each other, and 🧬 create clone / when I start as a clone / delete this clone make copies (bullets, stars, raindrops…).',
+  '📃 Lists on the Stage! 📃 Lists → ➕ Make a List, then add / delete / insert / replace items, and check item / item-number / length / contains. 👁️ Show list puts it on the stage. Great for high-score tables, inventories, quiz questions and more.',
+  '📦 Variables on the Stage! Tap 📦 Variables → ➕ Make a Variable to create your own (like score, lives or coins), then set it, change it by a number, and use it anywhere — in say blocks, if-checks and sums. 👁️ Show variable puts a live counter on the stage. Variables are shared across all your sprites. (Also fixed: Stage projects now save reliably.)',
+  '🧩 LOADS more Stage blocks — closer to real Scratch! 🔵 Motion: go to x/y, go to (random/mouse), glide, point towards, set x/set y, if-on-edge-bounce, x/y/direction. 🟣 Looks: say/think for secs, size. 🟠 Control: wait until, repeat until, stop. 🟦 Sensing: mouse x/y, mouse down?, distance to, timer + reset. 🟩 Operators: + − × ÷, pick random, compare, and/or/not, mod, round/√, join words. 🟡 Events: when this sprite clicked. (More coming: variables, broadcast, clones, costumes & sounds!)',
+  '🎮 Make Stage sprites INTERACT and keep score — 🤚 touching, if/else, compare, and a 🏆 score shown on the stage. Build games like: forever → if touching ⭐ → change score by 1.',
+  '🎨 Choose a costume for your Stage sprites! Click a sprite then 🎨 Costume (or double-click it) to pick a character — 🐱 cat, 🐶 dog, 🐻 bear, 🐰 bunny, 🐦 bird, ⚽ ball, 👻 ghost, ⭐ star or 🤖 robot — choose its colour, and rename it. New sprites now start as different characters too!',
+  '🎭 The 🎭 Stage works just like Scratch — all on ONE screen! Code blocks down the side, your stage on the right, and a 🎭 Sprites panel below it. Add as many sprites as you like with ＋ Add, click a sprite to give it its own code, drag sprites around the stage, then press 🟢 Go to run everything (⏹️ Stop to stop). No more separate Build / Play / Code screens for Stage projects.',
+  '🟡 Stage blocks: Events (🟢 when green flag clicked, when a key is pressed), 🔵 Motion (move, turn, point, change x/y, go to the middle), 🟣 Looks (say, show/hide, size) and 🟠 Control (wait, repeat, forever).',
+  '🎭 Project types: when you start a new project, after picking your age group you choose 🏃 Platformer (the grid game) or 🎭 Stage (sprites on a stage, like Scratch).',
+  '🤝 build together, LIVE! Open a game → Share → 🤝 Collaborate → invite classmates by display name. Up to 6 of you work on the same game at once — on BOTH the Build and Code screens — and see each other’s blocks, code and coloured cursors appear instantly.',
   '📂 Find shared projects under ☁️ Cloud → 🤝 Collaborations.',
   '⚙️ Your account is now front-and-centre: a “Sign in / Settings” chip on the home screen, change your password, edit your name, and join classes in Settings.',
   '🧑‍🏫 Teachers can now rename & delete classes, remove pupils, and 📤 send a game straight to a class (it lands in every pupil’s class work).',

@@ -251,6 +251,8 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .save-date{color:var(--gray);font-size:10px;font-weight:400;margin-top:3px;letter-spacing:.5px;text-transform:uppercase;}
 .save-load-btn{background:var(--gold);color:var(--black);border:none;border-radius:2px;padding:6px 10px;font-family:var(--font);font-weight:800;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;flex-shrink:0;transition:background .15s;}
 .save-load-btn:hover{background:#c99a4a;}
+.save-del-btn{background:transparent;border:1px solid var(--gray);color:#bbb;border-radius:6px;padding:5px 8px;font-size:13px;cursor:pointer;flex-shrink:0;margin-left:6px;transition:border-color .15s,color .15s;}
+.save-del-btn:hover{border-color:#c0392b;color:#e74c3c;}
 
 /* ── APP SHELL ─────────────────────────────────────────────────────── */
 #app{display:flex;flex-direction:column;flex:1;overflow:hidden;}
@@ -1813,7 +1815,9 @@ function renderHomeSaves(){
     info.appendChild(nm);info.appendChild(dt);
     const btn=document.createElement('button');btn.className='save-load-btn';btn.textContent='Load ▶';
     btn.onclick=e=>{e.stopPropagation();loadSaveData(save);hideHome();switchMode('build');};
-    item.appendChild(thumbCanvas);item.appendChild(info);item.appendChild(btn);
+    const del=document.createElement('button');del.className='save-del-btn';del.textContent='🗑️';del.title='Delete this saved game';
+    del.onclick=e=>{e.stopPropagation();if(!confirm('Delete “'+(save.name||'this game')+'” from this device? This can’t be undone.'))return;const saves=getSaves().filter((s,k)=>!((s.id&&save.id)?String(s.id)===String(save.id):s===save));setSaves(saves);renderHomeSaves();toast('Deleted','#585555');};
+    item.appendChild(thumbCanvas);item.appendChild(info);item.appendChild(btn);item.appendChild(del);
     item.onclick=()=>{loadSaveData(save);hideHome();switchMode('build');};
     cont.appendChild(item);
   });
@@ -2010,6 +2014,7 @@ function cmEmitCostumes(){if(stageState&&stageState.sprites[stageSel]&&typeof co
 function costumeImgEl(co){if(!co||!co.img)return null;if(co._el&&co._elSrc===co.img)return co._el;const im=new Image();im.src=co.img;co._el=im;co._elSrc=co.img;return im;}
 // Paint a sprite's CURRENT costume centred at the origin (built-in vector or a painted bitmap).
 function paintSpriteCostume(c,s,box){const co=curCostume(s);if(co.img){const im=costumeImgEl(co);if(im&&im.complete&&im.naturalWidth){const b=box||110,k=b/Math.max(im.naturalWidth,im.naturalHeight);c.drawImage(im,-im.naturalWidth*k/2,-im.naturalHeight*k/2,im.naturalWidth*k,im.naturalHeight*k);return;}}
+  if(co.builtin==='ohbot'){paintOhbot(c,(s&&s._ob)||OHBOT_DEFAULT,co.color);return;} // Ohbot draws from its live part state
   paintCostume(c,co.builtin||'cat',co.color||'#ff922b');}
 // ── Costume manager (the 🎨 Costume modal) ──
 function openCostumePicker(){if(!stageState||!stageState.sprites[stageSel])return;
@@ -2214,6 +2219,15 @@ function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{co
     case'st_repeat_until':{const body=b.getInputTargetBlock('DO');while(stagePlaying&&!stTruthy(stEval(b.getInputTargetBlock('COND'),s))){yield* stRunSeq(body,s,depth+1);yield 0;}break;}
     case'st_stop':{if(b.getFieldValue('WHAT')==='all'){stageStopRun();}else{throw{__stopThis:true};}break;}
     case'st_reset_timer':stTimerBase=performance.now();break;
+    case'ob_move':{const o=ohbotState(s),mk=b.getFieldValue('M'),t=Math.max(0,Math.min(10,num('N'))),f0=_obv(o,mk);for(let i=1;i<=8&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/8;yield 0;}o[mk]=t;break;}
+    case'ob_move_time':{const o=ohbotState(s),mk=b.getFieldValue('M'),t=Math.max(0,Math.min(10,num('N'))),fr=Math.max(1,Math.round(num('SECS')*60)),f0=_obv(o,mk);for(let i=1;i<=fr&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/fr;yield 0;}o[mk]=t;break;}
+    case'ob_eyecolor':ohbotState(s).color=b.getFieldValue('COLOR')||'#39c0ed';break;
+    case'ob_reset':{const o=ohbotState(s),st0={};OHBOT_MOTORS.forEach(k=>st0[k]=_obv(o,k));o.color=null;for(let i=1;i<=10&&stagePlaying;i++){OHBOT_MOTORS.forEach(k=>{const d=(k==='Lid'?0:5);o[k]=st0[k]+(d-st0[k])*i/10;});yield 0;}OHBOT_MOTORS.forEach(k=>o[k]=(k==='Lid'?0:5));break;}
+    case'ob_say':{const o=ohbotState(s),txt=String(b.getFieldValue('TXT')||'');o._speaking=true;let ended=false;
+      try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(txt);u.rate=1;u.onend=()=>{ended=true;};u.onerror=()=>{ended=true;};speechSynthesis.cancel();speechSynthesis.speak(u);}}catch(e){}
+      const vs=txt.replace(/\s+/g,' ').split('').map(visemeFor),per=3,total=Math.max(vs.length*per,20); // step through mouth shapes (visemes), one per sound
+      for(let f=0;f<total&&stagePlaying;f++){const v=vs[Math.min(vs.length-1,Math.floor(f/per))]||{t:5,b:5};o.TopLip=v.t;o.BottomLip=v.b;yield 0;if(ended&&f>4)break;}
+      o.TopLip=5;o.BottomLip=5;o._speaking=false;break;}
     case'st_ask':{stStartAsk(b.getFieldValue('Q'));while(stagePlaying&&stAsking)yield 0;break;}
     case'st_change_effect':{const fx=b.getFieldValue('FX');s.fx=s.fx||{};s.fx[fx]=(s.fx[fx]||0)+num('N');break;}
     case'st_set_effect':{const fx=b.getFieldValue('FX');s.fx=s.fx||{};s.fx[fx]=num('N');break;}
@@ -2271,6 +2285,7 @@ function stEval(b,s){if(!b)return 0;const t=b.type;const inp=n=>stEval(b.getInpu
     case'st_mouse_down':return !!stageMouse.down;
     case'st_timer':return Math.round((performance.now()-stTimerBase)/100)/10;
     case'st_answer':return stAnswer;
+    case'ob_speaking':return !!(s&&s._ob&&s._ob._speaking);
     case'st_username':return (typeof cloudMe!=='undefined'&&cloudMe&&cloudMe.displayName)||'player';
     case'st_days_2000':return Math.floor((Date.now()-Date.UTC(2000,0,1))/86400000);
     case'st_current':{const d=new Date(),u=b.getFieldValue('UNIT');return u==='year'?d.getFullYear():u==='month'?d.getMonth()+1:u==='date'?d.getDate():u==='dow'?d.getDay()+1:u==='hour'?d.getHours():u==='minute'?d.getMinutes():d.getSeconds();}
@@ -2325,7 +2340,7 @@ function stageStart(){if(!stageState)return;
   defineStageBlocks();
   // First pass: build each sprite's headless workspace and collect ALL hats (so broadcasts/clones see every sprite).
   stPenClear();
-  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;
+  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._ob=Object.assign({},OHBOT_DEFAULT);
     if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}
     if(s.xml){try{const ws=new Blockly.Workspace();Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(s.xml),ws);s._ws=ws; // headless copy so every sprite's scripts run, not just the selected one
       ws.getTopBlocks(true).forEach(b=>{
@@ -2405,8 +2420,65 @@ function paintBird(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2
   c.beginPath();c.ellipse(0,2,15,14,0,0,Math.PI*2);c.fill();c.stroke();
   c.fillStyle='#ffb300';c.beginPath();c.moveTo(13,0);c.lineTo(22,3);c.lineTo(13,6);c.closePath();c.fill();c.stroke();
   c.fillStyle='#fff';c.beginPath();c.arc(5,-3,4,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#000';c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
+// ── Ohbot emulator head — 7 motors (0–10, 5 = middle), eye colour + lip-sync ──
+const OHBOT_MOTORS=['HeadTurn','HeadNod','EyeTurn','EyeTilt','TopLip','BottomLip','Lid'];
+const OHBOT_DEFAULT={HeadTurn:5,HeadNod:5,EyeTurn:5,EyeTilt:5,TopLip:5,BottomLip:5,Lid:0,color:null};
+function ohbotState(s){if(!s._ob)s._ob=Object.assign({},OHBOT_DEFAULT);return s._ob;}
+function _obv(ob,k){const v=ob[k];return v==null?(k==='Lid'?0:5):v;}
+// Map a letter to a mouth shape (top/bottom lip 0–10). Browsers don't expose true phonemes,
+// so this is a grapheme→viseme approximation — the standard way to lip-sync to speech.
+function visemeFor(ch){ch=(ch||'').toLowerCase();
+  if(ch==='a')return{t:8,b:9};                 // open wide
+  if(ch==='e')return{t:7,b:7.5};               // mid-open
+  if(ch==='i'||ch==='y')return{t:6.5,b:6};     // ee — narrow
+  if(ch==='o')return{t:7,b:8};                 // rounded open
+  if(ch==='u'||ch==='w')return{t:6,b:7};       // rounded small
+  if(ch==='m'||ch==='b'||ch==='p')return{t:5,b:5}; // lips closed
+  if(ch==='f'||ch==='v')return{t:6,b:4.5};     // lower lip to teeth
+  if('ldtnrszcg'.includes(ch))return{t:6.5,b:6.5}; // tongue/teeth consonants — slight open
+  if(ch===' ')return{t:5,b:5};                 // pause
+  return{t:6,b:6};}                            // default
+function paintOhbot(c,ob,color){ob=ob||OHBOT_DEFAULT;const eye=ob.color||color||'#39c0ed';
+  const turn=_obv(ob,'HeadTurn')-5,nod=_obv(ob,'HeadNod')-5,fx=turn*2.4,fy=nod*1.9;
+  c.save();
+  // base + spine (the stand the head sits on)
+  c.fillStyle='#33373d';c.beginPath();c.ellipse(0,47,23,6,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#5c626a';c.fillRect(-5,29,10,16);c.strokeStyle='#222';c.lineWidth=2;c.strokeRect(-5,29,10,16);
+  c.fillStyle='#7b828b';c.beginPath();c.arc(-9,35,2.6,0,Math.PI*2);c.arc(9,35,2.6,0,Math.PI*2);c.fill();
+  c.rotate(turn*1.3*Math.PI/180);
+  c.strokeStyle='#1c1c1c';c.lineWidth=2.5;
+  // skull/head (cream, with a brow and jaw)
+  c.fillStyle='#f3ead7';c.beginPath();c.moveTo(-26,-13);
+  c.quadraticCurveTo(-30,-35,0,-37);c.quadraticCurveTo(30,-35,26,-13);
+  c.quadraticCurveTo(28,19,12,29);c.quadraticCurveTo(0,35,-12,29);c.quadraticCurveTo(-28,19,-26,-13);
+  c.closePath();c.fill();c.stroke();
+  c.strokeStyle='rgba(0,0,0,.15)';c.lineWidth=1.4;c.beginPath();c.moveTo(-24,-1);c.quadraticCurveTo(0,6,24,-1);c.stroke(); // cheek seam
+  // eyebrows
+  c.strokeStyle='#6b4f2a';c.lineWidth=3;c.lineCap='round';
+  c.beginPath();c.moveTo(-19+fx*0.4,-15+fy*0.5);c.quadraticCurveTo(-12+fx*0.4,-19+fy*0.5,-5+fx*0.4,-15+fy*0.5);c.stroke();
+  c.beginPath();c.moveTo(5+fx*0.4,-15+fy*0.5);c.quadraticCurveTo(12+fx*0.4,-19+fy*0.5,19+fx*0.4,-15+fy*0.5);c.stroke();
+  c.lineCap='butt';
+  // eyes (ping-pong eyeballs: iris + pupil + glint, eyelids)
+  const et=_obv(ob,'EyeTurn')-5,eu=_obv(ob,'EyeTilt')-5,lid=_obv(ob,'Lid')/10;
+  [[-11,-4],[11,-4]].forEach(([bx,by])=>{const ex=bx+fx,ey=by+fy;
+    c.fillStyle='#fbfbfb';c.beginPath();c.arc(ex,ey,9.6,0,Math.PI*2);c.fill();c.lineWidth=2;c.strokeStyle='#1c1c1c';c.stroke();
+    const px=ex+et*0.9,py=ey+eu*0.9;
+    c.fillStyle=eye;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();
+    c.fillStyle='#111';c.beginPath();c.arc(px,py,2.2,0,Math.PI*2);c.fill();
+    c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.arc(px+1.7,py-1.7,1.5,0,Math.PI*2);c.fill();
+    if(lid>0.02){c.save();c.beginPath();c.arc(ex,ey,9.7,0,Math.PI*2);c.clip();c.fillStyle='#e6dcc6';c.fillRect(ex-11,ey-11,22,22*lid);c.restore();c.strokeStyle='#1c1c1c';c.lineWidth=2;c.beginPath();c.arc(ex,ey,9.5,0,Math.PI*2);c.stroke();}
+  });
+  c.strokeStyle='rgba(0,0,0,.22)';c.lineWidth=1.4;c.beginPath();c.moveTo(fx,5+fy);c.lineTo(fx-1.5,9+fy);c.stroke(); // nose hint
+  // lips — upper & lower move independently; opening reveals mouth + teeth
+  const tl=_obv(ob,'TopLip')-5,bl=_obv(ob,'BottomLip')-5,mx=fx,midY=16+fy,topY=midY-1-tl,botY=midY+1+bl,gap=botY-topY;
+  if(gap>3.5){c.fillStyle='#6e2f25';c.beginPath();c.moveTo(mx-9,(topY+botY)/2);c.quadraticCurveTo(mx,topY-1,mx+9,(topY+botY)/2);c.quadraticCurveTo(mx,botY+1,mx-9,(topY+botY)/2);c.closePath();c.fill();
+    c.fillStyle='#f7f2e6';c.fillRect(mx-7,topY+0.5,14,Math.min(2.4,gap*0.3));}
+  c.strokeStyle='#9c5040';c.lineWidth=3;c.lineCap='round';
+  c.beginPath();c.moveTo(mx-9,topY);c.quadraticCurveTo(mx,topY-1.5,mx+9,topY);c.stroke();
+  c.beginPath();c.moveTo(mx-9,botY);c.quadraticCurveTo(mx,botY+2,mx+9,botY);c.stroke();c.lineCap='butt';
+  c.restore();}
 // Built-in costume library — name → {emoji, paint}. The single source of truth.
-const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot}};
+const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot},ohbot:{e:'🤖',f:(c,col)=>paintOhbot(c,OHBOT_DEFAULT,col)}};
 const COSTUME_KEYS=Object.keys(STAGE_COSTUMES);
 function paintCostume(c,name,color){(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f(c,color);}
 function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save();ctx.translate(s.x,s.y);
@@ -3048,6 +3120,14 @@ function defineStageBlocks(){
   // ── Operators: extras ──
   Blockly.Blocks['st_letter_of']={init:function(){this.appendValueInput('INDEX').appendField('🔤 letter');this.appendValueInput('TEXT').appendField('of');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
   Blockly.Blocks['st_str_contains']={init:function(){this.appendValueInput('A');this.appendValueInput('B').appendField('contains');this.appendDummyInput().appendField('?');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
+  // ── Ohbot extension — 7 motors + say (lip-sync) + eye colour + reset ──
+  const OB_MOTORS=[['HeadNod','HeadNod'],['HeadTurn','HeadTurn'],['EyeTurn','EyeTurn'],['EyeTilt','EyeTilt'],['BottomLip','BottomLip'],['TopLip','TopLip'],['Lid','Lid']];
+  Blockly.Blocks['ob_move']={init:function(){this.appendDummyInput().appendField('move').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('to').appendField(new Blockly.FieldNumber(5,0,10),'N');stmt(this);this.setColour(195);}};
+  Blockly.Blocks['ob_move_time']={init:function(){this.appendDummyInput().appendField('move').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('to').appendField(new Blockly.FieldNumber(5,0,10),'N').appendField('in').appendField(new Blockly.FieldNumber(1,0,60,0.1),'SECS').appendField('seconds');stmt(this);this.setColour(195);}};
+  Blockly.Blocks['ob_say']={init:function(){this.appendDummyInput().appendField('say').appendField(new Blockly.FieldTextInput('Hello, I am Ohbot'),'TXT');stmt(this);this.setColour(195);}};
+  Blockly.Blocks['ob_eyecolor']={init:function(){const fld=(Blockly.FieldColour)?new Blockly.FieldColour('#39c0ed'):new Blockly.FieldTextInput('#39c0ed');this.appendDummyInput().appendField('set eye colour to').appendField(fld,'COLOR');stmt(this);this.setColour(195);}};
+  Blockly.Blocks['ob_reset']={init:function(){this.appendDummyInput().appendField('reset Ohbot');stmt(this);this.setColour(195);}};
+  Blockly.Blocks['ob_speaking']={init:function(){this.appendDummyInput().appendField('Ohbot is speaking?');this.setOutput(true,null);this.setColour(195);}};
 }
 function stGotoTargets(){const opts=[['🎲 random position','_random'],['🖱️ mouse-pointer','_mouse']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
 function stAttrTargets(){const opts=[['Stage','_stage']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
@@ -3102,6 +3182,7 @@ function stageToolbox(){const blk=t=>({kind:'block',type:t});
     blk('st_show_list'),blk('st_hide_list')]},
   {kind:'category',name:'🖊️  Pen',colour:'160',contents:[blk('st_pen_clear'),blk('st_pen_stamp'),blk('st_pen_down'),blk('st_pen_up'),blk('st_pen_setcolor'),blk('st_pen_changesize'),blk('st_pen_setsize')]},
   {kind:'category',name:'🏆  Score',colour:'330',contents:[blk('st_change_score'),blk('st_set_score'),blk('st_score')]},
+  {kind:'category',name:'🤖  Ohbot',colour:'195',contents:[blk('ob_move'),blk('ob_move_time'),blk('ob_say'),blk('ob_eyecolor'),blk('ob_reset'),blk('ob_speaking')]},
 ]};}
 function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="st_when_flag" x="20" y="20"><next><block type="st_goto_center"><next><block type="st_say"><field name="TXT">Use the arrow keys!</field></block></next></block></next></block>
@@ -4676,7 +4757,9 @@ function collabConnect(roomId){if(!cloudToken){toast('Sign in to collaborate','#
 function collabApplyRemote(fn){collabApplyingRemote=true;try{fn();}catch(e){}collabApplyingRemote=false;}
 function collabOnMessage(m){
   if(m.type==='init'){collabMe=m.you;collabMembers={};(m.members||[]).forEach(x=>collabMembers[x.uid]=x);collabActive=true;
-    if(m.doc&&m.doc.levels){collabApplyRemote(()=>collabApplyDoc(m.doc));if(typeof hideHome==='function')hideHome();if(typeof hideTeacher==='function')hideTeacher();if(mode!=='build')switchMode('build');}
+    if(m.doc&&m.doc.levels){collabApplyRemote(()=>collabApplyDoc(m.doc));if(typeof hideHome==='function')hideHome();if(typeof hideTeacher==='function')hideTeacher();
+      if(projectType==='stage'){if(typeof enterStageUI==='function')enterStageUI();} // a Stage collab must enter the Stage view on join (switchMode('build') wouldn't fire if already in build)
+      else if(mode!=='build')switchMode('build');}
     else{collabSnapshotNow();}
     updateCollabBar();toast("You're in the live room! 🤝",'#10b981');}
   else if(m.type==='join'){collabMembers[m.member.uid]=m.member;updateCollabBar();toast(cesc(m.member.name)+' joined 🤝',m.member.color);}
@@ -4764,9 +4847,10 @@ function collabInviteView(roomId){document.getElementById('cloud-modal').classLi
 async function cloudCollabList(){try{const data=await cloudApi('/collab/list',{token:cloudToken});const cs=data.collabs||[];
   let h=`<button class="cloud-back" id="c-bk">← Back</button><h2>🤝 Collaborations</h2><p style="text-align:center">Projects you can build on together, live.</p>`;
   if(!cs.length)h+='<p style="text-align:center">None yet. Open a game and tap <b>Share → 🤝 Collaborate</b> to start one, or ask a friend to invite you.</p>';
-  cs.forEach(c=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-room="${cesc(c.roomId)}"><b>${cesc(c.title)}</b><small>${c.role==='owner'?'you started this':'shared by '+cesc(c.owner)}</small></div></div>`;});
+  cs.forEach(c=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-room="${cesc(c.roomId)}"><b>${cesc(c.title)}</b><small>${c.role==='owner'?'you started this':'shared by '+cesc(c.owner)}</small></div><button data-rem="${cesc(c.roomId)}" data-owner="${c.role==='owner'?1:0}" title="${c.role==='owner'?'Delete this collaboration for everyone':'Remove from your list'}">🗑️</button></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>{closeCloud();collabConnect(el.dataset.room);});
+  _cb().querySelectorAll('[data-rem]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const owner=b.dataset.owner==='1';if(!confirm(owner?'Delete this collaboration for everyone? (The shared game stays in anyone’s own saves if they saved it.)':'Remove this collaboration from your list?'))return;try{await cloudApi('/collab/remove',{token:cloudToken,roomId:b.dataset.rem});cloudCollabList();}catch(err){cloudError(err);}});
 }catch(e){cloudError(e);}}
 document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
@@ -5431,8 +5515,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.07.16';
+const CJ_VERSION='2026.07.18';
 const CJ_WHATSNEW=[
+  '🤖 NEW: Ohbot on the Stage! Add an Ohbot (pick a sprite → 🎨 Costume → 🤖 Ohbot) and program its on-screen robot head with the new 🤖 Ohbot blocks — move its head turn / head nod / eyes / eyelids / lips (0–10, instantly or over time), 🤖 set eye colour, 🤖 reset, and 🤖 Ohbot say which talks out loud while the mouth lip-syncs. A full robot emulator, right inside CodeJump!',
+  '🗑️ You can now tidy up your games! Delete saved games from this device (🗑️ on each one on the home screen), and remove 🤝 Collaborations you no longer need (☁️ Cloud → Collaborations). Your own cloud games & class work were already deletable under 📂 My games.',
+  '🐛 Fixed: opening a shared 🎭 Stage collaboration now goes straight to the Stage view (it used to briefly look like a Platformer until you tapped Code).',
   '🧑‍🏫 Teachers: add a whole class at once! In a class, tap 👥 Add pupils (CSV) and upload a file with three columns — Name, Display name, Password — to create all their accounts in one go. Then tap 🪪 Login cards to print a card for each pupil. The cards always show the current details, even if a pupil later changes their name or password.',
   '👆 You can now see your classmates’ pointers move around the 🎭 Stage while you collaborate — each shown with their name and colour, just like Google Docs!',
   '🤝 Live collaboration now works fully on the 🎭 Stage — just like Google Docs! Up to 6 of you edit the same Stage game at once: move sprites, change costumes & backdrops, and drag blocks, and everyone sees it happen live. Each person can work on a different sprite without overwriting anyone else. Open a Stage game → 🔗 Share → 🤝 Collaborate.',

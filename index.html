@@ -1717,6 +1717,7 @@ window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
 let projectType='platformer'; // 'platformer' = the grid game (default, all existing work) · 'stage' = sprite/stage projects (Scratch-style). The seam every future engine plugs into.
+let OHBOT_ON=false; // Ohbot extension HIDDEN in public builds (pending Ohbot's blessing/assets). Flip to true to re-enable the 🤖 Ohbot category + costume. All Ohbot code stays in place.
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
 function isKS3(){return keyStage==='ks3';}
 function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}document.body.classList.toggle('ks1mode',keyStage==='ks1');if(typeof updateCodeModeUI==='function')updateCodeModeUI();if(typeof updateReadBtn==='function')updateReadBtn();}
@@ -1900,7 +1901,7 @@ let stageSel=0;            // index of the sprite whose scripts are in the Block
 const SPRITE_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a'];
 function emptyStageXml(){return'<xml xmlns="https://developers.google.com/blockly/xml"></xml>';}
 function sid(){return 's'+Math.random().toString(36).slice(2,9);}  // stable per-sprite id for collab ops
-function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:COSTUME_KEYS[i%COSTUME_KEYS.length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]}],costumeIdx:0,xml:'',say:'',sayT:0};}
+function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:pickableCostumes()[i%pickableCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]}],costumeIdx:0,xml:'',say:'',sayT:0};}
 function stageNew(){const s0=blankSprite('Sprite1',0);s0.xml=stageDefaultXml();stageState={sprites:[s0],bg:'#bfe3ff',vars:[],lists:[],backdrops:[{name:'backdrop1',color:'#bfe3ff'}],backdropIdx:0};stageSel=0;stVars={};stVarShown={};stLists={};stListShown={};}
 // Coerce one untrusted costume object into a safe builtin-or-bitmap costume.
 function sanitizeCostume(c){if(!c||typeof c!=='object')return null;const name=(typeof c.name==='string'?c.name:'costume').slice(0,24);
@@ -2038,14 +2039,14 @@ function renderCostumeEdit(){const s=stageState.sprites[stageSel];const co=s.cos
   if(co.img){const eb=document.createElement('button');eb.className='cm-editbtn';eb.textContent='✏️ Edit drawing';eb.onclick=()=>paintCostumeEditor(co);ed.appendChild(eb);}
   else{const grid=document.createElement('div');grid.id='cm-grid';ed.appendChild(grid);const colors=document.createElement('div');colors.id='cm-colors';ed.appendChild(colors);renderCostumeGrid();renderCostumeColors();}}
 function renderCostumeGrid(){const grid=document.getElementById('cm-grid');if(!grid)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];grid.innerHTML='';
-  COSTUME_KEYS.forEach(k=>{const opt=document.createElement('div');opt.className='cm-opt'+(co.builtin===k?' sel':'');
+  pickableCostumes().forEach(k=>{const opt=document.createElement('div');opt.className='cm-opt'+(co.builtin===k?' sel':'');
     const cv=document.createElement('canvas');cv.width=48;cv.height=48;const c=cv.getContext('2d');c.save();c.translate(24,26);c.scale(0.95,0.95);paintCostume(c,k,co.color||'#ff922b');c.restore();opt.appendChild(cv);
     const sp=document.createElement('span');sp.textContent=STAGE_COSTUMES[k].e;opt.appendChild(sp);
     opt.onclick=()=>{co.builtin=k;delete co.img;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};grid.appendChild(opt);});}
 function renderCostumeColors(){const wrap=document.getElementById('cm-colors');if(!wrap)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];wrap.innerHTML='';
   CM_COLORS.forEach(col=>{const b=document.createElement('div');b.className='cm-color'+(co.color===col?' sel':'');b.style.background=col;
     b.onclick=()=>{co.color=col;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};wrap.appendChild(b);});}
-function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:COSTUME_KEYS[i%COSTUME_KEYS.length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
+function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:pickableCostumes()[i%pickableCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
 function cmPaintNew(){const s=stageState.sprites[stageSel];openPaintEditor({w:300,h:300,name:'costume'+(s.costumes.length+1),onSave:(dataURL,name)=>{s.costumes.push({name:name||'costume',img:dataURL});s.costumeIdx=s.costumes.length-1;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
 function paintCostumeEditor(co){openPaintEditor({w:300,h:300,img:co.img,name:co.name,onSave:(dataURL,name)=>{co.img=dataURL;co.name=name||co.name;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
 
@@ -2480,6 +2481,7 @@ function paintOhbot(c,ob,color){ob=ob||OHBOT_DEFAULT;const eye=ob.color||color||
 // Built-in costume library — name → {emoji, paint}. The single source of truth.
 const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot},ohbot:{e:'🤖',f:(c,col)=>paintOhbot(c,OHBOT_DEFAULT,col)}};
 const COSTUME_KEYS=Object.keys(STAGE_COSTUMES);
+function pickableCostumes(){return COSTUME_KEYS.filter(k=>OHBOT_ON||k!=='ohbot');} // hide Ohbot from the picker while it's off
 function paintCostume(c,name,color){(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f(c,color);}
 function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save();ctx.translate(s.x,s.y);
   if(!s.visible){ctx.globalAlpha=0.3;} // dim (not hidden) when stopped so kids can still find & move it
@@ -3183,7 +3185,7 @@ function stageToolbox(){const blk=t=>({kind:'block',type:t});
   {kind:'category',name:'🖊️  Pen',colour:'160',contents:[blk('st_pen_clear'),blk('st_pen_stamp'),blk('st_pen_down'),blk('st_pen_up'),blk('st_pen_setcolor'),blk('st_pen_changesize'),blk('st_pen_setsize')]},
   {kind:'category',name:'🏆  Score',colour:'330',contents:[blk('st_change_score'),blk('st_set_score'),blk('st_score')]},
   {kind:'category',name:'🤖  Ohbot',colour:'195',contents:[blk('ob_move'),blk('ob_move_time'),blk('ob_say'),blk('ob_eyecolor'),blk('ob_reset'),blk('ob_speaking')]},
-]};}
+].filter(cat=>OHBOT_ON||(cat.name||'').indexOf('Ohbot')<0)};}
 function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="st_when_flag" x="20" y="20"><next><block type="st_goto_center"><next><block type="st_say"><field name="TXT">Use the arrow keys!</field></block></next></block></next></block>
 <block type="st_when_key" x="20" y="160"><field name="KEY">left</field><next><block type="st_change_x"><field name="N">-10</field></block></next></block>
@@ -5517,7 +5519,6 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 const CJ_VERSION='2026.07.18';
 const CJ_WHATSNEW=[
-  '🤖 NEW: Ohbot on the Stage! Add an Ohbot (pick a sprite → 🎨 Costume → 🤖 Ohbot) and program its on-screen robot head with the new 🤖 Ohbot blocks — move its head turn / head nod / eyes / eyelids / lips (0–10, instantly or over time), 🤖 set eye colour, 🤖 reset, and 🤖 Ohbot say which talks out loud while the mouth lip-syncs. A full robot emulator, right inside CodeJump!',
   '🗑️ You can now tidy up your games! Delete saved games from this device (🗑️ on each one on the home screen), and remove 🤝 Collaborations you no longer need (☁️ Cloud → Collaborations). Your own cloud games & class work were already deletable under 📂 My games.',
   '🐛 Fixed: opening a shared 🎭 Stage collaboration now goes straight to the Stage view (it used to briefly look like a Platformer until you tapped Code).',
   '🧑‍🏫 Teachers: add a whole class at once! In a class, tap 👥 Add pupils (CSV) and upload a file with three columns — Name, Display name, Password — to create all their accounts in one go. Then tap 🪪 Login cards to print a card for each pupil. The cards always show the current details, even if a pupil later changes their name or password.',

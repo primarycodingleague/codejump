@@ -1441,6 +1441,7 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
     <button class="mode-btn stage-only" id="btn-greenflag" title="Run all scripts">🟢 Go</button>
     <button class="mode-btn stage-only" id="btn-stopall" title="Stop">⏹️ Stop</button>
     <button class="mode-btn stage-only" id="btn-backdrops" title="Stage backdrops">🖼️ Backdrops</button>
+    <button class="mode-btn stage-only" id="btn-mbsend" title="Send your program to a real micro:bit over USB">🔌 micro:bit</button>
     <div class="sep"></div>
     <button class="tbtn active" id="t-paint">🖌️ Paint</button>
     <button class="tbtn"        id="t-fill">🪣 Fill Row</button>
@@ -2154,6 +2155,7 @@ function enterKS1UI(){
   if(gc.parentElement!==holder)holder.appendChild(gc);gc.style.display='block';
   const gf=document.getElementById('btn-greenflag');if(gf)gf.onclick=()=>stageStart();
   const sb=document.getElementById('btn-stopall');if(sb)sb.onclick=()=>stageStop();
+  const mbb=document.getElementById('btn-mbsend');if(mbb)mbb.style.display='none';
   if(!stageState.pages){stageState.pages=[{sprites:stageState.sprites,backdropIdx:stageState.backdropIdx||0}];stageState.pageIdx=0;}
   if(stageState.pageIdx==null)stageState.pageIdx=0;
   const ap=stageState.pages[stageState.pageIdx];if(ap){stageState.sprites=ap.sprites;stageState.backdropIdx=ap.backdropIdx||0;}
@@ -2922,8 +2924,8 @@ function stageStart(){if(!stageState)return;
         else if(b.type==='mb_on_shake')stMbShakeHats.push({first:b.getNextBlock(),s});
         else if(b.type==='mb_on_gesture')stMbGestureHats.push({gesture:b.getFieldValue('G'),first:b.getNextBlock(),s});
         else if(b.type==='mb_on_logo')stMbLogoHats.push({first:b.getNextBlock(),s});
-        else if(b.type==='mb_on_radio_number')stMbRadioNumHats.push({first:b.getNextBlock(),s});
-        else if(b.type==='mb_on_radio_string')stMbRadioStrHats.push({first:b.getNextBlock(),s});
+        else if(b.type==='mb_on_radio_number')stMbRadioNumHats.push({first:b.getNextBlock(),s,vn:stVarName(b,'VAR')||'receivedNumber'});
+        else if(b.type==='mb_on_radio_string')stMbRadioStrHats.push({first:b.getNextBlock(),s,vn:stVarName(b,'VAR')||'receivedString'});
         else if(b.type==='st_when_key')stKeyHats.push({key:b.getFieldValue('KEY'),first:b.getNextBlock(),s});
         else if(b.type==='st_when_clicked')stClickHats.push({first:b.getNextBlock(),s});
         else if(b.type==='st_when_receive')stRecvHats.push({msg:b.getFieldValue('MSG'),first:b.getNextBlock(),s});
@@ -3155,9 +3157,141 @@ function stRadioPump(){if(!stRadioQ.length||!stageState)return;const q=stRadioQ;
   q.forEach(m=>{
     // set the latest received value on every other same-group sprite (so reporters read it)
     stageState.sprites.forEach(s=>{if(s===m.from||mbGroup(s)!==m.group)return;const o=mbState(s);if(m.kind==='num')o.rxNum=m.val;else o.rxStr=m.val;});
-    // fire the matching on-received hats
-    (m.kind==='num'?stMbRadioNumHats:stMbRadioStrHats).forEach(h=>{if(h.s!==m.from&&mbGroup(h.s)===m.group)stStartScript(h.first,h.s,null);});
+    // fire the matching on-received hats, putting the received value into the block's variable (like MakeCode)
+    (m.kind==='num'?stMbRadioNumHats:stMbRadioStrHats).forEach(h=>{if(h.s!==m.from&&mbGroup(h.s)===m.group){if(h.vn)stVars[h.vn]=m.val;stStartScript(h.first,h.s,null);}});
   });}
+// ══════════ Real micro:bit over USB (WebUSB) — translate blocks → MicroPython and flash the board ══════════
+// EXPERIMENTAL. Needs desktop Chrome/Edge or a Chromebook, a micro:bit on the cable, and the MicroPython firmware hosted at MB_FIRMWARE_URL.
+let MB_FLASH_ON=true; // shows the 🔌 Send to micro:bit button in KS2/KS3 Stage
+const MB_FIRMWARE_URL='microbit-micropython-v2.hex'; // MicroPython v2.1.1, hosted next to index.html (same origin → no CORS). For micro:bit V2 boards. Empty = flashing disabled, .py download still works.
+const MB_PY_ICON={heart:'HEART',happy:'HAPPY',sad:'SAD',yes:'YES',no:'NO',arrow_n:'ARROW_N',arrow_s:'ARROW_S',square:'SQUARE',duck:'DUCK',small:'SMALL_DIAMOND'};
+const MB_PY_ARROW={North:'ARROW_N',NorthEast:'ARROW_NE',East:'ARROW_E',SouthEast:'ARROW_SE',South:'ARROW_S',SouthWest:'ARROW_SW',West:'ARROW_W',NorthWest:'ARROW_NW'};
+const MB_PY_MELODY={'ba ding':'BA_DING','power up':'POWER_UP','power down':'POWER_DOWN','jump up':'JUMP_UP','jump down':'JUMP_DOWN','wedding':'WEDDING','funeral':'FUNERAL','birthday':'BIRTHDAY','baddy':'BADDY','chase':'CHASE','dadadum':'DADADADUM','wawawawaa':'WAWAWAWAA'};
+const MB_PY_GESTURE={shake:'shake',logo_up:'up',logo_down:'down',screen_up:'face up',screen_down:'face down',tilt_left:'left',tilt_right:'right',free_fall:'freefall','3g':'3g','6g':'6g','8g':'8g'};
+function mbPyVar(n){n=(n||'x').replace(/[^A-Za-z0-9_]/g,'_');if(/^[0-9]/.test(n))n='v_'+n;return n;}
+function mbPyInd(n){return '    '.repeat(n);}
+function mbExpr(b){if(!b)return '0';const t=b.type,A=n=>mbExpr(b.getInputTargetBlock(n));
+  if(t==='math_number')return String(b.getFieldValue('NUM'));
+  if(t==='text')return JSON.stringify(b.getFieldValue('TEXT')||'');
+  if(t==='math_arithmetic'){const o={ADD:'+',MINUS:'-',MULTIPLY:'*',DIVIDE:'/',POWER:'**'}[b.getFieldValue('OP')]||'+';return '('+A('A')+' '+o+' '+A('B')+')';}
+  if(t==='logic_compare'){const o={EQ:'==',NEQ:'!=',LT:'<',LTE:'<=',GT:'>',GTE:'>='}[b.getFieldValue('OP')]||'==';return '('+A('A')+' '+o+' '+A('B')+')';}
+  if(t==='logic_operation')return '('+A('A')+' '+(b.getFieldValue('OP')==='AND'?'and':'or')+' '+A('B')+')';
+  if(t==='logic_negate')return '(not '+A('BOOL')+')';
+  if(t==='logic_boolean')return b.getFieldValue('BOOL')==='TRUE'?'True':'False';
+  if(t==='math_random_int')return 'random.randint('+A('FROM')+', '+A('TO')+')';
+  if(t==='math_modulo')return '('+A('DIVIDEND')+' % '+A('DIVISOR')+')';
+  if(t==='text_join')return '(str('+A('ADD0')+') + str('+A('ADD1')+'))';
+  if(t==='variables_get')return mbPyVar(stVarName(b));
+  if(t==='mb_button'){const bt=b.getFieldValue('BTN');return bt==='AB'?'(button_a.is_pressed() and button_b.is_pressed())':('button_'+bt.toLowerCase()+'.is_pressed()');}
+  if(t==='mb_temperature')return 'temperature()';
+  if(t==='mb_light_level')return 'display.read_light_level()';
+  if(t==='mb_compass_heading')return 'compass.heading()';
+  if(t==='mb_running_time')return 'running_time()';
+  if(t==='mb_acceleration'){const d=b.getFieldValue('DIM');return d==='strength'?'accelerometer.get_strength()':('accelerometer.get_'+d+'()');}
+  if(t==='mb_radio_number')return '_rxnum';
+  if(t==='mb_radio_string')return '_rxstr';
+  if(t==='mb_brightness')return '9';
+  return '0';}
+function mbBool(b){return b?mbExpr(b):'True';}
+function mbSeq(b,lvl){const out=[];while(b){const s=mbStmt(b,lvl);if(s)out.push(s);b=b.getNextBlock();}return out.join('\n');}
+function mbStmt(b,lvl){const I=mbPyInd(lvl),t=b.type,F=f=>String(Number(b.getFieldValue(f))||0);
+  switch(t){
+    case'mb_show_icon':return I+'display.show(Image.'+(MB_PY_ICON[b.getFieldValue('ICON')]||'HEART')+')';
+    case'mb_show_arrow':return I+'display.show(Image.'+(MB_PY_ARROW[b.getFieldValue('DIR')]||'ARROW_N')+')';
+    case'mb_show_leds':{const p=(b.getFieldValue('PATTERN')||'').padEnd(25,'0');let rows=[];for(let r=0;r<5;r++){let row='';for(let c=0;c<5;c++)row+=(p[r*5+c]==='1'?'9':'0');rows.push(row);}return I+'display.show(Image("'+rows.join(':')+'"))';}
+    case'mb_show_number':return I+'display.show('+F('N')+')';
+    case'mb_show_string':return I+'display.scroll(str('+mbExpr(b.getInputTargetBlock('TXT'))+'))';
+    case'mb_clear':return I+'display.clear()';
+    case'mb_plot':return I+'display.set_pixel('+F('X')+', '+F('Y')+', 9)';
+    case'mb_unplot':return I+'display.set_pixel('+F('X')+', '+F('Y')+', 0)';
+    case'mb_toggle':return I+'display.set_pixel('+F('X')+', '+F('Y')+', 0 if display.get_pixel('+F('X')+', '+F('Y')+') else 9)';
+    case'mb_plot_brightness':return I+'display.set_pixel('+F('X')+', '+F('Y')+', min(9, '+F('V')+'*9//255))';
+    case'mb_play_tone':{const fr=Number(b.getFieldValue('NOTE'))||262,beats=Number(b.getFieldValue('DUR'))||1,ms=Math.round(beats*(60000/(stMbTempo||120)));return I+'music.pitch('+fr+', '+ms+')';}
+    case'mb_ring_tone':return I+'music.pitch('+F('N')+', 300)';
+    case'mb_rest':{const beats=Number(b.getFieldValue('DUR'))||1;return I+'sleep('+Math.round(beats*500)+')';}
+    case'mb_play_melody':return I+'music.play(music.'+(MB_PY_MELODY[b.getFieldValue('MEL')]||'BA_DING')+')';
+    case'mb_set_tempo':return I+'music.set_tempo(bpm='+F('N')+')';
+    case'mb_change_tempo':return I+'music.set_tempo(bpm=music.get_tempo()[0]+'+F('N')+')';
+    case'mb_set_brightness':return I+'# (the micro:bit sets brightness per pixel, not globally)';
+    case'mb_radio_set_group':return I+'radio.on()\n'+I+'radio.config(group='+F('N')+')';
+    case'mb_radio_send_number':return I+'radio.send(str('+mbExpr(b.getInputTargetBlock('NUM'))+'))';
+    case'mb_radio_send_string':return I+'radio.send(str('+mbExpr(b.getInputTargetBlock('MSG'))+'))';
+    case'st_wait':return I+'sleep('+Math.round((Number(b.getFieldValue('N'))||0)*1000)+')';
+    case'st_repeat':{const body=mbSeq(b.getInputTargetBlock('DO'),lvl+1);return I+'for _ in range('+F('N')+'):\n'+(body||(mbPyInd(lvl+1)+'pass'));}
+    case'st_forever':{const body=mbSeq(b.getInputTargetBlock('DO'),lvl+1);return I+'while True:\n'+(body||(mbPyInd(lvl+1)+'pass'));}
+    case'st_if':{const body=mbSeq(b.getInputTargetBlock('DO'),lvl+1);return I+'if '+mbBool(b.getInputTargetBlock('COND'))+':\n'+(body||(mbPyInd(lvl+1)+'pass'));}
+    case'st_if_else':{const d=mbSeq(b.getInputTargetBlock('DO'),lvl+1),e=mbSeq(b.getInputTargetBlock('ELSE'),lvl+1);return I+'if '+mbBool(b.getInputTargetBlock('COND'))+':\n'+(d||(mbPyInd(lvl+1)+'pass'))+'\n'+I+'else:\n'+(e||(mbPyInd(lvl+1)+'pass'));}
+    case'variables_set':return I+mbPyVar(stVarName(b))+' = '+mbExpr(b.getInputTargetBlock('VALUE'));
+    case'math_change':return I+mbPyVar(stVarName(b))+' = '+mbPyVar(stVarName(b))+' + '+mbExpr(b.getInputTargetBlock('DELTA'));
+    case'mb_run_background':{const body=mbSeq(b.getInputTargetBlock('DO'),lvl);return I+'# (run in background runs here in order)\n'+(body||'');}
+    default:return I+'# ('+t+' is not available on a real micro:bit)';
+  }}
+// Translate the SELECTED sprite's blocks into a MicroPython program.
+function mbToPython(){if(!blocklyWorkspace)return '# Open a micro:bit sprite and add some blocks first.';
+  const tops=blocklyWorkspace.getTopBlocks(true),once=[],forevers=[],events=[];
+  let useMusic=false,useRadio=false,useRandom=false;
+  blocklyWorkspace.getAllBlocks(false).forEach(b=>{const t=b.type;if(/^mb_(play|ring|rest|set_tempo|change_tempo|start_melody|play_melody)/.test(t)||t==='mb_play_sound')useMusic=true;if(/radio/.test(t))useRadio=true;if(t==='math_random_int')useRandom=true;});
+  tops.forEach(top=>{const t=top.type;
+    if(t==='mb_on_start'||t==='st_when_flag'){let b=top.getNextBlock();while(b){if(b.type==='st_forever')forevers.push(mbSeq(b.getInputTargetBlock('DO'),1));else once.push(mbStmt(b,0));b=b.getNextBlock();}}
+    else if(t==='st_forever')forevers.push(mbSeq(top.getInputTargetBlock('DO'),1));
+    else if(t==='mb_on_button')events.push({k:'btn',btn:top.getFieldValue('BTN'),body:mbSeq(top.getNextBlock(),2)});
+    else if(t==='mb_on_shake')events.push({k:'ges',g:'shake',body:mbSeq(top.getNextBlock(),2)});
+    else if(t==='mb_on_gesture')events.push({k:'ges',g:MB_PY_GESTURE[top.getFieldValue('G')]||'shake',body:mbSeq(top.getNextBlock(),2)});
+    else if(t==='mb_on_radio_number')events.push({k:'radio',num:true,vn:mbPyVar(stVarName(top,'VAR')||'receivedNumber'),body:mbSeq(top.getNextBlock(),2)});
+    else if(t==='mb_on_radio_string')events.push({k:'radio',num:false,vn:mbPyVar(stVarName(top,'VAR')||'receivedString'),body:mbSeq(top.getNextBlock(),2)});
+    else if(t==='mb_on_logo')events.push({k:'logo',body:mbSeq(top.getNextBlock(),2)});
+  });
+  const L=['# Made with CodeJump · Primary Coding League CIC','from microbit import *'];
+  if(useMusic)L.push('import music');if(useRadio)L.push('import radio');if(useRandom)L.push('import random');
+  L.push('');if(useRadio){L.push('_rxnum = 0');L.push('_rxstr = ""');}
+  once.forEach(s=>{if(s)L.push(s);});
+  if(forevers.length||events.length){L.push('while True:');
+    forevers.forEach(b=>{if(b)L.push(b);});
+    const radios=events.filter(e=>e.k==='radio');
+    events.filter(e=>e.k!=='radio').forEach(ev=>{
+      if(ev.k==='btn'){const c=ev.btn==='AB'?'button_a.is_pressed() and button_b.is_pressed()':('button_'+ev.btn.toLowerCase()+'.was_pressed()');L.push('    if '+c+':');L.push(ev.body||'        pass');}
+      else if(ev.k==='ges'){L.push("    if accelerometer.was_gesture('"+ev.g+"'):");L.push(ev.body||'        pass');}
+      else if(ev.k==='logo'){L.push('    if button_a.was_pressed():  # (logo touch -> button A on this board)');L.push(ev.body||'        pass');}
+    });
+    if(radios.length){L.push('    _msg = radio.receive()');L.push('    if _msg is not None:');L.push('        _rxstr = _msg');L.push('        try:');L.push('            _rxnum = int(_msg)');L.push('        except:');L.push('            _rxnum = 0');
+      radios.forEach(ev=>{L.push('        '+ev.vn+' = '+(ev.num?'_rxnum':'_rxstr'));L.push(ev.body||'        pass');});}
+    L.push('    sleep(20)');}
+  return L.join('\n');}
+function mbLoadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[data-mb="'+src+'"]'))return res();const s=document.createElement('script');s.src=src;s.dataset.mb=src;s.onload=()=>res();s.onerror=()=>rej(new Error('Could not load '+src));document.head.appendChild(s);});}
+async function mbFlashUSB(py,status){
+  if(!navigator.usb)throw new Error('This browser can’t flash over USB. Use Chrome or Edge on a computer or Chromebook.');
+  if(!MB_FIRMWARE_URL)throw new Error('Flashing isn’t set up yet: an adult needs to host the micro:bit MicroPython firmware and set MB_FIRMWARE_URL. You can still Download the .py for now.');
+  status('Loading flashing tools…');
+  await mbLoadScript('https://cdn.jsdelivr.net/npm/@microbit/microbit-fs@0.9.2/dist/bundles/microbit-fs.umd.min.js');
+  await mbLoadScript('https://cdn.jsdelivr.net/npm/dapjs@2.3.0/dist/dap.umd.min.js');
+  const FS=window.microbitFs||window.microbit_fs;if(!FS||!window.DAPjs)throw new Error('Flashing tools didn’t load. Check the internet connection and try again.');
+  status('Getting the micro:bit firmware…');
+  const hex=await (await fetch(MB_FIRMWARE_URL)).text();
+  const fs=new FS.MicropythonFsHex(hex);fs.write('main.py',py);const finalHex=fs.getIntelHex();
+  status('Connecting… pick your micro:bit in the box at the top.');
+  const dev=await navigator.usb.requestDevice({filters:[{vendorId:0x0d28}]});
+  const target=new window.DAPjs.DAPLink(new window.DAPjs.WebUSB(dev));
+  await target.connect();
+  status('Flashing… keep the cable plugged in.');
+  await target.flash(new TextEncoder().encode(finalHex));
+  await target.disconnect();
+  status('✅ Done! Your micro:bit is running your program.');}
+function mbHasMicrobitSprite(){return stageState&&stageState.sprites.some(s=>{const co=curCostume(s);return co&&co.builtin==='microbit';});}
+function mbSendOpen(){let m=document.getElementById('mbsend-modal');if(!m){m=document.createElement('div');m.id='mbsend-modal';m.className='ks1-modal';m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hide');});document.body.appendChild(m);}
+  const py=mbToPython();
+  m.innerHTML='';const box=document.createElement('div');box.className='ks1-modal-box';box.style.maxWidth='620px';box.style.textAlign='left';
+  box.innerHTML='<h3 style="text-align:center">🔌 Send to your micro:bit</h3><p class="ks1-modal-sub" style="text-align:center">CodeJump turns your blocks into micro:bit code, then sends it down the USB cable. Works in Chrome/Edge on a computer or Chromebook.</p>'+
+    '<pre id="mbsend-code" style="background:#11151a;color:#d6e6f2;border-radius:10px;padding:12px;max-height:230px;overflow:auto;font-size:12px;white-space:pre;"></pre>'+
+    '<div id="mbsend-status" style="text-align:center;color:#33485c;font-size:13px;min-height:18px;margin:6px 0;"></div>'+
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button id="mbsend-flash" class="ks1-rec-btn" style="background:#e0792b">🔌 Flash to micro:bit</button><button id="mbsend-dl" class="ks1-rec-btn" style="background:#3b8eea">⬇️ Download .py</button><button id="mbsend-copy" class="ks1-rec-btn" style="background:#2fb344">📋 Copy code</button><button id="mbsend-close" class="ks1-rec-btn" style="background:#888">Close</button></div>';
+  m.appendChild(box);
+  box.querySelector('#mbsend-code').textContent=py;
+  const st=t=>{box.querySelector('#mbsend-status').textContent=t;};
+  box.querySelector('#mbsend-flash').onclick=()=>{mbFlashUSB(py,st).catch(e=>st('⚠️ '+e.message));};
+  box.querySelector('#mbsend-dl').onclick=()=>{const a=document.createElement('a');a.href='data:text/x-python;charset=utf-8,'+encodeURIComponent(py);a.download='main.py';a.click();};
+  box.querySelector('#mbsend-copy').onclick=()=>{try{navigator.clipboard.writeText(py);st('Copied! ✅');}catch(e){st('Select the code and copy it.');}};
+  box.querySelector('#mbsend-close').onclick=()=>m.classList.add('hide');
+  m.classList.remove('hide');}
 // Shared pop-up grid editor for the custom LED / melody fields (real clickable HTML in Blockly's DropDownDiv).
 // isLit(v,col,row)→bool ; onClick(v,col,row)→newValue ; extra(wrap,field,rebuild) optional adds controls.
 function mbOpenGridEditor(field,cols,rows,cellW,cellH,litColor,isLit,onClick,extra){
@@ -3408,6 +3542,7 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   gc.addEventListener('touchend',e=>{stageDragEnd();mbPointerUp();});
   const gf=document.getElementById('btn-greenflag');if(gf)gf.onclick=()=>stageStart();
   const st=document.getElementById('btn-stopall');if(st)st.onclick=()=>stageStop();
+  const mbb=document.getElementById('btn-mbsend');if(mbb){mbb.onclick=mbSendOpen;mbb.style.display=(MB_FLASH_ON&&keyStage!=='ks1')?'':'none';}
   const as=document.getElementById('add-sprite');if(as)as.onclick=()=>stageAddSprite();
   const cb=document.getElementById('cm-costume-btn');if(cb)cb.onclick=()=>openCostumePicker();
   const cd=document.getElementById('cm-done');if(cd)cd.onclick=()=>document.getElementById('costume-modal').classList.add('hide');
@@ -4045,8 +4180,8 @@ function defineStageBlocks(){
   Blockly.Blocks['mb_radio_set_group']={init:function(){this.appendDummyInput().appendField('📻 radio set group').appendField(new Blockly.FieldNumber(1,0,255),'N');stmt(this);this.setColour(MB_COL);}};
   Blockly.Blocks['mb_radio_send_number']={init:function(){this.appendValueInput('NUM').appendField('📻 radio send number');stmt(this);this.setColour(MB_COL);}};
   Blockly.Blocks['mb_radio_send_string']={init:function(){this.appendValueInput('MSG').appendField('📻 radio send string');stmt(this);this.setColour(MB_COL);}};
-  Blockly.Blocks['mb_on_radio_number']={init:function(){this.appendDummyInput().appendField('📻 on radio received number');this.setNextStatement(true);this.setColour(MB_COL);}};
-  Blockly.Blocks['mb_on_radio_string']={init:function(){this.appendDummyInput().appendField('📻 on radio received string');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_radio_number']={init:function(){this.appendDummyInput().appendField('📻 on radio received').appendField(new Blockly.FieldVariable('receivedNumber'),'VAR');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_radio_string']={init:function(){this.appendDummyInput().appendField('📻 on radio received').appendField(new Blockly.FieldVariable('receivedString'),'VAR');this.setNextStatement(true);this.setColour(MB_COL);}};
   Blockly.Blocks['mb_radio_number']={init:function(){this.appendDummyInput().appendField('📻 received number');this.setOutput(true,'Number');this.setColour(MB_COL);}};
   Blockly.Blocks['mb_radio_string']={init:function(){this.appendDummyInput().appendField('📻 received string');this.setOutput(true,'String');this.setColour(MB_COL);}};
   // Control
@@ -6563,7 +6698,7 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.08.03';
+const CJ_VERSION='2026.08.05';
 const CJ_WHATSNEW=[
   "🧸 NEW: a whole ScratchJr-style coding space for Key Stage 1! Little ones make 🎭 Stage projects with big picture blocks that snap together — move, turn, hop, say, loops, colour messages, sounds (even ones they 🎤 record), multi-page 📄 stories and a built-in 🎨 character painter. Tap ✨ Ideas for starters or 🎯 Missions to be guided step-by-step.",
   "📟 Key Stage 2 & 3 get a full Scratch-style 🎭 Stage too — nearly the whole Scratch block range, plus an on-screen 📟 micro:bit you can really use (light-up screen, buttons, sensors, music and radio).",
@@ -6572,7 +6707,9 @@ const CJ_WHATSNEW=[
   "📖 The ❓ Help guide now matches your project type and Key Stage, and the 📖 Teacher Guide now covers the 🎭 Stage and 📟 micro:bit too.",
   "🤝 Live collaboration and 🔗 share links work across 🎭 Stage projects, and you can now 🗑️ tidy up saved games and collaborations you no longer need.",
   "🐛 Fixes & polish: switching between Key Stage Stages no longer leaves the old block area showing, plus lots of Stage tidy-ups.",
-  "📄 Privacy, Data Protection and Safeguarding policies are now linked at the bottom of the home page."
+  "📄 Privacy, Data Protection and Safeguarding policies are now linked at the bottom of the home page.",
+  "📻 The micro:bit “on radio received number/string” blocks now give you the value as a variable (receivedNumber / receivedString) you can drag straight into your code — just like MakeCode.",
+  "🔌 NEW (early access): send your program to a REAL micro:bit! In a Key Stage 2/3 Stage, tap 🔌 micro:bit to turn your blocks into micro:bit code and flash it down the USB cable — or download the .py. Works in Chrome/Edge on a computer or Chromebook."
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

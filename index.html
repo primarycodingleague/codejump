@@ -124,6 +124,23 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .pf-amp{font-family:var(--display);font-size:26px;color:var(--gold);opacity:.7;line-height:96px;}
 .pcl-footer .by{font-family:var(--font);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--white);opacity:.65;line-height:1.7;}
 .pcl-footer .by .partner{display:block;font-size:11px;opacity:.5;letter-spacing:1px;text-transform:none;font-style:italic;}
+.pcl-policies{margin-top:14px;font-family:var(--font);font-size:11px;letter-spacing:.5px;color:var(--white);opacity:.55;}
+.pcl-policies a{color:inherit;text-decoration:underline;cursor:pointer;}
+.pcl-policies a:hover{color:var(--gold);opacity:1;}
+#policy-modal{position:fixed;inset:0;z-index:1800;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--font);}
+#policy-modal.hide{display:none;}
+.policy-box{background:#fff;color:#222;border-radius:14px;max-width:680px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 14px 50px rgba(0,0,0,.5);}
+.policy-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e6e9ee;}
+.policy-head h2{margin:0;font-size:20px;color:#1e2a36;}
+.policy-x{width:34px;height:34px;border-radius:50%;border:0;background:#eef2f6;font-size:16px;cursor:pointer;}
+.policy-body{padding:18px 22px;overflow-y:auto;line-height:1.55;font-size:14px;color:#33414f;}
+.policy-body h3{font-size:15px;color:#1e2a36;margin:18px 0 6px;}
+.policy-body h3:first-child{margin-top:0;}
+.policy-body ul{margin:6px 0 6px 18px;}.policy-body li{margin:3px 0;}
+.policy-body .pol-note{background:#fff7e6;border:1px solid #f0d68a;border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 14px;}
+.policy-body a{color:#1f6fae;}
+.policy-foot{padding:12px 22px;border-top:1px solid #e6e9ee;text-align:right;}
+.policy-foot button{background:#3b8eea;color:#fff;border:0;border-radius:10px;padding:9px 20px;font-weight:bold;cursor:pointer;}
 
 /* ── SPLASH / LOADING SCREEN ───────────────────────────────────────── */
 #splash{position:fixed;inset:0;z-index:2000;background:var(--black);
@@ -152,7 +169,9 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 #splash.go .splash-bar i{width:100%;}
 @media(prefers-reduced-motion:reduce){.coin{animation:none;}.coin .face.back{display:none;}}
 /* ── FOR TEACHERS link on home ─────────────────────────────────────── */
-.teacher-link{position:absolute;top:16px;right:18px;z-index:2;}
+.teacher-link{position:absolute;top:16px;right:18px;z-index:2;display:flex;gap:10px;align-items:center;}
+#h-a11y{display:flex;align-items:center;justify-content:center;background:rgba(57,57,57,.7);border:1px solid var(--gray);color:var(--gold);font-size:20px;line-height:1;padding:0;width:40px;height:40px;border-radius:50%;cursor:pointer;flex:0 0 auto;}
+#h-a11y:hover{border-color:var(--gold);}
 .teacher-link button{background:rgba(57,57,57,.7);border:1px solid var(--gray);color:var(--gold);font-weight:700;letter-spacing:1.2px;text-transform:uppercase;font-size:12px;padding:10px 18px;border-radius:30px;cursor:pointer;transition:.15s;font-family:var(--font);}
 .teacher-link button:hover{border-color:var(--gold);background:rgba(57,57,57,.95);}
 /* ── TEACHER HUB ───────────────────────────────────────────────────── */
@@ -412,6 +431,7 @@ body.stage-mode .cp-run-bar,body.stage-mode #ks3-editor{display:none !important;
 body.stage-mode #cwrap{display:flex;flex-direction:row;align-items:stretch;justify-content:flex-start;gap:10px;padding:10px;background:#1e1e1e;}
 body.stage-mode #code-panel{display:flex !important;position:relative;inset:auto;width:auto;height:auto;flex:1 1 auto;min-width:0;min-height:0;border-radius:10px;overflow:hidden;}
 body.stage-mode #stage-right{display:flex;flex-direction:column;width:420px;min-width:0;gap:10px;}
+body.ks1-mode #code-panel,body.ks1-mode #stage-right,body.ks1-mode #cwrap{display:none !important;} /* KS1 uses its own ScratchJr UI, not the Blockly code panel */
 @media(max-width:1100px){body.stage-mode #stage-right{width:360px;}}
 @media(max-width:900px){body.stage-mode #stage-right{width:300px;}}
 /* Narrow / portrait tablets & phones: stack the stage on top, blocks fill the rest */
@@ -741,6 +761,102 @@ body.ks1mode .pal-icon{font-size:30px;}
 body.ks1mode .pal-item span:last-child{font-size:12px;}
 body.ks1mode .pal-group{font-size:13px;}
 body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
+/* ── KS1 ScratchJr-style Stage editor ── */
+#ks1-ui{position:fixed;left:0;right:0;bottom:0;top:54px;display:flex;flex-direction:column;background:#eef4f9;z-index:5;font-family:var(--font);}
+#ks1-ui.hide{display:none;}
+.ks1-top{flex:1 1 54%;display:flex;min-height:0;}
+.ks1-sprites{width:104px;background:#fff;border-right:2px solid #d4dde6;overflow-y:auto;padding:8px 6px;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.ks1-sprite{width:84px;height:84px;border-radius:14px;background:#f1f6fb;border:3px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:0 0 auto;}
+.ks1-sprite.sel{border-color:#3b8eea;background:#e6f0fb;}
+.ks1-sprite canvas{width:60px;height:52px;}
+.ks1-sprite .ks1-sname{font-size:10px;color:#456;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ks1-sprite .ks1-sdel{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e03131;color:#fff;font-size:13px;line-height:20px;text-align:center;display:none;}
+.ks1-sprite.sel .ks1-sdel{display:block;}
+.ks1-sprite .ks1-sdress{position:absolute;top:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #3b8eea;font-size:11px;line-height:19px;text-align:center;display:none;cursor:pointer;}
+.ks1-sprite.sel .ks1-sdress{display:block;}
+.ks1-readtog{width:84px;height:34px;border-radius:12px;background:#eef2f7;border:2px solid #b9c6d6;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.ks1-readtog.on{background:#dff0e4;border-color:#5cb877;}
+.ks1-ideabtn{width:84px;min-height:30px;border-radius:12px;background:#fff3d6;border:2px solid #e6b94d;color:#9a6a12;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.ks1-missionbtn{background:#e7f0ff;border-color:#7fb0ee;color:#1f5fae;}
+.ks1-msgc{width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3);cursor:pointer;margin-top:2px;}
+.ks1-spd{font-size:17px;cursor:pointer;margin-top:1px;background:rgba(255,255,255,.85);border-radius:8px;padding:0 3px;}
+.ks1-pbadge{display:inline-block;background:#fff;color:#e03131;border-radius:50%;font-size:10px;font-weight:bold;min-width:15px;height:15px;line-height:15px;text-align:center;margin-left:-7px;position:relative;top:-9px;box-shadow:0 0 0 1px rgba(0,0,0,.25);}
+/* Accessibility */
+.a11y-row{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 6px;border-bottom:1px solid #eef2f6;cursor:pointer;}
+.a11y-row input{width:22px;height:22px;flex:0 0 auto;}
+.a11y-row .a11y-rt b{display:block;font-size:15px;color:#2b3a4a;}
+.a11y-row .a11y-rt small{color:#67788a;font-size:12px;}
+.ks1-a11ybtn{background:#efe7fb;border-color:#b89ae0;color:#6a3aa8;}
+body.a11y-dyslexia{--font:'Comic Sans MS','Comic Neue','Trebuchet MS',Verdana,sans-serif;}
+body.a11y-dyslexia, body.a11y-dyslexia *{letter-spacing:.4px;line-height:1.5;}
+body.a11y-bigtext{zoom:1.12;}
+body.a11y-contrast .ks1-sb,body.a11y-contrast .ks1-block,body.a11y-contrast .ks1-cat,body.a11y-contrast .ks1-sprite,body.a11y-contrast .ks1-page{outline:2px solid rgba(0,0,0,.6);}
+body.a11y-contrast .ks1-hint,body.a11y-contrast .ks1-modal-sub,body.a11y-contrast .a11y-row .a11y-rt small{color:#222!important;}
+body.a11y-reduce *{animation:none!important;transition:none!important;scroll-behavior:auto!important;}
+.ks1-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--font);}
+.ks1-modal.hide{display:none;}
+.ks1-modal-box{background:#fff;border-radius:20px;padding:22px;max-width:560px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4);}
+.ks1-modal-box h3{margin:0 0 4px;font-size:24px;color:#2b3a4a;}
+.ks1-modal-sub{margin:0 0 16px;color:#67788a;font-size:14px;}
+.ks1-idea-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.ks1-idea{background:#f1f6fb;border:2px solid #d3e0ec;border-radius:16px;padding:14px 6px;cursor:pointer;transition:transform .08s;}
+.ks1-idea:hover{transform:translateY(-2px);border-color:#3b8eea;background:#e7f1fb;}
+.ks1-idea .ii{font-size:34px;}
+.ks1-idea .in{font-size:14px;font-weight:bold;color:#33485c;margin-top:4px;}
+.ks1-idea-close{margin-top:18px;background:#3b8eea;color:#fff;border:0;border-radius:12px;padding:9px 26px;font-size:15px;font-weight:bold;cursor:pointer;}
+#ks1-rec-timer{font-size:30px;font-weight:bold;color:#2b3a4a;margin:10px 0 16px;}
+#ks1-rec-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.ks1-rec-btn{color:#fff;border:0;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:bold;cursor:pointer;}
+/* KS1 guided-mission coach */
+#ks1-coach{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1400;background:#fff;border:3px solid #f4c20d;border-radius:18px;box-shadow:0 8px 28px rgba(0,0,0,.3);padding:12px 16px;max-width:520px;width:calc(100% - 40px);display:flex;align-items:center;gap:12px;font-family:var(--font);}
+#ks1-coach.hide{display:none;}
+#ks1-coach .kc-emoji{font-size:30px;flex:0 0 auto;}
+#ks1-coach .kc-body{flex:1;}
+#ks1-coach .kc-step{font-size:12px;color:#9a8b3a;font-weight:bold;}
+#ks1-coach .kc-tip{font-size:16px;color:#2b3a4a;font-weight:bold;}
+#ks1-coach .kc-x{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:#eee;border:0;font-size:15px;cursor:pointer;}
+#ks1-coach.done{border-color:#3fae5e;}
+.ks1-addsprite{width:84px;height:54px;border-radius:14px;background:#dcebe0;border:2px dashed #8bbf97;color:#2f8f4d;font-size:26px;cursor:pointer;flex:0 0 auto;}
+.ks1-pages{width:70px;background:#fff;border-left:2px solid #d4dde6;padding:8px 6px;display:flex;flex-direction:column;gap:8px;align-items:center;overflow-y:auto;}
+.ks1-page{width:56px;height:42px;border-radius:9px;border:3px solid #cdd8e3;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+.ks1-page.sel{border-color:#3b8eea;}
+.ks1-page .ks1-pnum{font-weight:bold;color:#33485c;font-size:15px;text-shadow:0 1px 2px #fff;}
+.ks1-page .ks1-pdel{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;background:#e03131;color:#fff;font-size:11px;line-height:18px;text-align:center;display:none;}
+.ks1-page.sel .ks1-pdel{display:block;}
+.ks1-paddpage{background:#dcebe0;border:2px dashed #8bbf97;color:#2f8f4d;font-size:22px;}
+.ks1-stage{flex:1;display:flex;align-items:center;justify-content:center;background:#cfe0ee;position:relative;padding:10px;}
+.ks1-stage canvas{max-width:100%;max-height:100%;background:#fff;border-radius:10px;box-shadow:0 3px 14px rgba(0,0,0,.18);touch-action:none;}
+.ks1-prog{flex:0 0 46%;display:flex;flex-direction:row;background:#e3eaf1;border-top:3px solid #c4d0db;min-height:0;}
+.ks1-progmain{flex:1;display:flex;flex-direction:column;min-width:0;}
+.ks1-cats{display:flex;flex-direction:column;gap:5px;padding:8px 6px;overflow-y:auto;background:#d6dfe9;border-right:2px solid #c4d0db;}
+.ks1-cat{width:62px;height:44px;border-radius:10px;cursor:pointer;border:3px solid transparent;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;}
+.ks1-cat .ks1-cati{font-size:18px;line-height:1;}
+.ks1-cat .ks1-catn{font-size:9px;font-weight:bold;text-shadow:0 1px 1px rgba(0,0,0,.3);}
+.ks1-cat.sel{border-color:#1b2733;}
+.ks1-palette{display:flex;gap:10px;overflow-x:auto;padding:8px 10px;align-items:center;min-height:82px;border-bottom:2px solid #d2dce6;}
+.ks1-block{min-width:62px;height:62px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;user-select:none;color:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);flex:0 0 auto;touch-action:none;}
+.ks1-block .bi{font-size:28px;line-height:1;}
+.ks1-block .bl{font-size:9px;margin-top:2px;max-width:60px;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;opacity:.95;}
+.ks1-scripts{flex:1;overflow:auto;padding:10px;min-height:0;}
+.ks1-hint{color:#789;font-size:14px;text-align:center;margin-top:18px;}
+.ks1-strip{display:flex;align-items:center;gap:5px;min-height:72px;margin-bottom:10px;background:#fff;border-radius:14px;padding:7px 8px;width:max-content;min-width:120px;}
+.ks1-strip.sel{outline:3px solid #3b8eea;}
+.ks1-sb{position:relative;min-width:60px;height:60px;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);cursor:grab;touch-action:none;flex:0 0 auto;}
+.ks1-sb .bi{font-size:26px;line-height:1;}
+.ks1-sb .bnum{display:flex;align-items:center;gap:3px;margin-top:1px;background:rgba(255,255,255,.85);border-radius:9px;padding:0 2px;}
+.ks1-sb .bnum b{color:#222;font-size:12px;min-width:14px;text-align:center;}
+.ks1-sb .bnum span{color:#222;font-weight:bold;cursor:pointer;width:15px;text-align:center;font-size:13px;}
+.ks1-sb .btext{width:46px;font-size:10px;border:0;border-radius:6px;text-align:center;margin-top:1px;}
+.ks1-bdel{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;background:#e03131;color:#fff;font-size:11px;line-height:18px;text-align:center;cursor:pointer;z-index:2;}
+.ks1-trig{border-top-left-radius:26px;border-bottom-left-radius:26px;}
+/* repeat / forever container (ScratchJr-style bracket that wraps the blocks inside it) */
+.ks1-cont{position:relative;display:inline-flex;align-items:center;gap:5px;border:3px solid;border-radius:16px;padding:5px 6px;flex:0 0 auto;}
+.ks1-cont.open{box-shadow:0 0 0 3px rgba(59,142,234,.55);}
+.ks1-cont-body{display:inline-flex;align-items:center;gap:5px;min-width:46px;min-height:62px;padding:0 3px;border-radius:11px;background:rgba(255,255,255,.4);}
+.ks1-cont-ph{color:#7a8794;font-size:10px;text-align:center;padding:0 6px;max-width:60px;line-height:1.1;}
+.ks1-cont-cap{font-size:22px;font-weight:bold;padding:0 2px;}
+.ks1-cblock{outline:2px dashed rgba(255,255,255,.7);outline-offset:-5px;}
+#ks1-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.9;transform:translate(-50%,-50%);}
 /* Home account bar (top-left) + toolbar chip */
 #home-account{position:absolute;top:18px;left:18px;z-index:6;display:flex;gap:8px;align-items:center;}
 #home-account .acc-chip{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.35);border:1px solid var(--gold);color:#fff;border-radius:22px;padding:7px 14px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;}
@@ -893,7 +1009,7 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
       <span class="pcc-mark spin-pcc" role="img" aria-label="Primary Coding Clubs"></span>
     </div>
   </div>
-  <div class="splash-text"><b>CodeJump</b> &nbsp;by Primary Coding League</div>
+  <div class="splash-text"><b>CodeJump</b> &nbsp;by Primary Coding League CIC</div>
   <div class="splash-bar"><i></i></div>
   <div class="splash-partner">in partnership with Primary Coding Clubs</div>
 </div>
@@ -916,7 +1032,7 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
     <a href="https://www.primarycodingleague.co.uk" target="_blank" rel="noopener" title="Primary Coding League"><span class="pcl-mark" role="img" aria-label="Primary Coding League"></span></a>
     <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
   </div>
-  <div class="teacher-link"><button id="h-teacher">👩‍🏫 &nbsp;For Teachers →</button></div>
+  <div class="teacher-link"><button id="h-a11y" title="Accessibility options">♿</button><button id="h-teacher">👩‍🏫 &nbsp;For Teachers →</button></div>
   <div id="home-account"></div>
   <div class="home-logo">
     <svg class="home-logomark" viewBox="0 0 200 152" role="img" aria-label="CodeJump by Primary Coding League">
@@ -1003,7 +1119,8 @@ body.ks1mode #btn-read.active{background:var(--gold);color:#000;}
       <span class="pf-amp">×</span>
       <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Visit Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
     </div>
-    <div class="by">By Primary Coding League<span class="partner">in partnership with Primary Coding Clubs</span></div>
+    <div class="by">By Primary Coding League CIC<span class="partner">in partnership with Primary Coding Clubs</span></div>
+    <div class="pcl-policies"><a id="pol-privacy">Privacy Policy</a> · <a id="pol-data">Data Protection</a> · <a id="pol-safe">Safeguarding</a></div>
   </div>
 
   <input type="file" id="file-input" accept=".codejump,.json,.html,text/html,application/json" style="display:none;">
@@ -1649,7 +1766,7 @@ function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
-function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote&&projectType!=='stage')collabSnapshotSoon();} // Stage uses granular ops, not full snapshots
+function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote){if(projectType!=='stage')collabSnapshotSoon();else if(keyStage==='ks1'&&typeof collabSnapshotSoon==='function')collabSnapshotSoon();}} // platformer + KS1 Stage sync via snapshots (KS1 data is small); KS2/3 Stage uses granular ops
 function clearDirty(){dirty=false;}
 function autoSaveDraft(){if(!dirty)return;try{commitLevel();localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload()}));}catch(e){}}
 setInterval(autoSaveDraft,15000);
@@ -1718,6 +1835,7 @@ let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
 let projectType='platformer'; // 'platformer' = the grid game (default, all existing work) · 'stage' = sprite/stage projects (Scratch-style). The seam every future engine plugs into.
 let OHBOT_ON=false; // Ohbot extension HIDDEN in public builds (pending Ohbot's blessing/assets). Flip to true to re-enable the 🤖 Ohbot category + costume. All Ohbot code stays in place.
+let MICROBIT_ON=true; // micro:bit emulator extension (native, clean-room). Flip to false to hide the 📟 micro:bit category + costume. Clean-room reimplementation of documented behaviour only.
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
 function isKS3(){return keyStage==='ks3';}
 function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}document.body.classList.toggle('ks1mode',keyStage==='ks1');if(typeof updateCodeModeUI==='function')updateCodeModeUI();if(typeof updateReadBtn==='function')updateReadBtn();}
@@ -1901,29 +2019,40 @@ let stageSel=0;            // index of the sprite whose scripts are in the Block
 const SPRITE_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a'];
 function emptyStageXml(){return'<xml xmlns="https://developers.google.com/blockly/xml"></xml>';}
 function sid(){return 's'+Math.random().toString(36).slice(2,9);}  // stable per-sprite id for collab ops
-function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:pickableCostumes()[i%pickableCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]}],costumeIdx:0,xml:'',say:'',sayT:0};}
+function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]}],costumeIdx:0,xml:'',ks1:[],say:'',sayT:0};}
 function stageNew(){const s0=blankSprite('Sprite1',0);s0.xml=stageDefaultXml();stageState={sprites:[s0],bg:'#bfe3ff',vars:[],lists:[],backdrops:[{name:'backdrop1',color:'#bfe3ff'}],backdropIdx:0};stageSel=0;stVars={};stVarShown={};stLists={};stListShown={};}
 // Coerce one untrusted costume object into a safe builtin-or-bitmap costume.
 function sanitizeCostume(c){if(!c||typeof c!=='object')return null;const name=(typeof c.name==='string'?c.name:'costume').slice(0,24);
   if(typeof c.img==='string'&&/^data:image\/(png|jpeg);/.test(c.img)&&c.img.length<600000)return{name,img:c.img};
   return{name,builtin:(STAGE_COSTUMES[c.builtin]?c.builtin:'cat'),color:safeColor(c.color)||'#ff922b'};}
 // Coerce an untrusted stage document into a safe one (for load/share/collab).
-function sanitizeStage(d){if(!d||typeof d!=='object'){const s=blankSprite('Sprite1',0);s.xml=stageDefaultXml();return{sprites:[s],bg:'#bfe3ff'};}
-  const num=(v,def,lo,hi)=>{v=(typeof v==='number'&&isFinite(v))?v:def;return Math.max(lo,Math.min(hi,v));};
-  let sprites=Array.isArray(d.sprites)?d.sprites.slice(0,40):[];
+function sanitizeStageSprites(arr){const num=(v,def,lo,hi)=>{v=(typeof v==='number'&&isFinite(v))?v:def;return Math.max(lo,Math.min(hi,v));};
+  let sprites=Array.isArray(arr)?arr.slice(0,40):[];
   sprites=sprites.map((s,i)=>{s=s||{};
     let costumes=Array.isArray(s.costumes)?s.costumes.map(sanitizeCostume).filter(Boolean):null;
-    if(!costumes||!costumes.length)costumes=[{name:'costume1',builtin:(STAGE_COSTUMES[s.costume]?s.costume:'cat'),color:safeColor(s.color)||SPRITE_COLORS[i%SPRITE_COLORS.length]}]; // migrate legacy single costume
+    if(!costumes||!costumes.length)costumes=[{name:'costume1',builtin:(STAGE_COSTUMES[s.costume]?s.costume:'cat'),color:safeColor(s.color)||SPRITE_COLORS[i%SPRITE_COLORS.length]}];
     return{id:(typeof s.id==='string'&&s.id)?s.id:sid(),name:(typeof s.name==='string'?s.name:'Sprite'+(i+1)).slice(0,30),
     x:num(s.x,CW/2,-200,CW+200),y:num(s.y,CH/2,-200,CH+200),dir:num(s.dir,90,-360,360),size:num(s.size,100,10,400),
     visible:s.visible!==false,costumes,costumeIdx:Math.max(0,Math.min((s.costumeIdx|0),costumes.length-1)),
-    xml:(typeof s.xml==='string'&&s.xml.indexOf('<xml')>-1)?s.xml.slice(0,200000):'',say:'',sayT:0};});
+    xml:(typeof s.xml==='string'&&s.xml.indexOf('<xml')>-1)?s.xml.slice(0,200000):'',ks1:sanitizeKs1(s.ks1),say:'',sayT:0};});
   if(!sprites.length){const s=blankSprite('Sprite1',0);s.xml=stageDefaultXml();sprites=[s];}
+  return sprites;}
+function sanitizeKs1Sounds(arr){if(!Array.isArray(arr))return [];return arr.slice(0,30).map(s=>(s&&typeof s.data==='string'&&/^data:audio\//.test(s.data)&&s.data.length<900000)?{name:(typeof s.name==='string'?s.name:'sound').slice(0,24),data:s.data}:null).filter(Boolean);}
+function sanitizeStage(d){if(!d||typeof d!=='object'){const s=blankSprite('Sprite1',0);s.xml=stageDefaultXml();return{sprites:[s],bg:'#bfe3ff'};}
   const cleanNames=x=>Array.isArray(x)?x.filter(n=>typeof n==='string').slice(0,200).map(n=>n.slice(0,40)):[];
   let backdrops=Array.isArray(d.backdrops)?d.backdrops.map(sanitizeBackdrop).filter(Boolean):null;
   if(!backdrops||!backdrops.length)backdrops=[{name:'backdrop1',color:safeColor(d.bg)||'#bfe3ff'}];
   const backdropIdx=Math.max(0,Math.min((d.backdropIdx|0),backdrops.length-1));
-  return{sprites,bg:safeColor(d.bg)||'#bfe3ff',vars:cleanNames(d.vars),lists:cleanNames(d.lists),backdrops,backdropIdx};}
+  const base={bg:safeColor(d.bg)||'#bfe3ff',vars:cleanNames(d.vars),lists:cleanNames(d.lists),backdrops,backdropIdx,ks1sounds:sanitizeKs1Sounds(d.ks1sounds)};
+  // KS1 multi-page (scenes): each page has its own sprite set + backdrop; top-level sprites mirror the active page.
+  if(Array.isArray(d.pages)&&d.pages.length){
+    const pages=d.pages.slice(0,4).map(pg=>({sprites:sanitizeStageSprites(pg&&pg.sprites),backdropIdx:Math.max(0,Math.min((pg&&pg.backdropIdx|0),backdrops.length-1))}));
+    const pageIdx=Math.max(0,Math.min((d.pageIdx|0),pages.length-1));
+    return Object.assign(base,{pages,pageIdx,sprites:pages[pageIdx].sprites,backdropIdx:pages[pageIdx].backdropIdx});}
+  return Object.assign(base,{sprites:sanitizeStageSprites(d.sprites)});}
+// Validate KS1 ScratchJr scripts: array of scripts, each an array of {t,n?,text?} with known block types.
+function sanitizeKs1Block(b,depth){if(!b||typeof b!=='object'||typeof KS1_BLOCKS==='undefined'||!KS1_BLOCKS[b.t])return null;const def=KS1_BLOCKS[b.t],o={t:b.t};if(typeof b.n==='number'&&isFinite(b.n))o.n=Math.max(0,Math.min(99,Math.round(b.n)));if(typeof b.text==='string')o.text=b.text.slice(0,60);if(typeof b.c==='number'&&isFinite(b.c))o.c=Math.max(0,Math.min(5,b.c|0));if(def.container)o.body=(depth<3&&Array.isArray(b.body))?b.body.slice(0,80).map(x=>sanitizeKs1Block(x,depth+1)).filter(Boolean):[];return o;}
+function sanitizeKs1(arr){if(!Array.isArray(arr))return [];return arr.slice(0,40).map(scr=>Array.isArray(scr)?scr.slice(0,80).map(b=>sanitizeKs1Block(b,0)).filter(Boolean):[]).filter(scr=>scr.length);}
 function sanitizeBackdrop(b){if(!b||typeof b!=='object')return null;const name=(typeof b.name==='string'?b.name:'backdrop').slice(0,24);
   if(typeof b.img==='string'&&/^data:image\/(png|jpeg);/.test(b.img)&&b.img.length<1000000)return{name,img:b.img};
   return{name,color:safeColor(b.color)||'#bfe3ff'};}
@@ -1936,6 +2065,11 @@ function startNewStage(ks){clearDirty();projectType='stage';
 
 // ── Unified Scratch-style Stage view (no separate Build/Play/Code modes) ──
 function enterStageUI(){
+  if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
+  document.body.classList.remove('ks1-mode'); // coming from KS1? drop its mode + hide its UI
+  const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
+  ['code-panel','stage-right','cwrap'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
+  if(typeof ks1StopMission==='function')ks1StopMission();
   if(!stageState)stageNew();
   document.getElementById('app').classList.remove('hide');
   mode='code'; // neutral: the loop() dispatches on projectType==='stage' before any mode check
@@ -1960,6 +2094,9 @@ function exitStageUI(){
   if(!document.body.classList.contains('stage-mode'))return;
   stageStop();
   document.body.classList.remove('stage-mode');
+  document.body.classList.remove('ks1-mode');
+  if(typeof ks1StopMission==='function')ks1StopMission();
+  const k1=document.getElementById('ks1-ui');if(k1)k1.classList.add('hide');
   document.getElementById('stage-right').classList.add('hide');
   document.getElementById('code-panel').classList.remove('show');
   const rb=document.querySelector('.cp-run-bar');if(rb)rb.style.display='';
@@ -1967,8 +2104,276 @@ function exitStageUI(){
   if(gc.parentElement!==cwrap)cwrap.insertBefore(gc,cwrap.firstChild);
   if(blocklyWorkspace&&projectType!=='stage'){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}
 }
+// ── KS1 ScratchJr-style editor UI ──
+let ks1SelCat='trig', ks1Target={si:-1,rep:-1};   // ks1Target = which script (si) and which open container (rep, -1 = root)
+let ks1ReadAloud=true;                              // speak block names when tapped (KS1)
+function ks1CurSprite(){return stageState&&stageState.sprites[stageSel];}
+function ks1HexA(h,a){const n=parseInt(h.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+function ks1Speak(t){if(!ks1ReadAloud||!t||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(String(t));u.rate=0.95;u.pitch=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+// The block array a (si,rep) points at: root script (rep<0) or an open container's body.
+function ks1ArrAt(si,rep){const s=ks1CurSprite();if(!s||!s.ks1||!s.ks1[si])return null;return rep>=0?((s.ks1[si][rep]&&s.ks1[si][rep].body)||null):s.ks1[si];}
+// Index to insert at within a container element, by pointer x (ignoring the block being dragged).
+function ks1InsertIndex(tEl,clientX,skipEl){const blocks=Array.from(tEl.children).filter(c=>(c.classList.contains('ks1-sb')||c.classList.contains('ks1-cont'))&&c!==skipEl);let idx=blocks.length;for(let i=0;i<blocks.length;i++){const r=blocks[i].getBoundingClientRect();if(clientX<r.left+r.width/2){idx=i;break;}}return idx;}
+// Drag a script block to reorder (within a strip / into a loop / out to delete). onTap fires when it was a tap, not a drag.
+function ks1BindReorder(el,srcArr,idx,si,onTap){el.addEventListener('pointerdown',function(e){
+  if(e.target.closest('.bnum')||e.target.closest('.btext')||e.target.closest('.ks1-bdel'))return;
+  const sx=e.clientX,sy=e.clientY;let dragging=false,ghost=null;
+  function mv(ev){const dx=ev.clientX-sx,dy=ev.clientY-sy;if(!dragging&&Math.hypot(dx,dy)>10){dragging=true;el.style.opacity='.35';ghost=el.cloneNode(true);ghost.id='ks1-ghost';ghost.style.width=el.offsetWidth+'px';document.body.appendChild(ghost);}
+    if(ghost){ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';}}
+  function up(ev){document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);el.style.opacity='';if(ghost)ghost.remove();
+    if(!dragging){if(onTap)onTap();return;}
+    const s=ks1CurSprite();const blk=srcArr[idx];if(!blk){ks1RenderScripts();return;}
+    const sc=document.getElementById('ks1-scripts'),at=document.elementFromPoint(ev.clientX,ev.clientY);
+    if(!at||!sc.contains(at)){srcArr.splice(idx,1);if(srcArr===s.ks1[si]&&!srcArr.length)s.ks1.splice(si,1);markDirty();ks1RenderScripts();return;} // out → delete
+    let tsi,trep,tEl;const bodyEl=at.closest('.ks1-cont-body'),stripEl=at.closest('.ks1-strip');
+    if(bodyEl&&bodyEl.dataset.si!=null){tsi=+bodyEl.dataset.si;trep=+bodyEl.dataset.rep;tEl=bodyEl;}
+    else if(stripEl&&stripEl.dataset.si!=null){tsi=+stripEl.dataset.si;trep=-1;tEl=stripEl;}
+    else{ks1RenderScripts();return;}
+    if(trep>=0&&KS1_BLOCKS[blk.t]&&KS1_BLOCKS[blk.t].container){const strip=tEl.closest('.ks1-strip');if(strip){tsi=+strip.dataset.si;trep=-1;tEl=strip;}} // no loop-in-loop
+    const tgtArr=ks1ArrAt(tsi,trep);if(!tgtArr){ks1RenderScripts();return;}
+    const insIdx=ks1InsertIndex(tEl,ev.clientX,el);
+    srcArr.splice(idx,1);tgtArr.splice(Math.max(0,Math.min(tgtArr.length,insIdx)),0,blk);
+    if(srcArr===s.ks1[si]&&!srcArr.length)s.ks1.splice(si,1);
+    markDirty();ks1RenderScripts();}
+  document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);});}
+function enterKS1UI(){
+  if(!stageState)stageNew();
+  document.getElementById('app').classList.remove('hide');
+  mode='code';
+  document.body.classList.add('stage-mode');document.body.classList.add('ks1-mode');
+  document.getElementById('stage-right').classList.add('hide');
+  document.getElementById('code-panel').classList.remove('show');
+  const rb=document.querySelector('.cp-run-bar');if(rb)rb.style.display='none';
+  let ui=document.getElementById('ks1-ui');
+  if(!ui){ui=document.createElement('div');ui.id='ks1-ui';
+    ui.innerHTML='<div class="ks1-top"><div class="ks1-sprites" id="ks1-sprites"></div><div class="ks1-stage" id="ks1-stage-holder"></div><div class="ks1-pages" id="ks1-pages"></div></div>'+
+      '<div class="ks1-prog"><div class="ks1-cats" id="ks1-cats"></div><div class="ks1-progmain"><div class="ks1-palette" id="ks1-palette"></div><div class="ks1-scripts" id="ks1-scripts"></div></div></div>';
+    document.getElementById('app').appendChild(ui);}
+  ui.classList.remove('hide');
+  const gc=document.getElementById('gc'),holder=document.getElementById('ks1-stage-holder');
+  if(gc.parentElement!==holder)holder.appendChild(gc);gc.style.display='block';
+  const gf=document.getElementById('btn-greenflag');if(gf)gf.onclick=()=>stageStart();
+  const sb=document.getElementById('btn-stopall');if(sb)sb.onclick=()=>stageStop();
+  if(!stageState.pages){stageState.pages=[{sprites:stageState.sprites,backdropIdx:stageState.backdropIdx||0}];stageState.pageIdx=0;}
+  if(stageState.pageIdx==null)stageState.pageIdx=0;
+  const ap=stageState.pages[stageState.pageIdx];if(ap){stageState.sprites=ap.sprites;stageState.backdropIdx=ap.backdropIdx||0;}
+  stageSel=Math.max(0,Math.min(stageSel,stageState.sprites.length-1));
+  const cs=ks1CurSprite();ks1Target={si:(cs&&cs.ks1&&cs.ks1.length)?0:-1,rep:-1};
+  ks1RenderCats();ks1RenderPalette();ks1RenderSprites();ks1RenderScripts();ks1RenderPages();
+  setTimeout(()=>{try{resize();}catch(e){}},60);
+}
+function ks1RenderCats(){const el=document.getElementById('ks1-cats');if(!el)return;el.innerHTML='';
+  KS1_CATS.forEach(c=>{const d=document.createElement('div');d.className='ks1-cat'+(ks1SelCat===c.id?' sel':'');d.style.background=c.color;d.title=c.name;
+    d.innerHTML='<span class="ks1-cati">'+c.icon+'</span><span class="ks1-catn">'+c.name+'</span>';
+    if(typeof attachTip==='function')attachTip(d,'<b>'+c.name+'</b> blocks');
+    d.onclick=()=>{ks1SelCat=c.id;ks1RenderCats();ks1RenderPalette();};el.appendChild(d);});}
+function ks1RenderPalette(){const el=document.getElementById('ks1-palette');if(!el)return;el.innerHTML='';
+  const cat=KS1_CATS.find(c=>c.id===ks1SelCat);
+  Object.keys(KS1_BLOCKS).filter(t=>KS1_BLOCKS[t].cat===ks1SelCat).forEach(t=>{const def=KS1_BLOCKS[t];
+    if(def.page){ // ScratchJr-style: one "go to page N" block per existing page
+      const np=(stageState&&stageState.pages)?stageState.pages.length:1;
+      for(let p=1;p<=np;p++){const d=document.createElement('div');d.className='ks1-block';d.style.background=cat.color;
+        d.innerHTML='<div class="bi">'+def.icon+'<span class="ks1-pbadge">'+p+'</span></div><div class="bl">go to page '+p+'</div>';
+        ks1BindAdd(d,t,{n:p});if(typeof attachTip==='function')attachTip(d,'<b>Go to page '+p+'</b><br>Jumps to page '+p+' (scene).');el.appendChild(d);}
+      return;}
+    const d=document.createElement('div');d.className='ks1-block'+(def.hat?' ks1-trig':'')+(def.container?' ks1-cblock':'');d.style.background=cat.color;
+    d.innerHTML='<div class="bi">'+def.icon+'</div><div class="bl">'+def.say+'</div>';
+    ks1BindAdd(d,t);if(typeof attachTip==='function')attachTip(d,'<b>'+def.say+'</b>'+(KS1_DESC[t]?'<br>'+KS1_DESC[t]:''));el.appendChild(d);});}
+function ks1RenderSprites(){const el=document.getElementById('ks1-sprites');if(!el||!stageState)return;el.innerHTML='';
+  const rt=document.createElement('div');rt.className='ks1-readtog'+(ks1ReadAloud?' on':'');rt.textContent=ks1ReadAloud?'🔊':'🔇';rt.title='Read blocks aloud';rt.onclick=()=>{ks1ReadAloud=!ks1ReadAloud;if(ks1ReadAloud)ks1Speak('reading on');ks1RenderSprites();};el.appendChild(rt);
+  const ib=document.createElement('div');ib.className='ks1-ideabtn';ib.textContent='✨ Ideas';ib.title='Try a ready-made idea';ib.onclick=ks1OpenIdeas;el.appendChild(ib);
+  const mb=document.createElement('div');mb.className='ks1-ideabtn ks1-missionbtn';mb.textContent='🎯 Missions';mb.title='Follow a step-by-step mission';mb.onclick=ks1OpenMissions;el.appendChild(mb);
+  const ab=document.createElement('div');ab.className='ks1-ideabtn ks1-a11ybtn';ab.textContent='♿ Access';ab.title='Accessibility options';ab.onclick=a11yOpen;el.appendChild(ab);
+  stageState.sprites.forEach((s,i)=>{const d=document.createElement('div');d.className='ks1-sprite'+(i===stageSel?' sel':'');
+    const cv=document.createElement('canvas');cv.width=60;cv.height=52;try{drawSpriteThumb(cv,s);}catch(e){}d.appendChild(cv);
+    const nm=document.createElement('div');nm.className='ks1-sname';nm.textContent=s.name;d.appendChild(nm);
+    const dress=document.createElement('div');dress.className='ks1-sdress';dress.textContent='🎨';dress.title='Dress up / paint';dress.onclick=e=>{e.stopPropagation();stageSel=i;ks1RenderSprites();openCostumePicker();};d.appendChild(dress);
+    const del=document.createElement('div');del.className='ks1-sdel';del.textContent='✕';del.title='Delete character';del.onclick=e=>{e.stopPropagation();ks1DeleteSprite(i);};d.appendChild(del);
+    d.onclick=()=>{stageSel=i;const cs=stageState.sprites[i];ks1Target={si:(cs.ks1&&cs.ks1.length)?0:-1,rep:-1};ks1RenderSprites();ks1RenderScripts();};
+    d.ondblclick=()=>{stageSel=i;ks1RenderSprites();openCostumePicker();};
+    el.appendChild(d);});
+  const add=document.createElement('div');add.className='ks1-addsprite';add.textContent='＋';add.title='Add a character';add.onclick=ks1AddSprite;el.appendChild(add);}
+function ks1AddSprite(){if(!stageState)return;const i=stageState.sprites.length;const s=blankSprite('Sprite'+(i+1),i);stageState.sprites.push(s);stageSel=i;ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();}
+// ── Accessibility (app-wide: dyslexia-friendly font, bigger text, high contrast, less motion, read-aloud) ──
+function a11yState(){try{return JSON.parse(localStorage.getItem('bap_a11y')||'{}');}catch(e){return {};}}
+function a11ySave(s){try{localStorage.setItem('bap_a11y',JSON.stringify(s));}catch(e){}}
+function applyA11y(){const s=a11yState();document.body.classList.toggle('a11y-dyslexia',!!s.dyslexia);document.body.classList.toggle('a11y-bigtext',!!s.bigtext);document.body.classList.toggle('a11y-contrast',!!s.contrast);document.body.classList.toggle('a11y-reduce',!!s.reduce);}
+function a11yOpen(){let m=document.getElementById('a11y-modal');if(!m){m=document.createElement('div');m.id='a11y-modal';m.className='ks1-modal';m.onclick=e=>{if(e.target===m)m.classList.add('hide');};document.body.appendChild(m);}
+  const s=a11yState();
+  const rows=[['dyslexia','🔤 Easy-to-read font','A rounded, dyslexia-friendly font with more spacing.'],['bigtext','🔎 Bigger text','Make everything on screen larger.'],['contrast','◐ High contrast','Stronger outlines so things stand out.'],['reduce','🐢 Less motion','Turn off animations and movement.'],['read','🔊 Read aloud','Say block names and tips out loud.']];
+  m.innerHTML='<div class="ks1-modal-box" style="max-width:480px"><h3>♿ Accessibility</h3><p class="ks1-modal-sub">Make CodeJump easier to see, read and use.</p><div id="a11y-rows" style="margin:6px 0"></div><button class="ks1-idea-close">Done</button></div>';
+  const box=m.querySelector('#a11y-rows');
+  rows.forEach(function(row){const k=row[0];const r=document.createElement('label');r.className='a11y-row';
+    const on=(k==='read')?(((typeof readAloud!=='undefined')&&readAloud)||ks1ReadAloud):!!s[k];
+    r.innerHTML='<input type="checkbox" '+(on?'checked':'')+'><div class="a11y-rt"><b>'+row[1]+'</b><small>'+row[2]+'</small></div>';
+    r.querySelector('input').onchange=function(e){const v=e.target.checked;
+      if(k==='read'){ks1ReadAloud=v;if(typeof readAloud!=='undefined'){readAloud=v;try{localStorage.setItem('bap_read_aloud',v?'on':'off');}catch(_){}}if(typeof updateReadBtn==='function')updateReadBtn();if(document.body.classList.contains('ks1-mode')&&typeof ks1RenderSprites==='function')ks1RenderSprites();}
+      else{const st=a11yState();st[k]=v;a11ySave(st);applyA11y();}};
+    box.appendChild(r);});
+  m.querySelector('.ks1-idea-close').onclick=function(){m.classList.add('hide');};
+  m.classList.remove('hide');}
+try{applyA11y();}catch(e){}
+// ── KS1 pages (scenes, ScratchJr-style; max 4) ──
+function ks1RenderPages(){const el=document.getElementById('ks1-pages');if(!el||!stageState||!stageState.pages)return;el.innerHTML='';
+  if(stageState.pages[stageState.pageIdx])stageState.pages[stageState.pageIdx].backdropIdx=stageState.backdropIdx; // keep active page's backdrop synced
+  stageState.pages.forEach((p,i)=>{const d=document.createElement('div');d.className='ks1-page'+(i===stageState.pageIdx?' sel':'');
+    const bd=(stageState.backdrops||[])[p.backdropIdx||0];d.style.background=(bd&&!bd.img&&bd.color)||'#cfe0ee';
+    const n=document.createElement('span');n.className='ks1-pnum';n.textContent=(i+1);d.appendChild(n);
+    if(stageState.pages.length>1){const x=document.createElement('div');x.className='ks1-pdel';x.textContent='✕';x.title='Delete page';x.onclick=e=>{e.stopPropagation();ks1DeletePage(i);};d.appendChild(x);}
+    d.onclick=()=>ks1SwitchPage(i);d.title='Page '+(i+1)+' (double-tap to change backdrop)';d.ondblclick=()=>{ks1SwitchPage(i);if(typeof openBackdropManager==='function')openBackdropManager();};
+    el.appendChild(d);});
+  if(stageState.pages.length<4){const add=document.createElement('div');add.className='ks1-page ks1-paddpage';add.textContent='＋';add.title='Add a page';add.onclick=ks1AddPage;el.appendChild(add);}}
+function ks1SwitchPage(i){const p=stageState&&stageState.pages;if(!p||!p[i]||stagePlaying)return;
+  p[stageState.pageIdx].backdropIdx=stageState.backdropIdx;
+  stageState.pageIdx=i;stageState.sprites=p[i].sprites;stageState.backdropIdx=p[i].backdropIdx||0;stageSel=0;ks1Target={si:-1,rep:-1};
+  ks1RenderSprites();ks1RenderScripts();ks1RenderPages();}
+function ks1AddPage(){if(!stageState.pages||stageState.pages.length>=4||stagePlaying)return;const s=blankSprite('Sprite1',0);stageState.pages.push({sprites:[s],backdropIdx:stageState.backdropIdx||0});markDirty();ks1SwitchPage(stageState.pages.length-1);}
+function ks1DeletePage(i){const p=stageState&&stageState.pages;if(!p||p.length<=1||stagePlaying)return;p.splice(i,1);stageState.pageIdx=Math.max(0,Math.min(stageState.pageIdx,p.length-1));stageState.sprites=p[stageState.pageIdx].sprites;stageState.backdropIdx=p[stageState.pageIdx].backdropIdx||0;stageSel=0;ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();ks1RenderPages();}
+// Ready-made starter programs kids can load into the current character (teaches by example).
+const KS1_IDEAS=[
+  {name:'Walk across',icon:'🚶',scr:[[{t:'flag'},{t:'repeat',n:8,body:[{t:'right',n:1}]}]]},
+  {name:'Bounce',icon:'🦘',scr:[[{t:'flag'},{t:'forever',body:[{t:'hop',n:2}]}]]},
+  {name:'Spin around',icon:'🌀',scr:[[{t:'flag'},{t:'repeat',n:12,body:[{t:'turnR',n:1}]}]]},
+  {name:'Grow when tapped',icon:'🎈',scr:[[{t:'tap'},{t:'grow',n:3},{t:'say',text:'Wheee!'}]]},
+  {name:'Say hello',icon:'👋',scr:[[{t:'flag'},{t:'say',text:'Hello!'},{t:'wait',n:10},{t:'say',text:'Bye!'}]]},
+  {name:'Dance!',icon:'💃',scr:[[{t:'flag'},{t:'forever',body:[{t:'right',n:1},{t:'left',n:1},{t:'hop',n:1}]}]]}
+];
+function ks1OpenIdeas(){let m=document.getElementById('ks1-ideas');
+  if(!m){m=document.createElement('div');m.id='ks1-ideas';m.className='ks1-modal hide';m.onclick=e=>{if(e.target===m)m.classList.add('hide');};document.body.appendChild(m);}
+  m.innerHTML='<div class="ks1-modal-box"><h3>✨ Try an idea</h3><p class="ks1-modal-sub">Tap one to add it to your character — then press 🟢 GO!</p><div class="ks1-idea-grid"></div><button class="ks1-idea-close">Close</button></div>';
+  const grid=m.querySelector('.ks1-idea-grid');
+  KS1_IDEAS.forEach(idea=>{const c=document.createElement('div');c.className='ks1-idea';c.innerHTML='<div class="ii">'+idea.icon+'</div><div class="in">'+idea.name+'</div>';
+    c.onclick=()=>{const s=ks1CurSprite();if(s){s.ks1=JSON.parse(JSON.stringify(idea.scr));ks1Target={si:0,rep:-1};markDirty();ks1RenderScripts();}m.classList.add('hide');ks1Speak(idea.name);};
+    grid.appendChild(c);});
+  m.querySelector('.ks1-idea-close').onclick=()=>m.classList.add('hide');
+  m.classList.remove('hide');}
+// Record-your-own-sound (browser mic permission = the consent gate). Stores into stageState.ks1sounds; block.n references it.
+function ks1RecordDialog(b){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Recording needs a microphone.');return;}
+  let m=document.getElementById('ks1-rec');if(!m){m=document.createElement('div');m.id='ks1-rec';m.className='ks1-modal';m.onclick=e=>{if(e.target===m)close();};document.body.appendChild(m);}
+  m.classList.remove('hide');
+  let chunks=[],mr=null,stream=null,dataURL=null,recording=false,seconds=0,timer=null;
+  // if the block already has a sound, offer to play it
+  const cur=(stageState.ks1sounds||[])[b.n!=null?b.n:-1];if(cur)dataURL=cur.data;
+  function close(){if(timer)clearInterval(timer);if(stream)stream.getTracks().forEach(t=>t.stop());m.classList.add('hide');}
+  function mk(t,c){const x=document.createElement('button');x.className='ks1-rec-btn';x.style.background=c;x.textContent=t;return x;}
+  function start(){navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){stream=s;chunks=[];try{mr=new MediaRecorder(s);}catch(e){alert('Recording not supported here.');return;}
+    mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+    mr.onstop=()=>{const blob=new Blob(chunks,{type:(mr&&mr.mimeType)||'audio/webm'});const fr=new FileReader();fr.onload=()=>{dataURL=fr.result;paint();};fr.readAsDataURL(blob);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}};
+    mr.start();recording=true;seconds=0;timer=setInterval(()=>{seconds++;if(seconds>=10)stop();paint();},1000);paint();}).catch(()=>{});}
+  function stop(){if(timer){clearInterval(timer);timer=null;}if(mr&&mr.state!=='inactive')mr.stop();recording=false;paint();}
+  function save(){if(!dataURL)return close();if(!stageState.ks1sounds)stageState.ks1sounds=[];
+    if(dataURL.length<800000){stageState.ks1sounds.push({name:'sound'+(stageState.ks1sounds.length+1),data:dataURL});b.n=stageState.ks1sounds.length-1;markDirty();ks1RenderScripts();}close();}
+  function paint(){m.innerHTML='<div class="ks1-modal-box"><h3>🎤 Record a sound</h3><p class="ks1-modal-sub">'+(recording?'Recording… make a sound!':'Tap 🔴 Record, make a sound, then ⏹️ Stop.')+'</p><div id="ks1-rec-timer">'+(recording?('🔴 '+seconds+'s'):(dataURL?'Got a sound! ✅':'Ready'))+'</div><div id="ks1-rec-row"></div></div>';
+    const row=m.querySelector('#ks1-rec-row');
+    if(!recording){const r=mk(dataURL?'🔴 Record again':'🔴 Record','#e03131');r.onclick=start;row.appendChild(r);}
+    else{const st=mk('⏹️ Stop','#444');st.onclick=stop;row.appendChild(st);}
+    if(dataURL&&!recording){const pl=mk('▶ Play','#3b8eea');pl.onclick=()=>{try{new Audio(dataURL).play();}catch(e){}};row.appendChild(pl);const sv=mk('✅ Use it','#2fb344');sv.onclick=save;row.appendChild(sv);}
+    const cx=mk('Cancel','#888');cx.onclick=close;row.appendChild(cx);}
+  paint();}
+// ── KS1 guided missions (step-by-step coach) ──
+function ks1AllBlocks(s){const out=[];(s.ks1||[]).forEach(scr=>scr.forEach(function walk(b){out.push(b);if(b.body)b.body.forEach(walk);}));return out;}
+function ks1HasTrig(s,t){return (s.ks1||[]).some(scr=>scr[0]&&scr[0].t===t);}
+function ks1HasBlock(s,types){return ks1AllBlocks(s).some(b=>types.indexOf(b.t)>=0);}
+function ks1HasInLoop(s,t){let f=false;(s.ks1||[]).forEach(scr=>scr.forEach(function walk(b){if((b.t==='repeat'||b.t==='forever')&&b.body&&b.body.some(x=>x.t===t))f=true;if(b.body)b.body.forEach(walk);}));return f;}
+const KS1_MISSIONS=[
+ {name:'Make it move',icon:'🚶',steps:[
+   {tip:'Tap the 🏁 Start block',ok:s=>ks1HasTrig(s,'flag')},
+   {tip:'Now add a Move block (➡️ ⬅️ ⬆️ ⬇️)',ok:s=>ks1HasBlock(s,['right','left','up','down'])},
+   {tip:'Press 🟢 GO to watch it move!',ok:()=>stagePlaying}]},
+ {name:'Make it talk',icon:'💬',steps:[
+   {tip:'Tap 🏁 Start',ok:s=>ks1HasTrig(s,'flag')},
+   {tip:'In 🎨 Looks, add a 💬 say block',ok:s=>ks1HasBlock(s,['say'])},
+   {tip:'Press 🟢 GO!',ok:()=>stagePlaying}]},
+ {name:'Jump for joy',icon:'🦘',steps:[
+   {tip:'Tap 🏁 Start',ok:s=>ks1HasTrig(s,'flag')},
+   {tip:'In ⏱️ Control, add a 🔁 Repeat loop',ok:s=>ks1HasBlock(s,['repeat'])},
+   {tip:'Put a 🦘 hop INSIDE the loop',ok:s=>ks1HasInLoop(s,'hop')},
+   {tip:'Press 🟢 GO!',ok:()=>stagePlaying}]},
+ {name:'Tap to grow',icon:'🎈',steps:[
+   {tip:'Tap the 👆 "when you tap" block',ok:s=>ks1HasTrig(s,'tap')},
+   {tip:'In 🎨 Looks, add a 🔼 get bigger block',ok:s=>ks1HasBlock(s,['grow'])},
+   {tip:'Press 🟢 GO, then tap your character!',ok:()=>stagePlaying}]}
+];
+let ks1Mission=null,_ks1mTimer=null;
+function ks1OpenMissions(){let m=document.getElementById('ks1-missions');if(!m){m=document.createElement('div');m.id='ks1-missions';m.className='ks1-modal';m.onclick=e=>{if(e.target===m)m.classList.add('hide');};document.body.appendChild(m);}
+  m.innerHTML='<div class="ks1-modal-box"><h3>🎯 Missions</h3><p class="ks1-modal-sub">Pick a mission and follow the steps!</p><div class="ks1-idea-grid"></div><button class="ks1-idea-close">Close</button></div>';
+  const grid=m.querySelector('.ks1-idea-grid');
+  KS1_MISSIONS.forEach((ms,i)=>{const c=document.createElement('div');c.className='ks1-idea';c.innerHTML='<div class="ii">'+ms.icon+'</div><div class="in">'+ms.name+'</div>';c.onclick=()=>{m.classList.add('hide');ks1StartMission(i);};grid.appendChild(c);});
+  m.querySelector('.ks1-idea-close').onclick=()=>m.classList.add('hide');
+  m.classList.remove('hide');}
+function ks1StartMission(i){ks1Mission={m:i,step:0};ks1ShowCoach();if(_ks1mTimer)clearInterval(_ks1mTimer);_ks1mTimer=setInterval(ks1MissionTick,500);}
+function ks1StopMission(){ks1Mission=null;if(_ks1mTimer){clearInterval(_ks1mTimer);_ks1mTimer=null;}const c=document.getElementById('ks1-coach');if(c)c.classList.add('hide');}
+function ks1MissionTick(){if(!ks1Mission)return;const ms=KS1_MISSIONS[ks1Mission.m],s=ks1CurSprite();if(!ms||!s)return;const step=ms.steps[ks1Mission.step];if(step&&step.ok(s)){ks1Mission.step++;if(ks1Mission.step>=ms.steps.length){ks1CoachDone();return;}ks1Speak('Well done');}ks1ShowCoach();}
+function ks1ShowCoach(){if(!ks1Mission)return;let c=document.getElementById('ks1-coach');if(!c){c=document.createElement('div');c.id='ks1-coach';document.body.appendChild(c);}
+  const ms=KS1_MISSIONS[ks1Mission.m],step=ms.steps[ks1Mission.step];if(!step)return;
+  c.className='';c.innerHTML='<div class="kc-emoji">'+ms.icon+'</div><div class="kc-body"><div class="kc-step">'+ms.name+' — step '+(ks1Mission.step+1)+' of '+ms.steps.length+'</div><div class="kc-tip">'+step.tip+'</div></div><button class="kc-x">✕</button>';
+  c.querySelector('.kc-x').onclick=ks1StopMission;}
+function ks1CoachDone(){const c=document.getElementById('ks1-coach');if(c){c.className='done';c.innerHTML='<div class="kc-emoji">🎉</div><div class="kc-body"><div class="kc-tip">Mission complete — great job!</div></div><button class="kc-x">✕</button>';c.querySelector('.kc-x').onclick=ks1StopMission;}ks1Speak('Mission complete! Great job!');if(_ks1mTimer){clearInterval(_ks1mTimer);_ks1mTimer=null;}ks1Mission=null;}
+function ks1DeleteSprite(i){if(!stageState||stageState.sprites.length<=1)return;stageState.sprites.splice(i,1);stageSel=Math.max(0,Math.min(stageSel,stageState.sprites.length-1));ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();}
+// small reusable bits
+function ks1Stepper(b,def){const nb=document.createElement('div');nb.className='bnum';const mn=document.createElement('span');mn.textContent='−';const vv=document.createElement('b');vv.textContent=(b.n!=null?b.n:def.num);const pl=document.createElement('span');pl.textContent='+';
+  mn.onclick=e=>{e.stopPropagation();b.n=Math.max(1,(b.n!=null?b.n:def.num)-1);markDirty();ks1RenderScripts();};
+  pl.onclick=e=>{e.stopPropagation();b.n=Math.min(20,(b.n!=null?b.n:def.num)+1);markDirty();ks1RenderScripts();};
+  nb.appendChild(mn);nb.appendChild(vv);nb.appendChild(pl);return nb;}
+function ks1TextInput(b,def){const ti=document.createElement('input');ti.className='btext';ti.value=(b.text!=null?b.text:def.text);ti.onclick=e=>e.stopPropagation();ti.oninput=()=>{b.text=ti.value;markDirty();};return ti;}
+function ks1ColorChip(b){const c=document.createElement('div');c.className='ks1-msgc';c.style.background=KS1_MSG_COLORS[b.c||0];c.title='Message colour (tap to change)';c.onclick=e=>{e.stopPropagation();b.c=((b.c||0)+1)%KS1_MSG_COLORS.length;markDirty();ks1RenderScripts();};return c;}
+function ks1SpeedChip(b){const SP=['🐢','🚶','🐇'];const c=document.createElement('div');c.className='ks1-spd';c.textContent=SP[(b.n||2)-1];c.title='Speed (tap to change)';c.onclick=e=>{e.stopPropagation();b.n=((b.n||2)%3)+1;markDirty();ks1RenderScripts();};return c;}
+function ks1DelBtn(fn){const x=document.createElement('div');x.className='ks1-bdel';x.textContent='✕';x.onclick=e=>{e.stopPropagation();fn();};return x;}
+// Render one block (recursively for container bodies). parent = the array it lives in; si/rootIdx locate it for targeting.
+function ks1BlockEl(b,parent,idx,s,si,rootIdx){const def=KS1_BLOCKS[b.t];if(!def)return document.createTextNode('');const cat=KS1_CATS.find(c=>c.id===def.cat);
+  function delThis(){parent.splice(idx,1);if(parent===s.ks1[si]&&!parent.length){s.ks1.splice(si,1);ks1Target={si:-1,rep:-1};}else if(ks1Target.si===si&&ks1Target.rep===rootIdx)ks1Target.rep=-1;markDirty();ks1RenderScripts();}
+  if(def.container){const wrap=document.createElement('div');wrap.className='ks1-cont'+((ks1Target.si===si&&ks1Target.rep===rootIdx)?' open':'');wrap.style.borderColor=cat.color;wrap.style.background=ks1HexA(cat.color,.16);
+    if(rootIdx!=null){wrap.dataset.si=si;wrap.dataset.rep=rootIdx;}
+    const head=document.createElement('div');head.className='ks1-sb';head.style.background=cat.color;head.innerHTML='<div class="bi">'+def.icon+'</div>';
+    if(def.num!=null)head.appendChild(ks1Stepper(b,def));
+    ks1BindReorder(head,parent,idx,si,()=>{ks1Speak(def.say);if(rootIdx!=null){ks1Target={si:si,rep:rootIdx};ks1RenderScripts();}});
+    wrap.appendChild(head);
+    const body=document.createElement('div');body.className='ks1-cont-body';if(rootIdx!=null){body.dataset.si=si;body.dataset.rep=rootIdx;}
+    b.body=b.body||[];
+    if(!b.body.length){const ph=document.createElement('div');ph.className='ks1-cont-ph';ph.textContent='blocks to repeat';body.appendChild(ph);}
+    b.body.forEach((cb,ci)=>{body.appendChild(ks1BlockEl(cb,b.body,ci,s,si,null));});
+    wrap.appendChild(body);
+    const cap=document.createElement('div');cap.className='ks1-cont-cap';cap.style.color=cat.color;cap.textContent='↺';wrap.appendChild(cap);
+    wrap.appendChild(ks1DelBtn(delThis));
+    return wrap;}
+  const d=document.createElement('div');d.className='ks1-sb'+(def.hat?' ks1-trig':'');d.style.background=cat.color;d.innerHTML='<div class="bi">'+def.icon+(def.page?('<span class="ks1-pbadge">'+(b.n||1)+'</span>'):'')+'</div>';
+  if(def.num!=null)d.appendChild(ks1Stepper(b,def));
+  if(def.speed)d.appendChild(ks1SpeedChip(b));
+  if(def.msg)d.appendChild(ks1ColorChip(b));
+  if(def.rec){const chip=document.createElement('div');chip.className='ks1-spd';chip.textContent=(b.n!=null&&(stageState.ks1sounds||[])[b.n])?'🎵':'🎤';chip.title='Record a sound';chip.onclick=e=>{e.stopPropagation();ks1RecordDialog(b);};d.appendChild(chip);}
+  if(def.text!=null)d.appendChild(ks1TextInput(b,def));
+  d.appendChild(ks1DelBtn(delThis));
+  ks1BindReorder(d,parent,idx,si,def.rec?(()=>ks1RecordDialog(b)):(()=>ks1Speak(def.say)));
+  if(typeof attachTip==='function')attachTip(d,'<b>'+def.say+'</b>'+(KS1_DESC[b.t]?'<br>'+KS1_DESC[b.t]:''));
+  return d;}
+function ks1RenderScripts(){const el=document.getElementById('ks1-scripts');if(!el)return;el.innerHTML='';const s=ks1CurSprite();if(!s)return;s.ks1=s.ks1||[];
+  if(!s.ks1.length){const h=document.createElement('div');h.className='ks1-hint';h.textContent='Tap a yellow 🏁 Start block below to begin a program for '+s.name+'.';el.appendChild(h);return;}
+  s.ks1.forEach((scr,si)=>{const strip=document.createElement('div');strip.className='ks1-strip'+(si===ks1Target.si?' sel':'');strip.dataset.si=si;
+    strip.onclick=e=>{if(e.target===strip){ks1Target={si:si,rep:-1};ks1RenderScripts();}};
+    scr.forEach((b,bi)=>{strip.appendChild(ks1BlockEl(b,scr,bi,s,si,bi));});
+    el.appendChild(strip);});}
+function ks1AddBlock(type,extra){const s=ks1CurSprite();if(!s)return;const def=KS1_BLOCKS[type];ks1Speak(def.say);const blk={t:type};if(def.num!=null)blk.n=def.num;if(def.text!=null)blk.text=def.text;if(def.speed)blk.n=2;if(def.msg)blk.c=0;if(def.page)blk.n=1;if(def.container)blk.body=[];if(extra)Object.assign(blk,extra);
+  s.ks1=s.ks1||[];
+  if(def.hat){s.ks1.push([blk]);ks1Target={si:s.ks1.length-1,rep:-1};markDirty();ks1RenderScripts();return;}
+  if(ks1Target.si<0||ks1Target.si>=s.ks1.length){s.ks1.push([blk]);ks1Target={si:s.ks1.length-1,rep:-1};if(def.container)ks1Target.rep=0;markDirty();ks1RenderScripts();return;}
+  const scr=s.ks1[ks1Target.si];
+  if(ks1Target.rep>=0&&scr[ks1Target.rep]&&scr[ks1Target.rep].body&&!def.container){scr[ks1Target.rep].body.push(blk);} // drop inside the open loop
+  else{scr.push(blk);if(def.container)ks1Target={si:ks1Target.si,rep:scr.length-1};} // a new loop auto-opens so the next blocks go inside it
+  markDirty();ks1RenderScripts();}
+// Tap a palette block to add it; or drag with a ghost (drop on a strip / inside a loop targets that spot).
+function ks1BindAdd(el,type,extra){el.addEventListener('pointerdown',function(e){e.preventDefault();const sx=e.clientX,sy=e.clientY;let dragging=false,ghost=null;
+  function mv(ev){const dx=ev.clientX-sx,dy=ev.clientY-sy;if(!dragging&&Math.hypot(dx,dy)>9){dragging=true;ghost=el.cloneNode(true);ghost.id='ks1-ghost';ghost.style.width=el.offsetWidth+'px';ghost.style.height=el.offsetHeight+'px';document.body.appendChild(ghost);}
+    if(ghost){ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';}}
+  function up(ev){document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);if(ghost)ghost.remove();
+    if(dragging){const sc=document.getElementById('ks1-scripts');const at=document.elementFromPoint(ev.clientX,ev.clientY);
+      if(!at||!sc.contains(at))return; // dropped outside the script area → cancel
+      const body=at.closest('.ks1-cont-body'),strip=at.closest('.ks1-strip');
+      if(body&&body.dataset.si!=null)ks1Target={si:+body.dataset.si,rep:+body.dataset.rep};
+      else if(strip&&strip.dataset.si!=null)ks1Target={si:+strip.dataset.si,rep:-1};}
+    ks1AddBlock(type,extra);}
+  document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);});}
 // Save the workspace into the currently-selected sprite, and load another sprite's scripts.
-function stageSaveCurrent(){if(blocklyWorkspace&&stageState&&stageState.sprites[stageSel]){try{stageState.sprites[stageSel].xml=Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));}catch(e){}}}
+function stageSaveCurrent(){if(keyStage==='ks1')return;if(blocklyWorkspace&&stageState&&stageState.sprites[stageSel]){try{stageState.sprites[stageSel].xml=Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));}catch(e){}}}
 function stageLoadSpriteScripts(i){if(!blocklyWorkspace||!stageState||!stageState.sprites[i])return;
   _suppressBlocklyDirty=true;blocklyWorkspace.clear();
   try{Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(stageState.sprites[i].xml||emptyStageXml()),blocklyWorkspace);}catch(e){}
@@ -1981,14 +2386,16 @@ function stageSyncVars(){if(!blocklyWorkspace||!stageState)return;
     stageState.lists.forEach(n=>{if(!blocklyWorkspace.getVariable(n,'list'))blocklyWorkspace.createVariable(n,'list');});
     blocklyWorkspace.getAllVariables().forEach(v=>{const arr=(v.type==='list')?stageState.lists:stageState.vars;if(arr.indexOf(v.name)<0){arr.push(v.name);added=true;}});}catch(e){}
   if(added&&typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote&&typeof collabVars==='function')collabVars();}
-function stageSelectSprite(i){if(!stageState||!stageState.sprites[i]||i===stageSel){if(stageState&&stageState.sprites[i]&&i===stageSel)return;}
-  if(!stageState||!stageState.sprites[i])return;stageSaveCurrent();stageSel=i;stageLoadSpriteScripts(i);renderSpritePanel();}
+function stageSelectSprite(i){if(!stageState||!stageState.sprites[i])return;
+  if(keyStage==='ks1'){stageSel=i;ks1Target={si:(stageState.sprites[i].ks1&&stageState.sprites[i].ks1.length)?0:-1,rep:-1};if(typeof ks1RenderSprites==='function'){ks1RenderSprites();ks1RenderScripts();}return;}
+  if(i===stageSel)return;stageSaveCurrent();stageSel=i;stageLoadSpriteScripts(i);renderSpritePanel();}
 function stageAddSprite(){if(!stageState)return;stageSaveCurrent();const i=stageState.sprites.length;const ns=blankSprite('Sprite'+(i+1),i);stageState.sprites.push(ns);stageSel=i;stageLoadSpriteScripts(i);renderSpritePanel();markDirty();if(typeof collabSpriteAdd==='function')collabSpriteAdd(ns);}
 function stageDeleteSprite(i){if(!stageState||stageState.sprites.length<=1||!stageState.sprites[i])return;
   const delId=stageState.sprites[i].id;
   stageState.sprites.splice(i,1);if(stageSel>=stageState.sprites.length)stageSel=stageState.sprites.length-1;
   stageLoadSpriteScripts(stageSel);renderSpritePanel();markDirty();if(typeof collabSpriteDel==='function')collabSpriteDel(delId);}
-function renderSpritePanel(){const list=document.getElementById('sprite-list');if(!list||!stageState)return;list.innerHTML='';
+function renderSpritePanel(){if(document.body.classList.contains('ks1-mode')&&typeof ks1RenderSprites==='function')ks1RenderSprites(); // keep KS1 character thumbnails in sync after costume edits
+  const list=document.getElementById('sprite-list');if(!list||!stageState)return;list.innerHTML='';
   stageState.sprites.forEach((s,i)=>{const card=document.createElement('div');card.className='sprite-card'+(i===stageSel?' sel':'');
     const cv=document.createElement('canvas');cv.width=44;cv.height=44;drawSpriteThumb(cv,s);card.appendChild(cv);
     const nm=document.createElement('div');nm.className='sp-name';nm.textContent=s.name;card.appendChild(nm);
@@ -2016,6 +2423,7 @@ function costumeImgEl(co){if(!co||!co.img)return null;if(co._el&&co._elSrc===co.
 // Paint a sprite's CURRENT costume centred at the origin (built-in vector or a painted bitmap).
 function paintSpriteCostume(c,s,box){const co=curCostume(s);if(co.img){const im=costumeImgEl(co);if(im&&im.complete&&im.naturalWidth){const b=box||110,k=b/Math.max(im.naturalWidth,im.naturalHeight);c.drawImage(im,-im.naturalWidth*k/2,-im.naturalHeight*k/2,im.naturalWidth*k,im.naturalHeight*k);return;}}
   if(co.builtin==='ohbot'){paintOhbot(c,(s&&s._ob)||OHBOT_DEFAULT,co.color);return;} // Ohbot draws from its live part state
+  if(co.builtin==='microbit'){paintMicrobit(c,(s&&s._mb)||MB_DEFAULT,co.color);return;} // micro:bit draws its live LED matrix
   paintCostume(c,co.builtin||'cat',co.color||'#ff922b');}
 // ── Costume manager (the 🎨 Costume modal) ──
 function openCostumePicker(){if(!stageState||!stageState.sprites[stageSel])return;
@@ -2046,7 +2454,7 @@ function renderCostumeGrid(){const grid=document.getElementById('cm-grid');if(!g
 function renderCostumeColors(){const wrap=document.getElementById('cm-colors');if(!wrap)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];wrap.innerHTML='';
   CM_COLORS.forEach(col=>{const b=document.createElement('div');b.className='cm-color'+(co.color===col?' sel':'');b.style.background=col;
     b.onclick=()=>{co.color=col;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};wrap.appendChild(b);});}
-function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:pickableCostumes()[i%pickableCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
+function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
 function cmPaintNew(){const s=stageState.sprites[stageSel];openPaintEditor({w:300,h:300,name:'costume'+(s.costumes.length+1),onSave:(dataURL,name)=>{s.costumes.push({name:name||'costume',img:dataURL});s.costumeIdx=s.costumes.length-1;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
 function paintCostumeEditor(co){openPaintEditor({w:300,h:300,img:co.img,name:co.name,onSave:(dataURL,name)=>{co.img=dataURL;co.name=name||co.name;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
 
@@ -2136,6 +2544,23 @@ let stKeyHats=[];    // {key, first, s} — "when key pressed" hats
 let stScore=0;       // the one built-in game score (🏆)
 let stScoreUsed=false; // only show the 🏆 badge once a score block runs
 let stClickHats=[];  // {first, s} — "when this sprite clicked" hats
+let stMbBtnHats=[];  // {btn, first, s} — micro:bit "on button pressed" hats
+let stMbShakeHats=[];// {first, s} — micro:bit "on shake" hats
+let stMbGestureHats=[];  // {gesture, first, s} — micro:bit "on gesture" hats
+let stMbLogoHats=[];     // {first, s} — micro:bit "on logo pressed" hats
+let stMbRadioNumHats=[]; // {first, s} — radio "on received number"
+let stMbRadioStrHats=[]; // {first, s} — radio "on received string"
+let stMbStart=0;         // performance.now() at play start (for running-time)
+let stMbTempo=120;       // music tempo (bpm)
+let stRadioQ=[];         // queued radio messages {group, kind, val, from}
+const MB_SENSOR_DEFAULTS={light:128,temp:21,compass:0,sound:0,magnetic:0,accelX:0,accelY:0,accelZ:0};
+let stMbSensors=Object.assign({},MB_SENSOR_DEFAULTS); // GLOBAL ambient sensor values (shared by all micro:bit sprites), driven by the on-stage sensor panel
+let stMbUses={};         // which sensor sliders to show (aggregated across all sprites' code)
+let stMbPanelPos=null;   // custom {x,y} top-left of the sensor panel (null = default left-centre)
+let _mbPanelDrag=null;   // {dx,dy} while dragging the panel to reposition it
+let _mbTiltState={x:0,y:0}; // edge-trigger zones for tilt gestures (-1/0/1)
+let stMbGestureUsed={};  // which gestures the code listens for → tap-to-test buttons on the panel
+let stMbMic={active:false}; // live microphone → sound level (opt-in)
 let stRecvHats=[];   // {msg, first, s} — "when I receive" hats
 let stCloneHats=[];  // {first, s} — "when I start as a clone" hats (s = original editor sprite)
 let stBackdropHats=[]; // {name, first, s} — "when backdrop switches to" hats
@@ -2229,6 +2654,51 @@ function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{co
       const vs=txt.replace(/\s+/g,' ').split('').map(visemeFor),per=3,total=Math.max(vs.length*per,20); // step through mouth shapes (visemes), one per sound
       for(let f=0;f<total&&stagePlaying;f++){const v=vs[Math.min(vs.length-1,Math.floor(f/per))]||{t:5,b:5};o.TopLip=v.t;o.BottomLip=v.b;yield 0;if(ended&&f>4)break;}
       o.TopLip=5;o.BottomLip=5;o._speaking=false;break;}
+    case'mb_show_icon':{const o=mbState(s),pat=MB_ICONS[b.getFieldValue('ICON')]||MB_ICONS.heart;o.leds=pat.padEnd(25,'.').split('').slice(0,25).map(ch=>ch==='#'?9:0);break;}
+    case'mb_clear':mbState(s).leds=Array(25).fill(0);break;
+    case'mb_plot':{const o=mbState(s),x=MB_CLAMP(num('X')),y=MB_CLAMP(num('Y'));o.leds[y*5+x]=9;break;}
+    case'mb_unplot':{const o=mbState(s),x=MB_CLAMP(num('X')),y=MB_CLAMP(num('Y'));o.leds[y*5+x]=0;break;}
+    case'mb_show_number':{const o=mbState(s),str=String(Math.round(num('N')));
+      if(str.length===1){mbSetGlyph(o,str);}
+      else{const cols=mbStringCols(str),per=4;
+        for(let pos=-1;pos<=cols.length&&stagePlaying;pos++){o.leds=Array(25).fill(0);
+          for(let wx=0;wx<5;wx++){const ci=pos+wx;if(ci>=0&&ci<cols.length){const cb=cols[ci];for(let y=0;y<5;y++)if(cb[y])o.leds[y*5+wx]=9;}}
+          for(let f=0;f<per&&stagePlaying;f++)yield 0;}}
+      break;}
+    case'mb_show_string':{const o=mbState(s),str=String(stEval(b.getInputTargetBlock('TXT'),s)||''),cols=mbStringCols(str),per=4;
+      for(let pos=-5;pos<=cols.length&&stagePlaying;pos++){o.leds=Array(25).fill(0);
+        for(let wx=0;wx<5;wx++){const ci=pos+wx;if(ci>=0&&ci<cols.length){const cb=cols[ci];for(let y=0;y<5;y++)if(cb[y])o.leds[y*5+wx]=9;}}
+        for(let f=0;f<per&&stagePlaying;f++)yield 0;}
+      break;}
+    case'mb_show_arrow':{mbState(s).leds=mbArrow(b.getFieldValue('DIR')).split('').map(ch=>ch==='#'?9:0);break;}
+    case'mb_show_leds':{const o=mbState(s),pat=String(b.getFieldValue('PATTERN')||'');o.leds=(pat+'0000000000000000000000000').slice(0,25).split('').map(ch=>ch==='1'?9:0);break;}
+    case'mb_set_brightness':mbState(s).bright=Math.max(0,Math.min(255,num('N')));break;
+    case'mb_toggle':{const o=mbState(s),x=MB_CLAMP(num('X')),y=MB_CLAMP(num('Y')),i=y*5+x;o.leds[i]=o.leds[i]>0?0:9;break;}
+    case'mb_plot_brightness':{const o=mbState(s),x=MB_CLAMP(num('X')),y=MB_CLAMP(num('Y'));o.leds[y*5+x]=Math.round(Math.max(0,Math.min(255,num('V')))/255*9);break;}
+    case'mb_plot_bar_graph':{const o=mbState(s),val=stNum(stEval(b.getInputTargetBlock('VALUE'),s)),max=stNum(stEval(b.getInputTargetBlock('MAX'),s))||1;
+      const lit=Math.max(0,Math.min(25,Math.round(Math.abs(val)/Math.abs(max)*25)));o.leds=Array(25).fill(0);
+      for(let col=0;col<5&&col*5<lit;col++){const colLit=Math.max(0,Math.min(5,lit-col*5));for(let r=0;r<colLit;r++)o.leds[(4-r)*5+col]=9;}break;}
+    case'mb_set_tempo':stMbTempo=Math.max(20,Math.min(400,num('N')));break;
+    case'mb_change_tempo':stMbTempo=Math.max(20,Math.min(400,stMbTempo+num('N')));break;
+    case'mb_play_tone':{const ac=stAudioCtx(),f=Number(b.getFieldValue('NOTE'))||262,beats=Number(b.getFieldValue('DUR'))||1,ms=beats*mbBeatMs();
+      if(ac)stTone(ac,ac.currentTime,f,null,ms/1000,'square',0.25);let fr=Math.max(1,Math.round(ms/16.67));while(fr-->0&&stagePlaying)yield 0;break;}
+    case'mb_ring_tone':{const ac=stAudioCtx(),f=Math.max(1,num('N'));if(ac)stTone(ac,ac.currentTime,f,null,0.4,'square',0.25);break;}
+    case'mb_rest':{const beats=Number(b.getFieldValue('DUR'))||1;let fr=Math.max(1,Math.round(beats*mbBeatMs()/16.67));while(fr-->0&&stagePlaying)yield 0;break;}
+    case'mb_play_melody':{const ac=stAudioCtx(),mel=MB_MELODIES[b.getFieldValue('MEL')]||MB_MELODIES['ba ding'];
+      for(const[f,sec]of mel){if(!stagePlaying)break;if(ac)stTone(ac,ac.currentTime,f,null,sec,'square',0.25);let fr=Math.max(1,Math.round(sec*1000/16.67));while(fr-->0&&stagePlaying)yield 0;}break;}
+    case'mb_set_volume':stSetVolume(Math.round(Math.max(0,Math.min(255,num('N')))/255*100));break;
+    case'mb_play_sound':{const ac=stAudioCtx(),seq=MB_SOUNDS[b.getFieldValue('SND')]||MB_SOUNDS.happy;
+      for(const part of seq){if(!stagePlaying)break;if(ac)stTone(ac,ac.currentTime,part[0],null,part[1],'square',0.25);let fr=Math.max(1,Math.round(part[1]*1000/16.67));while(fr-->0&&stagePlaying)yield 0;}break;}
+    case'mb_start_melody':{const mel=MB_MELODIES[b.getFieldValue('MEL')]||MB_MELODIES['ba ding'],loop=b.getFieldValue('REP')==='forever';stFibers.push({gen:stMbMelodyGen(mel,loop),wait:0,sp:s,_mel:true});break;}
+    case'mb_melody':{const seq=mbMelodyFromString(b.getFieldValue('MEL'),Number(b.getFieldValue('TEMPO'))||120);
+      if(b.getFieldValue('MODE')==='bg'){stFibers.push({gen:stMbMelodyGen(seq,false),wait:0,sp:s,_mel:true});}
+      else{const ac=stAudioCtx();for(const part of seq){if(!stagePlaying)break;if(ac&&part[0])stTone(ac,ac.currentTime,part[0],null,part[1],'square',0.25);let fr=Math.max(1,Math.round(part[1]*1000/16.67));while(fr-->0&&stagePlaying)yield 0;}}
+      break;}
+    case'mb_stop_all_sounds':if(typeof stStopSounds==='function')stStopSounds();stFibers=stFibers.filter(f=>!f._mel);break;
+    case'mb_radio_set_group':mbState(s).group=Math.max(0,Math.min(255,Math.round(num('N'))));break;
+    case'mb_radio_send_number':stRadioSend(s,'num',stNum(stEval(b.getInputTargetBlock('NUM'),s)));break;
+    case'mb_radio_send_string':stRadioSend(s,'str',String(stEval(b.getInputTargetBlock('MSG'),s)));break;
+    case'mb_run_background':stStartScript(b.getInputTargetBlock('DO'),s,null);break;
     case'st_ask':{stStartAsk(b.getFieldValue('Q'));while(stagePlaying&&stAsking)yield 0;break;}
     case'st_change_effect':{const fx=b.getFieldValue('FX');s.fx=s.fx||{};s.fx[fx]=(s.fx[fx]||0)+num('N');break;}
     case'st_set_effect':{const fx=b.getFieldValue('FX');s.fx=s.fx||{};s.fx[fx]=num('N');break;}
@@ -2287,6 +2757,22 @@ function stEval(b,s){if(!b)return 0;const t=b.type;const inp=n=>stEval(b.getInpu
     case'st_timer':return Math.round((performance.now()-stTimerBase)/100)/10;
     case'st_answer':return stAnswer;
     case'ob_speaking':return !!(s&&s._ob&&s._ob._speaking);
+    case'mb_button':return mbBtnDown(b.getFieldValue('BTN'),s);
+    case'mb_point':{const o=mbState(s),x=MB_CLAMP(Number(b.getFieldValue('X'))),y=MB_CLAMP(Number(b.getFieldValue('Y')));return (o.leds[y*5+x]||0)>0;}
+    case'mb_brightness':return (s&&s._mb&&s._mb.bright!=null)?s._mb.bright:255;
+    case'mb_logo_pressed':return !!(s&&s._mb&&s._mb._logo);
+    case'mb_tempo':return stMbTempo;
+    case'mb_running_time':return Math.round((performance.now()-stMbStart));
+    case'mb_temperature':return stMbSensors.temp;        // live from the on-stage sensor panel
+    case'mb_light_level':return stMbSensors.light;
+    case'mb_compass_heading':return stMbSensors.compass;
+    case'mb_sound_level':return stMbSensors.sound;
+    case'mb_magnetic_force':return stMbSensors.magnetic;
+    case'mb_acceleration':{const d=b.getFieldValue('DIM'),x=stMbSensors.accelX,y=stMbSensors.accelY,z=stMbSensors.accelZ;
+      if(d==='x')return x;if(d==='y')return y;if(d==='z')return z;return Math.round(Math.sqrt(x*x+y*y+z*z))||0;}
+    case'mb_rotation':return b.getFieldValue('ROT')==='roll'?Math.round(stMbSensors.accelX/1023*90):Math.round(stMbSensors.accelY/1023*90);
+    case'mb_radio_number':return (s&&s._mb&&s._mb.rxNum!=null)?s._mb.rxNum:0;
+    case'mb_radio_string':return (s&&s._mb&&s._mb.rxStr!=null)?s._mb.rxStr:'';
     case'st_username':return (typeof cloudMe!=='undefined'&&cloudMe&&cloudMe.displayName)||'player';
     case'st_days_2000':return Math.floor((Date.now()-Date.UTC(2000,0,1))/86400000);
     case'st_current':{const d=new Date(),u=b.getFieldValue('UNIT');return u==='year'?d.getFullYear():u==='month'?d.getMonth()+1:u==='date'?d.getDate():u==='dow'?d.getDay()+1:u==='hour'?d.getHours():u==='minute'?d.getMinutes():d.getSeconds();}
@@ -2335,34 +2821,133 @@ function stSpawnClone(orig){if(!orig||stClones.length>=300)return;const src=orig
   stClones.push(clone);stCloneHats.forEach(h=>{if(h.s===src)stStartScript(h.first,clone,null);});}
 function stPump(){if(!stFibers.length)return;const next=[];for(const f of stFibers){if(!stagePlaying)break;if(f.wait>0){f.wait--;next.push(f);continue;}let r;try{r=f.gen.next();}catch(e){continue;}if(!r.done){f.wait=(r.value|0);next.push(f);}}stFibers=next;}
 
+// ══════════ KS1 — ScratchJr-style horizontal icon-block engine (Key Stage 1 only) ══════════
+// A KS1 sprite stores s.ks1 = array of scripts; each script is an array of {t:type, n?:number, text?:string},
+// where the first block is a trigger (flag/tap/bump). Runs on the SAME fiber system as the Blockly Stage.
+const KS1_STEP=48, KS1_GY=38, KS1_TURN=30;
+const KS1_CATS=[{id:'trig',color:'#f4c20d',name:'Start',icon:'🏁'},{id:'motion',color:'#3b8eea',name:'Move',icon:'➡️'},{id:'looks',color:'#9b59d0',name:'Looks',icon:'🎨'},{id:'sound',color:'#2fb344',name:'Sound',icon:'🔊'},{id:'control',color:'#f08c1d',name:'Control',icon:'⏱️'},{id:'end',color:'#e03131',name:'End',icon:'🔚'}];
+const KS1_BLOCKS={
+  flag:{cat:'trig',icon:'🏁',hat:true,say:'when the green flag is tapped'},
+  tap:{cat:'trig',icon:'👆',hat:true,say:'when you tap this character'},
+  bump:{cat:'trig',icon:'💥',hat:true,say:'when characters bump'},
+  on_msg:{cat:'trig',icon:'📨',hat:true,msg:true,say:'when I get a message'},
+  send_msg:{cat:'trig',icon:'📤',msg:true,say:'send a message'},
+  right:{cat:'motion',icon:'➡️',num:1,say:'move right'},
+  left:{cat:'motion',icon:'⬅️',num:1,say:'move left'},
+  up:{cat:'motion',icon:'⬆️',num:1,say:'move up'},
+  down:{cat:'motion',icon:'⬇️',num:1,say:'move down'},
+  turnR:{cat:'motion',icon:'🔃',num:1,say:'turn this way'},
+  turnL:{cat:'motion',icon:'🔄',num:1,say:'turn that way'},
+  hop:{cat:'motion',icon:'🦘',num:1,say:'hop'},
+  home:{cat:'motion',icon:'🏠',say:'go home'},
+  say:{cat:'looks',icon:'💬',text:'Hi!',say:'say something'},
+  grow:{cat:'looks',icon:'🔼',num:1,say:'get bigger'},
+  shrink:{cat:'looks',icon:'🔽',num:1,say:'get smaller'},
+  resetSize:{cat:'looks',icon:'⏺️',say:'reset size'},
+  hide:{cat:'looks',icon:'🙈',say:'hide'},
+  show:{cat:'looks',icon:'🐵',say:'show'},
+  pop:{cat:'sound',icon:'🔊',say:'pop'},
+  recsound:{cat:'sound',icon:'🎤',rec:true,say:'play my sound'},
+  wait:{cat:'control',icon:'⏳',num:5,say:'wait'},
+  speed:{cat:'control',icon:'🐇',speed:true,say:'set speed'},
+  repeat:{cat:'control',icon:'🔁',num:2,container:true,say:'repeat'},
+  stop:{cat:'control',icon:'✋',say:'stop'},
+  forever:{cat:'end',icon:'♾️',container:true,say:'for ever'},
+  go_page:{cat:'end',icon:'📄',page:true,say:'go to page'}
+};
+const KS1_MSG_COLORS=['#e8533a','#3b8eea','#2fb344','#9b59d0','#f4c20d','#e879b0'];
+const KS1_DESC={flag:'Starts your program when the green flag is tapped.',tap:'Runs when you tap this character.',bump:'Runs when this character bumps into another one.',on_msg:'Runs when a matching-colour message is sent.',send_msg:'Sends a message of this colour to everyone.',right:'Moves the character to the right.',left:'Moves the character to the left.',up:'Moves the character up.',down:'Moves the character down.',turnR:'Turns the character a little to the right.',turnL:'Turns the character a little to the left.',hop:'Makes the character hop up and down.',home:'Sends the character back to where it started.',say:'Shows a speech bubble with your words.',grow:'Makes the character a bit bigger.',shrink:'Makes the character a bit smaller.',resetSize:'Puts the character back to its normal size.',hide:'Hides the character.',show:'Shows the character again.',pop:'Plays a pop sound.',recsound:'Plays a sound you record yourself.',wait:'Waits for a little while before the next block.',speed:'Sets how fast the character moves.',repeat:'Does the blocks inside it again and again.',stop:'Stops this character’s program.',forever:'Keeps doing the blocks inside, for ever.',go_page:'Goes to another page (scene).'};
+let ks1TapHats=[], ks1BumpHats=[], ks1MsgHats=[], stPendingPage=null;
+function ks1Steps(s,base){const sp=s._ks1speed||2,f=sp===1?1.8:(sp===3?0.5:1);return Math.max(2,Math.round(base*f));}
+// Switch the active KS1 page mid-play: drop running scripts, swap the sprite set + backdrop, start the new page's scripts.
+function ks1DoPageSwitch(n){const p=stageState&&stageState.pages;if(!p||!p[n])return;
+  stFibers=[];ks1TapHats=[];ks1BumpHats=[];ks1MsgHats=[];
+  stageState.pageIdx=n;stageState.sprites=p[n].sprites;stageState.backdropIdx=p[n].backdropIdx||0;
+  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._ks1speed=2;s.say='';s.sayT=0;s.visible=(s.visible!==false);});
+  stageState.sprites.forEach(s=>ks1CollectHats(s));
+  if(typeof ks1RenderPages==='function')ks1RenderPages();}
+function* ks1Move(s,dx,dy){const steps=ks1Steps(s,8);for(let i=0;i<steps&&stagePlaying;i++){s.x=Math.max(8,Math.min(CW-8,s.x+dx/steps));s.y=Math.max(8,Math.min(CH-8,s.y+dy/steps));yield 0;}}
+function* ks1Hop(s,n){const h=KS1_GY*Math.max(1,n),steps=ks1Steps(s,14),y0=s.y;for(let i=0;i<=steps&&stagePlaying;i++){s.y=y0-h*Math.sin(i/steps*Math.PI);yield 0;}s.y=y0;}
+function* ks1Turn(s,deg){const steps=ks1Steps(s,8),d0=(s.dir==null?90:s.dir);for(let i=1;i<=steps&&stagePlaying;i++){s.dir=d0+deg*i/steps;yield 0;}s.dir=d0+deg;}
+function* ks1RunOne(b,s){switch(b.t){
+  case'right':yield* ks1Move(s,(b.n||1)*KS1_STEP,0);break;
+  case'left':yield* ks1Move(s,-(b.n||1)*KS1_STEP,0);break;
+  case'up':yield* ks1Move(s,0,-(b.n||1)*KS1_GY);break;
+  case'down':yield* ks1Move(s,0,(b.n||1)*KS1_GY);break;
+  case'turnR':yield* ks1Turn(s,(b.n||1)*KS1_TURN);break;
+  case'turnL':yield* ks1Turn(s,-(b.n||1)*KS1_TURN);break;
+  case'hop':yield* ks1Hop(s,b.n||1);break;
+  case'home':s.x=s._sx;s.y=s._sy;s.dir=(s._sdir==null?90:s._sdir);break;
+  case'say':s.say=b.text||'Hi!';s.sayT=140;break;
+  case'grow':s.size=Math.min(300,(s.size||100)+(b.n||1)*15);break;
+  case'shrink':s.size=Math.max(15,(s.size||100)-(b.n||1)*15);break;
+  case'resetSize':s.size=100;break;
+  case'hide':s.visible=false;break;
+  case'show':s.visible=true;break;
+  case'pop':if(typeof stPlaySound==='function')stPlaySound('pop');break;
+  case'wait':{let fr=Math.max(1,Math.round((b.n||5)*0.1*60));while(fr-->0&&stagePlaying)yield 0;break;}
+  case'speed':s._ks1speed=Math.max(1,Math.min(3,b.n||2));break;
+  case'send_msg':ks1SendMsg(b.c||0);break;
+  case'recsound':{const snds=(stageState&&stageState.ks1sounds)||[],so=snds[b.n!=null?b.n:-1];if(so&&so.data){try{new Audio(so.data).play();}catch(e){}}break;}
+  case'go_page':{stPendingPage=Math.max(0,(b.n||2)-1);throw{__stopThis:true};} // scene change handled in stageFrame
+  case'stop':throw{__stopThis:true};
+}}
+function* ks1RunSeq(blocks,s){for(let i=0;i<blocks.length;i++){if(!stagePlaying)return;const b=blocks[i];
+  if(b.t==='repeat'){const reps=Math.max(1,b.n||1);for(let k=0;k<reps&&stagePlaying;k++)yield* ks1RunSeq(b.body||[],s);continue;} // wraps the blocks INSIDE it (like ScratchJr)
+  if(b.t==='forever'){const body=b.body||[];while(stagePlaying){if(body.length)yield* ks1RunSeq(body,s);else yield 0;}return;}
+  if(KS1_BLOCKS[b.t]&&!KS1_BLOCKS[b.t].hat)yield* ks1RunOne(b,s);
+}}
+function ks1Start(body,s){stFibers.push({gen:ks1RunSeq(body,s),wait:0,sp:s});}
+function ks1SendMsg(c){ks1MsgHats.forEach(h=>{if(h.c===c)ks1Start(h.body,h.s);});}
+function ks1CollectHats(s){(s.ks1||[]).forEach(scr=>{if(!scr.length)return;const trig=scr[0].t,body=scr.slice(1);
+  if(trig==='flag')ks1Start(body,s);
+  else if(trig==='tap')ks1TapHats.push({body,s});
+  else if(trig==='bump')ks1BumpHats.push({body,s,was:false});
+  else if(trig==='on_msg')ks1MsgHats.push({c:scr[0].c||0,body,s});});}
+function ks1BumpCheck(){if(!stageState)return;ks1BumpHats.forEach(h=>{const touch=stageState.sprites.some(o=>o!==h.s&&o.visible&&h.s.visible&&Math.hypot(o.x-h.s.x,o.y-h.s.y)<((h.s.size||100)+(o.size||100))*0.22);if(touch&&!h.was)ks1Start(h.body,h.s);h.was=touch;});}
+
 function stageStart(){if(!stageState)return;
   stageSaveCurrent();           // capture the selected sprite's latest edits first
-  stagePlaying=true;stFibers=[];stKeyHats=[];stClickHats=[];stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];stScore=0;stScoreUsed=false;stTimerBase=performance.now();stAnswer='';stFinishAsk();
+  stagePlaying=true;stFibers=[];stKeyHats=[];stClickHats=[];stMbBtnHats=[];stMbShakeHats=[];stMbGestureHats=[];stMbLogoHats=[];stMbRadioNumHats=[];stMbRadioStrHats=[];stRadioQ=[];stMbStart=performance.now();stMbTempo=120;stMbSensors=Object.assign({},MB_SENSOR_DEFAULTS);stMbUses={};stMbGestureUsed={};stMbPanelPos=null;_mbPanelDrag=null;_mbTiltState={x:0,y:0};_mbPress=null;_mbSlider=null;ks1TapHats=[];ks1BumpHats=[];ks1MsgHats=[];stPendingPage=null;stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];stScore=0;stScoreUsed=false;stTimerBase=performance.now();stAnswer='';stFinishAsk();
   defineStageBlocks();
   // First pass: build each sprite's headless workspace and collect ALL hats (so broadcasts/clones see every sprite).
   stPenClear();
-  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._ob=Object.assign({},OHBOT_DEFAULT);
+  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._ob=Object.assign({},OHBOT_DEFAULT);s._mb={leds:Array(25).fill(0),bright:255,group:0,rxNum:0,rxStr:''};s._ks1speed=2;
     if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}
+    if(keyStage==='ks1'){ks1CollectHats(s);return;} // KS1 runs ScratchJr-style scripts, not Blockly
     if(s.xml){try{const ws=new Blockly.Workspace();Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(s.xml),ws);s._ws=ws; // headless copy so every sprite's scripts run, not just the selected one
       ws.getTopBlocks(true).forEach(b=>{
-        if(b.type==='st_when_flag')stStartScript(b.getNextBlock(),s,null);
+        if(b.type==='st_when_flag'||b.type==='mb_on_start')stStartScript(b.getNextBlock(),s,null);
+        else if(b.type==='mb_on_button')stMbBtnHats.push({btn:b.getFieldValue('BTN'),first:b.getNextBlock(),s});
+        else if(b.type==='mb_on_shake')stMbShakeHats.push({first:b.getNextBlock(),s});
+        else if(b.type==='mb_on_gesture')stMbGestureHats.push({gesture:b.getFieldValue('G'),first:b.getNextBlock(),s});
+        else if(b.type==='mb_on_logo')stMbLogoHats.push({first:b.getNextBlock(),s});
+        else if(b.type==='mb_on_radio_number')stMbRadioNumHats.push({first:b.getNextBlock(),s});
+        else if(b.type==='mb_on_radio_string')stMbRadioStrHats.push({first:b.getNextBlock(),s});
         else if(b.type==='st_when_key')stKeyHats.push({key:b.getFieldValue('KEY'),first:b.getNextBlock(),s});
         else if(b.type==='st_when_clicked')stClickHats.push({first:b.getNextBlock(),s});
         else if(b.type==='st_when_receive')stRecvHats.push({msg:b.getFieldValue('MSG'),first:b.getNextBlock(),s});
         else if(b.type==='st_when_clone_start')stCloneHats.push({first:b.getNextBlock(),s});
         else if(b.type==='st_when_backdrop')stBackdropHats.push({name:b.getFieldValue('BD'),first:b.getNextBlock(),s});
       });
+      mbDetectControls(s,ws); // show only the sensor sliders this sprite's code uses
     }catch(e){}}
   });
   const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.add('active');
 }
-function stageStop(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];if(typeof stStopSounds==='function')stStopSounds();if(typeof stFinishAsk==='function')stFinishAsk();
+function stageStop(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];stMbBtnHats=[];stMbShakeHats=[];stMbGestureHats=[];stMbLogoHats=[];stMbRadioNumHats=[];stMbRadioStrHats=[];stRadioQ=[];ks1TapHats=[];ks1BumpHats=[];ks1MsgHats=[];_mbPress=null;_mbSlider=null;_mbPanelDrag=null;if(typeof mbStopMic==='function')mbStopMic();stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];if(typeof stStopSounds==='function')stStopSounds();if(typeof stFinishAsk==='function')stFinishAsk();
   const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.remove('active');
   if(stageState)stageState.sprites.forEach(s=>{if(s._sx!=null){s.x=s._sx;s.y=s._sy;s.dir=s._sdir;s.visible=(s._svis!==false);s.size=s._ssize||100;}s.say='';s.sayT=0;if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}});
 }
 function stageFrame(){if(!stagePlaying||!stageState)return;
   // "when key pressed" hats: while a key is held, (re)start its script once it's finished.
   stKeyHats.forEach(h=>{const code=ST_KEYMAP[h.key];if(code&&keys[code]&&!stFibers.some(f=>f.hat===h))stStartScript(h.first,h.s,h);});
+  // micro:bit "on button pressed" hats (A→keyboard A, B→keyboard B)
+  stMbBtnHats.forEach(h=>{if(mbBtnDown(h.btn,h.s)&&!stFibers.some(f=>f.hat===h))stStartScript(h.first,h.s,h);});
+  stRadioPump(); // deliver queued micro:bit radio messages
+  mbTiltGestures(); // fire tilt-left/right / logo-up/down gestures when tilt sliders cross the threshold
+  if(stMbMic.active)mbMicLevel(); // live microphone → sound level
+  if(keyStage==='ks1'){if(stPendingPage!=null){ks1DoPageSwitch(stPendingPage);stPendingPage=null;}ks1BumpCheck();} // KS1 page switch + "when characters bump" triggers
   stPump();
   // remove deleted clones and their fibers
   if(stClones.some(c=>c._deleted)){stClones=stClones.filter(c=>!c._deleted);stFibers=stFibers.filter(f=>!(f.sp&&f.sp._deleted));}
@@ -2373,7 +2958,9 @@ function stageFrame(){if(!stagePlaying||!stageState)return;
 function stPenTrace(s){if(!s.penDown){s._plx=s.x;s._ply=s.y;return;}const lx=s._plx,ly=s._ply;
   if(lx!=null&&(lx!==s.x||ly!==s.y)){const c=stPen();c.strokeStyle=s.penColor||'#ff0000';c.lineWidth=s.penSize||4;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(lx,ly);c.lineTo(s.x,s.y);c.stroke();}
   s._plx=s.x;s._ply=s.y;}
-function stageFireClick(x,y){if(!stagePlaying||!stageState)return;const i=stageSpriteAt(x,y);if(i<0)return;const s=stageState.sprites[i];stClickHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});}
+function stageFireClick(x,y){if(!stagePlaying||!stageState)return;const i=stageSpriteAt(x,y);if(i<0)return;const s=stageState.sprites[i];
+  if(keyStage==='ks1'){ks1TapHats.forEach(h=>{if(h.s===s)ks1Start(h.body,h.s);});return;}
+  stClickHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});}
 // The cat costume, drawn centred at the current origin in the given colour.
 function paintCat(c,color){c.fillStyle=color||'#ff922b';c.strokeStyle='#000';c.lineWidth=2.5;
   c.beginPath();c.moveTo(-14,-12);c.lineTo(-7,-22);c.lineTo(-2,-12);c.closePath();c.fill();c.stroke();
@@ -2422,6 +3009,247 @@ function paintBird(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2
   c.fillStyle='#ffb300';c.beginPath();c.moveTo(13,0);c.lineTo(22,3);c.lineTo(13,6);c.closePath();c.fill();c.stroke();
   c.fillStyle='#fff';c.beginPath();c.arc(5,-3,4,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#000';c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
 // ── Ohbot emulator head — 7 motors (0–10, 5 = middle), eye colour + lip-sync ──
+// ── micro:bit emulator (native, clean-room reimplementation of documented behaviour only) ──
+// A sprite wearing the 'microbit' costume shows a 5×5 red LED board. State lives on s._mb.
+const MB_DEFAULT={leds:Array(25).fill(0)};
+function mbState(s){if(!s._mb)s._mb={leds:Array(25).fill(0)};if(!s._mb.leds)s._mb.leds=Array(25).fill(0);return s._mb;}
+const MB_CLAMP=v=>Math.max(0,Math.min(4,Math.round(v)));
+// 5-row × 3-col font for show string / show number (A–Z, 0–9, space). '#'=lit.
+const MB_FONT={' ':['...','...','...','...','...'],
+ '0':['###','#.#','#.#','#.#','###'],'1':['.#.','##.','.#.','.#.','###'],'2':['###','..#','###','#..','###'],'3':['###','..#','###','..#','###'],'4':['#.#','#.#','###','..#','..#'],'5':['###','#..','###','..#','###'],'6':['###','#..','###','#.#','###'],'7':['###','..#','..#','..#','..#'],'8':['###','#.#','###','#.#','###'],'9':['###','#.#','###','..#','###'],
+ 'A':['.#.','#.#','###','#.#','#.#'],'B':['##.','#.#','##.','#.#','##.'],'C':['###','#..','#..','#..','###'],'D':['##.','#.#','#.#','#.#','##.'],'E':['###','#..','##.','#..','###'],'F':['###','#..','##.','#..','#..'],'G':['###','#..','#.#','#.#','###'],'H':['#.#','#.#','###','#.#','#.#'],'I':['###','.#.','.#.','.#.','###'],'J':['..#','..#','..#','#.#','###'],'K':['#.#','#.#','##.','#.#','#.#'],'L':['#..','#..','#..','#..','###'],'M':['#.#','###','###','#.#','#.#'],'N':['#.#','##.','###','.##','#.#'],'O':['###','#.#','#.#','#.#','###'],'P':['###','#.#','###','#..','#..'],'Q':['###','#.#','#.#','###','..#'],'R':['###','#.#','###','##.','#.#'],'S':['###','#..','###','..#','###'],'T':['###','.#.','.#.','.#.','.#.'],'U':['#.#','#.#','#.#','#.#','###'],'V':['#.#','#.#','#.#','#.#','.#.'],'W':['#.#','#.#','###','###','#.#'],'X':['#.#','#.#','.#.','#.#','#.#'],'Y':['#.#','#.#','.#.','.#.','.#.'],'Z':['###','..#','.#.','#..','###'],
+ '!':['.#.','.#.','.#.','...','.#.'],'?':['##.','..#','.#.','...','.#.'],'.':['...','...','...','...','.#.'],'-':['...','...','###','...','...'],'+':['...','.#.','###','.#.','...']};
+// Built-in 5×5 icons (the iconic micro:bit pictures).
+const MB_ICONS={
+ heart:'.#.#.'+'##########'+'.###.'+'..#..',
+ happy:'.....'+'.#.#.'+'.....'+'#...#'+'.###.',
+ sad:'.....'+'.#.#.'+'.....'+'.###.'+'#...#',
+ yes:'.....'+'....#'+'...#.'+'#.#..'+'.#...',
+ no:'#...#'+'.#.#.'+'..#..'+'.#.#.'+'#...#',
+ arrow_n:'..#..'+'.###.'+'#.#.#'+'..#..'+'..#..',
+ arrow_s:'..#..'+'..#..'+'#.#.#'+'.###.'+'..#..',
+ square:'#####'+'#...#'+'#...#'+'#...#'+'#####',
+ duck:'.##..'+'####.'+'.####'+'.#...'+'.....',
+ small:'.....'+'..#..'+'.#.#.'+'..#..'+'.....'};
+// columns of lit/unlit for one glyph (3 cols × 5 rows).
+function mbGlyphCols(ch){const g=MB_FONT[(ch||' ').toUpperCase()]||MB_FONT[' '];const cols=[];for(let x=0;x<3;x++){const cb=[];for(let y=0;y<5;y++)cb.push(g[y][x]==='#'?1:0);cols.push(cb);}return cols;}
+// full pixel-column strip for a whole string (glyphs + 1-col gap) — for scrolling.
+function mbStringCols(str){let cols=[];for(const ch of String(str)){cols=cols.concat(mbGlyphCols(ch));cols.push([0,0,0,0,0]);}return cols;}
+// paint a single glyph statically, centred (col offset 1).
+function mbSetGlyph(o,ch){o.leds=Array(25).fill(0);const cols=mbGlyphCols(ch);for(let x=0;x<3;x++)for(let y=0;y<5;y++)if(cols[x][y])o.leds[y*5+(x+1)]=9;}
+// A button is "down" if its keyboard key is held OR the on-screen button is being pressed (s._mb._A/_B).
+function mbBtnDown(btn,s){const pa=!!keys['KeyA']||!!(s&&s._mb&&s._mb._A),pb=!!keys['KeyB']||!!(s&&s._mb&&s._mb._B);if(btn==='A')return pa;if(btn==='B')return pb;if(btn==='AB')return pa&&pb;return false;}
+// Fire a shake gesture for sprite s (or all micro:bits when s is null).
+function stMbShake(s){if(typeof stMbShakeHats==='undefined')return;stMbShakeHats.forEach(h=>{if(!s||h.s===s)stStartScript(h.first,h.s,null);});}
+// Interactive controls on a playing micro:bit, in costume-local (unscaled) coords.
+// Physical A/B buttons + on-board A+B and Shake chips below the board.
+function mbControls(){return [
+  {id:'A',cx:-78,cy:12,r:22},{id:'B',cx:78,cy:12,r:22},{id:'LOGO',cx:0,cy:-51,w:48,h:22},
+  {id:'AB',cx:-34,cy:98,w:60,h:24},{id:'SHAKE',cx:38,cy:98,w:66,h:24}];}
+function mbControlAt(s,p){const sc=(s.size||100)/100,lx=(p.x-s.x)/sc,ly=(p.y-s.y)/sc;
+  for(const h of mbControls()){if(h.r){if((lx-h.cx)*(lx-h.cx)+(ly-h.cy)*(ly-h.cy)<=h.r*h.r)return h.id;}
+    else if(Math.abs(lx-h.cx)<=h.w/2&&Math.abs(ly-h.cy)<=h.h/2)return h.id;}
+  return null;}
+// Draw the A+B / Shake chips (and is drawn over the board while playing).
+function drawMbControls(c,s){const o=s._mb||{};c.font='bold 13px sans-serif';c.textAlign='center';c.textBaseline='middle';
+  [['AB','A+B',-34,(o._A&&o._B)],['SHAKE','⇄ Shake',38,false]].forEach(([id,lab,cx,act])=>{const w=id==='AB'?60:66;
+    mbRR(c,cx-w/2,86,w,24,11);c.fillStyle=act?'#2ec2e8':'rgba(255,255,255,.92)';c.fill();c.strokeStyle='#1b1b1d';c.lineWidth=1.5;c.stroke();
+    c.fillStyle=act?'#fff':'#1b1b1d';c.fillText(lab,cx,99);});}
+// ── micro:bit extras: notes, melodies, gestures, arrows, radio bus ──
+const MB_NOTES=[['C','262'],['D','294'],['E','330'],['F','349'],['G','392'],['A','440'],['B','494'],['high C','523'],['high D','587'],['high E','659'],['high G','784'],['top C','1047']];
+const MB_DUR=[['1 beat','1'],['½ beat','0.5'],['¼ beat','0.25'],['2 beats','2'],['4 beats','4']];
+const MB_MELODIES={'ba ding':[[988,0.25],[1319,0.5]],'power up':[[262,0.2],[330,0.2],[392,0.2],[523,0.4]],'power down':[[523,0.2],[392,0.2],[330,0.2],[262,0.4]],'jump up':[[262,0.18],[294,0.18],[330,0.18],[349,0.18],[392,0.3]],'jump down':[[392,0.18],[349,0.18],[330,0.18],[294,0.18],[262,0.3]],'wawawawaa':[[300,0.2],[270,0.2],[240,0.2],[200,0.6]],'dadadum':[[294,0.3],[294,0.3],[294,0.3],[349,0.6]],'birthday':[[264,0.2],[264,0.2],[297,0.4],[264,0.4],[352,0.4],[330,0.8]],'wedding':[[392,0.3],[523,0.6],[523,0.3],[587,0.9]],'funeral':[[196,0.5],[196,0.2],[196,0.5],[196,0.5]],'baddy':[[131,0.3],[165,0.3],[110,0.3],[131,0.3]],'chase':[[262,0.12],[330,0.12],[262,0.12],[330,0.12],[392,0.24]]};
+// micro:bit v2 built-in sound expressions — emulated as short synthesised note runs.
+const MB_SOUNDS={giggle:[[660,0.08],[880,0.08],[660,0.08],[990,0.1]],happy:[[523,0.12],[659,0.12],[784,0.15]],hello:[[523,0.1],[659,0.16]],mysterious:[[440,0.12],[466,0.12],[494,0.12],[523,0.2]],sad:[[392,0.2],[349,0.2],[294,0.35]],slide:[[300,0.06],[420,0.06],[560,0.06],[720,0.18]],soaring:[[392,0.14],[523,0.14],[659,0.26]],spring:[[523,0.08],[659,0.08],[784,0.08],[1047,0.12]],twinkle:[[1047,0.1],[1047,0.1],[1568,0.16]],yawn:[[330,0.25],[262,0.25],[196,0.4]]};
+// A melody as a fiber — plays once, or loops forever in the background (tagged _mel so "stop all sounds" can kill it).
+// A note of frequency 0 is a rest (silent beat).
+function* stMbMelodyGen(mel,loop){const ac=stAudioCtx();do{for(const part of mel){if(!stagePlaying)return;const f=part[0],sec=part[1];if(ac&&f)stTone(ac,ac.currentTime,f,null,sec,'square',0.25);let fr=Math.max(1,Math.round(sec*1000/16.67));while(fr-->0&&stagePlaying)yield 0;}}while(loop&&stagePlaying);}
+// Custom-melody pitches: row 1 (lowest) … row 8 (highest) → one octave of C major. Index 0 = rest.
+const MB_MEL_PITCH=[0,262,294,330,349,392,440,494,523];
+// 8-step custom melody string ("53231000", digits 0–8) → [[freq,sec],…] at the given tempo.
+function mbMelodyFromString(val,tempo){const beat=60000/(tempo||120)/1000,seq=[];for(let i=0;i<8;i++){const n=parseInt((val||'')[i]||'0',10)||0;seq.push([MB_MEL_PITCH[Math.max(0,Math.min(8,n))],beat]);}return seq;}
+const MB_GESTURES=[['shake','shake'],['logo up','logo_up'],['logo down','logo_down'],['screen up','screen_up'],['screen down','screen_down'],['tilt left','tilt_left'],['tilt right','tilt_right'],['free fall','free_fall'],['3g','3g'],['6g','6g'],['8g','8g']];
+const MB_ARROWS={North:'..#...###.#.#.#..#....#..',NorthEast:'..####...###..#.#.#...#....',East:'..#....#.#####...#...#..',SouthEast:'#.....#...#.#..##...###..',South:'..#....#..#.#.#.###...#..',SouthWest:'###..##...#.#.....#.....#',West:'..#...#..#####.#....#..',NorthWest:'....#...#.#.#..##...###..'};
+function mbArrow(name){const p=MB_ARROWS[name]||MB_ARROWS.North;return (p+'.........................').slice(0,25);}
+// Which sensor block → which slider control; and the slider definitions.
+const MB_SENSOR_OF={mb_light_level:'light',mb_temperature:'temp',mb_compass_heading:'compass',mb_sound_level:'sound',mb_magnetic_force:'magnetic',mb_acceleration:'tilt',mb_rotation:'tilt'};
+const MB_SLIDER_DEF={
+  light:{label:'☀ Light',min:0,max:255,def:128,store:'light'},
+  temp:{label:'🌡 Temp',min:-5,max:50,def:21,store:'temp'},
+  compass:{label:'🧭 Compass',min:0,max:359,def:0,store:'compass'},
+  sound:{label:'🔊 Sound',min:0,max:255,def:0,store:'sound'},
+  magnetic:{label:'🧲 Magnet',min:-300,max:300,def:0,store:'magnetic'},
+  tiltx:{label:'⬌ Tilt X',min:-1023,max:1023,def:0,store:'accelX'},
+  tilty:{label:'⬍ Tilt Y',min:-1023,max:1023,def:0,store:'accelY'}};
+// Detect which sensor sliders are needed (aggregate across every sprite's program) into the global stMbUses.
+function mbDetectControls(s,ws){try{ws.getAllBlocks(false).forEach(b=>{const k=MB_SENSOR_OF[b.type];if(k)stMbUses[k]=true;if(b.type==='mb_on_gesture')stMbGestureUsed[b.getFieldValue('G')]=true;});}catch(e){}}
+// Short labels for the gesture tap-to-test buttons.
+const MB_GLABEL={shake:'Shake',logo_up:'Logo↑',logo_down:'Logo↓',screen_up:'Screen↑',screen_down:'Screen↓',tilt_left:'Tilt◀',tilt_right:'Tilt▶',free_fall:'Free fall','3g':'3g','6g':'6g','8g':'8g'};
+function mbGestureBtnsList(){return ['screen_up','screen_down','free_fall','shake','logo_up','logo_down','tilt_left','tilt_right','3g','6g','8g'].filter(g=>stMbGestureUsed[g]);}
+// Live microphone → sound level (opt-in; the browser's own permission prompt is the consent gate).
+function mbToggleMic(){if(stMbMic.active){mbStopMic();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){const ac=stAudioCtx();if(!ac){stream.getTracks().forEach(t=>t.stop());return;}
+    const src=ac.createMediaStreamSource(stream),an=ac.createAnalyser();an.fftSize=512;src.connect(an);
+    stMbMic={active:true,stream:stream,an:an,data:new Uint8Array(an.fftSize)};}).catch(function(){});}
+function mbStopMic(){if(stMbMic.stream){try{stMbMic.stream.getTracks().forEach(t=>t.stop());}catch(e){}}stMbMic={active:false};}
+function mbMicLevel(){if(!stMbMic.active||!stMbMic.an)return;stMbMic.an.getByteTimeDomainData(stMbMic.data);let sum=0;for(let i=0;i<stMbMic.data.length;i++){const v=(stMbMic.data[i]-128)/128;sum+=v*v;}const rms=Math.sqrt(sum/stMbMic.data.length);stMbSensors.sound=Math.min(255,Math.round(rms*900));}
+// ── On-stage sensor panel (MakeCode-style) — fixed on the stage, big & easy to drag ──
+// Global so all micro:bit sprites share the same ambient light/temperature/tilt, like a real room.
+const MB_PANEL={x:14,w:244,rowH:34,padTop:36,labelW:84};
+function mbPanelRows(){const rows=[];['light','temp','compass','sound','magnetic'].forEach(k=>{if(stMbUses[k])rows.push(MB_SLIDER_DEF[k]);});if(stMbUses.tilt){rows.push(MB_SLIDER_DEF.tiltx);rows.push(MB_SLIDER_DEF.tilty);}return rows;}
+function mbPanelLayout(){const rows=mbPanelRows(),gnames=mbGestureBtnsList(),hasMic=!!stMbUses.sound;
+  if(!rows.length&&!gnames.length)return null;
+  const w=MB_PANEL.w,slidersH=rows.length*MB_PANEL.rowH;
+  // pack gesture buttons (relative coords; header occupies 0..18)
+  const rel=[];let gsecH=0;
+  if(gnames.length){let bx=12,by=20;gnames.forEach(g=>{const lab=MB_GLABEL[g]||g,bw=18+lab.length*7;if(bx+bw>w-12){bx=12;by+=28;}rel.push({name:g,lab,x:bx,y:by,w:bw,h:22});bx+=bw+6;});gsecH=by+22+8;}
+  const h=MB_PANEL.padTop+slidersH+(gnames.length?gsecH:0)+8;
+  let x=MB_PANEL.x,y=(CH-h)/2;if(stMbPanelPos){x=stMbPanelPos.x;y=stMbPanelPos.y;}
+  x=Math.max(0,Math.min(CW-w,x));y=Math.max(0,Math.min(CH-h,y));
+  const gbase=y+MB_PANEL.padTop+slidersH+4;
+  const gbtns=rel.map(b=>({name:b.name,lab:b.lab,ax:x+b.x,ay:gbase+b.y,w:b.w,h:b.h}));
+  const mic=hasMic?{ax:x+w-130,ay:y+8,w:62,h:20}:null;
+  return {rows,x,y,w,h,tx0:x+MB_PANEL.labelW,tx1:x+w-50,gbtns,gbase,mic};}
+function mbPanelKnobX(L,d){const v=stMbSensors[d.store],t=(v-d.min)/(d.max-d.min);return L.tx0+Math.max(0,Math.min(1,t))*(L.tx1-L.tx0);}
+// Draw the panel onto the stage canvas (called from drawStage while playing).
+function mbDrawPanel(ctx){if(!stagePlaying)return;const L=mbPanelLayout();if(!L)return;
+  ctx.save();ctx.beginPath();ctx.roundRect(L.x,L.y,L.w,L.h,12);ctx.fillStyle='rgba(20,22,26,.88)';ctx.fill();ctx.strokeStyle='#2ec2e8';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#e9f6fb';ctx.font='bold 14px sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('📟 sensors',L.x+12,L.y+18);
+  ctx.fillStyle='#6b7480';ctx.font='12px sans-serif';ctx.textAlign='right';ctx.fillText('⠿',L.x+L.w-12,L.y+18);
+  if(L.mic){const m=L.mic;ctx.beginPath();ctx.roundRect(m.ax,m.ay,m.w,m.h,9);ctx.fillStyle=stMbMic.active?'#27c07a':'rgba(255,255,255,.85)';ctx.fill();
+    ctx.fillStyle=stMbMic.active?'#06241a':'#1b1b1d';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(stMbMic.active?'🎤 on':'🎤 mic',m.ax+m.w/2,m.ay+m.h/2);}
+  L.rows.forEach((d,i)=>{const ry=L.y+MB_PANEL.padTop+i*MB_PANEL.rowH+MB_PANEL.rowH/2;
+    ctx.fillStyle='#cfeefb';ctx.font='bold 13px sans-serif';ctx.textAlign='left';ctx.fillText(d.label,L.x+12,ry);
+    ctx.strokeStyle='#444b55';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(L.tx0,ry);ctx.lineTo(L.tx1,ry);ctx.stroke();
+    const kx=mbPanelKnobX(L,d);ctx.strokeStyle='#1796b8';ctx.beginPath();ctx.moveTo(L.tx0,ry);ctx.lineTo(kx,ry);ctx.stroke();ctx.lineCap='butt';
+    ctx.fillStyle='#2ec2e8';ctx.beginPath();ctx.arc(kx,ry,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#0d6f8a';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#e9f6fb';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.fillText(String(Math.round(stMbSensors[d.store])),L.tx1+4,ry);});
+  if(L.gbtns.length){ctx.fillStyle='#9fb0bd';ctx.font='11px sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Gestures — tap to test',L.x+12,L.gbase+9);
+    L.gbtns.forEach(b=>{ctx.beginPath();ctx.roundRect(b.ax,b.ay,b.w,b.h,8);ctx.fillStyle='#2ec2e8';ctx.fill();
+      ctx.fillStyle='#06222b';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b.lab,b.ax+b.w/2,b.ay+b.h/2);});}
+  ctx.restore();}
+// Hit-test the sensor panel at canvas point p; returns {kind:'slider'|'gesture'|'mic', …} or null.
+function mbPanelHit(p){const L=mbPanelLayout();if(!L)return null;
+  if(L.mic&&p.x>=L.mic.ax&&p.x<=L.mic.ax+L.mic.w&&p.y>=L.mic.ay&&p.y<=L.mic.ay+L.mic.h)return {kind:'mic'};
+  if(p.x<L.x||p.x>L.x+L.w)return null;
+  for(let i=0;i<L.rows.length;i++){const ry=L.y+MB_PANEL.padTop+i*MB_PANEL.rowH+MB_PANEL.rowH/2;if(Math.abs(p.y-ry)<MB_PANEL.rowH/2)return {kind:'slider',desc:L.rows[i]};}
+  for(const b of L.gbtns){if(p.x>=b.ax&&p.x<=b.ax+b.w&&p.y>=b.ay&&p.y<=b.ay+b.h)return {kind:'gesture',name:b.name};}
+  return null;}
+function mbSetPanelFromPoint(d,p){const L=mbPanelLayout();if(!L)return;const t=(p.x-L.tx0)/(L.tx1-L.tx0);stMbSensors[d.store]=Math.round(d.min+Math.max(0,Math.min(1,t))*(d.max-d.min));}
+// Fire a gesture on every micro:bit sprite.
+function mbFireGestureAll(name){if(!stageState)return;stageState.sprites.forEach(s=>{const co=curCostume(s);if(co&&co.builtin==='microbit')stMbGesture(s,name);});}
+// Edge-triggered tilt gestures: when Tilt X/Y is dragged past a threshold, fire tilt-left/right / logo-up/down once.
+function mbTiltGestures(){const TH=700;
+  const zx=stMbSensors.accelX<-TH?-1:(stMbSensors.accelX>TH?1:0);
+  const zy=stMbSensors.accelY<-TH?-1:(stMbSensors.accelY>TH?1:0);
+  if(zx!==_mbTiltState.x){_mbTiltState.x=zx;if(zx<0)mbFireGestureAll('tilt_left');else if(zx>0)mbFireGestureAll('tilt_right');}
+  if(zy!==_mbTiltState.y){_mbTiltState.y=zy;if(zy<0)mbFireGestureAll('logo_up');else if(zy>0)mbFireGestureAll('logo_down');}}
+function mbGroup(s){const o=mbState(s);return o.group||0;}
+function mbBeatMs(){return 60000/(stMbTempo||120);}
+function stMbGesture(s,name){if(typeof stMbGestureHats==='undefined')return;stMbGestureHats.forEach(h=>{if(h.s===s&&h.gesture===name)stStartScript(h.first,h.s,null);});}
+function stRadioSend(from,kind,val){stRadioQ.push({group:mbGroup(from),kind:kind,val:val,from:from});}
+// Deliver queued radio messages to every OTHER sprite in the same group, firing its on-received hats.
+// (Not gated on costume — any sprite carrying radio blocks is a "micro:bit" for radio purposes.)
+function stRadioPump(){if(!stRadioQ.length||!stageState)return;const q=stRadioQ;stRadioQ=[];
+  q.forEach(m=>{
+    // set the latest received value on every other same-group sprite (so reporters read it)
+    stageState.sprites.forEach(s=>{if(s===m.from||mbGroup(s)!==m.group)return;const o=mbState(s);if(m.kind==='num')o.rxNum=m.val;else o.rxStr=m.val;});
+    // fire the matching on-received hats
+    (m.kind==='num'?stMbRadioNumHats:stMbRadioStrHats).forEach(h=>{if(h.s!==m.from&&mbGroup(h.s)===m.group)stStartScript(h.first,h.s,null);});
+  });}
+// Shared pop-up grid editor for the custom LED / melody fields (real clickable HTML in Blockly's DropDownDiv).
+// isLit(v,col,row)→bool ; onClick(v,col,row)→newValue ; extra(wrap,field,rebuild) optional adds controls.
+function mbOpenGridEditor(field,cols,rows,cellW,cellH,litColor,isLit,onClick,extra){
+  const dd=Blockly.DropDownDiv,cd=dd.getContentDiv();cd.innerHTML='';
+  const wrap=document.createElement('div');wrap.style.cssText='padding:10px;font-family:sans-serif;';
+  const grid=document.createElement('div');grid.style.cssText='display:grid;gap:3px;grid-template-columns:repeat('+cols+','+cellW+'px);grid-template-rows:repeat('+rows+','+cellH+'px);';
+  function rebuild(){grid.innerHTML='';const v=field.getValue()||'';
+    for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){const cell=document.createElement('div');
+      cell.style.cssText='width:'+cellW+'px;height:'+cellH+'px;border-radius:4px;cursor:pointer;background:'+(isLit(v,col,row)?litColor:'#3a3f46')+';';
+      cell.onmousedown=function(e){e.preventDefault();e.stopPropagation();field.setValue(onClick(field.getValue()||'',col,row));rebuild();};
+      grid.appendChild(cell);}}
+  rebuild();wrap.appendChild(grid);
+  if(extra)extra(wrap,field,rebuild);
+  cd.appendChild(wrap);dd.setColour('#23262b','#2ec2e8');dd.showPositionedByField(field,function(){});}
+// Custom Blockly field: the "show leds" 5×5 designer — inline preview + pop-up editor on click.
+function defineMbLedsField(){if(window.FieldLeds||typeof Blockly==='undefined')return;
+  class FieldLeds extends Blockly.Field{
+    constructor(v){super(v||'0011000110000000000000000');this.SERIALIZABLE=true;this.EDITABLE=true;this.CURSOR='pointer';}
+    static fromJson(o){return new FieldLeds(o.value);}
+    doClassValidation_(v){if(typeof v!=='string')return null;return (v.replace(/[^01]/g,'')+'0000000000000000000000000').slice(0,25);}
+    initView(){const C=11;this.size_=new Blockly.utils.Size(5*C+2,5*C+2);this.cells_=[];
+      for(let i=0;i<25;i++){const r=Blockly.utils.dom.createSvgElement('rect',{x:(i%5)*C+1,y:Math.floor(i/5)*C+1,width:C-2,height:C-2,rx:2},this.fieldGroup_);this.cells_.push(r);}
+      this.updateCells_();}
+    updateCells_(){const v=this.getValue()||'';for(let i=0;i<25;i++)if(this.cells_[i])this.cells_[i].setAttribute('fill',v[i]==='1'?'#ff3a1e':'#566');}
+    render_(){if(this.cells_)this.updateCells_();}
+    showEditor_(){mbOpenGridEditor(this,5,5,28,28,'#ff3a1e',
+      (v,c,r)=>v[r*5+c]==='1',
+      (v,c,r)=>{const i=r*5+c,a=v.split('');a[i]=a[i]==='1'?'0':'1';return a.join('');});}
+  }
+  window.FieldLeds=FieldLeds;}
+// Custom Blockly field: the "play melody" 8-beat × 8-pitch editor — inline preview + pop-up editor (with ▶ Play) on click.
+function defineMbMelodyField(){if(window.FieldMelody||typeof Blockly==='undefined')return;
+  class FieldMelody extends Blockly.Field{
+    constructor(v){super(v||'00000000');this.SERIALIZABLE=true;this.EDITABLE=true;this.CURSOR='pointer';}
+    static fromJson(o){return new FieldMelody(o.value);}
+    doClassValidation_(v){if(typeof v!=='string')return null;return (v.replace(/[^0-8]/g,'')+'00000000').slice(0,8);}
+    initView(){const C=9,COLS=8,ROWS=8;this.size_=new Blockly.utils.Size(COLS*C+2,ROWS*C+2);this.cells_=[];
+      for(let col=0;col<COLS;col++)for(let row=0;row<ROWS;row++){const r=Blockly.utils.dom.createSvgElement('rect',{x:col*C+1,y:row*C+1,width:C-2,height:C-2,rx:1},this.fieldGroup_);this.cells_.push(r);}
+      this.updateCells_();}
+    updateCells_(){const v=this.getValue()||'';for(let col=0;col<8;col++)for(let row=0;row<8;row++){const lit=(v[col]===String(8-row));this.cells_[col*8+row].setAttribute('fill',lit?'#ffd23f':'#566');}}
+    render_(){if(this.cells_)this.updateCells_();}
+    showEditor_(){mbOpenGridEditor(this,8,8,26,20,'#ffd23f',
+      (v,c,r)=>v[c]===String(8-r),
+      (v,c,r)=>{const note=String(8-r),a=v.split('');a[c]=(a[c]===note)?'0':note;return a.join('');},
+      function(wrap,field){const bar=document.createElement('div');bar.style.cssText='margin-top:8px;text-align:center;';
+        const play=document.createElement('button');play.textContent='▶ Play';play.style.cssText='background:#2ec2e8;color:#06222b;border:0;border-radius:8px;padding:5px 14px;font-weight:bold;cursor:pointer;font-size:13px;';
+        play.onmousedown=function(e){e.preventDefault();e.stopPropagation();const ac=stAudioCtx&&stAudioCtx();if(!ac)return;let t=ac.currentTime;mbMelodyFromString(field.getValue(),240).forEach(function(p){if(p[0])stTone(ac,t,p[0],null,p[1]*0.9,'square',0.25);t+=p[1];});};
+        bar.appendChild(play);wrap.appendChild(bar);});}
+  }
+  window.FieldMelody=FieldMelody;}
+// Rounded-rect path helper (centred coords).
+function mbRR(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+// Original full-size vector of a micro:bit FRONT (clean-room — our own art, real layout).
+// Drawn large (~190×160 at sprite size 100) so the device reads as "full size" on the stage.
+// Board is always black (the micro:bit look); the costume colour is ignored on purpose.
+function paintMicrobit(c,mb,color){mb=mb||MB_DEFAULT;const leds=(mb&&mb.leds)||MB_DEFAULT.leds;
+  c.save();
+  const BW=190,BH=158,bx=-BW/2,by=-BH/2,R=16;
+  // micro-USB connector poking out of the top edge (silver)
+  c.fillStyle='#c7ccd1';mbRR(c,-17,by-9,34,14,3);c.fill();c.fillStyle='#9aa0a6';mbRR(c,-13,by-6,26,9,2);c.fill();
+  // board body (black PCB)
+  mbRR(c,bx,by,BW,BH,R);c.fillStyle='#1b1b1d';c.fill();c.strokeStyle='#000';c.lineWidth=2;c.stroke();
+  // cyan corner triangles (top-left block + diagonal stripe; small accents by the buttons)
+  c.save();mbRR(c,bx,by,BW,BH,R);c.clip();
+  c.fillStyle='#2ec2e8';c.beginPath();c.moveTo(bx,by);c.lineTo(bx+58,by);c.lineTo(bx,by+58);c.closePath();c.fill();
+  c.fillStyle='#1b1b1d';c.beginPath();c.moveTo(bx+30,by);c.lineTo(bx+50,by);c.lineTo(bx,by+50);c.lineTo(bx,by+30);c.closePath();c.fill();
+  c.restore();
+  // oval logo with two holes ("eyes"), top-centre
+  c.strokeStyle='#cfd4d8';c.lineWidth=3.5;mbRR(c,-22,by+20,44,17,8);c.stroke();
+  c.fillStyle='#0c0c0d';c.beginPath();c.arc(-8,by+28.5,4.6,0,Math.PI*2);c.arc(8,by+28.5,4.6,0,Math.PI*2);c.fill();
+  c.fillStyle=mb._logo?'#2ec2e8':'#cfd4d8';c.beginPath();c.arc(-8,by+28.5,2.1,0,Math.PI*2);c.arc(8,by+28.5,2.1,0,Math.PI*2);c.fill();
+  // 5×5 LED matrix (tall little lamps), centred and slightly low
+  const sx=15.5,sy=14,cx0=-2*sx,cy0=4,bri=(mb.bright==null?255:mb.bright)/255;
+  for(let row=0;row<5;row++)for(let col=0;col<5;col++){const v=leds[row*5+col]||0,x=cx0+col*sx,y=cy0+(row-2)*sy;
+    mbRR(c,x-3,y-5,6,10,2);
+    if(v>0&&bri>0){c.save();c.shadowColor='#ff3a1e';c.shadowBlur=9*(v/9)*bri;c.fillStyle='rgba(255,60,30,'+(0.45+0.55*v/9)*bri+')';c.fill();c.restore();}
+    else{c.fillStyle='#5a5550';c.fill();}}
+  // buttons A (left) and B (right) — metallic square caps (light up cyan when pressed)
+  [['A',-78,1,!!mb._A],['B',78,-1,!!mb._B]].forEach(([lab,bxp,tri,down])=>{
+    mbRR(c,bxp-15,-3,30,30,5);c.fillStyle='#4a4d52';c.fill();c.strokeStyle='#2a2c2f';c.lineWidth=2;c.stroke();
+    c.fillStyle=down?'#2ec2e8':'#9aa0a6';c.beginPath();c.arc(bxp,12,down?10:9,0,Math.PI*2);c.fill();c.strokeStyle=down?'#1796b8':'#6b6f74';c.lineWidth=1.5;c.stroke();
+    c.fillStyle=down?'#bff0fb':'#c2c7cc';c.beginPath();c.arc(bxp-2,10,3.2,0,Math.PI*2);c.fill();
+    // small cyan triangle + label beside the button
+    c.fillStyle='#2ec2e8';const tx=bxp-22;c.beginPath();if(tri>0){c.moveTo(tx,32);c.lineTo(tx+12,32);c.lineTo(tx,44);}else{c.moveTo(bxp+22,-16);c.lineTo(bxp+10,-16);c.lineTo(bxp+22,-4);}c.closePath();c.fill();
+    c.fillStyle='#cfd4d8';c.font='bold 11px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,tri>0?tx+3:bxp+18,tri>0?40:-9);});
+  // gold edge-connector pads along the bottom (big labelled pads + thin pins between)
+  const pads=[['0',-76],['1',-38],['2',0],['3V',38],['GND',76]];
+  c.fillStyle='#c79a2e';for(let i=-9;i<=9;i++){c.fillRect(i*9-1.5,by+BH-14,3,14);}      // thin pins
+  pads.forEach(([lab,px])=>{c.fillStyle='#e7b53b';mbRR(c,px-13,by+BH-26,26,26,5);c.fill();
+    c.fillStyle='#1b1b1d';c.beginPath();c.arc(px,by+BH-15,5,0,Math.PI*2);c.fill();
+    c.fillStyle='#1b1b1d';c.font='bold 9px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,px,by+BH-5);});
+  c.restore();}
 const OHBOT_MOTORS=['HeadTurn','HeadNod','EyeTurn','EyeTilt','TopLip','BottomLip','Lid'];
 const OHBOT_DEFAULT={HeadTurn:5,HeadNod:5,EyeTurn:5,EyeTilt:5,TopLip:5,BottomLip:5,Lid:0,color:null};
 function ohbotState(s){if(!s._ob)s._ob=Object.assign({},OHBOT_DEFAULT);return s._ob;}
@@ -2479,18 +3307,22 @@ function paintOhbot(c,ob,color){ob=ob||OHBOT_DEFAULT;const eye=ob.color||color||
   c.beginPath();c.moveTo(mx-9,botY);c.quadraticCurveTo(mx,botY+2,mx+9,botY);c.stroke();c.lineCap='butt';
   c.restore();}
 // Built-in costume library — name → {emoji, paint}. The single source of truth.
-const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot},ohbot:{e:'🤖',f:(c,col)=>paintOhbot(c,OHBOT_DEFAULT,col)}};
+const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot},ohbot:{e:'🤖',f:(c,col)=>paintOhbot(c,OHBOT_DEFAULT,col)},microbit:{e:'📟',f:(c,col)=>paintMicrobit(c,MB_DEFAULT,col)}};
 const COSTUME_KEYS=Object.keys(STAGE_COSTUMES);
-function pickableCostumes(){return COSTUME_KEYS.filter(k=>OHBOT_ON||k!=='ohbot');} // hide Ohbot from the picker while it's off
+function pickableCostumes(){return COSTUME_KEYS.filter(k=>(OHBOT_ON||k!=='ohbot')&&((MICROBIT_ON&&keyStage!=='ks1')||k!=='microbit'));} // picker grid: hide Ohbot/micro:bit when off; micro:bit also hidden for KS1 (too advanced)
+function cycleCostumes(){return COSTUME_KEYS.filter(k=>k!=='ohbot'&&k!=='microbit');} // auto-assign for NEW sprites — never auto-pick a device costume
 function paintCostume(c,name,color){(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f(c,color);}
 function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save();ctx.translate(s.x,s.y);
   if(!s.visible){ctx.globalAlpha=0.3;} // dim (not hidden) when stopped so kids can still find & move it
   const fx=s.fx||{};
   if(fx.ghost)ctx.globalAlpha*=Math.max(0,Math.min(100,100-fx.ghost))/100;
   const sc=(s.size||100)/100;ctx.save();ctx.scale(sc,sc);
+  if(keyStage==='ks1'&&s.dir!=null)ctx.rotate((s.dir-90)*Math.PI/180); // KS1 characters visibly turn
   if(fx.brightness)ctx.filter='brightness('+(1+Math.max(-100,Math.min(100,fx.brightness))/100)+')';
   paintSpriteCostume(ctx,s);ctx.restore();
-  if(selected&&!stagePlaying){ctx.strokeStyle='#ae853e';ctx.lineWidth=2.5;ctx.setLineDash([5,4]);ctx.strokeRect(-24*sc,-26*sc,48*sc,52*sc);ctx.setLineDash([]);}
+  // micro:bit interactive controls (A+B / Shake chips) while playing
+  if(stagePlaying){const co=curCostume(s);if(co&&co.builtin==='microbit'){ctx.save();ctx.scale(sc,sc);drawMbControls(ctx,s);ctx.restore();}}
+  if(selected&&!stagePlaying){const h=costumeHalf(s);ctx.strokeStyle='#ae853e';ctx.lineWidth=2.5;ctx.setLineDash([5,4]);ctx.strokeRect(-h.hw*sc,-h.hh*sc,h.hw*2*sc,h.hh*2*sc);ctx.setLineDash([]);}
   ctx.restore();
   if(s.say&&s.sayT>0){ctx.save();ctx.font='bold 16px sans-serif';const w=ctx.measureText(s.say).width+20;const bx=Math.min(CW-w-4,s.x+12),by=Math.max(4,s.y-46);
     ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.lineWidth=2;
@@ -2522,12 +3354,38 @@ function drawStage(){ctx.save();const bd=curBackdrop();
     ctx.fillStyle='#9be7ff';ctx.fillText(txt,CW-w-3,my+5);my+=28;});
   // live collaborators' pointers (Google-Docs-style cursors)
   if(typeof collabActive!=='undefined'&&collabActive){for(const uid in collabRemoteCursors){const cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.sx==null)continue;drawRemotePointer(cu.cell.sx,cu.cell.sy,cu.color||'#fff',cu.name||'');}}
+  mbDrawPanel(ctx); // micro:bit sensor panel (drag light/temp/tilt… while playing)
   ctx.restore();
 }
 // Drag the selected sprite around the stage (when not running).
 let _stageDrag=null;
+let _mbPress=null; // {s} — micro:bit sprite whose A/B button is currently held down
+let _mbSlider=null; // {desc} — micro:bit sensor slider currently being dragged (on the fixed panel)
 function stagePtr(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*CW,y:(e.clientY-r.top)/r.height*CH};}
-function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100;if(Math.abs(x-s.x)<26*sc&&Math.abs(y-s.y)<28*sc)return i;}return -1;}
+// Pointer pressed a micro:bit control while playing. Returns true if it consumed the press.
+function mbPointerDown(p){if(!stagePlaying||!stageState)return false;
+  // the sensor panel sits on top of everything (fixed canvas coords)
+  const hit=mbPanelHit(p);
+  if(hit){if(hit.kind==='slider'){_mbSlider={desc:hit.desc};mbSetPanelFromPoint(hit.desc,p);}
+    else if(hit.kind==='gesture')mbFireGestureAll(hit.name);
+    else if(hit.kind==='mic')mbToggleMic();
+    return true;}
+  const L=mbPanelLayout();if(L&&p.x>=L.x&&p.x<=L.x+L.w&&p.y>=L.y&&p.y<=L.y+L.h){_mbPanelDrag={dx:p.x-L.x,dy:p.y-L.y};return true;} // grab the panel header/body to reposition it
+  for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i];if(s.visible===false)continue;
+    const co=curCostume(s);if(!co||co.builtin!=='microbit')continue;
+    const id=mbControlAt(s,p);if(!id)continue;const o=mbState(s);
+    if(id==='SHAKE'){stMbShake(s);stMbGesture(s,'shake');return true;}
+    if(id==='LOGO'){o._logo=true;stMbLogoHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});_mbPress={s:s};return true;}
+    if(id==='A'||id==='AB')o._A=true;
+    if(id==='B'||id==='AB')o._B=true;
+    _mbPress={s:s};return true;}
+  return false;}
+function mbPointerUp(){if(_mbPress){const o=mbState(_mbPress.s);o._A=false;o._B=false;o._logo=false;_mbPress=null;}_mbSlider=null;_mbPanelDrag=null;}
+function mbPointerMove(p){if(_mbSlider)mbSetPanelFromPoint(_mbSlider.desc,p);else if(_mbPanelDrag)stMbPanelPos={x:p.x-_mbPanelDrag.dx,y:p.y-_mbPanelDrag.dy};}
+// Half-extent (hw,hh) of a sprite's costume, for the selection box + drag hit test.
+// Most costumes are ~±24; the micro:bit board is much larger.
+function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};return{hw:24,hh:26};}
+function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100,h=costumeHalf(s);if(Math.abs(x-s.x)<(h.hw+2)*sc&&Math.abs(y-s.y)<(h.hh+2)*sc)return i;}return -1;}
 function stageDragStart(e){if(projectType!=='stage')return;const p=stagePtr(e);const i=stageSpriteAt(p.x,p.y);if(i<0)return;const sp=stageState.sprites[i];
   if(stagePlaying){if(!sp.draggable)return;}else if(i!==stageSel)stageSelectSprite(i); // during play only draggable sprites move
   _stageDrag={i:i,dx:p.x-sp.x,dy:p.y-sp.y};e.preventDefault();}
@@ -2539,13 +3397,15 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   window.addEventListener('mousemove',stageDragMove);
   window.addEventListener('mouseup',stageDragEnd);
   // mouse tracking + sprite clicks for Sensing / "when this sprite clicked"
+  window.addEventListener('mousemove',e=>{if(_mbSlider||_mbPanelDrag)mbPointerMove(stagePtr(e));});
+  gc.addEventListener('touchmove',e=>{if((_mbSlider||_mbPanelDrag)&&e.touches[0]){mbPointerMove(stagePtr(e.touches[0]));e.preventDefault();}},{passive:false});
   gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;if(typeof collabStageCursor==='function')collabStageCursor(p.x,p.y);}});
   gc.addEventListener('mouseleave',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
-  gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);stageFireClick(p.x,p.y);}});
-  window.addEventListener('mouseup',()=>{stageMouse.down=false;});
-  gc.addEventListener('touchstart',e=>{if(projectType==='stage'&&!stagePlaying&&e.touches[0]){stageDragStart(e.touches[0]);}},{passive:false});
+  gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);if(mbPointerDown(p))return;stageFireClick(p.x,p.y);}});
+  window.addEventListener('mouseup',()=>{stageMouse.down=false;mbPointerUp();});
+  gc.addEventListener('touchstart',e=>{if(projectType!=='stage')return;if(stagePlaying){if(e.touches[0]&&mbPointerDown(stagePtr(e.touches[0]))){e.preventDefault();return;}}else if(e.touches[0]){stageDragStart(e.touches[0]);}},{passive:false});
   gc.addEventListener('touchmove',e=>{if(_stageDrag&&e.touches[0]){stageDragMove(e.touches[0]);}},{passive:false});
-  gc.addEventListener('touchend',stageDragEnd);
+  gc.addEventListener('touchend',e=>{stageDragEnd();mbPointerUp();});
   const gf=document.getElementById('btn-greenflag');if(gf)gf.onclick=()=>stageStart();
   const st=document.getElementById('btn-stopall');if(st)st.onclick=()=>stageStop();
   const as=document.getElementById('add-sprite');if(as)as.onclick=()=>stageAddSprite();
@@ -2720,14 +3580,14 @@ function thSheetHTML(L){return '<div class="th-sheet">'+
   '<ol>'+L.steps.map(s=>'<li>'+s+'</li>').join('')+'</ol>'+
   '<div class="drawbox">✏️ Draw your plan here before you start</div>'+
   '<p style="margin-top:12px;"><b>Challenge:</b> '+L.challenge+'</p>'+
-  '<div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>';}
+  '<div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League CIC</span></div></div>';}
 function thCardHTML(){const ch=dailyChallenge();return '<div class="th-sheet">'+
   '<div class="ks">Challenge of the Day · '+new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})+'</div>'+
   '<h4>'+ch.title+' 🎮</h4>'+
   '<p><b>Your mission:</b> '+ch.desc+'</p>'+
   '<ol>'+ch.steps.map(s=>'<li>'+s+'</li>').join('')+'</ol>'+
   '<div class="drawbox">✏️ Sketch your idea here first</div>'+
-  '<div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League</span></div></div>';}
+  '<div class="foot"><span>Name: ______________________</span><span>CodeJump · Primary Coding League CIC</span></div></div>';}
 function thOpenLesson(i){
   const L=thLessons()[i];thCurrent=L;
   const loadBtn=L.starter
@@ -2768,6 +3628,7 @@ function openProjector(){const ch=dailyChallenge();
   thProjLeft=600;document.getElementById('projector').classList.add('on');thTickProj();thProjInt=setInterval(()=>{thProjLeft=Math.max(0,thProjLeft-1);thTickProj();},1000);}
 function thTickProj(){const m=Math.floor(thProjLeft/60),s=thProjLeft%60;document.getElementById('ptimer').textContent=m+':'+String(s).padStart(2,'0');}
 function closeProjector(){document.getElementById('projector').classList.remove('on');clearInterval(thProjInt);}
+{const ab=document.getElementById('h-a11y');if(ab)ab.onclick=()=>a11yOpen();}
 document.getElementById('h-teacher').onclick=()=>{
   if(typeof cloudOn==='function'&&cloudOn()){
     if(typeof isTeacher==='function'&&isTeacher())showTeacher();
@@ -3130,7 +3991,94 @@ function defineStageBlocks(){
   Blockly.Blocks['ob_eyecolor']={init:function(){const fld=(Blockly.FieldColour)?new Blockly.FieldColour('#39c0ed'):new Blockly.FieldTextInput('#39c0ed');this.appendDummyInput().appendField('set eye colour to').appendField(fld,'COLOR');stmt(this);this.setColour(195);}};
   Blockly.Blocks['ob_reset']={init:function(){this.appendDummyInput().appendField('reset Ohbot');stmt(this);this.setColour(195);}};
   Blockly.Blocks['ob_speaking']={init:function(){this.appendDummyInput().appendField('Ohbot is speaking?');this.setOutput(true,null);this.setColour(195);}};
+  // ── micro:bit emulator — 5×5 LED display + buttons (MakeCode-style wording) ──
+  const MB_COL='#00A86B';
+  const MB_ICONLIST=[['❤️ heart','heart'],['😀 happy','happy'],['🙁 sad','sad'],['✔️ yes','yes'],['❌ no','no'],['⬆️ arrow up','arrow_n'],['⬇️ arrow down','arrow_s'],['🟩 square','square'],['🦆 duck','duck'],['• small','small']];
+  const MB_BTNS=[['A','A'],['B','B'],['A+B','AB']];
+  Blockly.Blocks['mb_on_start']={init:function(){this.appendDummyInput().appendField('📟 on start');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_button']={init:function(){this.appendDummyInput().appendField('📟 on button').appendField(new Blockly.FieldDropdown(MB_BTNS),'BTN').appendField('pressed');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_shake']={init:function(){this.appendDummyInput().appendField('📟 on shake');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_show_icon']={init:function(){this.appendDummyInput().appendField('show icon').appendField(new Blockly.FieldDropdown(MB_ICONLIST),'ICON');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_show_number']={init:function(){this.appendDummyInput().appendField('show number').appendField(new Blockly.FieldNumber(0),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_show_string']={init:function(){this.appendValueInput('TXT').appendField('show string');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_clear']={init:function(){this.appendDummyInput().appendField('clear screen');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_plot']={init:function(){this.appendDummyInput().appendField('plot x').appendField(new Blockly.FieldNumber(0,0,4),'X').appendField('y').appendField(new Blockly.FieldNumber(0,0,4),'Y');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_unplot']={init:function(){this.appendDummyInput().appendField('unplot x').appendField(new Blockly.FieldNumber(0,0,4),'X').appendField('y').appendField(new Blockly.FieldNumber(0,0,4),'Y');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_button']={init:function(){this.appendDummyInput().appendField('button').appendField(new Blockly.FieldDropdown(MB_BTNS),'BTN').appendField('pressed?');this.setOutput(true,null);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_point']={init:function(){this.appendDummyInput().appendField('point x').appendField(new Blockly.FieldNumber(0,0,4),'X').appendField('y').appendField(new Blockly.FieldNumber(0,0,4),'Y').appendField('on?');this.setOutput(true,null);this.setColour(MB_COL);}};
+  // ── micro:bit full range (Basic+, Led, Input sensors, Music, Radio, Control) ──
+  defineMbLedsField();defineMbMelodyField();
+  const MB_DIRS=[['North','North'],['North-East','NorthEast'],['East','East'],['South-East','SouthEast'],['South','South'],['South-West','SouthWest'],['West','West'],['North-West','NorthWest']];
+  Blockly.Blocks['mb_show_arrow']={init:function(){this.appendDummyInput().appendField('show arrow').appendField(new Blockly.FieldDropdown(MB_DIRS),'DIR');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_show_leds']={init:function(){let f;try{f=new window.FieldLeds('0011000110000000000000000');}catch(e){f=new Blockly.FieldTextInput('0011000110000000000000000');}this.appendDummyInput().appendField('show leds').appendField(f,'PATTERN');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_set_brightness']={init:function(){this.appendDummyInput().appendField('set brightness').appendField(new Blockly.FieldNumber(255,0,255),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_toggle']={init:function(){this.appendDummyInput().appendField('toggle x').appendField(new Blockly.FieldNumber(0,0,4),'X').appendField('y').appendField(new Blockly.FieldNumber(0,0,4),'Y');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_plot_brightness']={init:function(){this.appendDummyInput().appendField('plot x').appendField(new Blockly.FieldNumber(0,0,4),'X').appendField('y').appendField(new Blockly.FieldNumber(0,0,4),'Y').appendField('brightness').appendField(new Blockly.FieldNumber(255,0,255),'V');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_plot_bar_graph']={init:function(){this.appendValueInput('VALUE').appendField('plot bar graph of');this.appendValueInput('MAX').appendField('up to');this.setInputsInline(true);stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_brightness']={init:function(){this.appendDummyInput().appendField('brightness');this.setOutput(true,null);this.setColour(MB_COL);}};
+  // Input — gestures, logo touch, sensors (emulated)
+  Blockly.Blocks['mb_on_gesture']={init:function(){this.appendDummyInput().appendField('📟 on').appendField(new Blockly.FieldDropdown(MB_GESTURES),'G');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_logo']={init:function(){this.appendDummyInput().appendField('📟 on logo pressed');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_logo_pressed']={init:function(){this.appendDummyInput().appendField('logo is pressed?');this.setOutput(true,null);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_acceleration']={init:function(){this.appendDummyInput().appendField('acceleration (mg)').appendField(new Blockly.FieldDropdown([['x','x'],['y','y'],['z','z'],['strength','strength']]),'DIM');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_rotation']={init:function(){this.appendDummyInput().appendField('rotation (°)').appendField(new Blockly.FieldDropdown([['pitch','pitch'],['roll','roll']]),'ROT');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_light_level']={init:function(){this.appendDummyInput().appendField('light level');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_temperature']={init:function(){this.appendDummyInput().appendField('temperature (°C)');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_compass_heading']={init:function(){this.appendDummyInput().appendField('compass heading (°)');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_magnetic_force']={init:function(){this.appendDummyInput().appendField('magnetic force (µT)');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_sound_level']={init:function(){this.appendDummyInput().appendField('sound level');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_running_time']={init:function(){this.appendDummyInput().appendField('running time (ms)');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  // Music
+  Blockly.Blocks['mb_play_tone']={init:function(){this.appendDummyInput().appendField('play tone').appendField(new Blockly.FieldDropdown(MB_NOTES),'NOTE').appendField('for').appendField(new Blockly.FieldDropdown(MB_DUR),'DUR');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_ring_tone']={init:function(){this.appendDummyInput().appendField('ring tone (Hz)').appendField(new Blockly.FieldNumber(440,1,8000),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_rest']={init:function(){this.appendDummyInput().appendField('rest for').appendField(new Blockly.FieldDropdown(MB_DUR),'DUR');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_play_melody']={init:function(){this.appendDummyInput().appendField('play melody').appendField(new Blockly.FieldDropdown(Object.keys(MB_MELODIES).map(k=>[k,k])),'MEL');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_set_tempo']={init:function(){this.appendDummyInput().appendField('set tempo (bpm)').appendField(new Blockly.FieldNumber(120,20,400),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_change_tempo']={init:function(){this.appendDummyInput().appendField('change tempo by').appendField(new Blockly.FieldNumber(20,-400,400),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_tempo']={init:function(){this.appendDummyInput().appendField('tempo (bpm)');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_set_volume']={init:function(){this.appendDummyInput().appendField('set volume').appendField(new Blockly.FieldNumber(127,0,255),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_play_sound']={init:function(){this.appendDummyInput().appendField('play sound').appendField(new Blockly.FieldDropdown(Object.keys(MB_SOUNDS).map(k=>[k,k])),'SND');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_start_melody']={init:function(){this.appendDummyInput().appendField('start melody').appendField(new Blockly.FieldDropdown(Object.keys(MB_MELODIES).map(k=>[k,k])),'MEL').appendField('repeating').appendField(new Blockly.FieldDropdown([['once','once'],['forever','forever']]),'REP');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_stop_all_sounds']={init:function(){this.appendDummyInput().appendField('stop all sounds');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_melody']={init:function(){let f;try{f=new window.FieldMelody('53231000');}catch(e){f=new Blockly.FieldTextInput('53231000');}this.appendDummyInput().appendField('play melody').appendField(f,'MEL').appendField('at tempo').appendField(new Blockly.FieldNumber(120,20,400),'TEMPO').appendField('(bpm)').appendField(new Blockly.FieldDropdown([['until done','done'],['in background','bg']]),'MODE');stmt(this);this.setColour(MB_COL);}};
+  // Radio (emulated between micro:bit sprites)
+  Blockly.Blocks['mb_radio_set_group']={init:function(){this.appendDummyInput().appendField('📻 radio set group').appendField(new Blockly.FieldNumber(1,0,255),'N');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_radio_send_number']={init:function(){this.appendValueInput('NUM').appendField('📻 radio send number');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_radio_send_string']={init:function(){this.appendValueInput('MSG').appendField('📻 radio send string');stmt(this);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_radio_number']={init:function(){this.appendDummyInput().appendField('📻 on radio received number');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_on_radio_string']={init:function(){this.appendDummyInput().appendField('📻 on radio received string');this.setNextStatement(true);this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_radio_number']={init:function(){this.appendDummyInput().appendField('📻 received number');this.setOutput(true,'Number');this.setColour(MB_COL);}};
+  Blockly.Blocks['mb_radio_string']={init:function(){this.appendDummyInput().appendField('📻 received string');this.setOutput(true,'String');this.setColour(MB_COL);}};
+  // Control
+  Blockly.Blocks['mb_run_background']={init:function(){this.appendStatementInput('DO').appendField('run in background');stmt(this);this.setColour(MB_COL);}};
+  stApplyTooltips(); // hover descriptions on every stage block (KS2/KS3)
 }
+// Plain-English description shown when you hover a Stage block (KS2/KS3 Blockly tooltips).
+const ST_BLOCK_DESC={
+  // Motion
+  st_move:'Move the sprite forwards by this many steps.',st_turn_r:'Turn the sprite clockwise (to the right).',st_turn_l:'Turn the sprite anticlockwise (to the left).',st_point:'Point the sprite in this direction (90 = right, 0 = up).',st_point_towards:'Point the sprite towards the mouse or another sprite.',st_goto:'Jump the sprite to the mouse, a random spot, or another sprite.',st_goto_xy:'Jump the sprite to an exact x (left–right) and y (up–down) spot.',st_goto_center:'Jump the sprite to the middle of the stage.',st_glide_xy:'Slide smoothly to an x,y spot over a number of seconds.',st_glide_to:'Slide smoothly to the mouse, a random spot, or another sprite.',st_change_x:'Change the sprite’s left–right position by this much.',st_set_x:'Set the sprite’s left–right position.',st_change_y:'Change the sprite’s up–down position by this much.',st_set_y:'Set the sprite’s up–down position.',st_edge_bounce:'If the sprite hits the edge, bounce off it.',st_xpos:'The sprite’s x (left–right) position.',st_ypos:'The sprite’s y (up–down) position.',st_direction:'The direction the sprite is pointing.',
+  // Looks
+  st_say:'Show a speech bubble with your words.',st_say_secs:'Show a speech bubble for a number of seconds.',st_think:'Show a thought bubble.',st_think_secs:'Show a thought bubble for a number of seconds.',st_switch_costume:'Change to a different costume.',st_next_costume:'Change to the next costume.',st_costume_num:'The number of the current costume.',st_switch_backdrop:'Change the stage’s backdrop.',st_next_backdrop:'Change to the next backdrop.',st_backdrop_num:'The number of the current backdrop.',st_change_effect:'Change a graphic effect (ghost or brightness).',st_set_effect:'Set a graphic effect to a value.',st_clear_effects:'Remove all graphic effects.',st_goto_layer:'Bring the sprite to the front or send it to the back.',st_go_layers:'Move the sprite forward or back by some layers.',st_show:'Show the sprite.',st_hide:'Hide the sprite.',st_change_size:'Change the sprite’s size by this much.',st_set_size:'Set the sprite’s size (100 is normal).',st_size:'The sprite’s size.',
+  // Sound
+  st_play_sound:'Play a sound.',st_play_sound_wait:'Play a sound and wait until it finishes.',st_stop_sounds:'Stop all sounds.',st_set_volume:'Set how loud sounds are.',st_change_volume:'Change how loud sounds are.',st_volume:'How loud sounds are now.',
+  // Events
+  st_when_flag:'Run these blocks when the green flag is clicked.',st_when_key:'Run these blocks when a key is pressed.',st_when_clicked:'Run these blocks when this sprite is clicked.',st_when_backdrop:'Run these blocks when the backdrop changes.',st_when_receive:'Run these blocks when this message is sent.',st_broadcast:'Send a message to all sprites.',st_broadcast_wait:'Send a message and wait for everyone to finish.',
+  // Control
+  st_wait:'Wait for a number of seconds.',st_wait_until:'Wait until something becomes true.',st_repeat:'Do the blocks inside a number of times.',st_repeat_until:'Repeat the blocks inside until something is true.',st_forever:'Keep doing the blocks inside, forever.',st_if:'Do the blocks inside only if something is true.',st_if_else:'Do one set of blocks if true, otherwise the other.',st_stop:'Stop scripts running.',st_clone:'Make a copy (clone) of a sprite.',st_when_clone_start:'Run these blocks when a clone is made.',st_delete_clone:'Delete this clone.',
+  // Sensing
+  st_touching:'True if the sprite is touching something.',st_key_pressed:'True while this key is held down.',st_ask:'Ask a question and wait for an answer.',st_answer:'The last answer that was typed.',st_mouse_down:'True while the mouse button is held.',st_mouse_x:'The mouse’s x (left–right) position.',st_mouse_y:'The mouse’s y (up–down) position.',st_distance_to:'How far the sprite is from the mouse or another sprite.',st_timer:'The timer’s value in seconds.',st_reset_timer:'Set the timer back to zero.',st_set_drag:'Let the player drag this sprite, or not.',st_attr_of:'Read a value (like x or size) from another sprite or the Stage.',st_username:'The name of the player who is signed in.',st_current:'Part of today’s date or time.',st_days_2000:'Days since the year 2000.',
+  // Operators (extras)
+  st_letter_of:'The letter at a position in some text.',st_str_contains:'True if the first text contains the second.',
+  // Variables / Lists
+  st_show_var:'Show this variable on the stage.',st_hide_var:'Hide this variable.',st_list_add:'Add an item to the end of a list.',st_list_delete:'Delete the item at a position.',st_list_delete_all:'Empty the whole list.',st_list_insert:'Put an item into the list at a position.',st_list_replace:'Replace an item in the list.',st_list_item:'The item at a position in the list.',st_list_itemnum:'The position of an item in the list.',st_list_length:'How many items are in the list.',st_list_contains:'True if the list contains this item.',st_show_list:'Show this list on the stage.',st_hide_list:'Hide this list.',
+  // Pen
+  st_pen_clear:'Wipe everything the pen has drawn.',st_pen_stamp:'Stamp a picture of the sprite onto the stage.',st_pen_down:'Put the pen down to start drawing.',st_pen_up:'Lift the pen up to stop drawing.',st_pen_setcolor:'Choose the pen colour.',st_pen_changesize:'Change how thick the pen draws.',st_pen_setsize:'Set how thick the pen draws.',
+  // Score
+  st_change_score:'Change the score by this much.',st_set_score:'Set the score to a number.',st_score:'The current score.',
+  // micro:bit (a few key ones; the rest are clear from their wording)
+  mb_on_start:'Run these blocks when the program starts.',mb_show_icon:'Show a picture on the 5×5 lights.',mb_show_leds:'Design your own picture on the lights.',mb_show_string:'Scroll some words across the lights.',mb_show_number:'Show a number on the lights.',mb_plot:'Turn one light on.',mb_unplot:'Turn one light off.',mb_on_button:'Run these blocks when a button is pressed.',mb_on_shake:'Run these blocks when the micro:bit is shaken.',mb_radio_send_number:'Send a number to other micro:bits.',mb_play_tone:'Play a musical note.',mb_play_melody:'Tap the squares to make your own tune.'
+};
+function stApplyTooltips(){if(typeof Blockly==='undefined')return;Object.keys(ST_BLOCK_DESC).forEach(function(type){const def=Blockly.Blocks[type];if(def&&def.init&&!def.init._stTip){const orig=def.init;const wrap=function(){orig.call(this);try{this.setTooltip(ST_BLOCK_DESC[type]);}catch(e){}};wrap._stTip=true;def.init=wrap;}});}
 function stGotoTargets(){const opts=[['🎲 random position','_random'],['🖱️ mouse-pointer','_mouse']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
 function stAttrTargets(){const opts=[['Stage','_stage']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
 function stCloneTargets(){const opts=[['myself','_myself']];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));return opts;}
@@ -3184,8 +4132,16 @@ function stageToolbox(){const blk=t=>({kind:'block',type:t});
     blk('st_show_list'),blk('st_hide_list')]},
   {kind:'category',name:'🖊️  Pen',colour:'160',contents:[blk('st_pen_clear'),blk('st_pen_stamp'),blk('st_pen_down'),blk('st_pen_up'),blk('st_pen_setcolor'),blk('st_pen_changesize'),blk('st_pen_setsize')]},
   {kind:'category',name:'🏆  Score',colour:'330',contents:[blk('st_change_score'),blk('st_set_score'),blk('st_score')]},
+  {kind:'category',name:'📟  micro:bit',colour:'#00A86B',contents:[
+    {kind:'category',name:'⬜  Basic',colour:'#00A86B',contents:[blk('mb_on_start'),blk('mb_show_icon'),blk('mb_show_arrow'),blk('mb_show_leds'),blk('mb_show_number'),{kind:'block',type:'mb_show_string',inputs:{TXT:{shadow:{type:'text',fields:{TEXT:'Hi!'}}}}},blk('mb_clear')]},
+    {kind:'category',name:'🎮  Input',colour:'#1aa3c4',contents:[blk('mb_on_button'),blk('mb_on_shake'),blk('mb_on_gesture'),blk('mb_on_logo'),blk('mb_button'),blk('mb_logo_pressed'),blk('mb_acceleration'),blk('mb_rotation'),blk('mb_light_level'),blk('mb_temperature'),blk('mb_compass_heading'),blk('mb_magnetic_force'),blk('mb_sound_level'),blk('mb_running_time')]},
+    {kind:'category',name:'🎵  Music',colour:'#d6478c',contents:[blk('mb_play_tone'),blk('mb_ring_tone'),blk('mb_rest'),blk('mb_play_sound'),{kind:'block',type:'mb_melody'},blk('mb_play_melody'),blk('mb_start_melody'),blk('mb_stop_all_sounds'),blk('mb_set_volume'),blk('mb_set_tempo'),blk('mb_change_tempo'),blk('mb_tempo')]},
+    {kind:'category',name:'💡  LED',colour:'#00A86B',contents:[blk('mb_plot'),blk('mb_unplot'),blk('mb_toggle'),blk('mb_point'),blk('mb_plot_brightness'),{kind:'block',type:'mb_plot_bar_graph',inputs:{VALUE:N(2),MAX:N(5)}},blk('mb_set_brightness'),blk('mb_brightness')]},
+    {kind:'category',name:'📻  Radio',colour:'#e0792b',contents:[blk('mb_radio_set_group'),{kind:'block',type:'mb_radio_send_number',inputs:{NUM:N(0)}},{kind:'block',type:'mb_radio_send_string',inputs:{MSG:{shadow:{type:'text',fields:{TEXT:'hi'}}}}},blk('mb_on_radio_number'),blk('mb_on_radio_string'),blk('mb_radio_number'),blk('mb_radio_string')]},
+    {kind:'category',name:'🔁  Control',colour:'#e0792b',contents:[blk('mb_run_background')]},
+  ]},
   {kind:'category',name:'🤖  Ohbot',colour:'195',contents:[blk('ob_move'),blk('ob_move_time'),blk('ob_say'),blk('ob_eyecolor'),blk('ob_reset'),blk('ob_speaking')]},
-].filter(cat=>OHBOT_ON||(cat.name||'').indexOf('Ohbot')<0)};}
+].filter(cat=>(OHBOT_ON||(cat.name||'').indexOf('Ohbot')<0)&&((MICROBIT_ON&&keyStage!=='ks1')||(cat.name||'').indexOf('📟')<0))};}
 function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="st_when_flag" x="20" y="20"><next><block type="st_goto_center"><next><block type="st_say"><field name="TXT">Use the arrow keys!</field></block></next></block></next></block>
 <block type="st_when_key" x="20" y="160"><field name="KEY">left</field><next><block type="st_change_x"><field name="N">-10</field></block></next></block>
@@ -4021,16 +4977,95 @@ const HELP_TABS=[
    <h3>🤝 Build together, LIVE!</h3><ul><li>Open a game, then <b>Share → 🤝 Collaborate</b> and invite classmates by their <b>display name</b> — up to 6 of you.</li><li>You all edit the <b>same game at the same time</b> — on the <b>Build</b> and <b>Code</b> screens — and see each other's blocks, code and <b>coloured cursors</b> appear instantly, like magic.</li><li>The <b>🤝 Live</b> bar shows who's in the room (tap <b>Leave</b> to stop). Friends you invite find it under <b>☁️ Cloud → 🤝 Collaborations</b>.</li></ul>`],
  ['play','▶️ Play & Share',`<h3>Playing</h3><ul><li>Move with the arrow keys (or on-screen buttons on a tablet); jump with Space/Up.</li><li>Collect gems and stars for points; avoid spikes, lava and enemies.</li><li>Use the speaker buttons to mute music or sound effects.</li></ul><h3>Saving & sharing</h3><ul><li><b>💾 Save</b> keeps your game on this device (and it <b>auto-saves</b> as a draft). If cloud saving is on, you can also <b>save online</b> to open it anywhere — see the <b>☁️ Cloud &amp; Teamwork</b> tab.</li><li><b>🔗 Share</b> — copy a link, download a playable <b>.html</b> file, or save a level file to build on later.</li><li><b>🤝 Collaborate</b> — build the same game together, live (see the Cloud &amp; Teamwork tab).</li></ul><h3>For teachers</h3><p>Tap <b>For Teachers</b> on the home screen (you'll need a teacher account if cloud is on) to manage classes and see pupils' work. The Teacher Hub has its own full guide via <b>📖 Teacher Guide</b>.</p>`],
 ];
+// Stage help — KS2/KS3 (Blockly) and KS1 (ScratchJr). Cloud/Teamwork content is shared with the platformer.
+const _cloudHelp=(HELP_TABS.find(t=>t[0]==='cloud')||[])[2]||'';
+const STAGE_HELP=[
+ ['start','🚀 Start',`<h3>Welcome to the Stage!</h3><p>The Stage is a Scratch-style world where your <b>characters (sprites)</b> follow code you build with snap-together blocks. Press <b>🟢 Go</b> to run everything and <b>⏹️ Stop</b> to stop.</p><h3>Make something in 3 steps</h3><ul><li>Pick a character (or tap <b>➕</b> to add one).</li><li>Drag blocks from the coloured categories and snap them under a <b>🟢 when green flag clicked</b> block.</li><li>Press <b>🟢 Go</b> and watch it happen!</li></ul><p style="opacity:.7">Tip: hover over any block to see what it does.</p>`],
+ ['blocks','🧩 Blocks',`<p>Blocks are grouped by colour — drag them out and snap them together. Each character has its <b>own</b> blocks, so click a character first.</p><ul>
+   <li><b>🔵 Motion</b> — move, turn, glide, point, go to x/y, bounce on the edge.</li>
+   <li><b>🟣 Looks</b> — say/think, costumes, backdrops, size, show/hide, effects, layers.</li>
+   <li><b>🔊 Sound</b> — play sounds and set the volume.</li>
+   <li><b>🟡 Events</b> — when the green flag/key/sprite is clicked, and broadcast &amp; receive messages.</li>
+   <li><b>🟠 Control</b> — wait, repeat, forever, if/else, and clones.</li>
+   <li><b>🟦 Sensing</b> — touching, key pressed, ask &amp; answer, mouse, timer, distance.</li>
+   <li><b>🟩 Operators</b> — maths, comparisons, and/or, and text.</li>
+   <li><b>📦 Variables</b> &amp; <b>📃 Lists</b> — remember numbers, words and collections.</li>
+   <li><b>🖊️ Pen</b> — draw on the stage; <b>🏆 Score</b> — keep score.</li>
+   <li><b>📟 micro:bit</b> — give a character the micro:bit costume to use the light-up screen, buttons, sensors, music and radio.</li></ul>`],
+ ['sprites','🐱 Characters',`<p>Manage characters in the panel beside the stage.</p><ul><li><b>➕ Add</b> a character; click one to select and code it; use 🗑️ to remove it.</li><li>Open <b>🎨 Costume</b> to switch costumes, pick from the character library, change colour, rename, or <b>paint your own</b>.</li><li>Drag a character on the stage to move it; the info bar sets its exact x, y, size and direction.</li><li>Tap <b>🖼️ Backdrops</b> to choose or paint the stage background.</li></ul>`],
+ ['play','▶️ Play & Share',`<h3>Run it</h3><p>Press <b>🟢 Go</b> to start all the scripts and <b>⏹️ Stop</b> to stop. Click characters or press keys to trigger their scripts.</p><h3>Save &amp; share</h3><ul><li><b>💾 Save</b> keeps your project (and auto-saves a draft); sign in to <b>save online</b> and open it anywhere.</li><li><b>🔗 Share</b> gives a short link to your exact project.</li><li><b>🤝 Collaborate</b> — build the same Stage project together, live.</li></ul>`],
+ ['cloud','☁️ Cloud & Teamwork',_cloudHelp]
+];
+const STAGE_HELP_KS1=[
+ ['start','🚀 Start',`<h3>Welcome!</h3><p>Make your characters move and play with big picture blocks — no reading needed.</p><h3>3 easy steps</h3><ul><li>Pick a character on the left (or tap <b>➕</b> to add one).</li><li>Tap a yellow <b>🏁 Start</b> block, then tap more blocks to add them in a row.</li><li>Press <b>🟢 Go</b> to watch it happen!</li></ul><p>Tap <b>✨ Ideas</b> for ready-made programs, or <b>🎯 Missions</b> to be guided step-by-step. Turn on <b>🔊</b> to hear what each block does.</p>`],
+ ['blocks','🧩 Blocks',`<p>Tap a coloured button on the left to see its blocks:</p><ul>
+   <li>🏁 <b>Start</b> — when to begin: green flag, when tapped, when characters bump, or a message.</li>
+   <li>➡️ <b>Move</b> — move, turn, hop, go home.</li>
+   <li>🎨 <b>Looks</b> — say, get bigger/smaller, hide and show.</li>
+   <li>🔊 <b>Sound</b> — pop, or record your own sound.</li>
+   <li>⏱️ <b>Control</b> — wait, set speed, and a 🔁 repeat loop (put blocks inside it).</li>
+   <li>🔚 <b>End</b> — repeat for ever, or go to another page.</li></ul><p>Tap the <b>−</b>/<b>+</b> on a block to change its number, or the <b>✕</b> to remove it. Drag a block to move it.</p>`],
+ ['chars','🐱 Characters & Pages',`<p><b>Characters</b> are on the left. Tap <b>➕</b> to add one, the <b>🎨</b> to dress it up or paint your own, and <b>✕</b> to remove it.</p><p><b>Pages</b> are on the right — make up to 4 scenes for a story. Use the <b>📄 go to page</b> block to jump between them. Double-tap a page to change its backdrop.</p>`],
+ ['play','▶️ Play & Share',`<p>Press <b>🟢 Go</b> to start and <b>⏹️ Stop</b> to stop. Tap a character to run its "when tapped" blocks.</p><p><b>💾 Save</b> keeps your project, and <b>🔗 Share</b> makes a link to send to a grown-up.</p>`]
+];
+function helpTabs(){if(typeof projectType!=='undefined'&&projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
 let helpTab='start';
-function openHelp(){buildHelpTabs();selHelpTab('start');document.getElementById('help-modal').classList.remove('hide');}
-function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';HELP_TABS.forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
-function selHelpTab(k){helpTab=k;document.querySelectorAll('.help-tab').forEach((b,i)=>b.classList.toggle('active',HELP_TABS[i][0]===k));const tab=HELP_TABS.find(t=>t[0]===k);const el=document.getElementById('help-content');el.innerHTML=tab?tab[2]:'';el.scrollTop=0;}
+function openHelp(){const T=helpTabs();buildHelpTabs();selHelpTab(T[0][0]);document.getElementById('help-modal').classList.remove('hide');}
+function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';helpTabs().forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
+function selHelpTab(k){const T=helpTabs();helpTab=k;document.querySelectorAll('.help-tab').forEach((b,i)=>b.classList.toggle('active',T[i]&&T[i][0]===k));const tab=T.find(t=>t[0]===k);const el=document.getElementById('help-content');el.innerHTML=tab?tab[2]:'';el.scrollTop=0;}
 // ── Read-aloud (text-to-speech) — helps Key Stage 1 early/pre-readers ──
 let readAloud=false;try{readAloud=localStorage.getItem('bap_read_aloud')!=='off';}catch(e){readAloud=true;}
 function speak(text){if(keyStage!=='ks1'||!readAloud||!text||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g,''));u.rate=0.92;u.pitch=1.08;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 function updateReadBtn(){const b=document.getElementById('btn-read');if(!b)return;b.style.display=(keyStage==='ks1')?'':'none';b.classList.toggle('active',readAloud);b.textContent=readAloud?'🔊 Read':'🔇 Read';}
 document.getElementById('btn-read').onclick=()=>{readAloud=!readAloud;try{localStorage.setItem('bap_read_aloud',readAloud?'on':'off');}catch(e){}if(!readAloud&&window.speechSynthesis)speechSynthesis.cancel();updateReadBtn();if(readAloud)speak('Reading out loud is on');};
 updateReadBtn();
+// ── Privacy / Data Protection / Safeguarding policies (linked in the home footer) ──
+const POLICY_CONTACT='privacy@primarycodingleague.co.uk';
+const POLICIES={
+ privacy:{title:'🔒 Privacy Policy',html:`
+  <p class="pol-note">This policy explains what information CodeJump uses. Your school or organisation decides how it is used and is responsible for any consent needed. Last updated: June 2026.</p>
+  <h3>Who we are</h3><p>CodeJump is a browser-based coding tool for primary-aged children. It is part of <b>Primary Coding League CIC</b> (a Community Interest Company), made in partnership with Primary Coding Clubs, and runs entirely in your web browser.</p>
+  <h3>What we use, and why</h3>
+  <ul>
+   <li><b>On your device only:</b> your projects auto-save in your browser so you can carry on later. This stays on the device and is not sent anywhere unless you choose to save online or share.</li>
+   <li><b>If cloud saving is switched on and you sign in:</b> an account made of a <b>display name</b>, a <b>password</b>, your <b>name</b> and a <b>role</b> (pupil or teacher); the <b>projects</b> you choose to save; and any <b>classes</b> you join. This lets your work follow you between devices and lets teachers see work handed in to their class.</li>
+   <li><b>Microphone (optional):</b> only if you allow it in your browser, and only to read the micro:bit “sound level” and to let you <b>record your own sounds</b>. A recording is saved into your project if you keep it; audio is not streamed or sent anywhere else. There is <b>no camera/video</b> use.</li>
+   <li><b>Read-aloud:</b> the “read aloud” feature uses your browser’s built-in speech and sends nothing to us.</li>
+   <li>We do <b>not</b> show adverts and do <b>not</b> use third-party tracking or analytics.</li>
+  </ul>
+  <h3>Sharing</h3><p>A 🔗 share link stores a copy of that project so other people can open it. Anyone with the link can view it, so only share links with people you trust.</p>
+  <h3>Where information is stored</h3><p>When cloud saving is enabled it is hosted by your school/organisation using Cloudflare (Workers &amp; KV storage). No data is sold or shared with advertisers.</p>
+  <h3>Keeping it / deleting it</h3><p>You can delete saved games, cloud projects and collaborations from inside the app. To ask about or remove account data, contact your school or <a href="mailto:${POLICY_CONTACT}">${POLICY_CONTACT}</a>.</p>
+  <h3>Contact</h3><p>Questions about privacy: <a href="mailto:${POLICY_CONTACT}">${POLICY_CONTACT}</a>.</p>`},
+ data:{title:'🛡️ Data Protection Policy',html:`
+  <p class="pol-note">A summary of how personal data is handled, for UK GDPR. Your school/organisation should review and adapt this to its own arrangements. Last updated: June 2026.</p>
+  <h3>Who controls the data</h3><p>When a school or organisation enables cloud saving, that <b>school/organisation is the data controller</b> and decides how pupil data is used. <b>Primary Coding League CIC</b> provides the software; <b>Cloudflare</b> is used as a hosting processor. With cloud saving off, no personal data leaves the device.</p>
+  <h3>Data minimisation &amp; children</h3><p>We keep accounts deliberately small. We recommend using <b>first names or nicknames</b> for display names and names, and that schools obtain the appropriate consent for pupils to use accounts.</p>
+  <h3>Security</h3><ul><li>Self-chosen passwords are stored as a one-way <b>hash</b> (SHA-256), not as plain text.</li><li>Sign-in uses a session token; cloud requests use HTTPS.</li><li><b>Please note:</b> for accounts a <b>teacher bulk-creates</b> for a class, a readable copy of the password is stored so the printable “login cards” stay correct. It is shown <b>only to the owning teacher</b>. Schools can instead have pupils set their own passwords (self-signup accounts never store a readable password).</li></ul>
+  <h3>Your rights</h3><p>You can see, correct, download (via save/share files) and delete your work. Accounts, projects and collaborations can be removed in-app; for anything else contact your school or <a href="mailto:${POLICY_CONTACT}">${POLICY_CONTACT}</a>.</p>
+  <h3>Retention</h3><p>Cloud data stays until it is deleted by the user, the teacher, or the school. There is no advertising profiling.</p>
+  <h3>Contact</h3><p>Data protection enquiries: <a href="mailto:${POLICY_CONTACT}">${POLICY_CONTACT}</a>.</p>`},
+ safeguarding:{title:'🧒 Safeguarding Policy',html:`
+  <p class="pol-note">How CodeJump is designed to keep children safe. It is intended for supervised use in primary settings. Last updated: June 2026.</p>
+  <h3>Our commitment</h3><p>CodeJump, part of <b>Primary Coding League CIC</b>, is built for primary-aged children and designed to be used with teacher or adult supervision.</p>
+  <h3>No contact with strangers</h3><ul><li>There is <b>no open chat</b> and no way to message unknown people.</li><li><b>Live collaboration</b> is invite-only: a pupil invites <b>classmates by display name</b> from the school’s own accounts (up to 6 people), and you can see who is in the room.</li></ul>
+  <h3>Sharing</h3><p>Sharing only happens when a child <b>chooses</b> to make a 🔗 link. Please guide children not to put personal information in projects and not to post links publicly.</p>
+  <h3>Microphone &amp; camera</h3><p>The microphone is used <b>only with the browser’s permission</b>, for the micro:bit sound level and recording your own sounds. There is <b>no camera or video</b>. Encourage children not to record names or personal details.</p>
+  <h3>Names &amp; accounts</h3><p>We recommend display names that are not a child’s full real name. Teachers manage class accounts and can reset passwords and remove pupils.</p>
+  <h3>Content</h3><p>Children can draw pictures and type words (for example in “say” blocks). This content is <b>not automatically moderated</b>, so adult supervision is advised.</p>
+  <h3>Reporting a concern</h3><p>Tell a teacher or trusted adult straight away. Schools should follow their own safeguarding procedures; you can also contact <a href="mailto:${POLICY_CONTACT}">${POLICY_CONTACT}</a>.</p>`}
+};
+function openPolicy(which){let m=document.getElementById('policy-modal');if(!m){m=document.createElement('div');m.id='policy-modal';m.className='hide';m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hide');});document.body.appendChild(m);}
+  const p=POLICIES[which]||POLICIES.privacy;
+  m.innerHTML='';
+  const box=document.createElement('div');box.className='policy-box';
+  const head=document.createElement('div');head.className='policy-head';const h2=document.createElement('h2');h2.textContent=p.title;const x=document.createElement('button');x.className='policy-x';x.textContent='✕';x.onclick=()=>m.classList.add('hide');head.appendChild(h2);head.appendChild(x);
+  const body=document.createElement('div');body.className='policy-body';body.innerHTML=p.html;
+  const foot=document.createElement('div');foot.className='policy-foot';const close=document.createElement('button');close.textContent='Close';close.onclick=()=>m.classList.add('hide');foot.appendChild(close);
+  box.appendChild(head);box.appendChild(body);box.appendChild(foot);m.appendChild(box);m.classList.remove('hide');}
+{const pp=document.getElementById('pol-privacy');if(pp)pp.onclick=()=>openPolicy('privacy');
+ const pd=document.getElementById('pol-data');if(pd)pd.onclick=()=>openPolicy('data');
+ const ps=document.getElementById('pol-safe');if(ps)ps.onclick=()=>openPolicy('safeguarding');}
 document.getElementById('btn-help').onclick=openHelp;
 document.getElementById('help-close').onclick=()=>document.getElementById('help-modal').classList.add('hide');
 
@@ -4040,9 +5075,17 @@ document.getElementById('help-close').onclick=()=>document.getElementById('help-
 function guideTileRef(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<h4>'+name+'</h4>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="tg-ref"><span class="i">'+t.icon+'</span><span><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
 function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>What is CodeJump?</h3>
-  <p>CodeJump is a browser-based game maker for primary children. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
+  <p>CodeJump is a browser-based game maker for primary children, part of <b>Primary Coding League CIC</b>. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
   <h3>The four modes</h3>
   <ul><li><b>🏗️ Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶️ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b>🎨 Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
+  <h3>🎭 Two project types: Platformer &amp; Stage</h3>
+  <p>When pupils start a new project they first choose a <b>type</b>: 🏃 <b>Platformer</b> (the grid game above) or 🎭 <b>Stage</b> — a Scratch-style world of <b>characters (sprites)</b> on a stage, programmed with blocks and run with the 🟢 <b>Go</b> button. The Stage adapts to the key stage:</p>
+  <ul>
+    <li><b>Key Stage 1 — ScratchJr-style:</b> big <b>picture blocks</b> that snap together left-to-right (no reading needed), in colour-coded groups (Start, Move, Looks, Sound, Control, End). Pupils pick a character, tap blocks to build a program, and press 🟢 Go. It includes a 🔁 <b>repeat loop</b> (blocks go <i>inside</i> it), 📨 colour-coded <b>messages</b> between characters, a 🐢🚶🐇 <b>set-speed</b> block, 🎤 <b>record-your-own-sounds</b>, up to <b>4 📄 pages</b> (scenes) with a <b>go-to-page</b> block, <b>drag-to-reorder</b>, <b>read-aloud</b> on tap, a full <b>character painter</b>, ✨ ready-made <b>Ideas</b>, and 🎯 step-by-step <b>Missions</b> that guide pupils block-by-block.</li>
+    <li><b>Key Stage 2 &amp; 3 — full Scratch-style blocks:</b> Motion, Looks, Sound, Events, Control, Sensing, Operators, Variables, Lists, Pen and Score — close to the whole Scratch palette, with multiple sprites, costumes, painted backdrops, broadcasts, clones and a live interpreter. (Stage uses these blocks at KS3 too, rather than Python — Python is for Platformer KS3.)</li>
+    <li><b>📟 micro:bit (Key Stage 2 &amp; 3):</b> give a character the micro:bit costume for an on-screen, fully interactive micro:bit emulator — a 5×5 LED display, clickable A/B buttons, shake &amp; gestures, a sensor panel (light, temperature, compass, sound, tilt), music, and radio so two or more micro:bit sprites can message each other. No hardware needed.</li>
+  </ul>
+  <p>Hover (or tap-and-hold) any Stage block for a plain-English description, in every key stage. The <b>❓ Help</b> guide automatically shows pages matched to the project type and key stage.</p>
   <h3>Key Stage 1 vs Key Stage 2</h3>
   <p>Pupils choose a key stage when starting a new game — it sets which blocks they see:</p>
   <ul><li><b>Key Stage 1</b> — designed for ages 5–7: a trimmed, friendly block set (When… / Move / Enemies / Win / Sound) with bigger blocks &amp; palette, a <b>🔊 Read aloud</b> button that speaks blocks, signs and messages for early readers, a gentle “Let’s make a game!” guided activity, and a one-tap starter game.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real block-coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li><li><b>Key Stage 3</b> — swaps the blocks for a <b>text editor</b> where pupils write a safe <b>Python-style language</b> (see below). All the KS2 building blocks are still available.</li></ul>
@@ -4067,6 +5110,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game → <b>Share → 🤝 Collaborate</b> → invites classmates by display name; everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b>☁️ Cloud → 🤝 Collaborations</b>. Great for pair-programming and group projects. <i>(Needs the optional cloud backend — including its Durable Object “rooms” setup; see <code>cloud/COLLAB.md</code>.)</i></p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
+  <h3>♿ Accessibility</h3>
+  <p>Tap the <b>♿</b> button (on the home screen, or in the Key Stage 1 Stage) to switch on an <b>easy-to-read dyslexia-friendly font</b>, <b>bigger text</b>, <b>high contrast</b>, <b>reduced motion</b>, or <b>read-aloud</b>. Choices are remembered on the device and apply across all key stages.</p>
   <h3>Troubleshooting</h3>
   <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>Can't press Play?</b> Add a Finish 🏁 — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
   <h3>Curriculum links</h3>
@@ -4803,6 +5848,7 @@ function applyStageOp(op){if(!stageState||!op)return;
   else if(op.k==='st_var'){stageState.vars=Array.isArray(op.vars)?op.vars.filter(x=>typeof x==='string'):[];stageState.lists=Array.isArray(op.lists)?op.lists.filter(x=>typeof x==='string'):[];if(typeof stageSyncVars==='function')stageSyncVars();}
 }
 function collabApplyDoc(doc){commitLevel();applyPayload(doc);collabRefreshCode();
+  if(keyStage==='ks1'&&document.body.classList.contains('ks1-mode')&&typeof ks1RenderSprites==='function'){ks1RenderSprites();ks1RenderScripts();ks1RenderPages();} // refresh the KS1 ScratchJr panels after a remote change
   if(projectType==='stage'){ // keep the live Stage view in sync (canvas auto-redraws via the loop)
     if(typeof renderSpritePanel==='function')renderSpritePanel();
     if(typeof renderStagePane==='function')renderStagePane();
@@ -5517,50 +6563,16 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.07.18';
+const CJ_VERSION='2026.08.03';
 const CJ_WHATSNEW=[
-  '🗑️ You can now tidy up your games! Delete saved games from this device (🗑️ on each one on the home screen), and remove 🤝 Collaborations you no longer need (☁️ Cloud → Collaborations). Your own cloud games & class work were already deletable under 📂 My games.',
-  '🐛 Fixed: opening a shared 🎭 Stage collaboration now goes straight to the Stage view (it used to briefly look like a Platformer until you tapped Code).',
-  '🧑‍🏫 Teachers: add a whole class at once! In a class, tap 👥 Add pupils (CSV) and upload a file with three columns — Name, Display name, Password — to create all their accounts in one go. Then tap 🪪 Login cards to print a card for each pupil. The cards always show the current details, even if a pupil later changes their name or password.',
-  '👆 You can now see your classmates’ pointers move around the 🎭 Stage while you collaborate — each shown with their name and colour, just like Google Docs!',
-  '🤝 Live collaboration now works fully on the 🎭 Stage — just like Google Docs! Up to 6 of you edit the same Stage game at once: move sprites, change costumes & backdrops, and drag blocks, and everyone sees it happen live. Each person can work on a different sprite without overwriting anyone else. Open a Stage game → 🔗 Share → 🤝 Collaborate.',
-  '🔗 Share links are fixed and work for EVERYTHING now! Tap 🔗 Share → Copy Link to get a short link to your game — it works no matter how big your project is (even Stage games with painted costumes and backdrops). Send it to a friend or teacher and they open your exact project in one click.',
-  '✨ Stage polish: the block categories are now in the familiar Scratch order (Motion, Looks, Sound, Events…), the stage is less cluttered (the 🏆 score only shows when you use score blocks), and the 🎨 paint editor is friendlier — quick-pick colour swatches, a centre guide so your drawing sits in the middle of the sprite, and a see-through (checkerboard) canvas so you can tell what’s transparent.',
-  '🎭 Tidier Stage workspace: each sprite now has an info bar showing its name, 👁️ show/hide, and its x, y, size and direction (type to set them exactly), and there’s a 🖼️ Stage panel showing your backdrop — click it to change backdrops.',
-  '📱 The 🎭 Stage now works much better on tablets! On smaller screens (like iPads in portrait) the blocks sit across the top with the stage and sprites below, so there’s plenty of room to code. On big screens it stays side-by-side as before.',
-  '🧩 The Stage now has (almost!) every Scratch block! New this update: 🗂️ layers (go to front/back, go forward/backward), 🛝 glide to / go to another sprite, and lots of Sensing & Operators — 🔎 [x/y/size/…] of another sprite, 🙋 username, 📅 current date & days since 2000, 🖐️ set drag mode, 🔤 letter of / contains, and 📐 sin/cos/tan. Build almost anything you can in Scratch!',
-  '❓ NEW: Ask & Answer + graphic effects! ❓ ask […] and wait pops up a box for the player to type into, and 💬 answer remembers what they said — perfect for quizzes and names. 🎚️ Graphic effects let you fade sprites with the 👻 ghost effect or change ☀️ brightness (change/set effect, clear graphic effects).',
-  '🔊 NEW: Sound! Sprites can play built-in sounds — 🔊 pop, beep, meow, boing, drum, coin, laser and magic — with 🔊 play sound (and play sound until done). Control the 🔊 volume (set / change / volume reporter) and 🔇 stop all sounds.',
-  '🖊️ Pen — sprites draw as they move: 🖊️ pen down / pen up, pen colour & size, 🖊️ stamp the sprite onto the stage, and 🖊️ erase all. Great for spirographs, drawing games and trails!',
-  '🖼️ NEW: Backdrops for the Stage! Tap 🖼️ Backdrops (top bar) to add backdrops — 🎨 Paint your own or pick a 🎨 Solid colour — switch between them, rename and delete. New blocks: 🖼️ switch backdrop / next backdrop / backdrop number, plus a 🖼️ when backdrop switches to… hat. Perfect for scene changes, levels and title screens!',
-  '🎨 NEW: Paint your own costumes! Click a sprite → 🎨 Costume → 🎨 Paint new to draw your own character with a full paint editor — brush, eraser, fill bucket, line, rectangle, circle, text, colours, sizes, undo/redo and flip. Sprites can have MANY costumes; switch between them with the new 🎭 switch costume / next costume / costume number blocks (great for animation!).',
-  '📣 Broadcasts & Clones — 📣 broadcast / 📩 when I receive let sprites trigger each other, and 🧬 create clone / when I start as a clone / delete this clone make copies (bullets, stars, raindrops…).',
-  '📃 Lists on the Stage! 📃 Lists → ➕ Make a List, then add / delete / insert / replace items, and check item / item-number / length / contains. 👁️ Show list puts it on the stage. Great for high-score tables, inventories, quiz questions and more.',
-  '📦 Variables on the Stage! Tap 📦 Variables → ➕ Make a Variable to create your own (like score, lives or coins), then set it, change it by a number, and use it anywhere — in say blocks, if-checks and sums. 👁️ Show variable puts a live counter on the stage. Variables are shared across all your sprites. (Also fixed: Stage projects now save reliably.)',
-  '🧩 LOADS more Stage blocks — closer to real Scratch! 🔵 Motion: go to x/y, go to (random/mouse), glide, point towards, set x/set y, if-on-edge-bounce, x/y/direction. 🟣 Looks: say/think for secs, size. 🟠 Control: wait until, repeat until, stop. 🟦 Sensing: mouse x/y, mouse down?, distance to, timer + reset. 🟩 Operators: + − × ÷, pick random, compare, and/or/not, mod, round/√, join words. 🟡 Events: when this sprite clicked. (More coming: variables, broadcast, clones, costumes & sounds!)',
-  '🎮 Make Stage sprites INTERACT and keep score — 🤚 touching, if/else, compare, and a 🏆 score shown on the stage. Build games like: forever → if touching ⭐ → change score by 1.',
-  '🎨 Choose a costume for your Stage sprites! Click a sprite then 🎨 Costume (or double-click it) to pick a character — 🐱 cat, 🐶 dog, 🐻 bear, 🐰 bunny, 🐦 bird, ⚽ ball, 👻 ghost, ⭐ star or 🤖 robot — choose its colour, and rename it. New sprites now start as different characters too!',
-  '🎭 The 🎭 Stage works just like Scratch — all on ONE screen! Code blocks down the side, your stage on the right, and a 🎭 Sprites panel below it. Add as many sprites as you like with ＋ Add, click a sprite to give it its own code, drag sprites around the stage, then press 🟢 Go to run everything (⏹️ Stop to stop). No more separate Build / Play / Code screens for Stage projects.',
-  '🟡 Stage blocks: Events (🟢 when green flag clicked, when a key is pressed), 🔵 Motion (move, turn, point, change x/y, go to the middle), 🟣 Looks (say, show/hide, size) and 🟠 Control (wait, repeat, forever).',
-  '🎭 Project types: when you start a new project, after picking your age group you choose 🏃 Platformer (the grid game) or 🎭 Stage (sprites on a stage, like Scratch).',
-  '🤝 build together, LIVE! Open a game → Share → 🤝 Collaborate → invite classmates by display name. Up to 6 of you work on the same game at once — on BOTH the Build and Code screens — and see each other’s blocks, code and coloured cursors appear instantly.',
-  '📂 Find shared projects under ☁️ Cloud → 🤝 Collaborations.',
-  '⚙️ Your account is now front-and-centre: a “Sign in / Settings” chip on the home screen, change your password, edit your name, and join classes in Settings.',
-  '🧑‍🏫 Teachers can now rename & delete classes, remove pupils, and 📤 send a game straight to a class (it lands in every pupil’s class work).',
-  '👤 Accounts! Sign in (or create an account) to save your games online and open them on any device — no more codes to remember. Choose 👤 your own work or 🏫 hand it in to a class you’ve joined.',
-  '🏫 Teachers: create a teacher account to make classes and see every pupil’s work (with their real & display names) on any device. Pupils join classes in ⚙️ Settings; the Teacher Hub is teacher-only.',
-  '☁️ Cloud save (if your school turns it on): tap 💾 Save → save online and open your games on ANY device with your 6-digit code. Choose 👤 my own work (private) or 🏫 hand it in to your class for your teacher to see.',
-  '🧒 Key Stage 1 made friendlier for ages 5–7: a 🔊 “Read aloud” button speaks blocks, signs & messages; simpler, bigger blocks; a “Let’s make a game!” walkthrough and a one-tap starter game.',
-  '🌀 Teleport pads can now zap to a pad on THIS page OR jump to another page — tap a pad to choose (KS2 & KS3).',
-  '🚪 Doors can now be a locked gate that blocks the way on the same page and opens when you collect the matching key — or still travel to another page (KS2 & KS3).',
-  '📐 Choose a bigger game size (Standard, Wide, Large or Huge) when you start a Key Stage 2 or 3 game — make much larger adventures!',
-  '🛟 Fixed: your level designs are now safe — pages no longer get overwritten when you play after editing.',
-  '👩‍🔬 Key Stage 3! Choose it for a new game and write real <b>Python-style code</b> in a built-in editor to control your game.',
-  '⌨️ KS3 code runs your game with on_start, on_update, on_key, on_gem and on_enemy — with variables, loops, lists, functions and friendly error messages.',
-  '📖 New “Commands” button in the KS3 editor lists every command you can use (movement, score, sensing, settings & sound) — no need to memorise anything.',
-  '🧰 Treasure chests — fill them with gems, stars or a key; in KS2 you can lock them.',
-  '🌀 Teleport pads, 🔘🚧 buttons & gates, 🎯🏃 points/time win goals, and 👾 chasing + stomp-able enemies (all Key Stage 2).',
-  '📖 The in-app Guide, tooltips & Teacher Guide cover everything new, with two new ❓ Help guided activities.',
+  "🧸 NEW: a whole ScratchJr-style coding space for Key Stage 1! Little ones make 🎭 Stage projects with big picture blocks that snap together — move, turn, hop, say, loops, colour messages, sounds (even ones they 🎤 record), multi-page 📄 stories and a built-in 🎨 character painter. Tap ✨ Ideas for starters or 🎯 Missions to be guided step-by-step.",
+  "📟 Key Stage 2 & 3 get a full Scratch-style 🎭 Stage too — nearly the whole Scratch block range, plus an on-screen 📟 micro:bit you can really use (light-up screen, buttons, sensors, music and radio).",
+  "💡 Hover over (or tap and hold) any Stage block to see a friendly description of what it does — in every key stage.",
+  "♿ NEW: Accessibility options for everyone — tap ♿ for an easy-to-read dyslexia-friendly font, bigger text, high contrast, less motion or read-aloud. Your choices are remembered.",
+  "📖 The ❓ Help guide now matches your project type and Key Stage, and the 📖 Teacher Guide now covers the 🎭 Stage and 📟 micro:bit too.",
+  "🤝 Live collaboration and 🔗 share links work across 🎭 Stage projects, and you can now 🗑️ tidy up saved games and collaborations you no longer need.",
+  "🐛 Fixes & polish: switching between Key Stage Stages no longer leaves the old block area showing, plus lots of Stage tidy-ups.",
+  "📄 Privacy, Data Protection and Safeguarding policies are now linked at the bottom of the home page."
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

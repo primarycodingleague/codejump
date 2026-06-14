@@ -3258,16 +3258,23 @@ function mbToPython(){if(!blocklyWorkspace)return '# Open a micro:bit sprite and
     L.push('    sleep(20)');}
   return L.join('\n');}
 function mbLoadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[data-mb="'+src+'"]'))return res();const s=document.createElement('script');s.src=src;s.dataset.mb=src;s.onload=()=>res();s.onerror=()=>rej(new Error('Could not load '+src));document.head.appendChild(s);});}
-async function mbFlashUSB(py,status){
-  if(!navigator.usb)throw new Error('This browser can’t flash over USB. Use Chrome or Edge on a computer or Chromebook.');
-  if(!MB_FIRMWARE_URL)throw new Error('Flashing isn’t set up yet: an adult needs to host the micro:bit MicroPython firmware and set MB_FIRMWARE_URL. You can still Download the .py for now.');
-  status('Loading flashing tools…');
+// Build the flashable micro:bit hex (firmware + your main.py). Shared by Flash (USB) and Download .hex (drag-to-drive).
+async function mbBuildHex(py,status){
+  if(!MB_FIRMWARE_URL)throw new Error('Flashing isn’t set up yet: an adult needs to host the micro:bit firmware and set MB_FIRMWARE_URL. You can still Download the .py for now.');
+  status('Building your micro:bit file…');
   await mbLoadScript('https://cdn.jsdelivr.net/npm/@microbit/microbit-fs@0.9.2/dist/bundles/microbit-fs.umd.min.js');
+  const FS=window.microbitFs||window.microbit_fs;if(!FS)throw new Error('Couldn’t load the builder. Check the internet connection and try again.');
+  const fw=await (await fetch(MB_FIRMWARE_URL)).text();
+  const fs=new FS.MicropythonFsHex(fw);fs.write('main.py',py);return fs.getIntelHex();}
+async function mbFlashUSB(py,status){
+  if(!navigator.usb){ // Safari/Firefox have no WebUSB → download the ready-to-flash .hex instead (same as MakeCode on Safari)
+    await mbDownloadHex(py,status);
+    status('✅ Saved microbit.hex. If your downloads go to the MICROBIT drive it’s already flashing; otherwise drag it onto the MICROBIT drive.');
+    return;}
+  const finalHex=await mbBuildHex(py,status);
+  status('Loading the flasher…');
   await mbLoadScript('https://cdn.jsdelivr.net/npm/dapjs@2.3.0/dist/dap.umd.min.js');
-  const FS=window.microbitFs||window.microbit_fs;if(!FS||!window.DAPjs)throw new Error('Flashing tools didn’t load. Check the internet connection and try again.');
-  status('Getting the micro:bit firmware…');
-  const hex=await (await fetch(MB_FIRMWARE_URL)).text();
-  const fs=new FS.MicropythonFsHex(hex);fs.write('main.py',py);const finalHex=fs.getIntelHex();
+  if(!window.DAPjs)throw new Error('The flasher didn’t load. Check the internet connection and try again.');
   status('Connecting… pick your micro:bit in the box at the top.');
   const dev=await navigator.usb.requestDevice({filters:[{vendorId:0x0d28}]});
   const target=new window.DAPjs.DAPLink(new window.DAPjs.WebUSB(dev));
@@ -3276,18 +3283,28 @@ async function mbFlashUSB(py,status){
   await target.flash(new TextEncoder().encode(finalHex));
   await target.disconnect();
   status('✅ Done! Your micro:bit is running your program.');}
+async function mbDownloadHex(py,status){
+  const finalHex=await mbBuildHex(py,status);
+  const a=document.createElement('a');a.href='data:application/octet-stream;charset=utf-8,'+encodeURIComponent(finalHex);a.download='microbit.hex';a.click();
+  status('✅ Saved microbit.hex — now drag it onto the MICROBIT drive (in Finder/Files).');}
 function mbHasMicrobitSprite(){return stageState&&stageState.sprites.some(s=>{const co=curCostume(s);return co&&co.builtin==='microbit';});}
 function mbSendOpen(){let m=document.getElementById('mbsend-modal');if(!m){m=document.createElement('div');m.id='mbsend-modal';m.className='ks1-modal';m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hide');});document.body.appendChild(m);}
   const py=mbToPython();
   m.innerHTML='';const box=document.createElement('div');box.className='ks1-modal-box';box.style.maxWidth='620px';box.style.textAlign='left';
-  box.innerHTML='<h3 style="text-align:center">🔌 Send to your micro:bit</h3><p class="ks1-modal-sub" style="text-align:center">CodeJump turns your blocks into micro:bit code, then sends it down the USB cable. Works in Chrome/Edge on a computer or Chromebook.</p>'+
+  box.innerHTML='<h3 style="text-align:center">🔌 Send to your micro:bit</h3><p class="ks1-modal-sub" style="text-align:center">CodeJump turns your blocks into real micro:bit code and puts it on the board over the cable.</p>'+
     '<pre id="mbsend-code" style="background:#11151a;color:#d6e6f2;border-radius:10px;padding:12px;max-height:230px;overflow:auto;font-size:12px;white-space:pre;"></pre>'+
     '<div id="mbsend-status" style="text-align:center;color:#33485c;font-size:13px;min-height:18px;margin:6px 0;"></div>'+
-    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button id="mbsend-flash" class="ks1-rec-btn" style="background:#e0792b">🔌 Flash to micro:bit</button><button id="mbsend-dl" class="ks1-rec-btn" style="background:#3b8eea">⬇️ Download .py</button><button id="mbsend-copy" class="ks1-rec-btn" style="background:#2fb344">📋 Copy code</button><button id="mbsend-close" class="ks1-rec-btn" style="background:#888">Close</button></div>';
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button id="mbsend-flash" class="ks1-rec-btn" style="background:#e0792b">🔌 Flash over USB</button><button id="mbsend-hex" class="ks1-rec-btn" style="background:#7a52c7">⬇️ Download .hex</button><button id="mbsend-dl" class="ks1-rec-btn" style="background:#3b8eea">⬇️ Download .py</button><button id="mbsend-copy" class="ks1-rec-btn" style="background:#2fb344">📋 Copy</button><button id="mbsend-close" class="ks1-rec-btn" style="background:#888">Close</button></div>'+
+    '<p class="mbsend-note" style="text-align:center;color:#67788a;font-size:12px;margin:10px 2px 0">🔌 <b>Flash to micro:bit</b> = one click (Chrome/Edge on a computer or Chromebook). On a <b>Mac/Safari or iPad</b>, tap <b>⬇️ Download .hex</b> then drag the file onto the <b>MICROBIT</b> drive.</p>';
   m.appendChild(box);
   box.querySelector('#mbsend-code').textContent=py;
   const st=t=>{box.querySelector('#mbsend-status').textContent=t;};
-  box.querySelector('#mbsend-flash').onclick=()=>{mbFlashUSB(py,st).catch(e=>st('⚠️ '+e.message));};
+  // Match the main button + note to what THIS browser can do.
+  const canUsb=!!navigator.usb, flashBtn=box.querySelector('#mbsend-flash'), hexBtn=box.querySelector('#mbsend-hex');
+  if(canUsb){flashBtn.textContent='🔌 Flash to micro:bit';}
+  else{flashBtn.textContent='⬇️ Get .hex (flash)';if(hexBtn)hexBtn.style.display='none';box.querySelector('.mbsend-note').textContent='Tap “Get .hex (flash)” — your micro:bit programs from the file. (One-click flashing needs Chrome or Edge.)';}
+  flashBtn.onclick=()=>{mbFlashUSB(py,st).catch(e=>st('⚠️ '+e.message));};
+  box.querySelector('#mbsend-hex').onclick=()=>{mbDownloadHex(py,st).catch(e=>st('⚠️ '+e.message));};
   box.querySelector('#mbsend-dl').onclick=()=>{const a=document.createElement('a');a.href='data:text/x-python;charset=utf-8,'+encodeURIComponent(py);a.download='main.py';a.click();};
   box.querySelector('#mbsend-copy').onclick=()=>{try{navigator.clipboard.writeText(py);st('Copied! ✅');}catch(e){st('Select the code and copy it.');}};
   box.querySelector('#mbsend-close').onclick=()=>m.classList.add('hide');

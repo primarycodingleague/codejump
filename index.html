@@ -2069,6 +2069,7 @@ let chestOpened={};  // "r,c" -> true once a chest has been opened this play-thr
 let air=600,airCount=6,airBubbles=[];const AIR_MAX=600; // KS2 underwater air meter
 let score=0,lives=3,camX=0,camY=0,playing=false;
 let gameTimer=0,gemsTotal=0,gemsGot=0;
+let collectedItems={},openedChests={}; // per-page record (key: playLevel+':'+r+','+c) so collectibles don't respawn on page revisit
 let musicMuted=false, sfxMuted=false;
 try{const a=JSON.parse(localStorage.getItem('bap_audio')||'{}');musicMuted=!!a.m;sfxMuted=!!a.s;}catch(e){}
 const keys={};
@@ -6909,10 +6910,15 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);if(t===T.DOOR){const dc=doorCfg[row+','+col];if(dc&&dc.mode==='barrier')return !playerKeys[dc.key];return false;}return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;camY=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;chestOpened={};teleCool=0;teleFrom=null;gateOpenUntil={};upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=0;gameTimer=(gameConfig.timerSeconds||60)*60;renderStaticLayer();cjRunHats('when_level_start');}
+function loadPlayLevel(i){activateLevel(i);camX=0;camY=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;teleCool=0;teleFrom=null;gateOpenUntil={};upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];spawnPlayer();initEnemies();initMovers();initItems();
+  // Restore collectibles already taken on this page (so they don't respawn or re-award points when you come back)
+  const pre=i+':';chestOpened={};Object.keys(openedChests).forEach(k=>{if(k.indexOf(pre)===0)chestOpened[k.slice(pre.length)]=true;});
+  items.forEach(it=>{if(collectedItems[pre+it.r+','+it.c]){it.got=true;if(it.type===T.KEY)playerKeys[it.color]=true;}});
+  gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=items.filter(it=>it.type===T.GEM&&it.got).length;
+  renderStaticLayer();cjRunHats('when_level_start');}
 let _testFromLevel=null;
 function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();if(isKS3()){ks3Compile();ks3Call('on_start');}}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;collectedItems={};openedChests={};gameTimer=(gameConfig.timerSeconds||60)*60;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();if(isKS3()){ks3Compile();ks3Call('on_start');}}
 function nextLevel(){playLevel++;if(playLevel>=LEVELS.length){winNow(' You Win!');return;}chirp(660,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Page '+(playLevel+1)+' of '+LEVELS.length+'! ','#10b981');}
 function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e');return;}playLevel--;chirp(440,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Back to page '+(playLevel+1)+'! ','#10b981');}
 // Resume after a game over: restart the CURRENT page (not the whole game), keeping score & keys.
@@ -6950,7 +6956,7 @@ function readSign(){if(signNear&&signNear.text){toast(''+signNear.text,'#caa472'
 function openChest(){if(!chestNear)return;const k=chestNear.r+','+chestNear.c;if(chestOpened[k])return;
   const cfg=chestCfg[k]||{contents:'gems',amount:3,color:'yellow',lock:'none'};
  if(cfg.lock&&cfg.lock!=='none'&&!playerKeys[cfg.lock]){chirp(180,0.12,'square',0.05);toast('Locked! Find the '+(KEY_NAMES[cfg.lock]||'')+' key first ',KEY_COLORS[cfg.lock]||'#ef4444');return;}
-  chestOpened[k]=true;
+  chestOpened[k]=true;openedChests[playLevel+':'+k]=true;
  if(cfg.contents==='key'){playerKeys[cfg.color]=true;chirp(1318,0.12,'square',0.06);toast('Chest opened — a '+(KEY_NAMES[cfg.color]||'')+' key! ',KEY_COLORS[cfg.color]||'#fdd835');}
  else{const n=Math.max(1,cfg.amount||1),star=cfg.contents==='stars';score+=(star?gameConfig.starPoints:gameConfig.gemPoints)*n;chirp(star?1047:784,0.1,'square',0.07);chirp(star?1318:988,0.1,'square',0.05);toast('Chest opened — '+n+' '+(star?'star':'gem')+(n>1?'s':'')+'! '+(star?'':''),'#c9a227');}
 }
@@ -7069,7 +7075,7 @@ function updateEnemies(){enemies.forEach(e=>{e.anim+=0.15;if(e.dead)return;
   }
   const pat=e.pat;if(pat==='upDown'){e.y=e.originY+Math.sin(tick*0.04+e.phase)*TS*1.8;e.x=e.originX;}else if(pat==='stationary'){}else{e.vx=Math.sign(e.vx||1)*eSpd(e.kind);e.x+=e.vx;const col=e.vx>0?Math.floor((e.x+TS)/TS):Math.floor(e.x/TS);if(isSolid(col,e.row))e.vx*=-1;const fc=e.vx>0?Math.floor((e.x+TS)/TS):Math.floor(e.x/TS);if(!isSolid(fc,e.row+1)&&e.row+1<ROWS)e.vx*=-1;if(e.x<0){e.x=0;e.vx=Math.abs(e.vx);}if(e.x+TS>COLS*TS){e.x=COLS*TS-TS;e.vx=-Math.abs(e.vx);}}});}
 function updateMovers(){movers.forEach(m=>{if(!m.vx||m.maxX<=m.minX)return;m.x+=m.vx;if(m.x<=m.minX){m.x=m.minX;m.vx=Math.abs(m.vx);}else if(m.x>=m.maxX){m.x=m.maxX;m.vx=-Math.abs(m.vx);}});}
-function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;
+function checkItems(){items.forEach(it=>{if(it.got){if(it.pop>0)it.pop-=0.08;return;}const ix=it.c*TS+8,iy=it.r*TS+8;if(player.x<ix+TS-16&&player.x+PW>ix&&player.y<iy+TS-16&&player.y+PH>iy){it.got=true;it.pop=1;collectedItems[playLevel+':'+it.r+','+it.c]=true;
  if(it.type===T.KEY){playerKeys[it.color]=true;chirp(1318,0.1,'square',0.06);toast((KEY_NAMES[it.color]||'')+' key! ',KEY_COLORS[it.color]||'#fdd835');return;}
     if(it.type===T.GEM)gemsGot++;score+=(it.type===T.STAR?gameConfig.starPoints:gameConfig.gemPoints);chirp(it.type===T.STAR?1047:784,0.08,'square',0.07);if(it.type===T.GEM){cjRunHats('when_collect_gem');ks3Call('on_gem');}}});}
 function checkHazards(){if(player.inv>0)return;const p=player;[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)].forEach(c=>[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)].forEach(r=>{const tt=tileAt(c,r);if(tt===T.SPIKE||tt===T.LAVA)killPlayer();}));if(player.inv>0)return;let stomped=false;
@@ -7271,8 +7277,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.08.09';
+const CJ_VERSION='2026.08.10';
 const CJ_WHATSNEW=[
+ "Fixed: in platform games with more than one page, gems, stars and chests you've already collected no longer come back when you revisit a page — and if your goal is to reach the finish before a time runs out, the timer now keeps counting across pages instead of starting again.",
  "Work together more easily! When you tap Collaborate, you can now pick a class and choose up to 5 classmates to build the same game with — even across different classes. You'll see everyone by their display name and real name, so it's easy to find your friends.",
  "A brand-new look! CodeJump now has its own set of hand-designed icons all the way through — the menus, the blocks, the building tiles and the Stage and KS1 editors. Everything feels cleaner and more polished, with the same colourful, friendly feel.",
  "New: Turtle! Pick the Turtle project to type Logo code (fd 100, rt 90, repeat, even your own commands) and watch a turtle draw pictures. Tap Commands and Examples to get going.",

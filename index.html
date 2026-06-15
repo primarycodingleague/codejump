@@ -242,7 +242,7 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
   @page{margin:14mm;}
   html,body{background:#fff!important;height:auto!important;overflow:visible!important;}
   body>*{display:none!important;}
-  #print-area{display:block!important;position:static;left:0;width:auto;}
+  #print-area{display:block!important;position:static;left:0;width:auto;color:#000!important;}
   #print-area .th-sheet{padding:0;border:none;border-radius:0;}
   #print-area .th-sheet .drawbox{min-height:340px;}
 }
@@ -871,6 +871,10 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
 #collab-bar .cb-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-weight:800;font-size:13px;border:2px solid rgba(255,255,255,.5);}
 #collab-bar #cb-leave{margin-left:6px;border:none;background:rgba(255,255,255,.12);color:#fff;border-radius:14px;padding:5px 10px;font-family:var(--font);font-weight:700;font-size:12px;cursor:pointer;}
 #collab-bar #cb-leave:hover{background:#ef4444;}
+#collab-cursors{position:fixed;inset:0;pointer-events:none;z-index:1500;}
+#collab-cursors .cc-ptr{position:absolute;transform:translate(-2px,-2px);transition:left .08s linear,top .08s linear;will-change:left,top;}
+#collab-cursors .cc-ptr svg{display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));}
+#collab-cursors .cc-name{position:absolute;left:15px;top:13px;font-family:var(--font);font-weight:800;font-size:11px;color:#fff;padding:2px 7px;border-radius:9px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35);}
 /* Cloud save (PIN / class) */
 #cloud-modal{position:fixed;inset:0;z-index:1590;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px;}
 #cloud-modal.hide{display:none;}
@@ -3551,8 +3555,11 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   // mouse tracking + sprite clicks for Sensing / "when this sprite clicked"
   window.addEventListener('mousemove',e=>{if(_mbSlider||_mbPanelDrag)mbPointerMove(stagePtr(e));});
   gc.addEventListener('touchmove',e=>{if((_mbSlider||_mbPanelDrag)&&e.touches[0]){mbPointerMove(stagePtr(e.touches[0]));e.preventDefault();}},{passive:false});
-  gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;if(typeof collabStageCursor==='function')collabStageCursor(p.x,p.y);}});
-  gc.addEventListener('mouseleave',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
+  gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;}});
+  // whole-editor collab cursor (blocks + canvas), so partners see each other while building, not just over the canvas
+  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&projectType==='stage'&&document.body.classList.contains('stage-mode'))collabStageCursor(e.clientX,e.clientY);});
+  window.addEventListener('blur',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
+  window.addEventListener('resize',()=>{if(typeof renderCollabStageCursors==='function')renderCollabStageCursors();});
   gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);if(mbPointerDown(p))return;stageFireClick(p.x,p.y);}});
   window.addEventListener('mouseup',()=>{stageMouse.down=false;mbPointerUp();});
   gc.addEventListener('touchstart',e=>{if(projectType!=='stage')return;if(stagePlaying){if(e.touches[0]&&mbPointerDown(stagePtr(e.touches[0]))){e.preventDefault();return;}}else if(e.touches[0]){stageDragStart(e.touches[0]);}},{passive:false});
@@ -5905,13 +5912,13 @@ async function teacherPrintCards(code){try{const data=await cloudApi('/class/car
     <div class="lc-f">Open CodeJump → 🔑 Sign in</div></div>`).join('');
   doPrint(`<style>
     .lc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    .lc{border:2px dashed #888;border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;page-break-inside:avoid;}
+    .lc{border:2px dashed #888;border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif;page-break-inside:avoid;color:#111;}
     .lc-h{font-size:12px;color:#ae853e;font-weight:bold;letter-spacing:.5px;}
-    .lc-n{font-size:20px;font-weight:bold;margin:4px 0 8px;}
+    .lc-n{font-size:20px;font-weight:bold;margin:4px 0 8px;color:#111;}
     .lc-r{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;border-bottom:1px solid #eee;}
-    .lc-r span{color:#666;} .lc-r b{font-family:'Courier New',monospace;}
+    .lc-r span{color:#666;} .lc-r b{font-family:'Courier New',monospace;color:#111;}
     .lc-f{margin-top:8px;font-size:11px;color:#888;}
-    h3.lc-title{font-family:Arial;margin:0 0 10px;}
+    h3.lc-title{font-family:Arial;margin:0 0 10px;color:#111;}
   </style><h3 class="lc-title">${cesc(data.className||'Class')} — login cards (${cesc(data.code)})</h3><div class="lc-grid">${cards}</div>`);
 }catch(err){cloudError(err);}}
 async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/roster',{token:cloudToken,code});
@@ -5948,7 +5955,7 @@ let collabWS=null,collabRoomId=null,collabActive=false,collabApplyingRemote=fals
 let collabMe=null,collabMembers={},collabRemoteCursors={},_collabSnapT=null,_collabCurT=0;
 function collabWsUrl(roomId){return CLOUD_URL.replace(/^http/,'ws').replace(/\/$/,'')+'/room/'+roomId+'?token='+encodeURIComponent(cloudToken||'');}
 function collabSend(o){if(collabWS&&collabWS.readyState===1){try{collabWS.send(JSON.stringify(o));}catch(e){}}}
-function collabDisconnect(silent){const ws=collabWS;collabWS=null;collabActive=false;collabMembers={};collabRemoteCursors={};if(ws){try{ws.close();}catch(e){}}updateCollabBar();if(!silent)toast('You left the live room','#585555');}
+function collabDisconnect(silent){const ws=collabWS;collabWS=null;collabActive=false;collabMembers={};collabRemoteCursors={};if(ws){try{ws.close();}catch(e){}}updateCollabBar();var ccl=document.getElementById('collab-cursors');if(ccl)ccl.innerHTML='';if(!silent)toast('You left the live room','#585555');}
 function collabConnect(roomId){if(!cloudToken){toast('Sign in to collaborate','#ef4444');return;}if(collabWS)collabDisconnect(true);collabRoomId=roomId;
   const ws=new WebSocket(collabWsUrl(roomId));collabWS=ws;
   ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}collabOnMessage(m);};
@@ -5963,10 +5970,10 @@ function collabOnMessage(m){
     else{collabSnapshotNow();}
     updateCollabBar();toast("You're in the live room! 🤝",'#10b981');}
   else if(m.type==='join'){collabMembers[m.member.uid]=m.member;updateCollabBar();toast(cesc(m.member.name)+' joined 🤝',m.member.color);}
-  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(g)toast(cesc(g.name)+' left','#585555');}
+  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage')renderCollabStageCursors();if(g)toast(cesc(g.name)+' left','#585555');}
   else if(m.type==='op'){collabApplyRemote(()=>collabApplyOp(m.op));}
   else if(m.type==='snapshot'){collabApplyRemote(()=>collabApplyDoc(m.doc));}
-  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];}
+  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage')renderCollabStageCursors();}
   else if(m.type==='full'){toast('That live room is full (max 6 people)','#ef4444');collabDisconnect(true);}}
 function collabApplyOp(op){if(!op)return;
   if(op.k!=='cell'){applyStageOp(op);return;} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
@@ -5983,8 +5990,21 @@ function collabSpriteAdd(s){if(s)collabStageOp({k:'st_add',sprite:{id:s.id,name:
 function collabSpriteDel(id){collabStageOp({k:'st_del',id});}
 function collabBackdrops(){if(stageState)collabStageOp({k:'st_bd',backdrops:stageState.backdrops,backdropIdx:stageState.backdropIdx|0});}
 function collabVars(){if(stageState)collabStageOp({k:'st_var',vars:stageState.vars||[],lists:stageState.lists||[]});}
-function collabStageCursor(x,y){if(!collabActive)return;const now=Date.now();if(now-_collabCurT<60)return;_collabCurT=now;collabSend({type:'cursor',cell:{sx:Math.round(x),sy:Math.round(y)}});}
+// cursor coords are sent as a FRACTION of the viewport (0..1) so partners' pointers map across different screen sizes
+function collabStageCursor(clientX,clientY){if(!collabActive)return;const w=window.innerWidth,h=window.innerHeight;if(!w||!h)return;const ex=clientX/w,ey=clientY/h;const now=Date.now();if(now-_collabCurT<55)return;_collabCurT=now;collabSend({type:'cursor',cell:{ex:Math.round(ex*1000)/1000,ey:Math.round(ey*1000)/1000}});}
 function collabStageCursorGone(){if(collabActive)collabSend({type:'cursor'});} // no cell → remote clears your pointer
+function renderCollabStageCursors(){var layer=document.getElementById('collab-cursors');
+  if(typeof collabActive==='undefined'||!collabActive||!document.body.classList.contains('stage-mode')){if(layer)layer.innerHTML='';return;}
+  if(!layer){layer=document.createElement('div');layer.id='collab-cursors';document.body.appendChild(layer);}
+  var w=window.innerWidth,h=window.innerHeight,seen={};
+  for(var uid in collabRemoteCursors){var cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.ex==null)continue;seen[uid]=1;
+    var p=layer.querySelector('[data-uid="'+uid+'"]');var col=cu.color||'#fff';
+    if(!p){p=document.createElement('div');p.className='cc-ptr';p.setAttribute('data-uid',uid);
+      p.innerHTML='<svg width="20" height="20" viewBox="0 0 20 20"><path d="M2 2 L2 15 L6 11 L8.5 17 L11 16 L8.5 10.5 L14 10.5 Z" fill="'+col+'" stroke="#000" stroke-width="1.2"/></svg><span class="cc-name"></span>';
+      layer.appendChild(p);}
+    var nm=p.querySelector('.cc-name');nm.textContent=(cu.name||'').slice(0,14);nm.style.background=col;
+    p.style.left=(cu.cell.ex*w)+'px';p.style.top=(cu.cell.ey*h)+'px';}
+  Array.prototype.slice.call(layer.children).forEach(function(c){if(!seen[c.getAttribute('data-uid')])c.remove();});}
 let _stXmlT=null;
 function collabStageXmlSoon(){if(!collabActive||collabApplyingRemote||projectType!=='stage')return;clearTimeout(_stXmlT);_stXmlT=setTimeout(()=>{if(!stageState)return;stageSaveCurrent();const s=stageState.sprites[stageSel];if(s)collabStageOp({k:'st_xml',id:s.id,xml:s.xml||''});},350);}
 function _stById(id){return stageState&&stageState.sprites.find(s=>s.id===id);}
@@ -6716,18 +6736,10 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.08.05';
+const CJ_VERSION='2026.08.06';
 const CJ_WHATSNEW=[
-  "🧸 NEW: a whole ScratchJr-style coding space for Key Stage 1! Little ones make 🎭 Stage projects with big picture blocks that snap together — move, turn, hop, say, loops, colour messages, sounds (even ones they 🎤 record), multi-page 📄 stories and a built-in 🎨 character painter. Tap ✨ Ideas for starters or 🎯 Missions to be guided step-by-step.",
-  "📟 Key Stage 2 & 3 get a full Scratch-style 🎭 Stage too — nearly the whole Scratch block range, plus an on-screen 📟 micro:bit you can really use (light-up screen, buttons, sensors, music and radio).",
-  "💡 Hover over (or tap and hold) any Stage block to see a friendly description of what it does — in every key stage.",
-  "♿ NEW: Accessibility options for everyone — tap ♿ for an easy-to-read dyslexia-friendly font, bigger text, high contrast, less motion or read-aloud. Your choices are remembered.",
-  "📖 The ❓ Help guide now matches your project type and Key Stage, and the 📖 Teacher Guide now covers the 🎭 Stage and 📟 micro:bit too.",
-  "🤝 Live collaboration and 🔗 share links work across 🎭 Stage projects, and you can now 🗑️ tidy up saved games and collaborations you no longer need.",
-  "🐛 Fixes & polish: switching between Key Stage Stages no longer leaves the old block area showing, plus lots of Stage tidy-ups.",
-  "📄 Privacy, Data Protection and Safeguarding policies are now linked at the bottom of the home page.",
-  "📻 The micro:bit “on radio received number/string” blocks now give you the value as a variable (receivedNumber / receivedString) you can drag straight into your code — just like MakeCode.",
-  "🔌 NEW (early access): send your program to a REAL micro:bit! In a Key Stage 2/3 Stage, tap 🔌 micro:bit to turn your blocks into micro:bit code and flash it down the USB cable — or download the .py. Works in Chrome/Edge on a computer or Chromebook."
+  "👀 NEW: when you build a 🎭 Stage project together, you can now see each other's mouse pointers move around — with everyone's name on a coloured arrow — so you always know where your partner is working.",
+  "🪪 Fixed: teacher login cards now print with all the details filled in (they were coming out blank)."
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

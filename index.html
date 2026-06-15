@@ -443,6 +443,38 @@ body.ks1-mode #code-panel,body.ks1-mode #stage-right,body.ks1-mode #cwrap{displa
   body.stage-mode #code-panel{flex:1 1 auto;min-height:300px;}
   body.stage-mode #rotate-hint{display:none !important;}
 }
+/* ── Turtle (Logo) playground ── */
+#turtle-ui{display:none;}
+body.turtle-mode #btn-build,body.turtle-mode #btn-play,body.turtle-mode #btn-code,
+body.turtle-mode #t-paint,body.turtle-mode #t-fill,body.turtle-mode #t-erase,body.turtle-mode #t-undo,
+body.turtle-mode #t-redo,body.turtle-mode #t-clear,body.turtle-mode #t-testpage,body.turtle-mode #theme-sel,
+body.turtle-mode #btn-design,body.turtle-mode #btn-read,body.turtle-mode #palette,body.turtle-mode #pages,
+body.turtle-mode #play-mute,body.turtle-mode #play-sfx,body.turtle-mode #hint,body.turtle-mode #touch-controls,
+body.turtle-mode .cp-run-bar,body.turtle-mode #ks3-editor,body.turtle-mode #code-panel,
+body.turtle-mode #stage-right,body.turtle-mode #gc,body.turtle-mode .stage-only{display:none !important;}
+body.turtle-mode #cwrap{display:flex;flex-direction:row;align-items:stretch;gap:10px;padding:10px;background:#1e1e1e;}
+body.turtle-mode #turtle-ui{display:flex;flex-direction:row;gap:10px;flex:1 1 auto;min-width:0;}
+#turtle-left{display:flex;flex-direction:column;width:42%;min-width:0;gap:8px;}
+#turtle-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+#turtle-bar button{font-family:var(--font);font-weight:800;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:14px;color:#fff;}
+#tt-run{background:#3fae5e;}#tt-stop{background:#ef4444;}#tt-clear{background:#475569;}#tt-cmds{background:#b45309;}#tt-examples{background:#6d28d9;}
+#turtle-status{font-family:var(--font);font-weight:700;font-size:13px;padding:4px 8px;border-radius:8px;}
+#turtle-status.ok{color:#86efac;}#turtle-status.err{color:#fca5a5;}#turtle-status.run{color:#fcd34d;}
+#turtle-code{flex:1 1 auto;width:100%;resize:none;font-family:'Courier New',monospace;font-size:15px;line-height:1.55;background:#11161c;color:#e6f0e6;border:2px solid var(--gray);border-radius:10px;padding:10px;min-height:0;box-sizing:border-box;}
+#turtle-right{flex:1 1 auto;display:flex;flex-direction:column;min-width:0;gap:8px;}
+#turtle-canvas-holder{flex:1 1 auto;background:#fff;border-radius:10px;border:2px solid var(--gray);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;}
+#turtle-canvas{max-width:100%;max-height:100%;background:#fff;}
+#turtle-speed-row{display:flex;align-items:center;gap:8px;color:#cbd5e1;font-family:var(--font);font-size:13px;}
+#turtle-modal .ttm-cmd{font-family:'Courier New',monospace;font-weight:bold;color:var(--gold);}
+#turtle-modal .ttm-row{margin:5px 0;line-height:1.4;}
+#turtle-modal .ttm-ex{display:block;width:100%;text-align:left;margin:4px 0;padding:8px 10px;border:1px solid var(--gray);border-radius:8px;background:#2a2a2a;color:#eee;font-family:var(--font);font-weight:700;cursor:pointer;}
+#turtle-modal .ttm-ex:hover{border-color:var(--gold);}
+@media(max-width:820px){
+  body.turtle-mode #cwrap{flex-direction:column;}
+  body.turtle-mode #turtle-ui{flex-direction:column;}
+  #turtle-left{width:100%;min-height:200px;}
+  #turtle-right{min-height:300px;}
+}
 #stage-canvas-holder{width:100%;aspect-ratio:16/9;background:#bfe3ff;border-radius:10px;overflow:hidden;border:2px solid var(--gray);display:flex;position:relative;}
 #stage-ask{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.95);border:2px solid var(--gold);border-radius:10px;padding:6px 8px;z-index:5;}
 #stage-ask.hide{display:none;}
@@ -542,8 +574,8 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .share-close:hover{opacity:1;}
 /* ── SPRITE DESIGNER ────────────────────────────────────────────────── */
 /* ── KS1/KS2 chooser ──────────────────────────────────────────────── */
-#ks-modal,#pt-modal,#costume-modal,#backdrop-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;}
-#ks-modal.hide,#pt-modal.hide,#costume-modal.hide,#backdrop-modal.hide{display:none;}
+#ks-modal,#pt-modal,#costume-modal,#backdrop-modal,#turtle-modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;}
+#ks-modal.hide,#pt-modal.hide,#costume-modal.hide,#backdrop-modal.hide,#turtle-modal.hide{display:none;}
 #bd-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;max-height:200px;overflow-y:auto;}
 .bd-cos{position:relative;width:96px;background:var(--black);border:2px solid var(--gray);border-radius:10px;cursor:pointer;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .bd-cos.sel{border-color:var(--gold);background:rgba(174,133,62,.18);}
@@ -1365,9 +1397,18 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
     <p>Pick the kind of project. You can't change this later, so choose what you'd like to build!</p>
     <div class="ks-opts">
       <button class="ks-opt" data-pt="platformer"><span class="ks-emoji">🏃</span><b>Platformer</b><small>Build a level on a grid<br>and jump through it</small></button>
-      <button class="ks-opt" data-pt="stage"><span class="ks-emoji">🎭</span><b>Stage</b><small>Sprites on a stage<br>(like Scratch) — NEW!</small></button>
+      <button class="ks-opt" data-pt="stage"><span class="ks-emoji">🎭</span><b>Stage</b><small>Sprites on a stage<br>(like Scratch)</small></button>
+      <button class="ks-opt" data-pt="turtle"><span class="ks-emoji">🐢</span><b>Turtle</b><small>Type Logo code to<br>draw pictures — NEW!</small></button>
     </div>
     <button class="ks-cancel" id="pt-cancel">Back</button>
+  </div>
+</div>
+
+<div id="turtle-modal" class="hide">
+  <div class="ks-box" style="max-width:560px;text-align:left;max-height:85vh;overflow:auto;">
+    <h2 id="ttm-title" style="text-align:center;">Turtle</h2>
+    <div id="ttm-body"></div>
+    <div style="text-align:center;"><button class="ks-cancel" id="ttm-close">Close</button></div>
   </div>
 </div>
 
@@ -1500,6 +1541,23 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
             <div id="sprite-list"></div>
             <div id="stage-pane" title="Stage backdrops"><canvas id="stage-pane-thumb" width="64" height="40"></canvas><span>Stage</span></div>
           </div>
+        </div>
+      </div>
+      <div id="turtle-ui">
+        <div id="turtle-left">
+          <div id="turtle-bar">
+            <button id="tt-run">▶️ Run</button>
+            <button id="tt-stop">⏹️ Stop</button>
+            <button id="tt-clear">🧹 Clear</button>
+            <button id="tt-cmds">📖 Commands</button>
+            <button id="tt-examples">✨ Examples</button>
+            <span id="turtle-status" class="ok">✓ Ready</span>
+          </div>
+          <textarea id="turtle-code" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off"></textarea>
+        </div>
+        <div id="turtle-right">
+          <div id="turtle-canvas-holder"><canvas id="turtle-canvas" width="600" height="600"></canvas></div>
+          <div id="turtle-speed-row"><span>🐢 Speed</span><input type="range" id="turtle-speed" min="1" max="10" value="6"><span id="turtle-speed-val">6</span></div>
         </div>
       </div>
       <button id="play-mute" title="Music on / off" aria-label="Toggle music">🎵</button>
@@ -1876,19 +1934,18 @@ function setSaves(s){localStorage.setItem('bap_saves',JSON.stringify(s));}
 function saveCurrentLevel(){
   const name=prompt('Give your game a name:','My Game');
   if(name===null)return;
-  commitLevel();
-  const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid.map(r=>[...r]),waterGrid:(L.waterGrid||mkGrid()).map(r=>[...r]),theme:L.theme,customBg:{top:L.customBg.top,bottom:L.customBg.bottom,art:L.customBg.art?[...L.customBg.art]:null},moverCfg:Object.assign({},L.moverCfg||{}),enemyCfg:Object.assign({},L.enemyCfg||{}),doorCfg:Object.assign({},L.doorCfg||{}),keyCfg:Object.assign({},L.keyCfg||{}),signCfg:Object.assign({},L.signCfg||{}),chestCfg:JSON.parse(JSON.stringify(L.chestCfg||{})),teleCfg:JSON.parse(JSON.stringify(L.teleCfg||{})),buttonCfg:JSON.parse(JSON.stringify(L.buttonCfg||{})),gateCfg:JSON.parse(JSON.stringify(L.gateCfg||{}))}));
-  const saves=getSaves();
-  saves.unshift({id:Date.now().toString(),name:name||'My Game',date:new Date().toLocaleDateString('en-GB'),version:2,keyStage,cols:COLS,rows:ROWS,levels,grid:levels[0].grid,theme:levels[0].theme,customBg:levels[0].customBg,blocklyXml:xml,ks3Code,customSprites});
+  // buildPayload captures EVERYTHING for the current project type (platformer levels, Stage sprites, Turtle code).
+  const save=buildPayload();
+  save.id=Date.now().toString();save.name=name||'My Game';save.date=new Date().toLocaleDateString('en-GB');
+  const saves=getSaves();saves.unshift(save);
   setSaves(saves.slice(0,12));clearDirty();
-  toast(levels.length>1?('Game saved ('+levels.length+' pages)! 💾'):'Game saved! 💾','#10b981');
+  const np=(save.levels&&save.levels.length)||1;
+  toast((projectType==='platformer'&&np>1)?('Game saved ('+np+' pages)! 💾'):'Game saved! 💾','#10b981');
 }
 
 function loadSaveData(save){clearDirty();
-  applyPayload((save.version>=2||Array.isArray(save.levels))
-    ?{keyStage:save.keyStage,cols:save.cols,rows:save.rows,levels:save.levels,blocklyXml:save.blocklyXml,ks3Code:save.ks3Code,customSprites:save.customSprites}
-    :{keyStage:save.keyStage,cols:save.cols,rows:save.rows,grid:save.grid,theme:save.theme,customBg:save.customBg,blocklyXml:save.blocklyXml,ks3Code:save.ks3Code,customSprites:save.customSprites});
+  // The save IS a full payload (from buildPayload), so apply it directly — this carries projectType/stage/turtle too.
+  applyPayload(save);
   const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;
   readBlocklyConfig();
 }
@@ -1909,6 +1966,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 // HOME SCREEN
 // ═══════════════════════════════════════════════════════════════════════
 function showHome(){
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.getElementById('home').classList.remove('hide');
   document.getElementById('app').classList.add('hide');
@@ -1990,12 +2048,14 @@ let _pendingKs='ks2',_pendingSize='standard';
 document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   _pendingKs=b.dataset.ks;const szEl=document.getElementById('ks-size');_pendingSize=(_pendingKs==='ks1')?'standard':(szEl?szEl.value:'standard');
   document.getElementById('ks-modal').classList.add('hide');
+  const ttOpt=document.querySelector('#pt-modal .ks-opt[data-pt="turtle"]');if(ttOpt)ttOpt.style.display=(_pendingKs==='ks1')?'none':''; // Turtle (typed Logo) is KS2+ only
   document.getElementById('pt-modal').classList.remove('hide');
 });
 document.getElementById('pt-cancel').onclick=()=>{document.getElementById('pt-modal').classList.add('hide');document.getElementById('ks-modal').classList.remove('hide');};
 document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=()=>{
   document.getElementById('pt-modal').classList.add('hide');
   if(b.dataset.pt==='stage')startNewStage(_pendingKs);
+  else if(b.dataset.pt==='turtle')startNewTurtle(_pendingKs);
   else startNewProject(_pendingKs);
 });
 function startNewProject(ks){clearDirty();projectType='platformer';
@@ -2071,6 +2131,7 @@ function startNewStage(ks){clearDirty();projectType='stage';
 
 // ── Unified Scratch-style Stage view (no separate Build/Play/Code modes) ──
 function enterStageUI(){
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
   document.body.classList.remove('ks1-mode'); // coming from KS1? drop its mode + hide its UI
   const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
@@ -2109,6 +2170,205 @@ function exitStageUI(){
   const cwrap=document.getElementById('cwrap'),gc=document.getElementById('gc');
   if(gc.parentElement!==cwrap)cwrap.insertBefore(gc,cwrap.firstChild);
   if(blocklyWorkspace&&projectType!=='stage'){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TURTLE (Logo) PROJECTS — a text-based Logo playground (like TurtleAcademy).
+// Self-contained: own canvas, own generator-based interpreter (animated so
+// long REPEATs don't freeze, same idea as the Stage fibers). Gated behind
+// projectType==='turtle'; platformer & stage are untouched.
+// ═══════════════════════════════════════════════════════════════════════
+const TW=600,TH=600;                         // turtle canvas internal resolution
+let turtleCode='';                           // the Logo source (payload)
+let turtleCtx=null,turtleDraw=null,turtleDrawCtx=null; // visible ctx + persistent line layer
+let turtle=null,turtleBg='#ffffff';
+let turtleGen=null,turtleRunning=false,turtleSpeed=6;
+let turtleVars={},turtleProcs={},turtleRepStack=[],turtleDepth=0,turtleSteps=0;
+let _turtleBound=false;
+const TURTLE_BUDGET=[0,1,2,4,9,20,45,90,220,650,250000]; // generator-steps per frame, by speed 1..10
+const TURTLE_PALETTE=['#000000','#1e88e5','#43a047','#00acc1','#e53935','#d500f9','#fdd835','#ffffff','#6d4c41','#d2b48c','#2e7d32','#80deea','#fa8072','#8e24aa','#fb8c00','#9e9e9e'];
+const TURTLE_NAMES={black:'#000000',white:'#ffffff',red:'#e53935',green:'#43a047',blue:'#1e88e5',yellow:'#fdd835',orange:'#fb8c00',purple:'#8e24aa',pink:'#ec407a',brown:'#6d4c41',gray:'#757575',grey:'#757575',cyan:'#00acc1',magenta:'#d500f9',lime:'#c0ca33',navy:'#1a237e',gold:'#c9a227'};
+const TURTLE_DEFAULT=
+`; Welcome to the Turtle! 🐢
+; Type Logo commands, then press ▶️ Run.
+; Tap 📖 Commands or ✨ Examples for ideas.
+
+repeat 5 [
+  fd 150
+  rt 144
+]`;
+const TURTLE_EXAMPLES=[
+  {name:'⬛ Square',code:'repeat 4 [\n  fd 120\n  rt 90\n]'},
+  {name:'⭐ Star',code:'repeat 5 [\n  fd 160\n  rt 144\n]'},
+  {name:'🌸 Flower',code:'repeat 36 [\n  repeat 4 [ fd 90 rt 90 ]\n  rt 10\n]'},
+  {name:'🌀 Spiral',code:'make "s 2\nrepeat 120 [\n  fd :s\n  rt 91\n  make "s :s + 1.5\n]'},
+  {name:'🌈 Circle',code:'setpensize 4\nrepeat 360 [ fd 3 rt 1 ]'},
+  {name:'🏠 Procedure',code:'to square :n\n  repeat 4 [ fd :n rt 90 ]\nend\n\nsquare 60\nrt 30\nsquare 90'},
+];
+const TURTLE_COMMANDS=[
+  {g:'Move',items:[['fd / forward 100','move forward 100 steps'],['bk / back 100','move backward 100 steps'],['rt / right 90','turn right (clockwise) 90°'],['lt / left 90','turn left 90°'],['setxy 50 -20','jump to x y'],['setx 50 / sety 20','set just x or y'],['seth / setheading 0','point in a direction (0=up, 90=right)'],['home','go back to the middle, facing up']]},
+  {g:'Pen',items:[['pd / pendown','start drawing'],['pu / penup','lift the pen (move without drawing)'],['setpensize 5','make the line thicker'],['setpencolor "red','set the colour (a name, or 0–15)'],['setpencolor [255 0 0]','set the colour with red green blue'],['setbg "yellow','colour the background']]},
+  {g:'Screen & turtle',items:[['cs / clearscreen','wipe everything and go home'],['clean','wipe drawings but stay put'],['ht / hideturtle','hide the turtle'],['st / showturtle','show the turtle']]},
+  {g:'Repeat & choices',items:[['repeat 4 [ ... ]','do the bracket part 4 times'],['repcount','which time round the repeat is on'],['if :x > 5 [ ... ]','do it only if true'],['ifelse :x > 5 [ ... ] [ ... ]','one thing or the other'],['wait 30','pause for a moment']]},
+  {g:'Numbers',items:[['+  -  *  /','add, take away, times, divide'],['random 100','a surprise number 0–99'],['xcor / ycor / heading','where the turtle is / which way']]},
+  {g:'Variables',items:[['make "score 0','make a box called score holding 0'],[':score','use what is in the box']]},
+  {g:'Your own commands',items:[['to NAME :a ... end','teach the turtle a new command'],['stop','leave the current command early']]},
+];
+function startNewTurtle(ks){clearDirty();projectType='turtle';
+  setKeyStage(ks);
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}
+  document.getElementById('pt-modal').classList.add('hide');
+  turtleCode='';hideHome();enterTurtleUI(); // start with a blank coding area
+}
+function turtleInit(){
+  const cv=document.getElementById('turtle-canvas');if(!cv)return;
+  turtleCtx=cv.getContext('2d');
+  if(!turtleDraw){turtleDraw=document.createElement('canvas');turtleDraw.width=TW;turtleDraw.height=TH;turtleDrawCtx=turtleDraw.getContext('2d');}
+}
+function turtleResetState(){turtle={x:0,y:0,h:0,pen:true,color:'#1565c0',size:3,show:true};}
+function turtleClearDrawing(){if(turtleDrawCtx)turtleDrawCtx.clearRect(0,0,TW,TH);turtleBg='#ffffff';}
+function enterTurtleUI(){
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
+  document.body.classList.remove('ks1-mode');
+  document.getElementById('app').classList.remove('hide');
+  document.getElementById('home').classList.add('hide');
+  mode='code';
+  document.body.classList.add('turtle-mode');
+  turtleInit();
+  const ta=document.getElementById('turtle-code');if(ta)ta.value=turtleCode||'';
+  if(!turtle)turtleResetState();
+  turtleClearDrawing();turtleResetState();turtleRender();
+  turtleSetStatus('✓ Ready','ok');
+  turtleBindOnce();
+  const t3=document.getElementById('t-cloud');if(t3){/* keep cloud button state managed elsewhere */}
+}
+function exitTurtleUI(){
+  if(!document.body.classList.contains('turtle-mode'))return;
+  turtleStop();
+  document.body.classList.remove('turtle-mode');
+}
+function turtleBindOnce(){
+  if(_turtleBound)return;_turtleBound=true;
+  const on=(id,fn)=>{const e=document.getElementById(id);if(e)e.onclick=fn;};
+  on('tt-run',turtleRun);on('tt-stop',()=>{turtleStop();turtleSetStatus('⏹️ Stopped','ok');});
+  on('tt-clear',turtleClearAll);on('tt-cmds',turtleShowCommands);on('tt-examples',turtleShowExamples);
+  on('ttm-close',()=>document.getElementById('turtle-modal').classList.add('hide'));
+  const sp=document.getElementById('turtle-speed');
+  if(sp)sp.oninput=()=>{turtleSpeed=+sp.value;const v=document.getElementById('turtle-speed-val');if(v)v.textContent=sp.value;};
+  const ta=document.getElementById('turtle-code');
+  if(ta)ta.addEventListener('input',()=>{turtleCode=ta.value;if(typeof markDirty==='function')markDirty();});
+}
+function turtleSetStatus(msg,cls){const e=document.getElementById('turtle-status');if(!e)return;e.textContent=msg;e.className=cls||'ok';}
+function turtleClearAll(){turtleStop();turtleResetState();turtleClearDrawing();turtleRender();turtleSetStatus('✓ Cleared','ok');}
+// ── rendering ──
+function turtleDrawLine(x1,y1,x2,y2){const c=turtleDrawCtx;if(!c)return;c.strokeStyle=turtle.color;c.lineWidth=turtle.size;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(TW/2+x1,TH/2-y1);c.lineTo(TW/2+x2,TH/2-y2);c.stroke();}
+function turtleRender(){const c=turtleCtx;if(!c)return;c.fillStyle=turtleBg;c.fillRect(0,0,TW,TH);if(turtleDraw)c.drawImage(turtleDraw,0,0);if(turtle&&turtle.show)turtleDrawTurtle(c);}
+function turtleDrawTurtle(c){const cx=TW/2+turtle.x,cy=TH/2-turtle.y;c.save();c.translate(cx,cy);c.rotate(turtle.h*Math.PI/180);
+  c.beginPath();c.moveTo(0,-13);c.lineTo(9,9);c.lineTo(0,4);c.lineTo(-9,9);c.closePath();
+  c.fillStyle='#2e7d32';c.fill();c.strokeStyle='#1b5e20';c.lineWidth=2;c.stroke();c.restore();}
+// ── tokeniser ──
+function turtleTokenize(src){src=src.replace(/;[^\n]*/g,' ');const toks=[];const re=/(<=|>=|<>|[\[\]()<>=+\-*/])|("[^\s\[\]()]+)|(:[A-Za-z_]\w*)|(\d+\.?\d*)|([A-Za-z_]\w*)/g;let m;while((m=re.exec(src)))toks.push(m[0]);return toks;}
+function turtleErr(msg){throw{turtleErr:true,msg};}
+// ── expression evaluator (numbers + comparisons) ──
+function turtleExpr(cur){let a=turtleSum(cur);const op=cur.toks[cur.i];if(op==='<'||op==='>'||op==='='||op==='<='||op==='>='||op==='<>'){cur.i++;const b=turtleSum(cur);switch(op){case'<':return a<b;case'>':return a>b;case'=':return a===b;case'<=':return a<=b;case'>=':return a>=b;case'<>':return a!==b;}}return a;}
+function turtleSum(cur){let a=turtleTerm(cur);while(cur.toks[cur.i]==='+'||cur.toks[cur.i]==='-'){const op=cur.toks[cur.i++];const b=turtleTerm(cur);a=(op==='+')?a+b:a-b;}return a;}
+function turtleTerm(cur){let a=turtleFactor(cur);while(cur.toks[cur.i]==='*'||cur.toks[cur.i]==='/'){const op=cur.toks[cur.i++];const b=turtleFactor(cur);a=(op==='*')?a*b:a/b;}return a;}
+function turtleFactor(cur){let t=cur.toks[cur.i];if(t===undefined)turtleErr('I expected a number here');
+  if(t==='-'){cur.i++;return -turtleFactor(cur);}
+  if(t==='('){cur.i++;const v=turtleExpr(cur);if(cur.toks[cur.i]===')')cur.i++;return v;}
+  if(t[0]===':'){cur.i++;const n=t.slice(1).toLowerCase();if(!(n in turtleVars))turtleErr('I don\'t know the variable '+t);return turtleVars[n];}
+  if(/^\d/.test(t)){cur.i++;return parseFloat(t);}
+  const lw=t.toLowerCase();
+  if(lw==='random'){cur.i++;return Math.floor(Math.random()*turtleFactor(cur));}
+  if(lw==='repcount'){cur.i++;return turtleRepStack.length?turtleRepStack[turtleRepStack.length-1]:0;}
+  if(lw==='xcor'){cur.i++;return turtle.x;}
+  if(lw==='ycor'){cur.i++;return turtle.y;}
+  if(lw==='heading'){cur.i++;return turtle.h;}
+  turtleErr('I expected a number but found "'+t+'"');
+}
+function turtleColorArg(cur){const t=cur.toks[cur.i];
+  if(t&&t[0]==='"'){cur.i++;const n=t.slice(1).toLowerCase();return TURTLE_NAMES[n]||(/^[a-z]+$/.test(n)?n:'#000');}
+  if(t==='['){cur.i++;const r=turtleSum(cur),g=turtleSum(cur),b=turtleSum(cur);if(cur.toks[cur.i]===']')cur.i++;return'rgb('+(r|0)+','+(g|0)+','+(b|0)+')';}
+  const n=Math.round(turtleSum(cur));return TURTLE_PALETTE[((n%16)+16)%16];}
+// ── bracket block reader: returns the token slice inside [ ... ] ──
+function turtleBracket(cur){if(cur.toks[cur.i]!=='[')turtleErr('I expected a [ here');cur.i++;const body=[];let d=1;while(cur.i<cur.toks.length){const t=cur.toks[cur.i];if(t==='[')d++;else if(t===']'){d--;if(d===0){cur.i++;return body;}}body.push(t);cur.i++;}turtleErr('A [ is missing its matching ]');}
+// ── extract TO..END procedure definitions, return the runnable main tokens ──
+function turtleExtractProcs(toks){turtleProcs={};const main=[];for(let i=0;i<toks.length;){if(toks[i]&&toks[i].toLowerCase()==='to'){i++;const name=(toks[i]||'').toLowerCase();if(!name||!/^[a-z_]/.test(name))turtleErr('"to" needs a name');i++;const params=[];while(i<toks.length&&toks[i][0]===':'){params.push(toks[i].slice(1).toLowerCase());i++;}const body=[];while(i<toks.length&&toks[i].toLowerCase()!=='end'){body.push(toks[i]);i++;}if(i>=toks.length)turtleErr('"to '+name+'" is missing its "end"');i++;turtleProcs[name]={params,body};}else{main.push(toks[i]);i++;}}return main;}
+// ── statement runners (generators: yield = one animation step) ──
+function* turtleRunSeq(cur){while(cur.i<cur.toks.length&&cur.toks[cur.i]!==']'){yield* turtleRunStmt(cur);}}
+function* turtleMove(dist){const seg=6;const steps=Math.max(1,Math.ceil(Math.abs(dist)/seg));const sl=dist/steps;for(let k=0;k<steps;k++){const rad=turtle.h*Math.PI/180;const nx=turtle.x+sl*Math.sin(rad);const ny=turtle.y+sl*Math.cos(rad);if(turtle.pen)turtleDrawLine(turtle.x,turtle.y,nx,ny);turtle.x=nx;turtle.y=ny;yield;}}
+function turtleGoto(x,y){if(turtle.pen)turtleDrawLine(turtle.x,turtle.y,x,y);turtle.x=x;turtle.y=y;}
+function* turtleCallProc(name,cur){const p=turtleProcs[name];const args=p.params.map(()=>turtleExpr(cur));const saved={};p.params.forEach((pn,k)=>{saved[pn]=turtleVars[pn];turtleVars[pn]=args[k];});turtleDepth++;if(turtleDepth>900){turtleDepth--;turtleErr('this repeats itself too many times');}try{yield* turtleRunSeq({toks:p.body,i:0});}catch(e){if(!(e&&e.turtleStop))throw e;}finally{turtleDepth--;p.params.forEach(pn=>{turtleVars[pn]=saved[pn];});}}
+function* turtleRunStmt(cur){const w=cur.toks[cur.i++];const cmd=w.toLowerCase();switch(cmd){
+  case'fd':case'forward':{const d=turtleExpr(cur);yield* turtleMove(d);break;}
+  case'bk':case'back':{const d=turtleExpr(cur);yield* turtleMove(-d);break;}
+  case'rt':case'right':{turtle.h+=turtleExpr(cur);yield;break;}
+  case'lt':case'left':{turtle.h-=turtleExpr(cur);yield;break;}
+  case'pu':case'penup':turtle.pen=false;break;
+  case'pd':case'pendown':turtle.pen=true;break;
+  case'ht':case'hideturtle':turtle.show=false;break;
+  case'st':case'showturtle':turtle.show=true;break;
+  case'home':turtle.x=0;turtle.y=0;turtle.h=0;yield;break;
+  case'cs':case'clearscreen':turtleClearDrawing();turtle.x=0;turtle.y=0;turtle.h=0;yield;break;
+  case'clean':turtleClearDrawing();break;
+  case'setpensize':case'setwidth':turtle.size=Math.max(1,Math.min(60,turtleExpr(cur)));break;
+  case'setpencolor':case'setpc':case'setcolor':turtle.color=turtleColorArg(cur);break;
+  case'setbg':case'setbackground':case'setscreencolor':turtleBg=turtleColorArg(cur);break;
+  case'setxy':{const x=turtleExpr(cur),y=turtleExpr(cur);turtleGoto(x,y);yield;break;}
+  case'setx':turtleGoto(turtleExpr(cur),turtle.y);yield;break;
+  case'sety':turtleGoto(turtle.x,turtleExpr(cur));yield;break;
+  case'seth':case'setheading':turtle.h=turtleExpr(cur);yield;break;
+  case'wait':{let n=Math.max(0,Math.min(600,Math.round(turtleExpr(cur))));for(let k=0;k<n;k++)yield;break;}
+  case'repeat':{const n=Math.round(turtleExpr(cur));const body=turtleBracket(cur);for(let k=0;k<n;k++){turtleRepStack.push(k+1);yield* turtleRunSeq({toks:body,i:0});turtleRepStack.pop();}break;}
+  case'if':{const c=turtleExpr(cur);const body=turtleBracket(cur);if(c)yield* turtleRunSeq({toks:body,i:0});break;}
+  case'ifelse':{const c=turtleExpr(cur);const b1=turtleBracket(cur);const b2=turtleBracket(cur);yield* turtleRunSeq({toks:(c?b1:b2),i:0});break;}
+  case'make':{let nm=cur.toks[cur.i++];if(nm===undefined)turtleErr('"make" needs a name');if(nm[0]==='"')nm=nm.slice(1);turtleVars[nm.toLowerCase()]=turtleExpr(cur);break;}
+  case'stop':throw{turtleStop:true};
+  default:
+    if(turtleProcs[cmd]){yield* turtleCallProc(cmd,cur);}
+    else turtleErr('I don\'t understand "'+w+'"');
+}}
+function* turtleRunTop(main){try{yield* turtleRunSeq({toks:main,i:0});}catch(e){if(!(e&&e.turtleStop))throw e;}}
+function turtleRun(){
+  turtleStop();
+  const ta=document.getElementById('turtle-code');turtleCode=ta?ta.value:turtleCode;
+  try{
+    const toks=turtleTokenize(turtleCode);
+    const main=turtleExtractProcs(toks);
+    turtleVars={};turtleRepStack=[];turtleDepth=0;turtleSteps=0;
+    turtleResetState();turtleClearDrawing();
+    turtleGen=turtleRunTop(main);turtleRunning=true;
+    turtleSetStatus('Running…','run');
+  }catch(e){turtleSetStatus('⚠️ '+(e&&e.turtleErr?e.msg:(''+(e&&e.message||e))),'err');}
+}
+function turtleStop(){turtleRunning=false;turtleGen=null;}
+function turtleFinish(okMsg,errMsg){turtleRunning=false;turtleGen=null;turtleSetStatus(errMsg?('⚠️ '+errMsg):(okMsg||'Done ✓'),errMsg?'err':'ok');}
+function turtleFrame(){
+  if(turtleRunning&&turtleGen){
+    const budget=TURTLE_BUDGET[turtleSpeed]||45;
+    for(let i=0;i<budget;i++){
+      let r;
+      try{r=turtleGen.next();}
+      catch(e){if(e&&e.turtleStop){turtleFinish('Done ✓');}else{turtleFinish(null,(e&&e.turtleErr)?e.msg:(''+(e&&e.message||e)));}break;}
+      if(r.done){turtleFinish('Done ✓');break;}
+      if(++turtleSteps>6000000){turtleFinish(null,'that takes too long — try smaller numbers');break;}
+    }
+  }
+  turtleRender();
+}
+function turtleShowCommands(){
+  let h='';TURTLE_COMMANDS.forEach(grp=>{h+='<h3 style="color:var(--gold);margin:12px 0 4px;">'+grp.g+'</h3>';grp.items.forEach(it=>{h+="<div class=\"ttm-row\"><span class=\"ttm-cmd\">"+cesc(it[0])+"</span> — "+cesc(it[1])+'</div>';});});
+  document.getElementById('ttm-title').textContent='📖 Turtle commands';
+  document.getElementById('ttm-body').innerHTML=h;
+  document.getElementById('turtle-modal').classList.remove('hide');
+}
+function turtleShowExamples(){
+  let h='<p style="opacity:.85;margin:0 0 8px;">Tap one to load it — then press ▶️ Run.</p>';
+  TURTLE_EXAMPLES.forEach((ex,i)=>{h+='<button class="ttm-ex" data-ex="'+i+'">'+cesc(ex.name)+'</button>';});
+  document.getElementById('ttm-title').textContent='✨ Examples';
+  const body=document.getElementById('ttm-body');body.innerHTML=h;
+  body.querySelectorAll('.ttm-ex').forEach(b=>b.onclick=()=>{const ex=TURTLE_EXAMPLES[+b.dataset.ex];const ta=document.getElementById('turtle-code');if(ta){ta.value=ex.code;turtleCode=ex.code;if(typeof markDirty==='function')markDirty();}document.getElementById('turtle-modal').classList.add('hide');turtleRun();});
+  document.getElementById('turtle-modal').classList.remove('hide');
 }
 // ── KS1 ScratchJr-style editor UI ──
 let ks1SelCat='trig', ks1Target={si:-1,rep:-1};   // ks1Target = which script (si) and which open container (rep, -1 = root)
@@ -5168,7 +5428,28 @@ const STAGE_HELP_KS1=[
  ['chars','🐱 Characters & Pages',`<p><b>Characters</b> are on the left. Tap <b>➕</b> to add one, the <b>🎨</b> to dress it up or paint your own, and <b>✕</b> to remove it.</p><p><b>Pages</b> are on the right — make up to 4 scenes for a story. Use the <b>📄 go to page</b> block to jump between them. Double-tap a page to change its backdrop.</p>`],
  ['play','▶️ Play & Share',`<p>Press <b>🟢 Go</b> to start and <b>⏹️ Stop</b> to stop. Tap a character to run its "when tapped" blocks.</p><p><b>💾 Save</b> keeps your project, and <b>🔗 Share</b> makes a link to send to a grown-up.</p>`]
 ];
-function helpTabs(){if(typeof projectType!=='undefined'&&projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
+const TURTLE_HELP=[
+ ['start','🚀 Start',`<h3>Welcome to the Turtle! 🐢</h3><p>Type <b>Logo</b> commands in the box on the left, then press <b>▶️ Run</b> to watch the turtle draw on the right.</p><h3>Try this</h3><pre style="background:#11161c;color:#e6f0e6;padding:10px;border-radius:8px;">repeat 4 [
+  fd 100
+  rt 90
+]</pre><p>That draws a square: go <b>forward 100</b> and <b>turn right 90°</b>, four times.</p><ul><li><b>▶️ Run</b> draws it · <b>⏹️ Stop</b> stops · <b>🧹 Clear</b> wipes the picture.</li><li>Use the <b>🐢 Speed</b> slider to watch slowly or draw instantly.</li><li>Tap <b>📖 Commands</b> for the full list and <b>✨ Examples</b> for ready-made pictures.</li></ul>`],
+ ['commands','📖 Commands',`<p>Tap the <b>📖 Commands</b> button any time for the full list. Here are the main ones:</p><ul>
+   <li><b>Move:</b> <code>fd 100</code> / <code>bk 100</code> (forward/back), <code>rt 90</code> / <code>lt 90</code> (turn right/left), <code>home</code>, <code>setxy 0 0</code>, <code>seth 0</code> (point: 0=up, 90=right).</li>
+   <li><b>Pen:</b> <code>pu</code> / <code>pd</code> (pen up/down), <code>setpensize 5</code>, <code>setpencolor "red</code> (a colour name or 0–15), <code>setbg "yellow</code>.</li>
+   <li><b>Screen:</b> <code>cs</code> (clear &amp; go home), <code>clean</code>, <code>ht</code> / <code>st</code> (hide/show turtle).</li>
+   <li><b>Repeat &amp; choices:</b> <code>repeat 4 [ … ]</code>, <code>if :x &gt; 5 [ … ]</code>, <code>ifelse … [ … ] [ … ]</code>, <code>wait 30</code>.</li>
+   <li><b>Numbers:</b> <code>+ - * /</code> and <code>random 100</code>.</li></ul>`],
+ ['vars','📦 Variables & your own commands',`<p>Use a <b>variable</b> to remember a number:</p><pre style="background:#11161c;color:#e6f0e6;padding:10px;border-radius:8px;">make "size 50
+repeat 5 [ fd :size  rt 72 ]</pre><p><code>make "size 50</code> puts 50 in a box called <i>size</i>; <code>:size</code> uses it.</p><h3>Teach the turtle a new command</h3><pre style="background:#11161c;color:#e6f0e6;padding:10px;border-radius:8px;">to square :n
+  repeat 4 [ fd :n rt 90 ]
+end
+
+square 60
+square 100</pre><p>Now <code>square 60</code> draws a small square and <code>square 100</code> a big one. Use <code>stop</code> to leave a command early.</p>`],
+ ['play','💾 Save & Share',`<h3>Run it</h3><p>Press <b>▶️ Run</b> to draw and <b>⏹️ Stop</b> to stop. If something's wrong, the message at the top tells you what to fix.</p><h3>Save &amp; share</h3><ul><li><b>💾 Save</b> keeps your project (and auto-saves a draft); sign in to <b>save online</b> and open it anywhere.</li><li><b>🔗 Share</b> gives a short link to your exact picture.</li></ul>`],
+ ['cloud','☁️ Cloud',_cloudHelp]
+];
+function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
 let helpTab='start';
 function openHelp(){const T=helpTabs();buildHelpTabs();selHelpTab(T[0][0]);document.getElementById('help-modal').classList.remove('hide');}
 function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';helpTabs().forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
@@ -5238,14 +5519,17 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>CodeJump is a browser-based game maker for primary children, part of <b>Primary Coding League CIC</b>. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
   <h3>The four modes</h3>
   <ul><li><b>🏗️ Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶️ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b>🎨 Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
-  <h3>🎭 Two project types: Platformer &amp; Stage</h3>
-  <p>When pupils start a new project they first choose a <b>type</b>: 🏃 <b>Platformer</b> (the grid game above) or 🎭 <b>Stage</b> — a Scratch-style world of <b>characters (sprites)</b> on a stage, programmed with blocks and run with the 🟢 <b>Go</b> button. The Stage adapts to the key stage:</p>
+  <h3>🎭 Three project types: Platformer, Stage &amp; Turtle</h3>
+  <p>When pupils start a new project they first choose a <b>type</b>: 🏃 <b>Platformer</b> (the grid game above), 🎭 <b>Stage</b> — a Scratch-style world of <b>characters (sprites)</b> on a stage — or 🐢 <b>Turtle</b> (see below). The Stage adapts to the key stage:</p>
   <ul>
     <li><b>Key Stage 1 — ScratchJr-style:</b> big <b>picture blocks</b> that snap together left-to-right (no reading needed), in colour-coded groups (Start, Move, Looks, Sound, Control, End). Pupils pick a character, tap blocks to build a program, and press 🟢 Go. It includes a 🔁 <b>repeat loop</b> (blocks go <i>inside</i> it), 📨 colour-coded <b>messages</b> between characters, a 🐢🚶🐇 <b>set-speed</b> block, 🎤 <b>record-your-own-sounds</b>, up to <b>4 📄 pages</b> (scenes) with a <b>go-to-page</b> block, <b>drag-to-reorder</b>, <b>read-aloud</b> on tap, a full <b>character painter</b>, ✨ ready-made <b>Ideas</b>, and 🎯 step-by-step <b>Missions</b> that guide pupils block-by-block.</li>
     <li><b>Key Stage 2 &amp; 3 — full Scratch-style blocks:</b> Motion, Looks, Sound, Events, Control, Sensing, Operators, Variables, Lists, Pen and Score — close to the whole Scratch palette, with multiple sprites, costumes, painted backdrops, broadcasts, clones and a live interpreter. (Stage uses these blocks at KS3 too, rather than Python — Python is for Platformer KS3.)</li>
     <li><b>📟 micro:bit (Key Stage 2 &amp; 3):</b> give a character the micro:bit costume for an on-screen, fully interactive micro:bit emulator — a 5×5 LED display, clickable A/B buttons, shake &amp; gestures, a sensor panel (light, temperature, compass, sound, tilt), music, and radio so two or more micro:bit sprites can message each other. No hardware needed.</li>
   </ul>
   <p>Hover (or tap-and-hold) any Stage block for a plain-English description, in every key stage. The <b>❓ Help</b> guide automatically shows pages matched to the project type and key stage.</p>
+  <h3>🐢 Turtle (Logo)</h3>
+  <p>The 🐢 <b>Turtle</b> project is a text <b>Logo</b> playground (like the classic turtle-graphics languages): pupils type commands on the left and a turtle draws on the right. Press ▶️ <b>Run</b> to draw, ⏹️ <b>Stop</b> / 🧹 <b>Clear</b> to start over, and use the <b>🐢 Speed</b> slider to watch the turtle move slowly or draw instantly. Built-in 📖 <b>Commands</b> and ✨ <b>Examples</b> buttons get pupils started.</p>
+  <p>It supports movement (<code>fd/forward</code>, <code>bk/back</code>, <code>rt/right</code>, <code>lt/left</code>, <code>setxy</code>, <code>seth</code>, <code>home</code>), pen control (<code>pu/pd</code>, <code>setpensize</code>, <code>setpencolor</code>, <code>setbg</code>), <code>repeat</code> loops, <code>if</code>/<code>ifelse</code>, variables (<code>make "x …</code> and <code>:x</code>), arithmetic and <code>random</code>, and pupils can teach the turtle <b>their own commands</b> with <code>to NAME … end</code> — a great bridge from blocks to typed code, and ideal for maths links (angles, repetition, polygons). It works at any key stage, but typing suits <b>Key Stage 2 upward</b> best.</p>
   <h3>Key Stage 1 vs Key Stage 2</h3>
   <p>Pupils choose a key stage when starting a new game — it sets which blocks they see:</p>
   <ul><li><b>Key Stage 1</b> — designed for ages 5–7: a trimmed, friendly block set (When… / Move / Enemies / Win / Sound) with bigger blocks &amp; palette, a <b>🔊 Read aloud</b> button that speaks blocks, signs and messages for early readers, a gentle “Let’s make a game!” guided activity, and a one-tap starter game.</li><li><b>Key Stage 2</b> — everything above, <i>plus</i> real block-coding: Events, Actions, Logic, Loops, Maths, Variables and Functions, which the game runs live (with safety limits). Plus keys &amp; locked doors.</li><li><b>Key Stage 3</b> — swaps the blocks for a <b>text editor</b> where pupils write a safe <b>Python-style language</b> (see below). All the KS2 building blocks are still available.</li></ul>
@@ -5519,7 +5803,9 @@ canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellF
 // MODE SWITCH
 // ═══════════════════════════════════════════════════════════════════════
 function switchMode(m){
-  // Stage projects use the unified Scratch-style view, not Build/Play/Code modes.
+  // Turtle & Stage projects use their own unified views, not Build/Play/Code modes.
+  if(projectType==='turtle'){enterTurtleUI();return;}
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(projectType==='stage'){enterStageUI();return;}
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   if(m==='play'&&!validate())return;
@@ -5571,11 +5857,12 @@ function openSaveChooser(){document.getElementById('cloud-modal').classList.remo
 function buildPayload(){
   commitLevel();
   if(projectType==='stage'&&typeof stageSaveCurrent==='function'){stageSaveCurrent();stageSyncVars();} // flush the on-screen sprite's edits + variable names into stageState
+  if(projectType==='turtle'){const _tta=document.getElementById('turtle-code');if(_tta)turtleCode=_tta.value;} // flush the editor into the saved code
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
-  return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
+  return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -5614,12 +5901,15 @@ function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;} // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
-  projectType=(d.projectType==='stage')?'stage':'platformer'; // legacy payloads (no field) are always platformer
-  if(projectType==='stage'){stagePlaying=false;stageState=sanitizeStage(d.stage);
+  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':'platformer'; // legacy payloads (no field) are always platformer
+  if(projectType==='turtle'){
+    turtleCode=(d.turtle&&typeof d.turtle.code==='string')?d.turtle.code.slice(0,20000):TURTLE_DEFAULT;
+    if(typeof enterTurtleUI==='function')enterTurtleUI(); // loaded a turtle project → show the playground
+  }else if(projectType==='stage'){if(typeof exitTurtleUI==='function')exitTurtleUI();stagePlaying=false;stageState=sanitizeStage(d.stage);
     stageSel=collabActive?Math.max(0,Math.min(stageSel,stageState.sprites.length-1)):0; // keep your selected sprite during live collab
     if(!collabActive){stVars={};stVarShown={};stLists={};stListShown={};}
     if(!collabActive&&typeof enterStageUI==='function')enterStageUI(); // loaded a stage project → show the unified view
-  }else if(typeof exitStageUI==='function')exitStageUI();
+  }else{if(typeof exitTurtleUI==='function')exitTurtleUI();if(typeof exitStageUI==='function')exitStageUI();}
   COLS=(d.cols>=20&&d.cols<=80)?(d.cols|0):20;ROWS=(d.rows>=12&&d.rows<=40)?(d.rows|0):12; // set size BEFORE cleaning levels
   ks3Code=(typeof d.ks3Code==='string')?d.ks3Code:(d.keyStage==='ks3'?KS3_DEFAULT:'');
   if(d.customSprites&&typeof d.customSprites==='object')Object.assign(customSprites,d.customSprites);
@@ -5722,9 +6012,9 @@ function importFromFile(file){
 }
 // — Wire up the share modal —
 function openShareModal(){
-  if(projectType!=='stage'&&!validate())return; // platformer needs start + goal; Stage can always share
+  if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none';
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='turtle'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Turtle has no live collaboration
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -6667,6 +6957,7 @@ function loop(){
   if(!document.getElementById('design-modal').classList.contains('hide'))return;
   if(!document.getElementById('share-modal').classList.contains('hide'))return;
   gemA+=0.07;goalA+=0.055;tick++;
+  if(projectType==='turtle'){turtleFrame();return;} // turtle playground renders + steps its own interpreter
   if(projectType==='stage'){if(stagePlaying)stageFrame();drawStage();return;} // unified Stage view: always render, run only when 🟢 Go is on
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
@@ -6736,10 +7027,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.08.06';
+const CJ_VERSION='2026.08.07';
 const CJ_WHATSNEW=[
-  "👀 NEW: when you build a 🎭 Stage project together, you can now see each other's mouse pointers move around — with everyone's name on a coloured arrow — so you always know where your partner is working.",
-  "🪪 Fixed: teacher login cards now print with all the details filled in (they were coming out blank)."
+  "🐢 BRAND NEW: Turtle! Pick the 🐢 Turtle project to type Logo code (fd 100, rt 90, repeat, even your own commands) and watch a turtle draw pictures. Tap 📖 Commands and ✨ Examples to get going.",
+  "👀 When you build a 🎭 Stage project together, you can now see each other's mouse pointers — with names on coloured arrows — so you always know where your partner is working.",
+  "💾 Fixed: saving 🎭 Stage and 🐢 Turtle projects to your device now keeps everything. 🪪 Teacher login cards print properly too."
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

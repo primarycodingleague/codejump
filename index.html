@@ -448,6 +448,31 @@ body.stage-mode #cwrap{display:flex;flex-direction:row;align-items:stretch;justi
 body.stage-mode #code-panel{display:flex !important;position:relative;inset:auto;width:auto;height:auto;flex:1 1 auto;min-width:0;min-height:0;border-radius:10px;overflow:hidden;}
 body.stage-mode #stage-right{display:flex;flex-direction:column;width:420px;min-width:0;gap:10px;}
 body.ks1-mode #code-panel,body.ks1-mode #stage-right,body.ks1-mode #cwrap{display:none !important;} /* KS1 uses its own ScratchJr UI, not the Blockly code panel */
+/* ── 3D (Babylon) build space — Blockly on the left, a 3D viewport on the right ── */
+.threed-only{display:none;}
+body.threed-mode .threed-only{display:inline-block;}
+#threed-right{display:none;}
+body.threed-mode #btn-build,body.threed-mode #btn-play,body.threed-mode #btn-code,
+body.threed-mode #t-paint,body.threed-mode #t-fill,body.threed-mode #t-erase,body.threed-mode #t-undo,
+body.threed-mode #t-redo,body.threed-mode #t-clear,body.threed-mode #t-testpage,body.threed-mode #theme-sel,
+body.threed-mode #btn-design,body.threed-mode #btn-read,body.threed-mode #btn-help,body.threed-mode #palette,body.threed-mode #pages,
+body.threed-mode #play-mute,body.threed-mode #play-sfx,body.threed-mode #hint,body.threed-mode #touch-controls,
+body.threed-mode .cp-run-bar,body.threed-mode #ks3-editor,body.threed-mode #stage-right,body.threed-mode #turtle-ui,body.threed-mode #gc{display:none !important;}
+body.threed-mode #cwrap{display:flex;flex-direction:row;align-items:stretch;gap:10px;padding:10px;background:#1e1e1e;}
+body.threed-mode #code-panel{display:flex !important;position:relative;inset:auto;width:auto;height:auto;flex:1 1 auto;min-width:0;min-height:0;border-radius:10px;overflow:hidden;}
+body.threed-mode #threed-right{display:flex;flex-direction:column;width:46%;min-width:0;gap:8px;}
+#threed-canvas-holder{flex:1 1 auto;border-radius:10px;overflow:hidden;border:2px solid var(--gray);background:#87ceeb;min-height:0;position:relative;}
+#threed-canvas{width:100%;height:100%;display:block;outline:none;touch-action:none;}
+#threed-hint{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.45);color:#fff;font:600 11px var(--font);padding:4px 8px;border-radius:8px;pointer-events:none;}
+#threed-pad{position:absolute;inset:0;pointer-events:none;}
+#threed-pad.hide{display:none !important;}
+#threed-pad .tdp-dpad{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;}
+#threed-pad .tdp-mid{display:flex;gap:34px;}
+#threed-pad button{pointer-events:auto;width:44px;height:44px;border-radius:10px;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:17px;font-weight:800;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;}
+#threed-pad button:active{background:var(--gold);color:#000;}
+#threed-pad .tdp-jump{position:absolute;right:14px;bottom:24px;width:64px;height:64px;border-radius:50%;font-size:13px;}
+#btn-3drun.active{background:#3fae5e;color:#fff;border-color:#3fae5e;}
+@media(max-width:820px){body.threed-mode #cwrap{flex-direction:column;}body.threed-mode #threed-right{width:100%;min-height:300px;}body.threed-mode #code-panel{min-height:300px;}}
 @media(max-width:1100px){body.stage-mode #stage-right{width:360px;}}
 @media(max-width:900px){body.stage-mode #stage-right{width:300px;}}
 /* Narrow / portrait tablets & phones: stack the stage on top, blocks fill the rest */
@@ -1041,6 +1066,20 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
     z-index:65;background:var(--gold);color:#000;font-family:var(--font);font-weight:700;font-size:12px;
     padding:7px 14px;border-radius:20px;box-shadow:0 3px 10px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap;}
 }
+/* ── M9: make the PLATFORMER editor usable in iPad-portrait (not just nag to rotate) ── */
+@media(max-width:820px){
+  #toolbar{padding:4px 8px;gap:4px;min-height:46px;}
+  #toolbar .mode-btn{padding:5px 9px;font-size:11px;}
+  #toolbar .tbtn{padding:4px 7px;font-size:10px;}
+  #toolbar .app-title{height:32px;}
+  #palette{width:84px;min-width:84px;}
+  body.is-touch #palette{width:96px;min-width:96px;}
+}
+/* ── L8: bigger, easier tap targets on small delete/icon chips ── */
+.save-del-btn,.ks1-bdel,.ks1-pdel,.ks1-sdel{min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;}
+/* ── M12: visible keyboard focus everywhere (was missing) ── */
+button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:focus-visible,.pal-item:focus-visible,[tabindex]:focus-visible{outline:3px solid #9cd2ff;outline-offset:2px;border-radius:4px;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
 </style>
 </head>
 <body>
@@ -1213,6 +1252,7 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
   <symbol id="i-flower" viewBox="0 0 24 24"><g fill="#ec5fa0"><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/></g><circle cx="12" cy="12" r="3" fill="#ffd24a"/></symbol>
   <symbol id="i-bush" viewBox="0 0 24 24"><circle cx="8" cy="14" r="5" fill="#3b6d11"/><circle cx="16" cy="13" r="5.5" fill="#4e8a1a"/><circle cx="12" cy="16" r="5" fill="#639922"/></symbol>
   <symbol id="i-player" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2" fill="#f0b97a"/><rect x="8" y="11" width="8" height="9" rx="3" fill="#3b8eea"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5 3.5 16.7V7.3z" fill="#7f77dd"/><path d="M3.7 7.2L12 12l8.3-4.8M12 12v9.3" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M12 2.5L3.5 7.3 12 12l8.5-4.7z" fill="#a59bf0"/></symbol>
   <symbol id="i-key2" viewBox="0 0 24 24"><circle cx="8" cy="9" r="4.5" fill="none" stroke="#ffd24a" stroke-width="2.4"/><path d="M11 12l8 8M16.5 17.5l2-2M19.5 20.5l1.5-1.5" stroke="#ffd24a" stroke-width="2.4" stroke-linecap="round"/></symbol>
 </svg>
 <div id="home">
@@ -1549,7 +1589,8 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
     <div class="ks-opts">
       <button class="ks-opt" data-pt="platformer"><span class="ks-emoji"><svg class="ic"><use href="#i-runner"></use></svg></span><b>Platformer</b><small>Build a level on a grid<br>and jump through it</small></button>
       <button class="ks-opt" data-pt="stage"><span class="ks-emoji"><svg class="ic"><use href="#i-stage"></use></svg></span><b>Stage</b><small>Sprites on a stage<br>(like Scratch)</small></button>
-      <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle</b><small>Type Logo code to<br>draw pictures — NEW!</small></button>
+      <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle</b><small>Type Logo code to<br>draw pictures</small></button>
+      <button class="ks-opt" data-pt="3d"><span class="ks-emoji"><svg class="ic"><use href="#i-cube"></use></svg></span><b>3D World</b><small>Build a 3D scene<br>with blocks — NEW!</small></button>
     </div>
     <button class="ks-cancel" id="pt-cancel">Back</button>
   </div>
@@ -1639,6 +1680,8 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
     <button class="mode-btn stage-only" id="btn-stopall" title="Stop"><svg class="ic"><use href="#i-stop"></use></svg> Stop</button>
     <button class="mode-btn stage-only" id="btn-backdrops" title="Stage backdrops"><svg class="ic"><use href="#i-image"></use></svg> Backdrops</button>
     <button class="mode-btn stage-only" id="btn-mbsend" title="Send your program to a real micro:bit over USB"><svg class="ic"><use href="#i-plug"></use></svg> micro:bit</button>
+    <button class="mode-btn threed-only" id="btn-3drun" title="Run your 3D scene"><svg class="ic"><use href="#i-play"></use></svg> Run</button>
+    <button class="mode-btn threed-only" id="btn-3dstop" title="Stop"><svg class="ic"><use href="#i-stop"></use></svg> Stop</button>
     <div class="sep"></div>
     <button class="tbtn active" id="t-paint"><svg class="ic"><use href="#i-brush"></use></svg> Paint</button>
     <button class="tbtn"        id="t-fill"><svg class="ic"><use href="#i-bucket"></use></svg> Fill Row</button>
@@ -1709,6 +1752,14 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
         <div id="turtle-right">
           <div id="turtle-canvas-holder"><canvas id="turtle-canvas" width="600" height="600"></canvas></div>
           <div id="turtle-speed-row"><span><svg class="ic"><use href="#i-turtle"></use></svg> Speed</span><input type="range" id="turtle-speed" min="1" max="10" value="6"><span id="turtle-speed-val">6</span></div>
+        </div>
+      </div>
+      <div id="threed-right">
+        <div id="threed-canvas-holder"><canvas id="threed-canvas" touch-action="none"></canvas><div id="threed-hint">Tap a shape to move it · drag empty space to look around · scroll to zoom</div>
+          <div id="threed-pad" class="hide">
+            <div class="tdp-dpad"><button data-k="arrowup">▲</button><div class="tdp-mid"><button data-k="arrowleft">◀</button><button data-k="arrowright">▶</button></div><button data-k="arrowdown">▼</button></div>
+            <button class="tdp-jump" data-k="space">Jump</button>
+          </div>
         </div>
       </div>
  <button id="play-mute" title="Music on / off" aria-label="Toggle music"></button>
@@ -1873,6 +1924,7 @@ const GRID_SIZES={standard:{c:20,r:12,label:'Standard — 20×12'},wide:{c:36,r:
 function setGridSize(name){const s=GRID_SIZES[name]||GRID_SIZES.standard;COLS=s.c;ROWS=s.r;}
 const GRID_PX=16,PPX=3;
 const T={EMPTY:0,PLATFORM:1,GRASS:2,GEM:3,STAR:4,SPIKE:5,ENEMY:6,START:7,GOAL:8,CLOUD:9,LADDER:10,MOVER:11,BOUNCE:12,ENEMY2:13,DOOR:14,KEY:15,CHECKPOINT:16,ONEWAY:17,LAVA:18,TREE:19,FLOWER:20,BUSH:21,SIGN:22,CONVEYOR_L:23,CONVEYOR_R:24,CRUMBLE:25,WATER_TOP:26,WATER:27,CHEST:28,TELEPORT:29,BUTTON:30,GATE:31};
+const T_MAX=Math.max.apply(null,Object.keys(T).map(k=>T[k])); // highest valid tile id — keep sanitizeGrid in sync so new tiles aren't silently wiped on load
 const KEY_COLORS={red:'#e53935',blue:'#4a90d9',green:'#43a047',yellow:'#fdd835'};
 const KEY_NAMES={red:'Red',blue:'Blue',green:'Green',yellow:'Yellow'};
 const TILE_GROUPS=[['build',' Blocks'],['hazard',' Hazards'],['water',' Water'],['item',' Pickups'],['marker',' Markers'],['decor',' Decorations']];
@@ -1934,8 +1986,8 @@ const TOOL_DESC={
   't-erase':'Erase — click blocks to remove them.',
   't-undo':'Undo your last change.','t-redo':'Redo a change you undid.',
   't-clear':'Clear this whole page.','t-testpage':'Test just the page you’re building.',
-  't-save':'Save your game so you can come back to it later.',
-  't-share':'Share — copy a link, download a playable file, or save a level file.',
+  't-save':'Save your game to keep it. Signed in? You can also hand it in to a class. (Stays in your account/this device.)',
+  't-share':'Share a copy: copy a link to send to someone, or download your game as a file. (Doesn’t hand it in to a teacher.)',
   'theme-sel':'Theme — change the look of this page (Forest, Space, Underwater).',
   't-mute':'Turn the music on or off.','t-hand':'Switch the on-screen controls to left or right hand.',
   'btn-design':'DESIGN — draw your own pictures for the player, blocks, keys and background.',
@@ -1983,7 +2035,7 @@ function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPa
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
 function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote){if(projectType!=='stage')collabSnapshotSoon();else if(keyStage==='ks1'&&typeof collabSnapshotSoon==='function')collabSnapshotSoon();}} // platformer + KS1 Stage sync via snapshots (KS1 data is small); KS2/3 Stage uses granular ops
 function clearDirty(){dirty=false;}
-function autoSaveDraft(){if(!dirty)return;try{commitLevel();localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload()}));}catch(e){}}
+function autoSaveDraft(){if(!dirty)return;try{commitLevel();const link={save:curSaveId,cloud:(typeof cloudProjectId!=='undefined'?cloudProjectId:null),title:(typeof cloudProjectTitle!=='undefined'?cloudProjectTitle:''),cls:(typeof cloudProjectClass!=='undefined'?cloudProjectClass:null)};localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload(),link}));}catch(e){}}
 setInterval(autoSaveDraft,15000);
 window.addEventListener('beforeunload',e=>{if(dirty){autoSaveDraft();e.preventDefault();e.returnValue='';}});
 function gotoLevel(i){if(i<0||i>=LEVELS.length||i===curLevel){return;}commitLevel();curLevel=i;activateLevel(i);history=[];future=[];renderPagesStrip();}
@@ -2008,7 +2060,7 @@ function renderPagesStrip(){
     acts.appendChild(mkBtn('▲','Move page up',()=>moveLevel(i,-1),i===0));
     acts.appendChild(mkBtn('▼','Move page down',()=>moveLevel(i,1),i===LEVELS.length-1));
     acts.appendChild(mkBtn('⧉','Duplicate page',()=>dupLevel(i)));
-    if(LEVELS.length>1)acts.appendChild(mkBtn('×','Delete this page',()=>{if(confirm('Delete page '+(i+1)+'?'))deleteLevel(i);}));
+    if(LEVELS.length>1)acts.appendChild(mkBtn('×','Delete this page',async()=>{if(await cjConfirm('Delete page '+(i+1)+'?',{title:'Delete page',danger:true,okLabel:'Delete'}))deleteLevel(i);}));
     cell.appendChild(acts);
     wrap.appendChild(cell);
   });
@@ -2051,6 +2103,7 @@ let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks 
 let projectType='platformer'; // 'platformer' = the grid game (default, all existing work) · 'stage' = sprite/stage projects (Scratch-style). The seam every future engine plugs into.
 let OHBOT_ON=false; // Ohbot extension HIDDEN in public builds (pending Ohbot's blessing/assets). Flip to true to re-enable the Ohbot category + costume. All Ohbot code stays in place.
 let MICROBIT_ON=true; // micro:bit emulator extension (native, clean-room). Flip to false to hide the micro:bit category + costume. Clean-room reimplementation of documented behaviour only.
+let THREED_ON=false;  // 3D World (Babylon.js) project type — PROTOTYPE, parked. Flip to true to show the 3D option in the project chooser.
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
 function isKS3(){return keyStage==='ks3';}
 function setKeyStage(ks){keyStage=(ks==='ks1'||ks==='ks3')?ks:'ks2';if(keyStage==='ks1'&&(selTile===T.KEY||selTile===T.ENEMY2||selTile===T.TELEPORT||selTile===T.BUTTON||selTile===T.GATE))selTile=T.PLATFORM;if(typeof buildPalette==='function')buildPalette();if(blocklyWorkspace){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}document.body.classList.toggle('ks1mode',keyStage==='ks1');if(typeof updateCodeModeUI==='function')updateCodeModeUI();if(typeof updateReadBtn==='function')updateReadBtn();}
@@ -2081,23 +2134,38 @@ function th(){return THEMES[theme];}
 // SAVE SYSTEM (multiple slots)
 // ═══════════════════════════════════════════════════════════════════════
 function getSaves(){try{return JSON.parse(localStorage.getItem('bap_saves')||'[]');}catch(e){return[];}}
-function setSaves(s){localStorage.setItem('bap_saves',JSON.stringify(s));}
+function setSaves(s){try{localStorage.setItem('bap_saves',JSON.stringify(s));return true;}catch(e){return false;}} // false = storage full / quota
+let curSaveId=null; // the device-save slot currently being edited (so Save overwrites instead of duplicating)
 
-function saveCurrentLevel(){
-  const name=prompt('Give your game a name:','My Game');
-  if(name===null)return;
+async function saveCurrentLevel(){
+  let saves=getSaves();
+  const existing=curSaveId?saves.find(s=>String(s.id)===String(curSaveId)):null;
+  let name;
+  if(existing){name=existing.name||'My Game';} // overwriting the game you're editing — keep its name
+  else{name=await cjPrompt('Give your game a name:','My Game',{title:'Save game'});if(name===null)return;}
   // buildPayload captures EVERYTHING for the current project type (platformer levels, Stage sprites, Turtle code).
   const save=buildPayload();
-  save.id=Date.now().toString();save.name=name||'My Game';save.date=new Date().toLocaleDateString('en-GB');
-  const saves=getSaves();saves.unshift(save);
-  setSaves(saves.slice(0,12));clearDirty();
+  save.name=name||'My Game';save.date=new Date().toLocaleDateString('en-GB');
+  let droppedOldest=false;
+  if(existing){save.id=existing.id;saves=saves.map(s=>String(s.id)===String(existing.id)?save:s);}
+  else{save.id=Date.now().toString();curSaveId=save.id;saves.unshift(save);if(saves.length>12)droppedOldest=true;}
+  const ok=setSaves(saves.slice(0,12));
+  if(!ok){ // storage full — don't pretend it saved; the previous save (if any) is still on disk
+    if(!existing)curSaveId=null;
+    toast('Couldn’t save — this device’s storage is full. Try saving to the Cloud, or delete some old games.','#ef4444');
+    return;
+  }
+  clearDirty();
   const np=(save.levels&&save.levels.length)||1;
- toast((projectType==='platformer'&&np>1)?('Game saved ('+np+' pages)! '):'Game saved! ','#10b981');
+  let msg=existing?'Game saved! ':((projectType==='platformer'&&np>1)?('Game saved ('+np+' pages)! '):'Game saved! ');
+  if(droppedOldest)msg+=' (your oldest game was removed to make room)';
+ toast(msg,'#10b981');
 }
 
 function loadSaveData(save){clearDirty();
   // The save IS a full payload (from buildPayload), so apply it directly — this carries projectType/stage/turtle too.
   applyPayload(save);
+  curSaveId=save.id||null; // link to this slot so the next Save overwrites it (applyPayload cleared it)
   const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;
   readBlocklyConfig();
 }
@@ -2118,6 +2186,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 // HOME SCREEN
 // ═══════════════════════════════════════════════════════════════════════
 function showHome(){
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.getElementById('home').classList.remove('hide');
@@ -2132,7 +2201,10 @@ function hideHome(){
 }
 function getDraft(){try{return JSON.parse(localStorage.getItem('bap_autosave')||'null');}catch(e){return null;}}
 function updateResumePill(){const el=document.getElementById('resume-pill');if(!el)return;el.classList.toggle('hide',!getDraft());}
-document.getElementById('resume-pill').onclick=()=>{const d=getDraft();if(!d||!d.payload)return;applyPayload(d.payload);if(window._pendingXml&&!blocklyWorkspace){/* xml applied when code opens */}document.getElementById('resume-pill').classList.add('hide');hideHome();switchMode('build');markDirty();toast('Draft restored','#10b981');};
+document.getElementById('resume-pill').onclick=()=>{const d=getDraft();if(!d||!d.payload)return;applyPayload(d.payload);
+  // re-link the draft to whatever slot it came from, so Save overwrites instead of duplicating
+  if(d.link){curSaveId=d.link.save||null;if(typeof cloudProjectId!=='undefined'){cloudProjectId=d.link.cloud||null;cloudProjectTitle=d.link.title||'';cloudProjectClass=d.link.cls||null;}}
+  if(window._pendingXml&&!blocklyWorkspace){/* xml applied when code opens */}document.getElementById('resume-pill').classList.add('hide');hideHome();switchMode('build');markDirty();toast('Draft restored','#10b981');};
 
 function renderHomeSaves(){
   const cont=document.getElementById('home-saves');
@@ -2143,7 +2215,8 @@ function renderHomeSaves(){
     const item=document.createElement('div');item.className='save-item';
     const thumbCanvas=document.createElement('canvas');
     thumbCanvas.className='save-thumb';thumbCanvas.width=80;thumbCanvas.height=48;
-    drawMiniThumb(thumbCanvas,save.grid,save.theme);
+    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
+    else drawMiniThumb(thumbCanvas,save.grid,save.theme);
     const info=document.createElement('div');info.className='save-info';
     const nm=document.createElement('div');nm.className='save-name';nm.textContent=save.name||'';
     const dt=document.createElement('div');dt.className='save-date';dt.textContent=save.date||'';
@@ -2151,7 +2224,7 @@ function renderHomeSaves(){
     const btn=document.createElement('button');btn.className='save-load-btn';btn.textContent='Load ▶';
     btn.onclick=e=>{e.stopPropagation();loadSaveData(save);hideHome();switchMode('build');};
  const del=document.createElement('button');del.className='save-del-btn';del.innerHTML=ksvg('i-trash');del.title='Delete this saved game';
-    del.onclick=e=>{e.stopPropagation();if(!confirm('Delete “'+(save.name||'this game')+'” from this device? This can’t be undone.'))return;const saves=getSaves().filter((s,k)=>!((s.id&&save.id)?String(s.id)===String(save.id):s===save));setSaves(saves);renderHomeSaves();toast('Deleted','#585555');};
+    del.onclick=async e=>{e.stopPropagation();if(!await cjConfirm('Delete “'+(save.name||'this game')+'” from this device? This can’t be undone.',{title:'Delete game',danger:true,okLabel:'Delete'}))return;const saves=getSaves().filter((s,k)=>!((s.id&&save.id)?String(s.id)===String(save.id):s===save));setSaves(saves);renderHomeSaves();toast('Deleted','#585555');};
     item.appendChild(thumbCanvas);item.appendChild(info);item.appendChild(btn);item.appendChild(del);
     item.onclick=()=>{loadSaveData(save);hideHome();switchMode('build');};
     cont.appendChild(item);
@@ -2201,19 +2274,22 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   _pendingKs=b.dataset.ks;const szEl=document.getElementById('ks-size');_pendingSize=(_pendingKs==='ks1')?'standard':(szEl?szEl.value:'standard');
   document.getElementById('ks-modal').classList.add('hide');
   const ttOpt=document.querySelector('#pt-modal .ks-opt[data-pt="turtle"]');if(ttOpt)ttOpt.style.display=(_pendingKs==='ks1')?'none':''; // Turtle (typed Logo) is KS2+ only
+  const tdOpt=document.querySelector('#pt-modal .ks-opt[data-pt="3d"]');if(tdOpt)tdOpt.style.display=(_pendingKs==='ks1'||!THREED_ON)?'none':''; // 3D is KS2+ only, behind the THREED_ON flag
   document.getElementById('pt-modal').classList.remove('hide');
 });
 document.getElementById('pt-cancel').onclick=()=>{document.getElementById('pt-modal').classList.add('hide');document.getElementById('ks-modal').classList.remove('hide');};
-document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=()=>{
+document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
+  if(dirty){autoSaveDraft();if(!await cjConfirm('Start a new project? Your current game is saved as a draft you can resume from the home screen.',{title:'Start fresh?',okLabel:'Start new',cancelLabel:'Stay'}))return;}
   document.getElementById('pt-modal').classList.add('hide');
   if(b.dataset.pt==='stage')startNewStage(_pendingKs);
   else if(b.dataset.pt==='turtle')startNewTurtle(_pendingKs);
+  else if(b.dataset.pt==='3d')startNew3D(_pendingKs);
   else startNewProject(_pendingKs);
 });
 function startNewProject(ks){clearDirty();projectType='platformer';
   setKeyStage(ks);
   const szEl=document.getElementById('ks-size');setGridSize((ks==='ks1')?'standard':(szEl?szEl.value:'standard'));
-  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   ks3Code=(ks==='ks3')?KS3_DEFAULT:'';
   grid=mkGrid();waterGrid=mkGrid();theme='forest';customBg={top:null,bottom:null,art:null};
   customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
@@ -2233,6 +2309,7 @@ function startNewProject(ks){clearDirty();projectType='platformer';
 // ═══════════════════════════════════════════════════════════════════════
 let stageState=null;       // {sprites:[...]} — the whole stage document
 let stagePlaying=false;    // true while the green flag is "running"
+let stageNeedsDraw=true;   // when idle, only redraw the stage canvas on demand (perf on cheap devices)
 let stageSel=0;            // index of the sprite whose scripts are in the Blockly workspace
 const SPRITE_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a'];
 function emptyStageXml(){return'<xml xmlns="https://developers.google.com/blockly/xml"></xml>';}
@@ -2276,13 +2353,14 @@ function sanitizeBackdrop(b){if(!b||typeof b!=='object')return null;const name=(
   return{name,color:safeColor(b.color)||'#bfe3ff'};}
 function startNewStage(ks){clearDirty();projectType='stage';
   setKeyStage(ks);
-  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
   stageNew();hideHome();enterStageUI();
 }
 
 // ── Unified Scratch-style Stage view (no separate Build/Play/Code modes) ──
 function enterStageUI(){
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
   document.body.classList.remove('ks1-mode'); // coming from KS1? drop its mode + hide its UI
@@ -2362,13 +2440,13 @@ const TURTLE_COMMANDS=[
   {g:'Pen',items:[['pd / pendown','start drawing'],['pu / penup','lift the pen (move without drawing)'],['setpensize 5','make the line thicker'],['setpencolor "red','set the colour (a name, or 0–15)'],['setpencolor [255 0 0]','set the colour with red green blue'],['setbg "yellow','colour the background']]},
   {g:'Screen & turtle',items:[['cs / clearscreen','wipe everything and go home'],['clean','wipe drawings but stay put'],['ht / hideturtle','hide the turtle'],['st / showturtle','show the turtle']]},
   {g:'Repeat & choices',items:[['repeat 4 [ ... ]','do the bracket part 4 times'],['repcount','which time round the repeat is on'],['if :x > 5 [ ... ]','do it only if true'],['ifelse :x > 5 [ ... ] [ ... ]','one thing or the other'],['wait 30','pause for a moment']]},
-  {g:'Numbers',items:[['+  -  *  /','add, take away, times, divide'],['random 100','a surprise number 0–99'],['xcor / ycor / heading','where the turtle is / which way']]},
+  {g:'Numbers',items:[['+  -  *  /','add, take away, times, divide'],['random 100','a surprise number 0–99 (takes one number — use brackets like random (n*2))'],['xcor / ycor / heading','where the turtle is / which way']]},
   {g:'Variables',items:[['make "score 0','make a box called score holding 0'],[':score','use what is in the box']]},
   {g:'Your own commands',items:[['to NAME :a ... end','teach the turtle a new command'],['stop','leave the current command early']]},
 ];
 function startNewTurtle(ks){clearDirty();projectType='turtle';
   setKeyStage(ks);
-  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
   turtleCode='';hideHome();enterTurtleUI(); // start with a blank coding area
 }
@@ -2380,6 +2458,7 @@ function turtleInit(){
 function turtleResetState(){turtle={x:0,y:0,h:0,pen:true,color:'#1565c0',size:3,show:true};}
 function turtleClearDrawing(){if(turtleDrawCtx)turtleDrawCtx.clearRect(0,0,TW,TH);turtleBg='#ffffff';}
 function enterTurtleUI(){
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');
   document.getElementById('app').classList.remove('hide');
@@ -2398,6 +2477,380 @@ function exitTurtleUI(){
   if(!document.body.classList.contains('turtle-mode'))return;
   turtleStop();
   document.body.classList.remove('turtle-mode');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// 3D WORLD (Babylon.js) — block-based 3D scenes (Flock-style). PROTOTYPE.
+// projectType==='3d'. Babylon is lazy-loaded from a CDN only when you open a
+// 3D project (so the rest of the app stays offline-capable). Reuses the
+// existing Blockly editor + a generator-fiber interpreter like Stage/Turtle.
+// ═══════════════════════════════════════════════════════════════════════
+let td3Engine=null,td3Scene=null,td3Cam=null,td3Sky=null,td3Shadow=null,td3Meshes={},td3Fibers=[],td3ClickHats=[],td3Running=false,_td3Bound=false,_td3BlocksDefined=false,_td3Loading=null;
+let td3Keys={},td3Follow=null,td3KeyHats=[],td3TouchHats=[],td3TouchState={},_td3KeyBound=false,td3Hemi=null,td3StartTime=0,td3Pipe=null,td3Gizmo=null,td3SelName=null,td3PrevT=0,_td3PrevBound=false;
+// ── lightweight physics: AABB-based gravity/resting/walls so we stay offline (no engine to load) ──
+function td3AABB(e){return e.root.getHierarchyBoundingVectors(true);}
+function td3Overlap(a,b){const A=td3AABB(a),B=td3AABB(b);return A.min.x<B.max.x&&A.max.x>B.min.x&&A.min.y<B.max.y&&A.max.y>B.min.y&&A.min.z<B.max.z&&A.max.z>B.min.z;}
+function td3Solids(){const s=[];for(const k in td3Meshes){const e=td3Meshes[k];if(e.solid||e.kind==='ground')s.push(e);}return s;}
+function td3RestY(e,solids){const a=td3AABB(e),bottomOff=e.root.position.y-a.min.y;let surf=0;for(const s of solids){if(s===e)continue;const b=td3AABB(s);if(a.min.x<b.max.x&&a.max.x>b.min.x&&a.min.z<b.max.z&&a.max.z>b.min.z){if(b.max.y<=a.min.y+0.35&&b.max.y>surf)surf=b.max.y;}}return surf+bottomOff;}
+function td3TryMove(e,dx,dz,solids){e.root.position.x+=dx;e.root.position.z+=dz;const a=td3AABB(e);for(const s of solids){if(s===e||s.kind==='ground')continue;const b=td3AABB(s);if(a.min.x<b.max.x&&a.max.x>b.min.x&&a.min.z<b.max.z&&a.max.z>b.min.z&&a.min.y<b.max.y-0.12&&a.max.y>b.min.y+0.12){e.root.position.x-=dx;e.root.position.z-=dz;return;}}}
+function td3Physics(){const solids=td3Solids();
+  for(const k in td3Meshes){const e=td3Meshes[k];if(!(e.dynamic||e.control))continue;
+    if(e.control){const sp=e.control.speed;let vx=0,vz=0;if(td3Keys['arrowup']||td3Keys['w'])vz-=sp;if(td3Keys['arrowdown']||td3Keys['s'])vz+=sp;if(td3Keys['arrowleft']||td3Keys['a'])vx-=sp;if(td3Keys['arrowright']||td3Keys['d'])vx+=sp;
+      if(vx)td3TryMove(e,vx,0,solids);if(vz)td3TryMove(e,0,vz,solids);if((vx||vz))e.root.rotation.y=Math.atan2(vx,vz);}
+    e.vy=(e.vy||0)-0.02;let ny=e.root.position.y+e.vy;const restY=td3RestY(e,solids);
+    if(ny<=restY){e.root.position.y=restY;e.vy=0;e.grounded=true;}else{e.root.position.y=ny;e.grounded=false;}
+    if(e.control&&e.grounded&&(td3Keys['space']||td3Keys[' '])){e.vy=0.34;e.grounded=false;}
+  }
+  // touch events (edge-triggered)
+  td3TouchHats.forEach((h,i)=>{const A=td3Meshes[h.getFieldValue('A')],B=td3Meshes[h.getFieldValue('B')];if(!A||!B){td3TouchState[i]=false;return;}const now=td3Overlap(A,B);if(now&&!td3TouchState[i])td3Fibers.push(td3RunSeq(h.getNextBlock()));td3TouchState[i]=now;});
+}
+function td3Animate(){for(const k in td3Meshes){const e=td3Meshes[k];const a=e.anim;if(!a)continue;a.t+=0.08;const r=e.root;
+  if(a.type==='spin')r.rotation.y+=0.045;
+  else if(a.type==='wobble')r.rotation.z=a.baseRZ+Math.sin(a.t)*0.25;
+  else if(a.type==='pulse'){const s=1+Math.sin(a.t)*0.12;r.scaling.set(s,s,s);}
+  else if(!e.dynamic&&!e.control){if(a.type==='bob')r.position.y=a.baseY+Math.sin(a.t)*0.18;else if(a.type==='bounce')r.position.y=a.baseY+Math.abs(Math.sin(a.t))*0.55;}
+}}
+function td3FireKey(k){td3KeyHats.forEach(h=>{if(h.getFieldValue('KEY')===k)td3Fibers.push(td3RunSeq(h.getNextBlock()));});}
+function td3ShowPad(on){const p=document.getElementById('threed-pad');if(p)p.classList.toggle('hide',!on);}
+function td3Lighten(hex,amt){try{const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255,m=v=>Math.round(v+(255-v)*amt);return 'rgb('+m(r)+','+m(g)+','+m(b)+')';}catch(e){return '#dff0ff';}}
+function td3SkyTex(){const dt=new BABYLON.DynamicTexture('skytex',{width:16,height:256},td3Scene,false);dt._top='#3b7fc4';td3PaintSky(dt,'#3b7fc4');return dt;}
+function td3PaintSky(dt,top){const c=dt.getContext();const g=c.createLinearGradient(0,0,0,256);g.addColorStop(0,top);g.addColorStop(0.55,td3Lighten(top,0.34));g.addColorStop(1,td3Lighten(top,0.62));c.fillStyle=g;c.fillRect(0,0,16,256);dt.update();dt._top=top;}
+function td3SetSky(hex){if(td3Sky&&td3Sky.material&&td3Sky.material.emissiveTexture)td3PaintSky(td3Sky.material.emissiveTexture,hex);try{if(td3Scene)td3Scene.fogColor=BABYLON.Color3.FromHexString(td3Lighten(hex,0.62));}catch(e){}}
+function td3GroundTex(hex){const dt=new BABYLON.DynamicTexture('gtex',{width:512,height:512},td3Scene,false);const c=dt.getContext();const g=c.createLinearGradient(0,0,512,512);g.addColorStop(0,td3Lighten(hex,0.08));g.addColorStop(1,hex);c.fillStyle=g;c.fillRect(0,0,512,512);c.strokeStyle=td3Lighten(hex,0.16);c.lineWidth=1.5;for(let i=0;i<=512;i+=64){c.beginPath();c.moveTo(i,0);c.lineTo(i,512);c.moveTo(0,i);c.lineTo(512,i);c.stroke();}dt.update();dt.uScale=8;dt.vScale=8;return dt;}
+const TD3_MODELS={person:1,tree:1,car:1,cat:1,dog:1,duck:1,house:1,rocket:1,robot:1,flower:1,star:1,coin:1,rock:1,fish:1,bird:1};
+function td3BuildModel(kind,col,name){const MB=BABYLON.MeshBuilder,node=new BABYLON.TransformNode(name,td3Scene),parts=[];
+  const add=(m,c)=>{m.parent=node;m.material=td3Mat(c);parts.push(m);return m;};
+  if(kind==='person'){add(MB.CreateSphere(name+'_h',{diameter:0.72},td3Scene),'#ffce9e').position.set(0,1.78,0);
+    add(MB.CreateCylinder(name+'_b',{height:1,diameterTop:0.5,diameterBottom:0.72},td3Scene),col).position.set(0,1.05,0);
+    [-0.5,0.5].forEach(s=>add(MB.CreateCylinder(name+'_a',{height:0.9,diameter:0.2},td3Scene),col).position.set(s,1.05,0));
+    [-0.2,0.2].forEach(s=>add(MB.CreateCylinder(name+'_l',{height:0.95,diameter:0.26},td3Scene),'#39507a').position.set(s,0.47,0));
+  }else if(kind==='tree'){add(MB.CreateCylinder(name+'_t',{height:1.3,diameter:0.42},td3Scene),'#7a4a23').position.set(0,0.65,0);
+    add(MB.CreateSphere(name+'_f',{diameter:1.9},td3Scene),col).position.set(0,1.9,0);
+  }else if(kind==='car'){add(MB.CreateBox(name+'_b',{width:2.1,height:0.6,depth:1.05},td3Scene),col).position.set(0,0.55,0);
+    add(MB.CreateBox(name+'_r',{width:1.1,height:0.5,depth:0.92},td3Scene),col).position.set(-0.1,1.05,0);
+    [[-0.72,0.55],[0.72,0.55],[-0.72,-0.55],[0.72,-0.55]].forEach(p=>{const w=MB.CreateCylinder(name+'_w',{height:0.26,diameter:0.62},td3Scene);w.rotation.z=Math.PI/2;add(w,'#222');w.position.set(p[0],0.32,p[1]);});
+  }else if(kind==='cat'){add(MB.CreateBox(name+'_b',{width:1,height:0.5,depth:0.5},td3Scene),col).position.set(0,0.5,0);
+    add(MB.CreateSphere(name+'_h',{diameter:0.56},td3Scene),col).position.set(0,0.72,0.55);
+    [-0.13,0.13].forEach(s=>{const e=MB.CreateCylinder(name+'_e',{height:0.24,diameterTop:0,diameterBottom:0.18},td3Scene);add(e,col);e.position.set(s,1.02,0.55);});
+    const t=MB.CreateCylinder(name+'_t',{height:0.7,diameter:0.12},td3Scene);t.rotation.x=0.7;add(t,col);t.position.set(0,0.6,-0.6);
+    [[-0.32,0.18],[0.32,0.18],[-0.32,-0.18],[0.32,-0.18]].forEach(p=>{const l=MB.CreateCylinder(name+'_l',{height:0.4,diameter:0.16},td3Scene);add(l,col);l.position.set(p[0],0.2,p[1]);});
+  }else if(kind==='dog'){add(MB.CreateBox(name+'_b',{width:1.3,height:0.62,depth:0.62},td3Scene),col).position.set(0,0.62,0);
+    add(MB.CreateBox(name+'_h',{width:0.55,height:0.55,depth:0.55},td3Scene),col).position.set(0,0.82,0.78);
+    add(MB.CreateBox(name+'_s',{width:0.34,height:0.3,depth:0.34},td3Scene),'#2b1d12').position.set(0,0.72,1.08);
+    const t=MB.CreateCylinder(name+'_t',{height:0.55,diameter:0.14},td3Scene);t.rotation.x=-0.7;add(t,col);t.position.set(0,0.95,-0.75);
+    [[-0.45,0.4],[0.45,0.4],[-0.45,-0.4],[0.45,-0.4]].forEach(p=>{const l=MB.CreateCylinder(name+'_l',{height:0.55,diameter:0.2},td3Scene);add(l,col);l.position.set(p[0],0.28,p[1]);});
+  }else if(kind==='duck'){add(MB.CreateSphere(name+'_b',{diameter:0.95},td3Scene),col).position.set(0,0.55,0);
+    add(MB.CreateSphere(name+'_h',{diameter:0.5},td3Scene),col).position.set(0,1,0.32);
+    const k=MB.CreateCylinder(name+'_k',{height:0.26,diameterTop:0,diameterBottom:0.22},td3Scene);k.rotation.x=Math.PI/2;add(k,'#f4a000');k.position.set(0,0.95,0.62);
+  }else if(kind==='house'){add(MB.CreateBox(name+'_b',{width:1.7,height:1.4,depth:1.7},td3Scene),col).position.set(0,0.7,0);
+    const r=MB.CreateCylinder(name+'_r',{height:1,diameterTop:0,diameterBottom:1.45,tessellation:4},td3Scene);r.rotation.y=Math.PI/4;add(r,'#c0392b');r.position.set(0,1.9,0);
+    add(MB.CreateBox(name+'_d',{width:0.45,height:0.8,depth:0.12},td3Scene),'#6d4c2a').position.set(0,0.4,0.86);
+  }else if(kind==='rocket'){add(MB.CreateCylinder(name+'_b',{height:1.7,diameter:0.62},td3Scene),col).position.set(0,1,0);
+    const n=MB.CreateCylinder(name+'_n',{height:0.7,diameterTop:0,diameterBottom:0.62},td3Scene);add(n,'#e24b4a');n.position.set(0,2.2,0);
+    [0,1,2].forEach(i=>{const f=MB.CreateCylinder(name+'_f',{height:0.55,diameterTop:0,diameterBottom:0.42,tessellation:3},td3Scene);add(f,'#e24b4a');const a=i*2.094;f.position.set(Math.sin(a)*0.42,0.32,Math.cos(a)*0.42);f.rotation.y=-a;f.rotation.x=Math.PI;});
+    add(MB.CreateSphere(name+'_w',{diameter:0.3},td3Scene),'#9cd2ff').position.set(0,1.25,0.33);
+  }else if(kind==='robot'){add(MB.CreateBox(name+'_b',{width:0.9,height:1,depth:0.6},td3Scene),col).position.set(0,1,0);
+    add(MB.CreateBox(name+'_h',{width:0.6,height:0.5,depth:0.5},td3Scene),col).position.set(0,1.78,0);
+    [-0.16,0.16].forEach(s=>add(MB.CreateSphere(name+'_e',{diameter:0.16},td3Scene),'#4d96ff').position.set(s,1.82,0.27));
+    [-0.6,0.6].forEach(s=>{const a=MB.CreateCylinder(name+'_a',{height:0.8,diameter:0.18},td3Scene);add(a,'#8a8980');a.position.set(s,1,0);});
+    [-0.25,0.25].forEach(s=>{const l=MB.CreateCylinder(name+'_l',{height:0.7,diameter:0.22},td3Scene);add(l,'#8a8980');l.position.set(s,0.35,0);});
+  }else if(kind==='flower'){const st=MB.CreateCylinder(name+'_s',{height:1.2,diameter:0.1},td3Scene);add(st,'#3fae5e');st.position.set(0,0.6,0);
+    add(MB.CreateSphere(name+'_c',{diameter:0.42},td3Scene),'#ffd24a').position.set(0,1.3,0);
+    for(let i=0;i<6;i++){const a=i*Math.PI/3;const p=MB.CreateSphere(name+'_p',{diameterX:0.36,diameterY:0.16,diameterZ:0.26},td3Scene);add(p,col);p.position.set(Math.sin(a)*0.4,1.3,Math.cos(a)*0.4);}
+  }else if(kind==='star'){[0,Math.PI].forEach(rz=>{const s=MB.CreateCylinder(name+'_s',{height:0.22,diameterTop:0,diameterBottom:1.3,tessellation:3},td3Scene);s.rotation.x=Math.PI/2;s.rotation.z=rz;add(s,col);s.position.set(0,1,0);});
+  }else if(kind==='coin'){const c=MB.CreateCylinder(name+'_c',{height:0.12,diameter:0.85},td3Scene);c.rotation.x=Math.PI/2;add(c,col);c.position.set(0,0.85,0);
+  }else if(kind==='rock'){const r=MB.CreateSphere(name+'_r',{diameter:1,segments:3},td3Scene);r.scaling.set(1.25,0.85,1.05);add(r,col);r.position.set(0,0.42,0);
+  }else if(kind==='fish'){const bd=MB.CreateSphere(name+'_b',{diameter:1},td3Scene);bd.scaling.set(1.4,0.85,0.6);add(bd,col);bd.position.set(0,0.7,0);
+    const tl=MB.CreateCylinder(name+'_t',{height:0.5,diameterTop:0.55,diameterBottom:0,tessellation:3},td3Scene);tl.rotation.z=-Math.PI/2;tl.scaling.set(1,1,0.3);add(tl,col);tl.position.set(-0.85,0.7,0);
+    add(MB.CreateSphere(name+'_e',{diameter:0.14},td3Scene),'#222').position.set(0.55,0.85,0.22);
+  }else if(kind==='bird'){add(MB.CreateSphere(name+'_b',{diameter:0.72},td3Scene),col).position.set(0,0.7,0);
+    add(MB.CreateSphere(name+'_h',{diameter:0.46},td3Scene),col).position.set(0,1.05,0.25);
+    const bk=MB.CreateCylinder(name+'_k',{height:0.22,diameterTop:0,diameterBottom:0.16},td3Scene);bk.rotation.x=Math.PI/2;add(bk,'#f4a000');bk.position.set(0,1.05,0.5);
+    [-0.36,0.36].forEach(s=>{const w=MB.CreateBox(name+'_w',{width:0.42,height:0.1,depth:0.34},td3Scene);add(w,col);w.position.set(s,0.72,0);w.rotation.z=s>0?-0.35:0.35;});
+  }
+  return {node,parts};}
+// dropdown of the shapes the program creates (scans td_add blocks); keeps the field's current value so saved programs never reset
+function td3MeshNames(){const out=[];try{if(typeof blocklyWorkspace!=='undefined'&&blocklyWorkspace){const bs=blocklyWorkspace.getBlocksByType?blocklyWorkspace.getBlocksByType('td_add',false):blocklyWorkspace.getAllBlocks(false).filter(b=>b.type==='td_add');bs.forEach(b=>{const n=b.getFieldValue('NAME');if(n&&out.indexOf(n)<0)out.push(n);});}}catch(e){}return out;}
+function td3MeshOptions(){const opts=td3MeshNames().map(n=>[n,n]);let cur=null;try{cur=this&&this.getValue&&this.getValue();}catch(e){}if(cur&&!opts.some(o=>o[1]===cur))opts.unshift([cur,cur]);if(!opts.length)opts.push(['(add a shape)','cube']);return opts;}
+function load3DEngine(){if(window.BABYLON&&window.BABYLON.GLTFFileLoader)return Promise.resolve();if(_td3Loading)return _td3Loading;
+  function inject(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=()=>ok();s.onerror=()=>no(new Error('Could not load the 3D engine — check your internet.'));document.head.appendChild(s);});}
+  _td3Loading=(window.BABYLON?Promise.resolve():inject('https://cdn.jsdelivr.net/npm/babylonjs@7/babylon.js'))
+    .then(()=>window.BABYLON.GLTFFileLoader?null:inject('https://cdn.jsdelivr.net/npm/babylonjs-loaders@7/babylonjs.loaders.min.js'));
+  return _td3Loading;}
+// ── glTF model library (real rigged characters with named animations, loaded from a CORS-friendly CDN) ──
+const TD3_GLTF={
+  robot:{label:'robot (animated)',url:'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/RobotExpressive/RobotExpressive.glb',scale:0.16,y:0},
+  fox:{label:'fox (animated)',url:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Fox/glTF-Binary/Fox.glb',scale:0.022,y:0}
+};
+function td3GltfOptions(){return Object.keys(TD3_GLTF).map(k=>[TD3_GLTF[k].label||k,k]);}
+function td3LoadGLTF(name,url,scale,x,y,z){return new Promise(function(resolve){
+  if(td3Meshes[name])td3Dispose(name);
+  if(!(window.BABYLON&&BABYLON.SceneLoader)){resolve(null);return;}
+  BABYLON.SceneLoader.ImportMeshAsync('','',url,td3Scene).then(function(res){
+    const node=new BABYLON.TransformNode(name+'_root',td3Scene);
+    res.meshes.forEach(function(m){if(!m.parent)m.parent=node;m.metadata=m.metadata||{};m.metadata.cjName=name;if(td3Shadow&&m.getTotalVertices&&m.getTotalVertices()>0){try{td3Shadow.addShadowCaster(m);}catch(e){}}});
+    node.scaling.set(scale,scale,scale);node.position.set(x||0,(y==null?0:y),z||0);
+    const entry={root:node,parts:res.meshes,kind:'gltf',anims:res.animationGroups||[]};
+    entry.dynamic=false;entry.solid=false;entry.control=null;entry.vy=0;entry.grounded=false;entry.anim=null;
+    entry.anims.forEach(function(g){g.stop();});
+    td3Meshes[name]=entry;resolve(entry);
+  }).catch(function(e){ // graceful fallback so the program still runs even if the model can't be fetched
+    const box=BABYLON.MeshBuilder.CreateBox(name,{size:1.2},td3Scene);box.material=td3Mat('#9aa');box.position.set(x||0,(y==null?1:y),z||0);box.metadata={cjName:name};
+    const entry={root:box,parts:[box],kind:'box',anims:[]};entry.dynamic=false;entry.solid=false;entry.control=null;entry.vy=0;entry.grounded=false;entry.anim=null;td3Meshes[name]=entry;resolve(entry);
+  });
+});}
+function define3DBlocks(){if(_td3BlocksDefined||typeof Blockly==='undefined')return;_td3BlocksDefined=true;
+  if(typeof installBlocklyIconPatch==='function')installBlocklyIconPatch();
+  const HUE={ev:55,shape:120,move:210,look:30,ctrl:40,scene:260,sound:300,sense:180};
+  const FC=(d)=>Blockly.FieldColour?new Blockly.FieldColour(d):new Blockly.FieldTextInput(d);
+  const SHAPES=[['box','box'],['sphere','sphere'],['cylinder','cylinder'],['cone','cone'],['ground','ground'],['person','person'],['cat','cat'],['dog','dog'],['duck','duck'],['fish','fish'],['bird','bird'],['tree','tree'],['flower','flower'],['house','house'],['car','car'],['rocket','rocket'],['robot','robot'],['star','star'],['coin','coin'],['rock','rock']];
+  const MN=()=>new Blockly.FieldDropdown(td3MeshOptions);// pick a created shape
+  Blockly.Blocks['td_on_start']={init:function(){this.appendDummyInput().appendField('🟢 when I run');this.setNextStatement(true);this.setColour(HUE.ev);this.setTooltip('Runs when you press Run.');}};
+  Blockly.Blocks['td_when_click']={init:function(){this.appendDummyInput().appendField('👆 when').appendField(MN(),'NAME').appendField('is clicked');this.setNextStatement(true);this.setColour(HUE.ev);}};
+  Blockly.Blocks['td_add']={init:function(){this.appendDummyInput().appendField('add a').appendField(new Blockly.FieldDropdown(SHAPES),'SHAPE').appendField('called').appendField(new Blockly.FieldTextInput('cube'),'NAME');
+    this.appendDummyInput().appendField('colour').appendField(FC('#ff6b6b'),'COL').appendField('at x').appendField(new Blockly.FieldNumber(0),'X').appendField('y').appendField(new Blockly.FieldNumber(1),'Y').appendField('z').appendField(new Blockly.FieldNumber(0),'Z');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.shape);this.setTooltip('Add a 3D shape with a name, colour and position.');}};
+  Blockly.Blocks['td_move']={init:function(){this.appendDummyInput().appendField('move').appendField(MN(),'NAME').appendField('by x').appendField(new Blockly.FieldNumber(0),'X').appendField('y').appendField(new Blockly.FieldNumber(0),'Y').appendField('z').appendField(new Blockly.FieldNumber(0),'Z');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);}};
+  Blockly.Blocks['td_rotate']={init:function(){this.appendDummyInput().appendField('spin').appendField(MN(),'NAME').appendField('by').appendField(new Blockly.FieldNumber(15),'DEG').appendField('° around').appendField(new Blockly.FieldDropdown([['up','y'],['side','x'],['forward','z']]),'AXIS');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);}};
+  Blockly.Blocks['td_scale']={init:function(){this.appendDummyInput().appendField('set size of').appendField(MN(),'NAME').appendField('to').appendField(new Blockly.FieldNumber(1.5,0.1,30),'S');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);}};
+  Blockly.Blocks['td_color']={init:function(){this.appendDummyInput().appendField('set').appendField(MN(),'NAME').appendField('colour').appendField(FC('#4d96ff'),'COL');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.look);}};
+  Blockly.Blocks['td_sky']={init:function(){this.appendDummyInput().appendField('set sky colour').appendField(FC('#87ceeb'),'COL');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.scene);}};
+  Blockly.Blocks['td_wait']={init:function(){this.appendDummyInput().appendField('wait').appendField(new Blockly.FieldNumber(1,0,60),'SECS').appendField('seconds');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.ctrl);}};
+  Blockly.Blocks['td_repeat']={init:function(){this.appendDummyInput().appendField('repeat').appendField(new Blockly.FieldNumber(4,1,2000),'N');this.appendStatementInput('DO');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.ctrl);}};
+  Blockly.Blocks['td_forever']={init:function(){this.appendDummyInput().appendField('forever');this.appendStatementInput('DO');this.setPreviousStatement(true);this.setColour(HUE.ctrl);}};
+  // ── Game / playable blocks ──
+  Blockly.Blocks['td_gravity']={init:function(){this.appendDummyInput().appendField('make').appendField(MN(),'NAME').appendField('fall with gravity');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);this.setTooltip('This shape drops and lands on the ground or on solid shapes.');}};
+  Blockly.Blocks['td_solid']={init:function(){this.appendDummyInput().appendField('make').appendField(MN(),'NAME').appendField('solid');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);this.setTooltip('Other shapes land on this and cannot pass through it.');}};
+  Blockly.Blocks['td_control']={init:function(){this.appendDummyInput().appendField('let arrow keys move').appendField(MN(),'NAME').appendField('speed').appendField(new Blockly.FieldNumber(0.12,0.01,2),'SPEED');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);this.setTooltip('Drive this shape with the arrow keys / WASD (and Space to jump).');}};
+  Blockly.Blocks['td_camera_follow']={init:function(){this.appendDummyInput().appendField('camera follows').appendField(MN(),'NAME');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.scene);this.setTooltip('The camera trails behind this shape, like a 3D game.');}};
+  Blockly.Blocks['td_on_key']={init:function(){this.appendDummyInput().appendField('⌨ when').appendField(new Blockly.FieldDropdown([['space','space'],['up','arrowup'],['down','arrowdown'],['left','arrowleft'],['right','arrowright'],['W','w'],['A','a'],['S','s'],['D','d']]),'KEY').appendField('pressed');this.setNextStatement(true);this.setColour(HUE.ev);}};
+  Blockly.Blocks['td_on_touch']={init:function(){this.appendDummyInput().appendField('when').appendField(MN(),'A').appendField('touches').appendField(MN(),'B');this.setNextStatement(true);this.setColour(HUE.ev);}};
+  // ── Animate ──
+  Blockly.Blocks['td_animate']={init:function(){this.appendDummyInput().appendField('play').appendField(new Blockly.FieldDropdown([['spin','spin'],['bob','bob'],['bounce','bounce'],['wobble','wobble'],['pulse','pulse']]),'ANIM').appendField('on').appendField(MN(),'NAME');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.look);this.setTooltip('Make a shape move on the spot, over and over.');}};
+  Blockly.Blocks['td_stop_anim']={init:function(){this.appendDummyInput().appendField('stop').appendField(MN(),'NAME').appendField('animating');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.look);}};
+  Blockly.Blocks['td_glide']={init:function(){this.appendDummyInput().appendField('glide').appendField(MN(),'NAME').appendField('to x').appendField(new Blockly.FieldNumber(0),'X').appendField('y').appendField(new Blockly.FieldNumber(1),'Y').appendField('z').appendField(new Blockly.FieldNumber(0),'Z').appendField('over').appendField(new Blockly.FieldNumber(1,0.1,60),'SECS').appendField('s');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.move);this.setTooltip('Slide a shape smoothly to a new spot.');}};
+  Blockly.Blocks['td_glow']={init:function(){this.appendDummyInput().appendField('make').appendField(MN(),'NAME').appendField('glow').appendField(FC('#ffe14d'),'COL');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.look);}};
+  // ── Sound ──
+  Blockly.Blocks['td_play_sound']={init:function(){this.appendDummyInput().appendField('play sound').appendField(new Blockly.FieldDropdown(typeof stSoundOptions==='function'?stSoundOptions:[['pop','pop']]),'SND');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.sound);}};
+  Blockly.Blocks['td_play_note']={init:function(){this.appendDummyInput().appendField('play note').appendField(new Blockly.FieldDropdown([['C','261.63'],['D','293.66'],['E','329.63'],['F','349.23'],['G','392.00'],['A','440.00'],['B','493.88'],['high C','523.25']]),'NOTE').appendField('for').appendField(new Blockly.FieldNumber(0.4,0.05,4),'SECS').appendField('s');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.sound);}};
+  Blockly.Blocks['td_speak']={init:function(){this.appendDummyInput().appendField('say').appendField(new Blockly.FieldTextInput('Hello!'),'TEXT');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.sound);this.setTooltip('Speak the words out loud (text-to-speech).');}};
+  // ── Sensing (reporters) + If ──
+  Blockly.Blocks['td_distance']={init:function(){this.appendDummyInput().appendField('distance from').appendField(MN(),'A').appendField('to').appendField(MN(),'B');this.setOutput(true,'Number');this.setColour(HUE.sense);}};
+  Blockly.Blocks['td_get']={init:function(){this.appendDummyInput().appendField(new Blockly.FieldDropdown([['x','x'],['y','y'],['z','z']]),'AXIS').appendField('of').appendField(MN(),'NAME');this.setOutput(true,'Number');this.setColour(HUE.sense);}};
+  Blockly.Blocks['td_touching']={init:function(){this.appendDummyInput().appendField(MN(),'A').appendField('touching').appendField(MN(),'B');this.setOutput(true,'Boolean');this.setColour(HUE.sense);}};
+  Blockly.Blocks['td_if']={init:function(){this.appendValueInput('COND').appendField('if');this.appendStatementInput('DO').appendField('do');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.ctrl);}};
+  // ── Scene atmosphere ──
+  Blockly.Blocks['td_fog']={init:function(){this.appendDummyInput().appendField('add fog colour').appendField(FC('#cfd8e3'),'COL').appendField('thickness').appendField(new Blockly.FieldNumber(30,0,100),'AMT');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.scene);this.setTooltip('Misty fog — bigger numbers = thicker. Use 0 to turn it off.');}};
+  Blockly.Blocks['td_light']={init:function(){this.appendDummyInput().appendField('set brightness').appendField(new Blockly.FieldNumber(0.7,0,2,0.1),'AMT');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.scene);this.setTooltip('How bright the world is (1 is normal).');}};
+  // ── Sensing reporters ──
+  Blockly.Blocks['td_timer']={init:function(){this.appendDummyInput().appendField('timer (seconds)');this.setOutput(true,'Number');this.setColour(HUE.sense);this.setTooltip('How many seconds since you pressed Run.');}};
+  Blockly.Blocks['td_key_pressed']={init:function(){this.appendDummyInput().appendField('key').appendField(new Blockly.FieldDropdown([['space','space'],['up','arrowup'],['down','arrowdown'],['left','arrowleft'],['right','arrowright'],['W','w'],['A','a'],['S','s'],['D','d']]),'KEY').appendField('pressed?');this.setOutput(true,'Boolean');this.setColour(HUE.sense);}};
+  Blockly.Blocks['td_random']={init:function(){this.appendDummyInput().appendField('random').appendField(new Blockly.FieldNumber(1),'MIN').appendField('to').appendField(new Blockly.FieldNumber(10),'MAX');this.setOutput(true,'Number');this.setColour(HUE.sense);}};
+  // ── Models (real glTF characters with animations) ──
+  Blockly.Blocks['td_load']={init:function(){this.appendDummyInput().appendField('load').appendField(new Blockly.FieldDropdown(td3GltfOptions),'MODEL').appendField('called').appendField(new Blockly.FieldTextInput('character'),'NAME');
+    this.appendDummyInput().appendField('size').appendField(new Blockly.FieldNumber(1,0.1,50),'SCALE').appendField('at x').appendField(new Blockly.FieldNumber(0),'X').appendField('y').appendField(new Blockly.FieldNumber(0),'Y').appendField('z').appendField(new Blockly.FieldNumber(0),'Z');
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.shape);this.setTooltip('Load a real 3D character that can play animations (needs internet).');}};
+  Blockly.Blocks['td_play_anim']={init:function(){this.appendDummyInput().appendField('play animation').appendField(new Blockly.FieldDropdown([['idle','idle'],['walk','walk'],['run','run'],['jump','jump'],['dance','dance'],['wave','wave'],['punch','punch'],['survey','survey'],['sit','sit']]),'ANIM').appendField('on').appendField(MN(),'NAME');this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(HUE.look);this.setTooltip('Play a movement (walk, dance…) on a loaded character.');}};
+}
+function blk3(t){return {kind:'block',type:t};}
+function threeDToolbox(){return {kind:'categoryToolbox',contents:[
+  {kind:'category',name:'When',colour:'55',contents:[blk3('td_on_start'),blk3('td_when_click'),blk3('td_on_key'),blk3('td_on_touch')]},
+  {kind:'category',name:'Shapes',colour:'120',contents:[blk3('td_add')]},
+  {kind:'category',name:'Models',colour:'140',contents:[blk3('td_load'),blk3('td_play_anim')]},
+  {kind:'category',name:'Move',colour:'210',contents:[blk3('td_move'),blk3('td_glide'),blk3('td_rotate'),blk3('td_scale')]},
+  {kind:'category',name:'Game',colour:'200',contents:[blk3('td_gravity'),blk3('td_solid'),blk3('td_control'),blk3('td_camera_follow')]},
+  {kind:'category',name:'Looks',colour:'30',contents:[blk3('td_color'),blk3('td_glow'),blk3('td_sky')]},
+  {kind:'category',name:'Scene',colour:'260',contents:[blk3('td_sky'),blk3('td_fog'),blk3('td_light')]},
+  {kind:'category',name:'Animate',colour:'330',contents:[blk3('td_animate'),blk3('td_stop_anim')]},
+  {kind:'category',name:'Sound',colour:'300',contents:[blk3('td_play_sound'),blk3('td_play_note'),blk3('td_speak')]},
+  {kind:'category',name:'Sensing',colour:'180',contents:[blk3('td_distance'),blk3('td_get'),blk3('td_touching'),blk3('td_timer'),blk3('td_key_pressed'),blk3('td_random')]},
+  {kind:'category',name:'Control',colour:'40',contents:[blk3('td_wait'),blk3('td_repeat'),blk3('td_forever'),blk3('td_if'),{kind:'block',type:'logic_compare'},{kind:'block',type:'math_number'},{kind:'block',type:'math_arithmetic'},{kind:'block',type:'logic_operation'},{kind:'block',type:'logic_boolean'}]},
+]};}
+function threeDDefaultXml(){return `<xml xmlns="https://developers.google.com/blockly/xml">
+<block type="td_on_start" x="40" y="40"><next>
+<block type="td_sky"><field name="COL">#3b8fd4</field><next>
+<block type="td_add"><field name="SHAPE">ground</field><field name="NAME">floor</field><field name="COL">#6fb83f</field><field name="X">0</field><field name="Y">0</field><field name="Z">0</field><next>
+<block type="td_add"><field name="SHAPE">tree</field><field name="NAME">tree1</field><field name="COL">#3fae5e</field><field name="X">-3.5</field><field name="Y">0</field><field name="Z">-2</field><next>
+<block type="td_add"><field name="SHAPE">box</field><field name="NAME">block1</field><field name="COL">#b07a3f</field><field name="X">3</field><field name="Y">0.6</field><field name="Z">0</field><next>
+<block type="td_solid"><field name="NAME">block1</field><next>
+<block type="td_add"><field name="SHAPE">person</field><field name="NAME">hero</field><field name="COL">#4d96ff</field><field name="X">0</field><field name="Y">0</field><field name="Z">2</field><next>
+<block type="td_control"><field name="NAME">hero</field><field name="SPEED">0.12</field><next>
+<block type="td_camera_follow"><field name="NAME">hero</field><next>
+<block type="td_add"><field name="SHAPE">box</field><field name="NAME">crate</field><field name="COL">#f4b400</field><field name="X">-1.5</field><field name="Y">5</field><field name="Z">0</field><next>
+<block type="td_gravity"><field name="NAME">crate</field><next>
+<block type="td_add"><field name="SHAPE">duck</field><field name="NAME">duck1</field><field name="COL">#ffd23f</field><field name="X">-3</field><field name="Y">0</field><field name="Z">1.5</field><next>
+<block type="td_animate"><field name="ANIM">bounce</field><field name="NAME">duck1</field><next>
+<block type="td_add"><field name="SHAPE">flower</field><field name="NAME">flower1</field><field name="COL">#ec5fa0</field><field name="X">2</field><field name="Y">0</field><field name="Z">2.5</field></block>
+</next></block></next></block>
+</next></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block>
+</xml>`;}
+function td3Init(){const cv=document.getElementById('threed-canvas');if(!cv||td3Engine||!window.BABYLON)return;
+  td3Engine=new BABYLON.Engine(cv,true,{preserveDrawingBuffer:true,stencil:true});try{td3Engine.setHardwareScalingLevel(1/Math.min(2,window.devicePixelRatio||1));}catch(e){}
+  td3Scene=new BABYLON.Scene(td3Engine);td3Scene.clearColor=BABYLON.Color4.FromHexString('#bfe0f5ff');td3Scene.ambientColor=new BABYLON.Color3(0.5,0.52,0.58);
+  const cam=new BABYLON.ArcRotateCamera('cam',-Math.PI/2.3,1.15,16,new BABYLON.Vector3(0,1.1,0),td3Scene);
+  cam.attachControl(cv,true);cam.wheelPrecision=24;cam.lowerRadiusLimit=4;cam.upperRadiusLimit=55;cam.lowerBetaLimit=0.25;cam.upperBetaLimit=1.48;cam.useAutoRotationBehavior=false;cam.inertia=0.82;cam.panningSensibility=0;td3Cam=cam;
+  // sun + soft sky-fill lighting
+  const h=new BABYLON.HemisphericLight('h',new BABYLON.Vector3(0.2,1,0.15),td3Scene);h.intensity=0.62;h.diffuse=new BABYLON.Color3(1,0.99,0.94);h.groundColor=new BABYLON.Color3(0.42,0.46,0.5);td3Hemi=h;
+  const d=new BABYLON.DirectionalLight('d',new BABYLON.Vector3(-0.55,-1,-0.45),td3Scene);d.position=new BABYLON.Vector3(26,46,26);d.intensity=1.25;d.diffuse=new BABYLON.Color3(1,0.97,0.88);
+  td3Shadow=new BABYLON.ShadowGenerator(2048,d);td3Shadow.useBlurExponentialShadowMap=true;td3Shadow.blurKernel=48;td3Shadow.darkness=0.55;td3Shadow.bias=0.0015;
+  // subtle depth: ground fades into the sky at distance
+  td3Scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;td3Scene.fogColor=BABYLON.Color3.FromHexString('#cfe6f7');td3Scene.fogDensity=0.0085;
+  // gradient sky dome
+  const sky=BABYLON.MeshBuilder.CreateSphere('cjsky',{segments:24,diameter:500,sideOrientation:BABYLON.Mesh.BACKSIDE},td3Scene);
+  const sm=new BABYLON.StandardMaterial('skm',td3Scene);sm.backFaceCulling=false;sm.disableLighting=true;sm.diffuseColor=new BABYLON.Color3(0,0,0);sm.specularColor=new BABYLON.Color3(0,0,0);sm.emissiveColor=new BABYLON.Color3(1,1,1);sm.emissiveTexture=td3SkyTex();
+  sky.material=sm;sky.infiniteDistance=true;sky.isPickable=false;sky.applyFog=false;td3Sky=sky;
+  // modern post-processing: smooth edges + filmic tone-mapping + gentle bloom
+  try{const pl=new BABYLON.DefaultRenderingPipeline('cjpipe',true,td3Scene,[cam]);pl.fxaaEnabled=true;pl.samples=4;
+    pl.imageProcessingEnabled=true;pl.imageProcessing.toneMappingEnabled=true;pl.imageProcessing.toneMappingType=BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES;pl.imageProcessing.exposure=1.05;pl.imageProcessing.contrast=1.18;
+    pl.bloomEnabled=true;pl.bloomThreshold=0.82;pl.bloomWeight=0.22;pl.bloomScale=0.6;pl.bloomKernel=64;
+    pl.imageProcessing.vignetteEnabled=false;td3Pipe=pl;}catch(e){}
+  // drag-to-move gizmo (edit mode): grab a shape and slide it; the move is written back into its block
+  try{const gm=new BABYLON.GizmoManager(td3Scene);gm.positionGizmoEnabled=true;gm.rotationGizmoEnabled=false;gm.scaleGizmoEnabled=false;gm.usePointerToAttachGizmos=false;
+    if(gm.gizmos.positionGizmo){gm.gizmos.positionGizmo.scaleRatio=1.1;gm.gizmos.positionGizmo.onDragEndObservable.add(td3GizmoMoved);}
+    gm.attachToNode(null);td3Gizmo=gm;}catch(e){}
+  td3Scene.onPointerDown=(evt,pick)=>{
+    if(td3Running){if(pick&&pick.hit&&pick.pickedMesh){const nm=(pick.pickedMesh.metadata&&pick.pickedMesh.metadata.cjName)||pick.pickedMesh.name;td3FireClick(nm);}return;}
+    // edit mode: select a shape for the move gizmo
+    if(pick&&pick.hit&&pick.pickedMesh&&pick.pickedMesh!==td3Sky){const nm=(pick.pickedMesh.metadata&&pick.pickedMesh.metadata.cjName)||pick.pickedMesh.name;const e=td3Meshes[nm];if(e&&e.kind!=='ground'){td3SelName=nm;if(td3Gizmo)td3Gizmo.attachToNode(e.root);return;}}
+    td3SelName=null;if(td3Gizmo)td3Gizmo.attachToNode(null);
+  };
+}
+function td3R(v){return Math.round(v*100)/100;}
+function td3FindAddBlock(name){if(!blocklyWorkspace)return null;const bs=blocklyWorkspace.getBlocksByType?blocklyWorkspace.getBlocksByType('td_add',false):blocklyWorkspace.getAllBlocks(false).filter(b=>b.type==='td_add');return bs.find(b=>b.getFieldValue('NAME')===name)||null;}
+function td3GizmoMoved(){if(!td3SelName)return;const e=td3Meshes[td3SelName];if(!e)return;const p=e.root.position,b=td3FindAddBlock(td3SelName);if(b){try{b.setFieldValue(String(td3R(p.x)),'X');b.setFieldValue(String(td3R(p.y)),'Y');b.setFieldValue(String(td3R(p.z)),'Z');}catch(_){}}}
+// build a live, editable preview of the scene from the blocks (so you can arrange shapes before running)
+function td3Preview(){if(td3Running||!td3Scene||!window.BABYLON||!blocklyWorkspace)return;
+  const sel=td3SelName;td3ClearScene();
+  const num=(b,f)=>{const v=parseFloat(b.getFieldValue(f));return isNaN(v)?0:v;};
+  const adds=blocklyWorkspace.getBlocksByType?blocklyWorkspace.getBlocksByType('td_add',false):blocklyWorkspace.getAllBlocks(false).filter(b=>b.type==='td_add');
+  adds.forEach(b=>{try{td3Add(b.getFieldValue('SHAPE'),b.getFieldValue('NAME'),b.getFieldValue('COL'),num(b,'X'),num(b,'Y'),num(b,'Z'));}catch(e){}});
+  try{const skb=(blocklyWorkspace.getBlocksByType?blocklyWorkspace.getBlocksByType('td_sky',false):[]).find(Boolean);td3SetSky(skb?skb.getFieldValue('COL'):'#3b7fc4');}catch(e){}
+  try{(blocklyWorkspace.getBlocksByType?blocklyWorkspace.getBlocksByType('td_color',false):[]).forEach(b=>{const e=td3Meshes[b.getFieldValue('NAME')];if(e)e.parts.forEach(p=>{if(p.material){try{p.material.diffuseColor=BABYLON.Color3.FromHexString(b.getFieldValue('COL'));}catch(_){}}});});}catch(e){}
+  if(sel&&td3Meshes[sel]){td3SelName=sel;if(td3Gizmo)td3Gizmo.attachToNode(td3Meshes[sel].root);}else{td3SelName=null;if(td3Gizmo)td3Gizmo.attachToNode(null);}
+}
+function td3PreviewSoon(){if(projectType!=='3d'||td3Running)return;clearTimeout(td3PrevT);td3PrevT=setTimeout(td3Preview,350);}
+function td3Mat(col){const m=new BABYLON.StandardMaterial('m'+Math.round(td3Cam.alpha*1000)+Object.keys(td3Meshes).length,td3Scene);try{m.diffuseColor=BABYLON.Color3.FromHexString(col);}catch(e){}m.specularColor=new BABYLON.Color3(0.05,0.05,0.05);m.specularPower=64;m.ambientColor=new BABYLON.Color3(1,1,1);return m;}
+function td3Dispose(name){const e=td3Meshes[name];if(!e)return;(e.anims||[]).forEach(g=>{try{g.dispose();}catch(_){}});(e.parts||[]).forEach(p=>{try{p.dispose();}catch(_){}});try{if(e.root&&e.root.dispose)e.root.dispose();}catch(_){}delete td3Meshes[name];}
+function td3Add(shape,name,col,x,y,z){if(!td3Scene)return;name=String(name||'shape');if(td3Meshes[name])td3Dispose(name);
+  const MB=BABYLON.MeshBuilder;let entry;
+  if(TD3_MODELS[shape]){const b=td3BuildModel(shape,col,name);entry={root:b.node,parts:b.parts,kind:shape};}
+  else{let mesh;
+    if(shape==='sphere')mesh=MB.CreateSphere(name,{diameter:1.3},td3Scene);
+    else if(shape==='cylinder')mesh=MB.CreateCylinder(name,{height:1.4,diameter:1.1},td3Scene);
+    else if(shape==='cone')mesh=MB.CreateCylinder(name,{height:1.5,diameterTop:0,diameterBottom:1.2},td3Scene);
+    else if(shape==='ground')mesh=MB.CreateGround(name,{width:14,height:14},td3Scene);
+    else mesh=MB.CreateBox(name,{size:1.15},td3Scene);
+    mesh.material=td3Mat(col);
+    if(shape==='ground'){try{mesh.material.diffuseTexture=td3GroundTex(col);}catch(e){}mesh.receiveShadows=true;}
+    entry={root:mesh,parts:[mesh],kind:shape};}
+  entry.dynamic=false;entry.solid=(shape==='ground');entry.control=null;entry.vy=0;entry.grounded=false;entry.anim=null;
+  if(shape==='ground')entry.root.position.set(0,0,0);
+  else entry.root.position.set(x||0,(y==null?(TD3_MODELS[shape]?0:1):y),z||0);
+  entry.parts.forEach(p=>{p.metadata={cjName:name};p.receiveShadows=(shape!=='ground')?p.receiveShadows:true;if(td3Shadow&&shape!=='ground'){try{td3Shadow.addShadowCaster(p);}catch(e){}}});
+  td3Meshes[name]=entry;return entry;}
+function* td3RunSeq(b){while(b){yield* td3RunOne(b);b=b.getNextBlock();}}
+function* td3RunOne(b){const T=b.type,F=n=>b.getFieldValue(n),N=n=>parseFloat(b.getFieldValue(n))||0;
+  if(T==='td_add'){td3Add(F('SHAPE'),F('NAME'),F('COL'),N('X'),N('Y'),N('Z'));yield;}
+  else if(T==='td_move'){const e=td3Meshes[F('NAME')];if(e)e.root.position.addInPlace(new BABYLON.Vector3(N('X'),N('Y'),N('Z')));yield;}
+  else if(T==='td_rotate'){const e=td3Meshes[F('NAME')];if(e){const a=N('DEG')*Math.PI/180,ax=F('AXIS');if(ax==='x')e.root.rotation.x+=a;else if(ax==='z')e.root.rotation.z+=a;else e.root.rotation.y+=a;}yield;}
+  else if(T==='td_scale'){const e=td3Meshes[F('NAME')];if(e){const s=N('S')||1;e.root.scaling.set(s,s,s);}yield;}
+  else if(T==='td_color'){const e=td3Meshes[F('NAME')];if(e)e.parts.forEach(p=>{if(p.material){try{p.material.diffuseColor=BABYLON.Color3.FromHexString(F('COL'));}catch(_){}}});}
+  else if(T==='td_sky'){td3SetSky(F('COL'));}
+  else if(T==='td_gravity'){const e=td3Meshes[F('NAME')];if(e)e.dynamic=true;}
+  else if(T==='td_solid'){const e=td3Meshes[F('NAME')];if(e)e.solid=true;}
+  else if(T==='td_control'){const e=td3Meshes[F('NAME')];if(e){e.control={speed:N('SPEED')||0.12};e.dynamic=true;td3ShowPad(true);}}
+  else if(T==='td_camera_follow'){const e=td3Meshes[F('NAME')];if(e)td3Follow=e;}
+  else if(T==='td_animate'){const e=td3Meshes[F('NAME')];if(e)e.anim={type:F('ANIM'),t:0,baseY:e.root.position.y,baseRZ:e.root.rotation.z};}
+  else if(T==='td_stop_anim'){const e=td3Meshes[F('NAME')];if(e&&e.anim){if(e.anim.type==='bob'||e.anim.type==='bounce')e.root.position.y=e.anim.baseY;if(e.anim.type==='wobble')e.root.rotation.z=e.anim.baseRZ;if(e.anim.type==='pulse')e.root.scaling.set(1,1,1);e.anim=null;}}
+  else if(T==='td_glide'){const e=td3Meshes[F('NAME')];if(e){const tx=N('X'),ty=N('Y'),tz=N('Z'),frames=Math.max(1,Math.round(N('SECS')*60)),s=e.root.position.clone();for(let i=1;i<=frames;i++){const k=i/frames,ek=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;e.root.position.set(s.x+(tx-s.x)*ek,s.y+(ty-s.y)*ek,s.z+(tz-s.z)*ek);yield;}}else yield;}
+  else if(T==='td_glow'){const e=td3Meshes[F('NAME')];if(e)e.parts.forEach(p=>{if(p.material){try{p.material.emissiveColor=BABYLON.Color3.FromHexString(F('COL')).scale(0.6);}catch(_){}}});}
+  else if(T==='td_play_sound'){if(typeof stPlaySound==='function')try{stPlaySound(F('SND'));}catch(_){}}
+  else if(T==='td_play_note'){if(typeof stTone==='function'&&typeof stAudioCtx==='function'){const ac=stAudioCtx();if(ac)try{stTone(ac,ac.currentTime,parseFloat(F('NOTE'))||440,null,N('SECS'),'triangle',0.3);}catch(_){}}}
+  else if(T==='td_speak'){const txt=F('TEXT');if(window.speechSynthesis&&txt){try{const u=new SpeechSynthesisUtterance(txt);speechSynthesis.cancel();speechSynthesis.speak(u);}catch(_){}}}
+  else if(T==='td_if'){if(td3Eval(b.getInputTargetBlock('COND')))yield* td3RunSeq(b.getInputTargetBlock('DO'));}
+  else if(T==='td_fog'){const amt=N('AMT');if(amt<=0){td3Scene.fogMode=BABYLON.Scene.FOGMODE_NONE;}else{try{td3Scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;td3Scene.fogColor=BABYLON.Color3.FromHexString(F('COL'));td3Scene.fogDensity=amt/600;}catch(_){}}}
+  else if(T==='td_light'){if(td3Hemi)td3Hemi.intensity=N('AMT');}
+  else if(T==='td_load'){const md=TD3_GLTF[F('MODEL')];if(md){let done=false;td3LoadGLTF(F('NAME'),md.url,(N('SCALE')||1)*(md.scale||1),N('X'),(md.y!=null?md.y:N('Y')),N('Z')).then(()=>{done=true;}).catch(()=>{done=true;});let guard=0;while(!done&&guard++<1200)yield;}else yield;}
+  else if(T==='td_play_anim'){const e=td3Meshes[F('NAME')];if(e&&e.anims&&e.anims.length){const want=F('ANIM').toLowerCase();e.anims.forEach(g=>{try{g.stop();}catch(_){}});let g=e.anims.find(a=>(a.name||'').toLowerCase().indexOf(want)>=0)||e.anims[0];if(g)try{g.start(true,1.0,g.from,g.to,false);}catch(_){}}}
+  else if(T==='td_wait'){let n=Math.round(N('SECS')*60);for(let i=0;i<n;i++)yield;}
+  else if(T==='td_repeat'){const n=Math.max(0,Math.round(N('N'))),body=b.getInputTargetBlock('DO');for(let i=0;i<n;i++){yield* td3RunSeq(body);yield;}}
+  else if(T==='td_forever'){const body=b.getInputTargetBlock('DO');while(true){yield* td3RunSeq(body);yield;}}
+}
+function td3Eval(b){if(!b)return 0;const T=b.type,F=n=>b.getFieldValue(n),I=n=>td3Eval(b.getInputTargetBlock(n));
+  if(T==='math_number')return parseFloat(F('NUM'))||0;
+  if(T==='logic_boolean')return F('BOOL')==='TRUE';
+  if(T==='td_distance'){const A=td3Meshes[F('A')],B=td3Meshes[F('B')];return (A&&B)?BABYLON.Vector3.Distance(A.root.position,B.root.position):0;}
+  if(T==='td_get'){const e=td3Meshes[F('NAME')];if(!e)return 0;const ax=F('AXIS');return ax==='x'?e.root.position.x:ax==='y'?e.root.position.y:e.root.position.z;}
+  if(T==='td_touching'){const A=td3Meshes[F('A')],B=td3Meshes[F('B')];return (A&&B)?td3Overlap(A,B):false;}
+  if(T==='td_timer')return td3StartTime?((((window.performance&&performance.now)?performance.now():0)-td3StartTime)/1000):0;
+  if(T==='td_key_pressed')return !!td3Keys[F('KEY')];
+  if(T==='td_random'){const mn=parseFloat(F('MIN'))||0,mx=parseFloat(F('MAX'))||0;return mn+Math.random()*(mx-mn);}
+  if(T==='logic_compare'){const a=I('A'),c=I('B');switch(F('OP')){case'EQ':return a===c;case'NEQ':return a!==c;case'LT':return a<c;case'LTE':return a<=c;case'GT':return a>c;case'GTE':return a>=c;}return false;}
+  if(T==='math_arithmetic'){const a=I('A'),c=I('B');switch(F('OP')){case'ADD':return a+c;case'MINUS':return a-c;case'MULTIPLY':return a*c;case'DIVIDE':return c?a/c:0;case'POWER':return Math.pow(a,c);}return 0;}
+  if(T==='logic_operation'){const a=I('A'),c=I('B');return F('OP')==='AND'?(a&&c):(a||c);}
+  if(T==='logic_negate')return !I('BOOL');
+  return 0;}
+function td3FireClick(name){td3ClickHats.forEach(h=>{if(String(h.getFieldValue('NAME'))===String(name))td3Fibers.push(td3RunSeq(h.getNextBlock()));});}
+function td3ClearScene(){Object.keys(td3Meshes).forEach(k=>td3Dispose(k));td3Meshes={};td3SetSky('#3b7fc4');}
+function td3SetRunBtn(on){const b=document.getElementById('btn-3drun');if(b)b.classList.toggle('active',!!on);}
+function td3Run(){if(!td3Scene){toast('3D is still loading…','#ae853e');return;}td3Stop();td3ClearScene();
+  td3Fibers=[];td3ClickHats=[];td3KeyHats=[];td3TouchHats=[];td3TouchState={};td3Keys={};td3Follow=null;td3ShowPad(false);
+  td3SelName=null;if(td3Gizmo)td3Gizmo.attachToNode(null);
+  td3StartTime=(window.performance&&performance.now)?performance.now():0;
+  if(td3Scene){td3Scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;td3Scene.fogDensity=0.0085;}if(td3Hemi)td3Hemi.intensity=0.62;
+  if(blocklyWorkspace)blocklyWorkspace.getTopBlocks(true).forEach(b=>{
+    if(b.type==='td_on_start')td3Fibers.push(td3RunSeq(b.getNextBlock()));
+    else if(b.type==='td_when_click')td3ClickHats.push(b);
+    else if(b.type==='td_on_key')td3KeyHats.push(b);
+    else if(b.type==='td_on_touch')td3TouchHats.push(b);});
+  td3Running=true;td3SetRunBtn(true);}
+function td3Stop(){td3Running=false;td3Fibers=[];td3Keys={};td3ShowPad(false);td3SetRunBtn(false);setTimeout(td3Preview,40);}
+function td3Frame(){if(!td3Scene)return;
+  if(td3Running){
+    if(td3Fibers.length){const NEXT=[];for(const f of td3Fibers){let r;try{r=f.next();}catch(e){r={done:true};}if(!r.done)NEXT.push(f);}td3Fibers=NEXT;}
+    try{td3Physics();}catch(e){}
+    try{td3Animate();}catch(e){}
+    if(td3Follow&&td3Cam){const p=td3Follow.root.position;td3Cam.setTarget(BABYLON.Vector3.Lerp(td3Cam.getTarget(),new BABYLON.Vector3(p.x,p.y+0.8,p.z),0.12));}
+  }
+  try{td3Scene.render();}catch(e){}}
+function td3BindOnce(){if(_td3Bound)return;_td3Bound=true;
+  const on=(id,fn)=>{const e=document.getElementById(id);if(e)e.onclick=fn;};on('btn-3drun',td3Run);on('btn-3dstop',()=>{td3Stop();});
+  window.addEventListener('resize',()=>{if(td3Engine&&document.body.classList.contains('threed-mode')){try{td3Engine.resize();}catch(e){}}});
+  // keyboard control + when-key events (only while a 3D scene is running)
+  window.addEventListener('keydown',e=>{if(projectType!=='3d'||!td3Running)return;let k=e.key.toLowerCase();if(k===' ')k='space';td3Keys[k]=true;td3FireKey(k);if(k==='space'||k.indexOf('arrow')===0)e.preventDefault();});
+  window.addEventListener('keyup',e=>{let k=e.key.toLowerCase();if(k===' ')k='space';td3Keys[k]=false;});
+  // on-screen d-pad (tablets): press = key down, release = key up
+  const pad=document.getElementById('threed-pad');
+  if(pad)pad.querySelectorAll('button[data-k]').forEach(b=>{const k=b.getAttribute('data-k');
+    const dn=ev=>{ev.preventDefault();td3Keys[k]=true;td3FireKey(k);};const up=ev=>{ev.preventDefault();td3Keys[k]=false;};
+    b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);b.addEventListener('pointercancel',up);});
+}
+function enter3DUI(){
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
+  document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
+  ['code-panel','cwrap'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
+  document.getElementById('app').classList.remove('hide');document.getElementById('home').classList.add('hide');
+  mode='code';document.body.classList.add('threed-mode');
+  document.getElementById('threed-right').classList.remove('hide');
+  document.getElementById('code-panel').classList.add('show');
+  document.getElementById('ks3-editor').classList.add('hide');document.getElementById('blockly-div').style.display='';
+  const rb=document.querySelector('.cp-run-bar');if(rb)rb.style.display='none';
+  define3DBlocks();
+  if(!blocklyWorkspace)initBlockly();else{try{blocklyWorkspace.updateToolbox(threeDToolbox());}catch(e){}}
+  td3BindOnce();
+  load3DEngine().then(()=>{td3Init();setTimeout(()=>{try{td3Engine.resize();}catch(e){}td3Preview();},80);}).catch(e=>toast(e.message||'Could not load 3D','#ef4444'));
+  if(!_td3PrevBound&&blocklyWorkspace){_td3PrevBound=true;blocklyWorkspace.addChangeListener(ev=>{if(projectType==='3d'&&!td3Running&&ev&&ev.type!=='selected'&&ev.type!=='click'&&ev.type!=='viewport_change')td3PreviewSoon();});}
+  setTimeout(()=>{try{Blockly.svgResize(blocklyWorkspace);}catch(e){}resize();},60);
+}
+function exit3DUI(){if(!document.body.classList.contains('threed-mode'))return;td3Stop();document.body.classList.remove('threed-mode');
+  document.getElementById('threed-right').classList.add('hide');document.getElementById('code-panel').classList.remove('show');
+  const rb=document.querySelector('.cp-run-bar');if(rb)rb.style.display='';
+  if(blocklyWorkspace&&projectType!=='3d'){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}}
+function startNew3D(ks){clearDirty();projectType='3d';setKeyStage(ks);
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
+  document.getElementById('pt-modal').classList.add('hide');hideHome();enter3DUI();
+  if(blocklyWorkspace){blocklyWorkspace.clear();window._pendingXml='';try{_suppressBlocklyDirty=true;Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(threeDDefaultXml()),blocklyWorkspace);}catch(e){}_suppressBlocklyDirty=false;}
 }
 function turtleBindOnce(){
   if(_turtleBound)return;_turtleBound=true;
@@ -2424,7 +2877,7 @@ function turtleErr(msg){throw{turtleErr:true,msg};}
 // ── expression evaluator (numbers + comparisons) ──
 function turtleExpr(cur){let a=turtleSum(cur);const op=cur.toks[cur.i];if(op==='<'||op==='>'||op==='='||op==='<='||op==='>='||op==='<>'){cur.i++;const b=turtleSum(cur);switch(op){case'<':return a<b;case'>':return a>b;case'=':return a===b;case'<=':return a<=b;case'>=':return a>=b;case'<>':return a!==b;}}return a;}
 function turtleSum(cur){let a=turtleTerm(cur);while(cur.toks[cur.i]==='+'||cur.toks[cur.i]==='-'){const op=cur.toks[cur.i++];const b=turtleTerm(cur);a=(op==='+')?a+b:a-b;}return a;}
-function turtleTerm(cur){let a=turtleFactor(cur);while(cur.toks[cur.i]==='*'||cur.toks[cur.i]==='/'){const op=cur.toks[cur.i++];const b=turtleFactor(cur);a=(op==='*')?a*b:a/b;}return a;}
+function turtleTerm(cur){let a=turtleFactor(cur);while(cur.toks[cur.i]==='*'||cur.toks[cur.i]==='/'){const op=cur.toks[cur.i++];const b=turtleFactor(cur);if(op==='/'&&b===0)turtleErr('you can’t divide by zero');a=(op==='*')?a*b:a/b;}return a;}
 function turtleFactor(cur){let t=cur.toks[cur.i];if(t===undefined)turtleErr('I expected a number here');
   if(t==='-'){cur.i++;return -turtleFactor(cur);}
   if(t==='('){cur.i++;const v=turtleExpr(cur);if(cur.toks[cur.i]===')')cur.i++;return v;}
@@ -2448,9 +2901,9 @@ function turtleBracket(cur){if(cur.toks[cur.i]!=='[')turtleErr('I expected a [ h
 function turtleExtractProcs(toks){turtleProcs={};const main=[];for(let i=0;i<toks.length;){if(toks[i]&&toks[i].toLowerCase()==='to'){i++;const name=(toks[i]||'').toLowerCase();if(!name||!/^[a-z_]/.test(name))turtleErr('"to" needs a name');i++;const params=[];while(i<toks.length&&toks[i][0]===':'){params.push(toks[i].slice(1).toLowerCase());i++;}const body=[];while(i<toks.length&&toks[i].toLowerCase()!=='end'){body.push(toks[i]);i++;}if(i>=toks.length)turtleErr('"to '+name+'" is missing its "end"');i++;turtleProcs[name]={params,body};}else{main.push(toks[i]);i++;}}return main;}
 // ── statement runners (generators: yield = one animation step) ──
 function* turtleRunSeq(cur){while(cur.i<cur.toks.length&&cur.toks[cur.i]!==']'){yield* turtleRunStmt(cur);}}
-function* turtleMove(dist){const seg=6;const steps=Math.max(1,Math.ceil(Math.abs(dist)/seg));const sl=dist/steps;for(let k=0;k<steps;k++){const rad=turtle.h*Math.PI/180;const nx=turtle.x+sl*Math.sin(rad);const ny=turtle.y+sl*Math.cos(rad);if(turtle.pen)turtleDrawLine(turtle.x,turtle.y,nx,ny);turtle.x=nx;turtle.y=ny;yield;}}
+function* turtleMove(dist){if(!isFinite(dist))turtleErr('that number is too big');const seg=6;const steps=Math.max(1,Math.ceil(Math.abs(dist)/seg));const sl=dist/steps;for(let k=0;k<steps;k++){const rad=turtle.h*Math.PI/180;const nx=turtle.x+sl*Math.sin(rad);const ny=turtle.y+sl*Math.cos(rad);if(turtle.pen)turtleDrawLine(turtle.x,turtle.y,nx,ny);turtle.x=nx;turtle.y=ny;yield;}}
 function turtleGoto(x,y){if(turtle.pen)turtleDrawLine(turtle.x,turtle.y,x,y);turtle.x=x;turtle.y=y;}
-function* turtleCallProc(name,cur){const p=turtleProcs[name];const args=p.params.map(()=>turtleExpr(cur));const saved={};p.params.forEach((pn,k)=>{saved[pn]=turtleVars[pn];turtleVars[pn]=args[k];});turtleDepth++;if(turtleDepth>900){turtleDepth--;turtleErr('this repeats itself too many times');}try{yield* turtleRunSeq({toks:p.body,i:0});}catch(e){if(!(e&&e.turtleStop))throw e;}finally{turtleDepth--;p.params.forEach(pn=>{turtleVars[pn]=saved[pn];});}}
+function* turtleCallProc(name,cur){const p=turtleProcs[name];const args=p.params.map(()=>turtleExpr(cur));const saved={};p.params.forEach((pn,k)=>{saved[pn]=turtleVars[pn];turtleVars[pn]=args[k];});turtleDepth++;if(turtleDepth>900){turtleDepth--;turtleErr('your shape calls itself too many times — try a smaller number');}try{yield* turtleRunSeq({toks:p.body,i:0});}catch(e){if(!(e&&e.turtleStop))throw e;}finally{turtleDepth--;p.params.forEach(pn=>{turtleVars[pn]=saved[pn];});}}
 function* turtleRunStmt(cur){const w=cur.toks[cur.i++];const cmd=w.toLowerCase();switch(cmd){
   case'fd':case'forward':{const d=turtleExpr(cur);yield* turtleMove(d);break;}
   case'bk':case'back':{const d=turtleExpr(cur);yield* turtleMove(-d);break;}
@@ -2647,7 +3100,7 @@ function ks1SwitchPage(i){const p=stageState&&stageState.pages;if(!p||!p[i]||sta
   stageState.pageIdx=i;stageState.sprites=p[i].sprites;stageState.backdropIdx=p[i].backdropIdx||0;stageSel=0;ks1Target={si:-1,rep:-1};
   ks1RenderSprites();ks1RenderScripts();ks1RenderPages();}
 function ks1AddPage(){if(!stageState.pages||stageState.pages.length>=4||stagePlaying)return;const s=blankSprite('Sprite1',0);stageState.pages.push({sprites:[s],backdropIdx:stageState.backdropIdx||0});markDirty();ks1SwitchPage(stageState.pages.length-1);}
-function ks1DeletePage(i){const p=stageState&&stageState.pages;if(!p||p.length<=1||stagePlaying)return;p.splice(i,1);stageState.pageIdx=Math.max(0,Math.min(stageState.pageIdx,p.length-1));stageState.sprites=p[stageState.pageIdx].sprites;stageState.backdropIdx=p[stageState.pageIdx].backdropIdx||0;stageSel=0;ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();ks1RenderPages();}
+async function ks1DeletePage(i){const p=stageState&&stageState.pages;if(!p||p.length<=1||stagePlaying)return;if(!await cjConfirm('Delete this page?',{title:'Delete page',danger:true,okLabel:'Delete'}))return;p.splice(i,1);stageState.pageIdx=Math.max(0,Math.min(stageState.pageIdx,p.length-1));stageState.sprites=p[stageState.pageIdx].sprites;stageState.backdropIdx=p[stageState.pageIdx].backdropIdx||0;stageSel=0;ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();ks1RenderPages();}
 // Ready-made starter programs kids can load into the current character (teaches by example).
 const KS1_IDEAS=[
  {name:'Walk across',icon:ksvg('i-arr-r'),scr:[[{t:'flag'},{t:'repeat',n:8,body:[{t:'right',n:1}]}]]},
@@ -2662,12 +3115,12 @@ function ks1OpenIdeas(){let m=document.getElementById('ks1-ideas');
  m.innerHTML='<div class="ks1-modal-box"><h3> Try an idea</h3><p class="ks1-modal-sub">Tap one to add it to your character — then press GO!</p><div class="ks1-idea-grid"></div><button class="ks1-idea-close">Close</button></div>';
   const grid=m.querySelector('.ks1-idea-grid');
   KS1_IDEAS.forEach(idea=>{const c=document.createElement('div');c.className='ks1-idea';c.innerHTML='<div class="ii">'+idea.icon+'</div><div class="in">'+idea.name+'</div>';
-    c.onclick=()=>{const s=ks1CurSprite();if(s){s.ks1=JSON.parse(JSON.stringify(idea.scr));ks1Target={si:0,rep:-1};markDirty();ks1RenderScripts();}m.classList.add('hide');ks1Speak(idea.name);};
+    c.onclick=()=>{const s=ks1CurSprite();if(s){const base=(s.ks1||[]).length;s.ks1=(s.ks1||[]).concat(JSON.parse(JSON.stringify(idea.scr)));ks1Target={si:base,rep:-1};markDirty();ks1RenderScripts();}m.classList.add('hide');ks1Speak(idea.name);};
     grid.appendChild(c);});
   m.querySelector('.ks1-idea-close').onclick=()=>m.classList.add('hide');
   m.classList.remove('hide');}
 // Record-your-own-sound (browser mic permission = the consent gate). Stores into stageState.ks1sounds; block.n references it.
-function ks1RecordDialog(b){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Recording needs a microphone.');return;}
+function ks1RecordDialog(b){if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){cjAlert('Recording needs a microphone.','Microphone needed');return;}
   let m=document.getElementById('ks1-rec');if(!m){m=document.createElement('div');m.id='ks1-rec';m.className='ks1-modal';m.onclick=e=>{if(e.target===m)close();};document.body.appendChild(m);}
   m.classList.remove('hide');
   let chunks=[],mr=null,stream=null,dataURL=null,recording=false,seconds=0,timer=null;
@@ -2675,7 +3128,7 @@ function ks1RecordDialog(b){if(!navigator.mediaDevices||!navigator.mediaDevices.
   const cur=(stageState.ks1sounds||[])[b.n!=null?b.n:-1];if(cur)dataURL=cur.data;
   function close(){if(timer)clearInterval(timer);if(stream)stream.getTracks().forEach(t=>t.stop());m.classList.add('hide');}
   function mk(t,c){const x=document.createElement('button');x.className='ks1-rec-btn';x.style.background=c;x.textContent=t;return x;}
-  function start(){navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){stream=s;chunks=[];try{mr=new MediaRecorder(s);}catch(e){alert('Recording not supported here.');return;}
+  function start(){navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){stream=s;chunks=[];try{mr=new MediaRecorder(s);}catch(e){cjAlert('Recording not supported here.','Recording');return;}
     mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
     mr.onstop=()=>{const blob=new Blob(chunks,{type:(mr&&mr.mimeType)||'audio/webm'});const fr=new FileReader();fr.onload=()=>{dataURL=fr.result;paint();};fr.readAsDataURL(blob);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}};
     mr.start();recording=true;seconds=0;timer=setInterval(()=>{seconds++;if(seconds>=10)stop();paint();},1000);paint();}).catch(()=>{});}
@@ -2728,15 +3181,15 @@ function ks1ShowCoach(){if(!ks1Mission)return;let c=document.getElementById('ks1
  c.className='';c.innerHTML='<div class="kc-emoji">'+ms.icon+'</div><div class="kc-body"><div class="kc-step">'+ms.name+' — step '+(ks1Mission.step+1)+' of '+ms.steps.length+'</div><div class="kc-tip">'+step.tip+'</div></div><button class="kc-x">'+ksvg('i-x')+'</button>';
   c.querySelector('.kc-x').onclick=ks1StopMission;}
 function ks1CoachDone(){const c=document.getElementById('ks1-coach');if(c){c.className='done';c.innerHTML='<div class="kc-emoji"></div><div class="kc-body"><div class="kc-tip">Mission complete — great job!</div></div><button class="kc-x">'+ksvg('i-x')+'</button>';c.querySelector('.kc-x').onclick=ks1StopMission;}ks1Speak('Mission complete! Great job!');if(_ks1mTimer){clearInterval(_ks1mTimer);_ks1mTimer=null;}ks1Mission=null;}
-function ks1DeleteSprite(i){if(!stageState||stageState.sprites.length<=1)return;stageState.sprites.splice(i,1);stageSel=Math.max(0,Math.min(stageSel,stageState.sprites.length-1));ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();}
+async function ks1DeleteSprite(i){if(!stageState||stageState.sprites.length<=1)return;if(!await cjConfirm('Delete this character?',{title:'Delete character',danger:true,okLabel:'Delete'}))return;stageState.sprites.splice(i,1);stageSel=Math.max(0,Math.min(stageSel,stageState.sprites.length-1));ks1Target={si:-1,rep:-1};markDirty();ks1RenderSprites();ks1RenderScripts();}
 // small reusable bits
 function ks1Stepper(b,def){const nb=document.createElement('div');nb.className='bnum';const mn=document.createElement('span');mn.textContent='−';const vv=document.createElement('b');vv.textContent=(b.n!=null?b.n:def.num);const pl=document.createElement('span');pl.textContent='+';
   mn.onclick=e=>{e.stopPropagation();b.n=Math.max(1,(b.n!=null?b.n:def.num)-1);markDirty();ks1RenderScripts();};
   pl.onclick=e=>{e.stopPropagation();b.n=Math.min(20,(b.n!=null?b.n:def.num)+1);markDirty();ks1RenderScripts();};
   nb.appendChild(mn);nb.appendChild(vv);nb.appendChild(pl);return nb;}
 function ks1TextInput(b,def){const ti=document.createElement('input');ti.className='btext';ti.value=(b.text!=null?b.text:def.text);ti.onclick=e=>e.stopPropagation();ti.oninput=()=>{b.text=ti.value;markDirty();};return ti;}
-function ks1ColorChip(b){const c=document.createElement('div');c.className='ks1-msgc';c.style.background=KS1_MSG_COLORS[b.c||0];c.title='Message colour (tap to change)';c.onclick=e=>{e.stopPropagation();b.c=((b.c||0)+1)%KS1_MSG_COLORS.length;markDirty();ks1RenderScripts();};return c;}
-function ks1SpeedChip(b){const SP=['','',''];const c=document.createElement('div');c.className='ks1-spd';c.textContent=SP[(b.n||2)-1];c.title='Speed (tap to change)';c.onclick=e=>{e.stopPropagation();b.n=((b.n||2)%3)+1;markDirty();ks1RenderScripts();};return c;}
+function ks1ColorChip(b){const c=document.createElement('div');c.className='ks1-msgc';c.style.background=KS1_MSG_COLORS[b.c||0];c.style.cssText+=';color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;text-shadow:0 1px 2px rgba(0,0,0,.5)';c.textContent=String((b.c||0)+1);c.setAttribute('aria-label','Message colour '+((b.c||0)+1));c.title='Message colour '+((b.c||0)+1)+' (tap to change)';c.onclick=e=>{e.stopPropagation();b.c=((b.c||0)+1)%KS1_MSG_COLORS.length;markDirty();ks1RenderScripts();};return c;}
+function ks1SpeedChip(b){const SP=['i-turtle','i-run','i-rabbit'];const c=document.createElement('div');c.className='ks1-spd';c.innerHTML=(typeof ksvg==='function')?ksvg(SP[(b.n||2)-1]):['slow','medium','fast'][(b.n||2)-1];c.title='Speed: '+['slow','medium','fast'][(b.n||2)-1]+' (tap to change)';c.onclick=e=>{e.stopPropagation();b.n=((b.n||2)%3)+1;markDirty();ks1RenderScripts();};return c;}
 function ks1DelBtn(fn){const x=document.createElement('div');x.className='ks1-bdel';x.innerHTML=ksvg('i-x');x.onclick=e=>{e.stopPropagation();fn();};return x;}
 // Render one block (recursively for container bodies). parent = the array it lives in; si/rootIdx locate it for targeting.
 function ks1BlockEl(b,parent,idx,s,si,rootIdx){const def=KS1_BLOCKS[b.t];if(!def)return document.createTextNode('');const cat=KS1_CATS.find(c=>c.id===def.cat);
@@ -2911,7 +3364,7 @@ function paintRedo(){if(!paintState.redo.length)return;const d=paintState.redo.p
 function paintFlip(horiz){const tmp=document.createElement('canvas');tmp.width=_pcv.width;tmp.height=_pcv.height;tmp.getContext('2d').drawImage(_pcv,0,0);
   _pctx.save();_pctx.clearRect(0,0,_pcv.width,_pcv.height);_pctx.translate(horiz?_pcv.width:0,horiz?0:_pcv.height);_pctx.scale(horiz?-1:1,horiz?1:-1);_pctx.drawImage(tmp,0,0);_pctx.restore();paintPush();}
 function paintDown(p){const t=paintState.tool;paintState.drawing=true;paintState.start=p;
-  if(t==='text'){paintState.drawing=false;const txt=prompt('Type your text:');if(txt){_pctx.fillStyle=pcol('paint-fill');_pctx.font='bold '+(paintState.size*4)+'px sans-serif';_pctx.textBaseline='top';_pctx.fillText(txt,p.x,p.y);paintPush();}return;}
+  if(t==='text'){paintState.drawing=false;cjPrompt('Type your text:','',{title:'Add text'}).then(txt=>{if(txt){_pctx.fillStyle=pcol('paint-fill');_pctx.font='bold '+(paintState.size*4)+'px sans-serif';_pctx.textBaseline='top';_pctx.fillText(txt,p.x,p.y);paintPush();}});return;}
   if(t==='fill'){paintFloodFill(Math.round(p.x),Math.round(p.y),pcol('paint-fill'));paintPush();paintState.drawing=false;return;}
   if(t==='brush'||t==='erase'){_pctx.lineCap='round';_pctx.lineJoin='round';_pctx.lineWidth=paintState.size;_pctx.strokeStyle=pcol('paint-fill');_pctx.globalCompositeOperation=(t==='erase')?'destination-out':'source-over';_pctx.beginPath();_pctx.moveTo(p.x,p.y);_pctx.lineTo(p.x+0.1,p.y);_pctx.stroke();return;}
   // shapes: snapshot for live preview
@@ -3044,9 +3497,9 @@ function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{co
     case'st_set_drag':s.draggable=(b.getFieldValue('MODE')==='on');break;
     case'st_edge_bounce':{let bounced=false;if(s.x<18){s.x=18;bounced=true;}else if(s.x>CW-18){s.x=CW-18;bounced=true;}if(s.y<18){s.y=18;bounced=true;}else if(s.y>CH-18){s.y=CH-18;bounced=true;}if(bounced)s.dir=(540-s.dir)%360;break;}
     case'st_say':{s.say=String(b.getFieldValue('TXT')||'');s.sayT=99999;s.thinking=false;break;}
-    case'st_say_secs':{s.say=String(b.getFieldValue('TXT')||'');s.thinking=false;let f=Math.round(num('SECS')*60);s.sayT=f+1;while(f-->0&&stagePlaying)yield 0;s.say='';s.sayT=0;break;}
+    case'st_say_secs':{s.say=String(b.getFieldValue('TXT')||'');s.thinking=false;let f=Math.round(num('SECS')*60);s.sayT=99999;while(f-->0&&stagePlaying)yield 0;s.say='';s.sayT=0;break;}
     case'st_think':{s.say=String(b.getFieldValue('TXT')||'');s.sayT=99999;s.thinking=true;break;}
-    case'st_think_secs':{s.say=String(b.getFieldValue('TXT')||'');s.thinking=true;let f=Math.round(num('SECS')*60);s.sayT=f+1;while(f-->0&&stagePlaying)yield 0;s.say='';s.sayT=0;break;}
+    case'st_think_secs':{s.say=String(b.getFieldValue('TXT')||'');s.thinking=true;let f=Math.round(num('SECS')*60);s.sayT=99999;while(f-->0&&stagePlaying)yield 0;s.say='';s.sayT=0;break;}
     case'st_show':s.visible=true;break;
     case'st_hide':s.visible=false;break;
     case'st_change_size':s.size=Math.max(10,Math.min(400,s.size+num('N')));break;
@@ -3148,7 +3601,7 @@ function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{co
     case'st_pen_changesize':s.penSize=Math.max(1,Math.min(100,(s.penSize||4)+num('N')));break;
     case'st_pen_setsize':s.penSize=Math.max(1,Math.min(100,num('N')));break;
     case'st_broadcast':stBroadcast(b.getFieldValue('MSG'));break;
-    case'st_broadcast_wait':{const msg=b.getFieldValue('MSG'),tok={};let any=false;stRecvHats.forEach(h=>{if(h.msg===msg){stFibers.push({gen:stRunSeq(h.first,h.s,0),wait:0,bcast:tok,sp:h.s});any=true;}});if(any)while(stagePlaying&&stFibers.some(f=>f.bcast===tok))yield 0;break;}
+    case'st_broadcast_wait':{const msg=b.getFieldValue('MSG'),tok={};let any=false;stRecvHats.forEach(h=>{if(h.msg===msg){stFibers.push({gen:stRunSeq(h.first,h.s,0),wait:0,bcast:tok,sp:h.s});any=true;stClones.forEach(c=>{if(c._src===h.s&&!c._deleted){stFibers.push({gen:stRunSeq(h.first,c,0),wait:0,bcast:tok,sp:c});any=true;}});}});if(any)while(stagePlaying&&stFibers.some(f=>f.bcast===tok))yield 0;break;}
     case'st_clone':{const w=b.getFieldValue('WHICH');const orig=(!w||w==='_myself')?s:(stageState.sprites.find(o=>o.name===w)||s);stSpawnClone(orig);break;}
     case'st_delete_clone':if(s&&s.isClone){s._deleted=true;throw{__stopThis:true};}break;
   }}
@@ -3205,7 +3658,7 @@ function stEval(b,s){if(!b)return 0;const t=b.type;const inp=n=>stEval(b.getInpu
     case'st_distance_to':{const p=stTargetPos(s,b.getFieldValue('TARGET'));return Math.round(Math.hypot(p.x-s.x,p.y-s.y));}
     case'st_key_pressed':{const code=ST_KEYMAP[b.getFieldValue('KEY')];return !!(code&&keys[code]);}
     case'st_touching':return stTouching(s,b.getFieldValue('TARGET'));
-    case'st_compare':{const a=inp('A'),c=inp('B'),op=b.getFieldValue('OP');return op==='>'?stNum(a)>stNum(c):op==='<'?stNum(a)<stNum(c):a==c;}
+    case'st_compare':{const a=inp('A'),c=inp('B'),op=b.getFieldValue('OP');const numc=stBothNum(a,c),A=numc?stNum(a):a,C=numc?stNum(c):c;return op==='>'?stNum(a)>stNum(c):op==='<'?stNum(a)<stNum(c):A==C;}
     // ── standard Blockly operators ──
     case'math_number':return Number(b.getFieldValue('NUM'))||0;
     case'math_arithmetic':{const a=stNum(inp('A')),c=stNum(inp('B')),op=b.getFieldValue('OP');return op==='ADD'?a+c:op==='MINUS'?a-c:op==='MULTIPLY'?a*c:op==='DIVIDE'?(c?a/c:0):op==='POWER'?Math.pow(a,c):0;}
@@ -3234,7 +3687,7 @@ function stTargetPos(s,target){if(target==='_mouse')return{x:stageMouse.x,y:stag
   const o=stageState&&stageState.sprites.find(o=>o!==s&&o.name===target);return o?{x:o.x,y:o.y}:{x:s.x,y:s.y};}
 function stageStopRun(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.remove('active');}
 function stStartScript(first,s,hat){if(first)stFibers.push({gen:stRunSeq(first,s,0),wait:0,hat,sp:s});}
-function stBroadcast(msg){stRecvHats.forEach(h=>{if(h.msg===msg)stStartScript(h.first,h.s,null);});}
+function stBroadcast(msg){stRecvHats.forEach(h=>{if(h.msg===msg){stStartScript(h.first,h.s,null);stClones.forEach(c=>{if(c._src===h.s&&!c._deleted)stStartScript(h.first,c,null);});}});}
 function stSpawnClone(orig){if(!orig||stClones.length>=300)return;const src=orig._src||orig;
   const clone={name:src.name,x:orig.x,y:orig.y,dir:orig.dir,size:orig.size,visible:orig.visible,costumes:src.costumes,costumeIdx:orig.costumeIdx||0,penDown:orig.penDown||false,penColor:orig.penColor||'#ff0000',penSize:orig.penSize||4,_plx:orig.x,_ply:orig.y,fx:Object.assign({},orig.fx),say:'',sayT:0,thinking:false,isClone:true,_src:src};
   stClones.push(clone);stCloneHats.forEach(h=>{if(h.s===src)stStartScript(h.first,clone,null);});}
@@ -3314,7 +3767,7 @@ function* ks1RunOne(b,s){switch(b.t){
 }}
 function* ks1RunSeq(blocks,s){for(let i=0;i<blocks.length;i++){if(!stagePlaying)return;const b=blocks[i];
   if(b.t==='repeat'){const reps=Math.max(1,b.n||1);for(let k=0;k<reps&&stagePlaying;k++)yield* ks1RunSeq(b.body||[],s);continue;} // wraps the blocks INSIDE it (like ScratchJr)
-  if(b.t==='forever'){const body=b.body||[];while(stagePlaying){if(body.length)yield* ks1RunSeq(body,s);else yield 0;}return;}
+  if(b.t==='forever'){const body=b.body||[];while(stagePlaying){if(body.length)yield* ks1RunSeq(body,s);yield 0;}return;}
   if(KS1_BLOCKS[b.t]&&!KS1_BLOCKS[b.t].hat)yield* ks1RunOne(b,s);
 }}
 function ks1Start(body,s){stFibers.push({gen:ks1RunSeq(body,s),wait:0,sp:s});}
@@ -3332,7 +3785,7 @@ function stageStart(){if(!stageState)return;
   defineStageBlocks();
   // First pass: build each sprite's headless workspace and collect ALL hats (so broadcasts/clones see every sprite).
   stPenClear();
-  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._ob=Object.assign({},OHBOT_DEFAULT);s._mb={leds:Array(25).fill(0),bright:255,group:0,rxNum:0,rxStr:''};s._ks1speed=2;
+  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s._scostume=s.costumeIdx;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._ob=Object.assign({},OHBOT_DEFAULT);s._mb={leds:Array(25).fill(0),bright:255,group:0,rxNum:0,rxStr:''};s._ks1speed=2;
     if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}
     if(keyStage==='ks1'){ks1CollectHats(s);return;} // KS1 runs ScratchJr-style scripts, not Blockly
     if(s.xml){try{const ws=new Blockly.Workspace();Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(s.xml),ws);s._ws=ws; // headless copy so every sprite's scripts run, not just the selected one
@@ -3357,7 +3810,7 @@ function stageStart(){if(!stageState)return;
 }
 function stageStop(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];stMbBtnHats=[];stMbShakeHats=[];stMbGestureHats=[];stMbLogoHats=[];stMbRadioNumHats=[];stMbRadioStrHats=[];stRadioQ=[];ks1TapHats=[];ks1BumpHats=[];ks1MsgHats=[];_mbPress=null;_mbSlider=null;_mbPanelDrag=null;if(typeof mbStopMic==='function')mbStopMic();stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];if(typeof stStopSounds==='function')stStopSounds();if(typeof stFinishAsk==='function')stFinishAsk();
   const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.remove('active');
-  if(stageState)stageState.sprites.forEach(s=>{if(s._sx!=null){s.x=s._sx;s.y=s._sy;s.dir=s._sdir;s.visible=(s._svis!==false);s.size=s._ssize||100;}s.say='';s.sayT=0;if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}});
+  if(stageState)stageState.sprites.forEach(s=>{if(s._sx!=null){s.x=s._sx;s.y=s._sy;s.dir=s._sdir;s.visible=(s._svis!==false);s.size=s._ssize||100;if(s._scostume!=null)s.costumeIdx=s._scostume;}s._z=0;s.fx={};s.say='';s.sayT=0;if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}});
 }
 function stageFrame(){if(!stagePlaying||!stageState)return;
   // "when key pressed" hats: while a key is held, (re)start its script once it's finished.
@@ -3378,9 +3831,12 @@ function stageFrame(){if(!stagePlaying||!stageState)return;
 function stPenTrace(s){if(!s.penDown){s._plx=s.x;s._ply=s.y;return;}const lx=s._plx,ly=s._ply;
   if(lx!=null&&(lx!==s.x||ly!==s.y)){const c=stPen();c.strokeStyle=s.penColor||'#ff0000';c.lineWidth=s.penSize||4;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(lx,ly);c.lineTo(s.x,s.y);c.stroke();}
   s._plx=s.x;s._ply=s.y;}
-function stageFireClick(x,y){if(!stagePlaying||!stageState)return;const i=stageSpriteAt(x,y);if(i<0)return;const s=stageState.sprites[i];
-  if(keyStage==='ks1'){ks1TapHats.forEach(h=>{if(h.s===s)ks1Start(h.body,h.s);});return;}
-  stClickHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});}
+function stageFireClick(x,y){if(!stagePlaying||!stageState)return;const i=stageSpriteAt(x,y);
+  if(i>=0){const s=stageState.sprites[i];
+    if(keyStage==='ks1'){ks1TapHats.forEach(h=>{if(h.s===s)ks1Start(h.body,h.s);});return;}
+    stClickHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});return;}
+  // clones aren't in stageState.sprites — hit-test them too (topmost first) and fire the clone's source hats ON the clone
+  for(let k=stClones.length-1;k>=0;k--){const c=stClones[k];if(c._deleted)continue;const sc=(c.size||100)/100,hb=costumeHalf(c);if(Math.abs(x-c.x)<(hb.hw+2)*sc&&Math.abs(y-c.y)<(hb.hh+2)*sc){stClickHats.forEach(h=>{if(h.s===c._src)stStartScript(h.first,c,null);});return;}}}
 // The cat costume, drawn centred at the current origin in the given colour.
 function paintCat(c,color){c.fillStyle=color||'#ff922b';c.strokeStyle='#000';c.lineWidth=2.5;
   c.beginPath();c.moveTo(-14,-12);c.lineTo(-7,-22);c.lineTo(-2,-12);c.closePath();c.fill();c.stroke();
@@ -3958,7 +4414,7 @@ function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprite
 function stageDragStart(e){if(projectType!=='stage')return;const p=stagePtr(e);const i=stageSpriteAt(p.x,p.y);if(i<0)return;const sp=stageState.sprites[i];
   if(stagePlaying){if(!sp.draggable)return;}else if(i!==stageSel)stageSelectSprite(i); // during play only draggable sprites move
   _stageDrag={i:i,dx:p.x-sp.x,dy:p.y-sp.y};e.preventDefault();}
-function stageDragMove(e){if(!_stageDrag||!stageState)return;const s=stageState.sprites[_stageDrag.i!=null?_stageDrag.i:stageSel];if(!s)return;const p=stagePtr(e);s.x=Math.max(16,Math.min(CW-16,p.x-_stageDrag.dx));s.y=Math.max(16,Math.min(CH-16,p.y-_stageDrag.dy));if(typeof collabSpriteThrottled==='function')collabSpriteThrottled(s);e.preventDefault();}
+function stageDragMove(e){if(!_stageDrag||!stageState)return;const s=stageState.sprites[_stageDrag.i!=null?_stageDrag.i:stageSel];if(!s)return;const p=stagePtr(e);s.x=Math.max(16,Math.min(CW-16,p.x-_stageDrag.dx));s.y=Math.max(16,Math.min(CH-16,p.y-_stageDrag.dy));stageNeedsDraw=true;if(typeof collabSpriteThrottled==='function')collabSpriteThrottled(s);e.preventDefault();}
 function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_stageDrag.i!=null?_stageDrag.i:stageSel];_stageDrag=null;markDirty();if(s&&typeof collabSprite==='function')collabSprite(s);}}
 // NB: the shared `canvas` const is declared later in the file, so bind via getElementById here.
 (function bindStageControls(){const gc=document.getElementById('gc');
@@ -4009,9 +4465,9 @@ function closeTut(){document.getElementById('tutorial').classList.add('hide');tr
 document.getElementById('tut-next').onclick=()=>{if(tutStep<TUTORIAL.length-1){tutStep++;renderTut();}else closeTut();};
 document.getElementById('tut-skip').onclick=closeTut;
 document.querySelectorAll('[data-demo]').forEach(btn=>{
-  btn.onclick=()=>{setGridSize('standard');DEMOS[btn.dataset.demo]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();clearDirty();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');};
+  btn.onclick=()=>{setGridSize('standard');DEMOS[btn.dataset.demo]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();clearDirty();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');toast('Example games use the Key Stage 2 blocks','#3b82a6');};
 });
-document.getElementById('home-btn').onclick=()=>{if(dirty){autoSaveDraft();if(!confirm('Go back to the home screen?\n\nYour game is auto-saved as a draft you can resume — but unsaved changes won\'t be in your saved levels.'))return;}showHome();};
+document.getElementById('home-btn').onclick=async()=>{if(dirty){autoSaveDraft();if(!await cjConfirm('Your game is auto-saved as a draft you can resume — but unsaved changes won’t be in your saved games.',{title:'Go back to home?',okLabel:'Go home',cancelLabel:'Stay'}))return;}showHome();};
 
 // ═══════════════════════════════════════════════════════════════════════
 // TEACHER HUB
@@ -4191,7 +4647,7 @@ function printPack(){const ls=thLessons();doPrint(ls.map((L,i)=>thSheetHTML(L)+(
 function loadStarter(){if(thCurrent&&thCurrent.starter&&TH_STARTERS[thCurrent.starter]){setGridSize('standard');TH_STARTERS[thCurrent.starter]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage(thYear===2?'ks2':'ks1');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');clearDirty();toast('Starter level loaded — happy building!','#ae853e');}}
 function loadChallenge(){setGridSize('standard');TH_STARTERS.challenge();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();document.getElementById('theme-sel').value=theme;hideTeacher();hideHome();switchMode('build');clearDirty();toast('Challenge loaded!','#ae853e');}
 function openSubmission(){hideTeacher();document.getElementById('file-input').click();}
-function teacherHubClasses(){if(typeof cloudOn==='function'&&cloudOn()){openCloudTeacher();}else{alert('Cloud saving isn’t set up yet. Ask your CodeJump administrator to switch it on (see the cloud/ setup guide), then your classes will appear here.');}}
+function teacherHubClasses(){if(typeof cloudOn==='function'&&cloudOn()){openCloudTeacher();}else{cjAlert('Cloud saving isn’t set up yet. Ask your CodeJump administrator to switch it on (see the cloud/ setup guide), then your classes will appear here.','Teacher tools');}}
 // Projector mode with live countdown
 let thProjInt=null,thProjLeft=600;
 function openProjector(){const ch=dailyChallenge();
@@ -4774,6 +5230,7 @@ function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/bloc
 </xml>`;}
 
 function getToolbox(){
+  if(projectType==='3d')return threeDToolbox();
   if(projectType==='stage')return stageToolbox();
   // Game blocks — shown for every key stage.
   const events=[{kind:'block',type:'when_key_pressed'},{kind:'block',type:'when_game_starts'}];
@@ -4857,6 +5314,7 @@ function getToolbox(){
 }
 
 function getDefaultXml(){
+  if(projectType==='3d')return threeDDefaultXml();
   if(projectType==='stage')return stageDefaultXml();
   return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="when_key_pressed" x="20" y="20"><field name="KEY">left</field>
@@ -4898,7 +5356,7 @@ function getDefaultXml(){
 
 function initBlockly(){
   if(blocklyWorkspace)return;
-  defineBlocks();defineStageBlocks();
+  defineBlocks();defineStageBlocks();if(typeof define3DBlocks==='function')define3DBlocks();
   // Custom theme — set the font HERE so Blockly measures block sizes with the
   // real font (Montserrat). Doing it via CSS instead desyncs measurement from
   // rendering and makes the text sit off-centre.
@@ -5659,7 +6117,7 @@ function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTM
 function selHelpTab(k){const T=helpTabs();helpTab=k;document.querySelectorAll('.help-tab').forEach((b,i)=>b.classList.toggle('active',T[i]&&T[i][0]===k));const tab=T.find(t=>t[0]===k);const el=document.getElementById('help-content');el.innerHTML=tab?tab[2]:'';el.scrollTop=0;}
 // ── Read-aloud (text-to-speech) — helps Key Stage 1 early/pre-readers ──
 let readAloud=false;try{readAloud=localStorage.getItem('bap_read_aloud')!=='off';}catch(e){readAloud=true;}
-function speak(text){if(keyStage!=='ks1'||!readAloud||!text||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g,''));u.rate=0.92;u.pitch=1.08;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+function speak(text){if(!readAloud||!text||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g,''));u.rate=0.92;u.pitch=1.08;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 function updateReadBtn(){const b=document.getElementById('btn-read');if(!b)return;b.style.display=(keyStage==='ks1')?'':'none';b.classList.toggle('active',readAloud);b.innerHTML='<svg class="ic"><use href="#'+(readAloud?'i-read':'i-read')+'"></use></svg> Read';}
 document.getElementById('btn-read').onclick=()=>{readAloud=!readAloud;try{localStorage.setItem('bap_read_aloud',readAloud?'on':'off');}catch(e){}if(!readAloud&&window.speechSynthesis)speechSynthesis.cancel();updateReadBtn();if(readAloud)speak('Reading out loud is on');};
 updateReadBtn();
@@ -5874,8 +6332,8 @@ buildPalette();
 function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
 
 let histSaved=false;
-function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg)};}
-function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});commitLevel();renderPagesStrip();}
+function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg))};}
+function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});doorCfg=Object.assign({},s.doorCfg||{});keyCfg=Object.assign({},s.keyCfg||{});signCfg=Object.assign({},s.signCfg||{});chestCfg=s.chestCfg?JSON.parse(JSON.stringify(s.chestCfg)):{};teleCfg=s.teleCfg?JSON.parse(JSON.stringify(s.teleCfg)):{};buttonCfg=s.buttonCfg?JSON.parse(JSON.stringify(s.buttonCfg)):{};gateCfg=s.gateCfg?JSON.parse(JSON.stringify(s.gateCfg)):{};commitLevel();renderPagesStrip();}
 function pushHistory(){history.push(snapState());if(history.length>80)history.shift();future=[];histSaved=true;}
 function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}future.push(snapState());restoreState(history.pop());markDirty();toast('Undone!','#6366f1');}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone!','#6366f1');}
@@ -6007,6 +6465,8 @@ canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellF
 // ═══════════════════════════════════════════════════════════════════════
 function switchMode(m){
   // Turtle & Stage projects use their own unified views, not Build/Play/Code modes.
+  if(projectType==='3d'){enter3DUI();return;}
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(projectType==='turtle'){enterTurtleUI();return;}
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(projectType==='stage'){enterStageUI();return;}
@@ -6047,7 +6507,7 @@ document.getElementById('t-erase').onclick=()=>setTool('erase');
 document.getElementById('t-undo') .onclick=()=>undo();
 document.getElementById('t-redo') .onclick=()=>redo();
 document.getElementById('t-testpage').onclick=()=>testThisPage();
-document.getElementById('t-clear').onclick=()=>{if(confirm('Clear this page?')){pushHistory();grid=mkGrid();waterGrid=mkGrid();commitLevel();renderPagesStrip();markDirty();}};
+document.getElementById('t-clear').onclick=async()=>{if(await cjConfirm('Clear everything on this page?',{title:'Clear page',danger:true,okLabel:'Clear'})){pushHistory();grid=mkGrid();waterGrid=mkGrid();commitLevel();renderPagesStrip();markDirty();}};
 document.getElementById('t-save') .onclick=()=>{if(typeof cloudOn==='function'&&cloudOn()){openSaveChooser();}else{saveCurrentLevel();}};
 function openSaveChooser(){document.getElementById('cloud-modal').classList.remove('hide');_cb().innerHTML=`<h2> Save your game</h2><p style="text-align:center">Where would you like to save it?</p>
  <button class="cloud-btn gold" id="sv-cloud"> Save online<span class="sub" style="color:rgba(0,0,0,.6)">Open it on any device with your code</span></button>
@@ -6075,7 +6535,7 @@ function sanitizeArt(a){if(!Array.isArray(a))return null;const out=new Array(256
 function sanitizeWaterGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;for(let r=0;r<ROWS;r++){const row=Array.isArray(g[r])?g[r]:[];for(let c=0;c<COLS;c++){const v=row[c]|0;out[r][c]=(v===T.WATER||v===T.WATER_TOP)?v:0;}}return out;}
 function sanitizeGrid(g){const out=mkGrid();if(!Array.isArray(g))return out;
   for(let r=0;r<ROWS;r++){const row=Array.isArray(g[r])?g[r]:[];
-    for(let c=0;c<COLS;c++){let v=row[c];v=(typeof v==='number'&&isFinite(v))?(v|0):0;out[r][c]=(v>=0&&v<=30)?v:0;}}
+    for(let c=0;c<COLS;c++){let v=row[c];v=(typeof v==='number'&&isFinite(v))?(v|0):0;out[r][c]=(v>=0&&v<=T_MAX)?v:0;}}
   return out;}
 function sanitizeMoverCfg(m){const out={};if(!m||typeof m!=='object')return out;for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};const l=Math.max(0,Math.min(19,(v.l|0))),r=Math.max(0,Math.min(19,(v.r|0)));out[k]={l,r};}return out;}
 function sanitizeEnemyCfg(m){const out={};if(!m||typeof m!=='object')return out;const cl=x=>Math.max(0,Math.min(11,(x|0)));for(const k in m){if(!/^\d{1,2},\d{1,2}$/.test(k))continue;const v=m[k]||{};out[k]={l:cl(v.l),r:cl(v.r),u:cl(v.u),d:cl(v.d)};}return out;}
@@ -6102,17 +6562,20 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
 };}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
-  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;} // a freshly loaded project isn't linked to a cloud slot yet
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
-  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':'platformer'; // legacy payloads (no field) are always platformer
-  if(projectType==='turtle'){
+  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':'platformer'; // legacy payloads (no field) are always platformer
+  if(projectType==='3d'){
+    if(typeof exitTurtleUI==='function')exitTurtleUI();if(typeof exitStageUI==='function')exitStageUI();
+    if(typeof enter3DUI==='function')enter3DUI(); // the blocklyXml below loads the saved 3D program into the workspace
+  }else if(projectType==='turtle'){
     turtleCode=(d.turtle&&typeof d.turtle.code==='string')?d.turtle.code.slice(0,20000):TURTLE_DEFAULT;
  if(typeof enterTurtleUI==='function')enterTurtleUI(); // loaded a turtle project show the playground
   }else if(projectType==='stage'){if(typeof exitTurtleUI==='function')exitTurtleUI();stagePlaying=false;stageState=sanitizeStage(d.stage);
     stageSel=collabActive?Math.max(0,Math.min(stageSel,stageState.sprites.length-1)):0; // keep your selected sprite during live collab
     if(!collabActive){stVars={};stVarShown={};stLists={};stListShown={};}
  if(!collabActive&&typeof enterStageUI==='function')enterStageUI(); // loaded a stage project show the unified view
-  }else{if(typeof exitTurtleUI==='function')exitTurtleUI();if(typeof exitStageUI==='function')exitStageUI();}
+  }else{if(typeof exit3DUI==='function')exit3DUI();if(typeof exitTurtleUI==='function')exitTurtleUI();if(typeof exitStageUI==='function')exitStageUI();}
   COLS=(d.cols>=20&&d.cols<=80)?(d.cols|0):20;ROWS=(d.rows>=12&&d.rows<=40)?(d.rows|0):12; // set size BEFORE cleaning levels
   ks3Code=(typeof d.ks3Code==='string')?d.ks3Code:(d.keyStage==='ks3'?KS3_DEFAULT:'');
   if(d.customSprites&&typeof d.customSprites==='object')Object.assign(customSprites,d.customSprites);
@@ -6217,7 +6680,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='turtle'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Turtle has no live collaboration
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='turtle'&&projectType!=='3d'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Turtle & 3D have no live collaboration yet
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -6241,10 +6704,10 @@ document.getElementById('btn-build').onclick=()=>switchMode('build');
 document.getElementById('btn-play') .onclick=()=>switchMode('play');
 document.getElementById('btn-code') .onclick=()=>switchMode('code');
 document.getElementById('cp-run').onclick=()=>switchMode('play');
-document.getElementById('cp-clear').onclick=()=>{
-  if(isKS3()){if(confirm('Clear all your code?')){const ta=document.getElementById('ks3-code');ta.value='';ks3Code='';ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();toast('Code cleared','#585555');}return;}
+document.getElementById('cp-clear').onclick=async()=>{
+  if(isKS3()){if(await cjConfirm('Clear all your code?',{title:'Clear code',danger:true,okLabel:'Clear'})){const ta=document.getElementById('ks3-code');ta.value='';ks3Code='';ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();toast('Code cleared','#585555');}return;}
   if(!blocklyWorkspace){initBlockly();}
-  if(confirm('Remove ALL your code blocks? This cannot be undone.')){
+  if(await cjConfirm('Remove ALL your code blocks? This cannot be undone.',{title:'Clear code',danger:true,okLabel:'Clear'})){
     blocklyWorkspace.clear();window._pendingXml='';readBlocklyConfig();
     toast('Code cleared','#585555');
   }
@@ -6317,23 +6780,32 @@ function cloudMyHome(){let h=`<button id="c-out" class="cloud-back" style="float
 async function cloudMyGames(){await cloudRefresh();const projs=(cloudMe&&cloudMe.projects)||[];
  let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> My games</h2>`;
   if(!projs.length)h+='<p style="text-align:center">No saved games yet. Build one, then tap “Save this game”.</p>';
- projs.forEach(pr=>{const tag=pr.class?(' '+cesc(pr.class)):' my own';h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${tag} · ${new Date(pr.updated).toLocaleDateString('en-GB')}</small></div><button data-del="${pr.id}" title="Delete"></button></div>`;});
+ projs.forEach(pr=>{const tag=(pr.fromTeacher&&!pr.handedIn)?'⭐ NEW — from your teacher':(pr.handedIn?('handed in to '+cesc(pr.class)):(pr.class?('class '+cesc(pr.class)):'my own'));h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${tag} · ${new Date(pr.updated).toLocaleDateString('en-GB')}</small></div><button data-del="${pr.id}" title="Delete"></button></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudOpenProject(cloudMe.uid,el.dataset.id,projs.find(p=>p.id===el.dataset.id)));
-  _cb().querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this game?'))return;try{await cloudApi('/project/delete',{token:cloudToken,id:b.dataset.del});await cloudRefresh();cloudMyGames();}catch(e){cloudError(e);}});}
+  _cb().querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!await cjConfirm('Delete this game?',{title:'Delete game',danger:true,okLabel:'Delete'}))return;try{await cloudApi('/project/delete',{token:cloudToken,id:b.dataset.del});await cloudRefresh();cloudMyGames();}catch(e){cloudError(e);}});}
 async function cloudOpenProject(owner,id,meta){try{const data=await cloudApi('/project/load',{token:cloudToken,id,owner:owner!==cloudMe.uid?owner:undefined});applyPayload(data.payload);cloudProjectId=(owner===cloudMe.uid)?id:null;cloudProjectTitle=(meta&&meta.title)||data.title||'My Game';cloudProjectClass=(meta&&meta.class)||data.class||null;const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof readBlocklyConfig==='function')readBlocklyConfig();closeCloud();if(typeof hideHome==='function')hideHome();if(typeof hideTeacher==='function')hideTeacher();switchMode('build');toast('Opened “'+cesc(cloudProjectTitle)+'” ','#10b981');}catch(e){cloudError(e);}}
 // ---- SAVE (personal or a joined class) ----
 function cloudSaveFlow(){if(!isSignedIn()){cloudAuthHome();return;}const classes=cloudMe.classes||[];
- let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> Save this game</h2><p>Where should it go?</p>
- <button class="cloud-btn" id="sv-own"> My own work<span class="sub">Private — just for you</span></button>`;
- classes.forEach(c=>{h+=`<button class="cloud-btn" data-cls="${cesc(c.code)}"> ${cesc(c.name)}<span class="sub">Hand in to this class (${cesc(c.code)})</span></button>`;});
- if(!classes.length)h+='<p class="cloud-note">Join a class in Settings to hand work in to a teacher.</p>';
+ const curCls=cloudProjectClass,curObj=classes.find(c=>c.code===curCls);
+ let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> Save this game</h2>`;
+ if(curObj){ // this game is class work → handing IN to that class is the main thing to do
+   h+=`<p>This game belongs to <b>${cesc(curObj.name)}</b>.</p>
+   <button class="cloud-btn gold" data-cls="${cesc(curCls)}"> Hand in to ${cesc(curObj.name)}<span class="sub">Send your work to your teacher</span></button>`;
+   classes.forEach(c=>{if(c.code!==curCls)h+=`<button class="cloud-btn" data-cls="${cesc(c.code)}"> Hand in to ${cesc(c.name)}<span class="sub">${cesc(c.code)}</span></button>`;});
+   h+=`<button class="cloud-btn" id="sv-own"> Save a private copy<span class="sub">Just for you — your teacher will NOT see this</span></button>`;
+ } else {
+   h+=`<p>Where should it go?</p>
+   <button class="cloud-btn" id="sv-own"> My own work<span class="sub">Private — just for you</span></button>`;
+   classes.forEach(c=>{h+=`<button class="cloud-btn gold" data-cls="${cesc(c.code)}"> Hand in to ${cesc(c.name)}<span class="sub">${cesc(c.code)} — your teacher will see it</span></button>`;});
+   if(!classes.length)h+='<p class="cloud-note">Join a class in Settings to hand work in to a teacher.</p>';
+ }
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
-  document.getElementById('sv-own').onclick=()=>cloudDoSave(null);
+  const own=document.getElementById('sv-own');if(own)own.onclick=()=>cloudDoSave(null);
   _cb().querySelectorAll('[data-cls]').forEach(b=>b.onclick=()=>cloudDoSave(b.dataset.cls));}
 async function cloudDoSave(classCode){try{commitLevel();
   if(cloudProjectId&&classCode!==cloudProjectClass)cloudProjectId=null;
-  let title=cloudProjectTitle;if(!cloudProjectId){title=prompt('Name your game:',cloudProjectTitle||'My Game');if(title===null)return;}
+  let title=cloudProjectTitle;if(!cloudProjectId){title=await cjPrompt('Name your game:',cloudProjectTitle||'My Game',{title:'Save game'});if(title===null)return;}
   cloudProjectTitle=title||'My Game';
  _cb().innerHTML='<h2> Saving…</h2><p style="text-align:center">Please wait…</p>';
   const res=await cloudApi('/project/save',{token:cloudToken,id:cloudProjectId,title:cloudProjectTitle,class:classCode,payload:buildPayload()});
@@ -6361,8 +6833,8 @@ function cloudChangePassword(){_cb().innerHTML=`<button class="cloud-back" id="c
   <p>New password:</p><input class="cloud-input" id="pw-new" type="password">
  <button class="cloud-btn gold" id="pw-go">Change password </button>`;
   document.getElementById('c-bk').onclick=cloudSettings;
-  document.getElementById('pw-go').onclick=async()=>{const oldPassword=document.getElementById('pw-old').value;const newPassword=document.getElementById('pw-new').value;if(newPassword.length<4){toast('New password must be at least 4 characters','#ef4444');return;}try{await cloudApi('/password',{token:cloudToken,oldPassword,newPassword});toast('Password changed','#10b981');cloudSettings();}catch(e){cloudError(e);}};}
-function cloudRenderSettingsClasses(){const box=document.getElementById('se-classes');if(!box)return;const cs=cloudMe.classes||[];if(!cs.length){box.innerHTML='<p style="font-size:13px;opacity:.7">You haven’t joined any classes yet.</p>';return;}box.innerHTML=cs.map(c=>`<div class="cloud-list-item"><div class="ci-main"><b>${cesc(c.name)}</b><small>${cesc(c.code)}</small></div><button data-leave="${cesc(c.code)}">Leave</button></div>`).join('');box.querySelectorAll('[data-leave]').forEach(b=>b.onclick=async()=>{if(!confirm('Leave this class?'))return;try{await cloudApi('/class/leave',{token:cloudToken,code:b.dataset.leave});await cloudRefresh();cloudSettings();}catch(e){cloudError(e);}});}
+  document.getElementById('pw-go').onclick=async()=>{const oldPassword=document.getElementById('pw-old').value;const newPassword=document.getElementById('pw-new').value;if(newPassword.length<4){toast('New password must be at least 4 characters','#ef4444');return;}try{const r=await cloudApi('/password',{token:cloudToken,oldPassword,newPassword});if(r&&r.token){cloudToken=r.token;try{localStorage.setItem('bap_cloud_token',cloudToken);}catch(_){}}toast('Password changed','#10b981');cloudSettings();}catch(e){cloudError(e);}};}
+function cloudRenderSettingsClasses(){const box=document.getElementById('se-classes');if(!box)return;const cs=cloudMe.classes||[];if(!cs.length){box.innerHTML='<p style="font-size:13px;opacity:.7">You haven’t joined any classes yet.</p>';return;}box.innerHTML=cs.map(c=>`<div class="cloud-list-item"><div class="ci-main"><b>${cesc(c.name)}</b><small>${cesc(c.code)}</small></div><button data-leave="${cesc(c.code)}">Leave</button></div>`).join('');box.querySelectorAll('[data-leave]').forEach(b=>b.onclick=async()=>{if(!await cjConfirm('Leave this class?',{title:'Leave class',okLabel:'Leave'}))return;try{await cloudApi('/class/leave',{token:cloudToken,code:b.dataset.leave});await cloudRefresh();cloudSettings();}catch(e){cloudError(e);}});}
 // ---- TEACHER: classes pupils work ----
 function cloudTeacherClasses(){const cs=(cloudMe&&cloudMe.classes)||[];
  let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> My classes</h2><p style="text-align:center">${cesc(cloudMe.displayName)} · teacher</p>`;
@@ -6391,7 +6863,7 @@ function teacherBulkConfirm(code,students){
  <button class="cloud-btn gold" id="bk-go"> Create ${students.length} account${students.length===1?'':'s'}</button>`;
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherRoster(code);
   document.getElementById('bk-go').onclick=async()=>{try{_cb().innerHTML='<h2>⏳ Creating accounts…</h2>';const res=await cloudApi('/class/bulk',{token:cloudToken,code,students});
- _cb().innerHTML=`<h2> Done!</h2><p style="text-align:center"><b>${res.created}</b> created${res.added?` · <b>${res.added}</b> already existed (added)`:''}${res.skipped?` · <b>${res.skipped}</b> skipped (name 3+ chars, password 4+ chars)`:''}.</p>
+ _cb().innerHTML=`<h2> Done!</h2><p style="text-align:center"><b>${res.created}</b> created${res.exists?` · <b>${res.exists}</b> already had an account`:''}${res.skipped?` · <b>${res.skipped}</b> skipped (name 3+ chars, password 4+ chars)`:''}.</p>${res.exists?`<p class="cloud-note">${res.exists} pupil${res.exists===1?'':'s'} already use CodeJump — they can't be added by name. Ask them to sign in and join with the class code <b>${cesc(code)}</b>.</p>`:''}
  <button class="cloud-btn gold" id="bk-cards"> Print login cards now</button><button class="cloud-btn" id="bk-back">Back to class</button>`;
     document.getElementById('bk-cards').onclick=()=>teacherPrintCards(code);document.getElementById('bk-back').onclick=()=>cloudTeacherRoster(code);
   }catch(err){cloudError(err);}};}
@@ -6416,23 +6888,41 @@ async function teacherPrintCards(code){try{const data=await cloudApi('/class/car
 }catch(err){cloudError(err);}}
 async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/roster',{token:cloudToken,code});
  let h=`<button class="cloud-back" id="c-bk"> Back</button><h2>‍ ${cesc(data.name||'Class')}</h2><p style="text-align:center">Code: <b style="color:var(--gold)">${cesc(code)}</b> · ${(data.pupils||[]).length} pupil${(data.pupils||[]).length===1?'':'s'}</p>
- <button class="cloud-btn gold" id="cr-send"> Send the game I'm building to this class</button>
+ <button class="cloud-btn gold" id="cr-send"> Give a game to this class</button>
  <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-bulk" style="margin:0;flex:1"> Add pupils (CSV)</button><button class="cloud-btn" id="cr-cards" style="margin:0;flex:1"> Login cards</button></div>
  <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-rename" style="margin:0;flex:1"> Rename</button><button class="cloud-btn" id="cr-del" style="margin:0;flex:1"> Delete class</button></div>`;
   if(!(data.pupils||[]).length)h+='<p style="text-align:center;margin-top:10px">No pupils have joined yet — share the class code!</p>';
- (data.pupils||[]).forEach(pu=>{const n=(pu.projects||[]).length;h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${n} game${n===1?'':'s'} handed in</small></div><button data-remove="${cesc(pu.uid)}" title="Remove from class"></button></div>`;});
+ (data.pupils||[]).forEach(pu=>{const done=(pu.projects||[]).filter(p=>p.handedIn||!p.fromTeacher).length;const waiting=(pu.projects||[]).filter(p=>p.fromTeacher&&!p.handedIn).length;const sub=done+' handed in'+(waiting?(' · '+waiting+' not started'):'');h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${sub}</small></div><button data-remove="${cesc(pu.uid)}" title="Remove from class"></button></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudTeacherClasses;
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherPupil(code,(data.pupils||[]).find(x=>x.uid===el.dataset.uid)));
-  _cb().querySelectorAll('[data-remove]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();if(!confirm('Remove this pupil from the class? Their work stays in their own account.'))return;try{await cloudApi('/class/remove',{token:cloudToken,code,uid:b.dataset.remove});cloudTeacherRoster(code);}catch(err){cloudError(err);}});
- document.getElementById('cr-send').onclick=async()=>{const title=prompt('Name the game you’re sending:','Class activity');if(title===null)return;try{commitLevel();_cb().innerHTML='<h2> Sending…</h2>';const res=await cloudApi('/class/assign',{token:cloudToken,code,title,payload:buildPayload()});_cb().innerHTML=`<h2> Sent!</h2><p style="text-align:center">“${cesc(title)}” is now in ${res.count} pupil${res.count===1?'':'s'}’ class work.</p><button class="cloud-btn gold" id="c-done">Back to class</button>`;document.getElementById('c-done').onclick=()=>cloudTeacherRoster(code);}catch(err){cloudError(err);}};
+  _cb().querySelectorAll('[data-remove]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();if(!await cjConfirm('Remove this pupil from the class? Their work stays in their own account.',{title:'Remove pupil',danger:true,okLabel:'Remove'}))return;try{await cloudApi('/class/remove',{token:cloudToken,code,uid:b.dataset.remove});cloudTeacherRoster(code);}catch(err){cloudError(err);}});
+ document.getElementById('cr-send').onclick=()=>cloudTeacherSendChooser(code);
   document.getElementById('cr-bulk').onclick=()=>teacherBulkCSV(code);
   document.getElementById('cr-cards').onclick=()=>teacherPrintCards(code);
-  document.getElementById('cr-rename').onclick=async()=>{const name=prompt('New class name:',data.name||'');if(!name)return;try{await cloudApi('/class/update',{token:cloudToken,code,name});await cloudRefresh();cloudTeacherRoster(code);}catch(err){cloudError(err);}};
-  document.getElementById('cr-del').onclick=async()=>{if(!confirm('Delete this class for everyone? Pupils’ own games are kept, but the class is removed.'))return;try{await cloudApi('/class/delete',{token:cloudToken,code});await cloudRefresh();cloudTeacherClasses();toast('Class deleted','#585555');}catch(err){cloudError(err);}};
+  document.getElementById('cr-rename').onclick=async()=>{const name=await cjPrompt('New class name:',data.name||'',{title:'Rename class'});if(!name)return;try{await cloudApi('/class/update',{token:cloudToken,code,name});await cloudRefresh();cloudTeacherRoster(code);}catch(err){cloudError(err);}};
+  document.getElementById('cr-del').onclick=async()=>{if(!await cjConfirm('Delete this class for everyone? Pupils’ own games are kept, but the class is removed.',{title:'Delete class',danger:true,okLabel:'Delete'}))return;try{await cloudApi('/class/delete',{token:cloudToken,code});await cloudRefresh();cloudTeacherClasses();toast('Class deleted','#585555');}catch(err){cloudError(err);}};
 }catch(e){cloudError(e);}}
+async function cloudTeacherSendChooser(code){await cloudRefresh();const projs=(cloudMe&&cloudMe.projects)||[];
+ let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> Give a game to this class</h2><p style="text-align:center">Pick one of your saved games to give to every pupil.</p>`;
+ if(!projs.length)h+='<p style="text-align:center">You haven’t saved any games yet. Build one and tap “Save this game”, then come back.</p>';
+ projs.forEach(pr=>{const tag=pr.class?(' '+cesc(pr.class)):' my own';h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${cesc(pr.id)}" data-title="${cesc(pr.title||'My Game')}"><b>${cesc(pr.title||'My Game')}</b><small>${tag} · ${new Date(pr.updated).toLocaleDateString('en-GB')}</small></div></div>`;});
+ h+=`<button class="cloud-btn" id="cs-current" style="margin-top:14px"> Send the game I’m building right now</button>`;
+ _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherRoster(code);
+ _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudTeacherAssignProject(code,el.dataset.id,el.dataset.title));
+ document.getElementById('cs-current').onclick=()=>cloudTeacherAssignCurrent(code);}
+async function cloudTeacherAssignProject(code,id,title){try{_cb().innerHTML='<h2> Sending…</h2>';
+ const data=await cloudApi('/project/load',{token:cloudToken,id});
+ const t=title||data.title||'Class activity';
+ const res=await cloudApi('/class/assign',{token:cloudToken,code,title:t,payload:data.payload});
+ _cb().innerHTML=`<h2> Sent!</h2><p style="text-align:center">“${cesc(t)}” is now in ${res.count} pupil${res.count===1?'':'s'}’ class work.</p><button class="cloud-btn gold" id="c-done">Back to class</button>`;document.getElementById('c-done').onclick=()=>cloudTeacherRoster(code);}catch(err){cloudError(err);}}
+async function cloudTeacherAssignCurrent(code){let title=cloudProjectTitle;if(!title){title=await cjPrompt('Name the game you’re sending:','Class activity',{title:'Give a game'});if(title===null)return;}
+ try{commitLevel();_cb().innerHTML='<h2> Sending…</h2>';const res=await cloudApi('/class/assign',{token:cloudToken,code,title,payload:buildPayload()});
+ _cb().innerHTML=`<h2> Sent!</h2><p style="text-align:center">“${cesc(title)}” is now in ${res.count} pupil${res.count===1?'':'s'}’ class work.</p><button class="cloud-btn gold" id="c-done">Back to class</button>`;document.getElementById('c-done').onclick=()=>cloudTeacherRoster(code);}catch(err){cloudError(err);}}
 function cloudTeacherPupil(code,pu){if(!pu)return;let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> ${cesc(pu.realName||pu.displayName)}</h2><p style="text-align:center">@${cesc(pu.displayName)}</p>`;
   if(!(pu.projects||[]).length)h+='<p style="text-align:center">No games handed in to this class yet.</p>';
-  (pu.projects||[]).forEach(pr=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${new Date(pr.updated).toLocaleDateString('en-GB')} · tap to open</small></div></div>`;});
+  // show handed-in work first, then any untouched templates
+  const ordered=(pu.projects||[]).slice().sort((a,b)=>((a.fromTeacher&&!a.handedIn)?1:0)-((b.fromTeacher&&!b.handedIn)?1:0));
+  ordered.forEach(pr=>{const status=pr.handedIn?('✓ handed in '+new Date(pr.handedInAt||pr.updated).toLocaleDateString('en-GB')):(pr.fromTeacher?'not started yet — your template':('handed in '+new Date(pr.updated).toLocaleDateString('en-GB')));h+=`<div class="cloud-list-item"><div class="ci-main" data-id="${pr.id}"><b>${cesc(pr.title||'My Game')}</b><small>${status} · tap to open</small></div></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherRoster(code);
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>cloudOpenProject(pu.uid,el.dataset.id,(pu.projects||[]).find(x=>x.id===el.dataset.id)));}
 function openCloudTeacher(){if(!cloudOn())return;document.getElementById('cloud-modal').classList.remove('hide');if(isTeacher())cloudTeacherClasses();else cloudAuthHome();}
@@ -6606,7 +7096,7 @@ async function cloudCollabList(){try{const data=await cloudApi('/collab/list',{t
  cs.forEach(c=>{h+=`<div class="cloud-list-item"><div class="ci-main" data-room="${cesc(c.roomId)}"><b>${cesc(c.title)}</b><small>${c.role==='owner'?'you started this':'shared by '+cesc(c.owner)}</small></div><button data-rem="${cesc(c.roomId)}" data-owner="${c.role==='owner'?1:0}" title="${c.role==='owner'?'Delete this collaboration for everyone':'Remove from your list'}"></button></div>`;});
   _cb().innerHTML=h;document.getElementById('c-bk').onclick=cloudMyHome;
   _cb().querySelectorAll('.ci-main').forEach(el=>el.onclick=()=>{closeCloud();collabConnect(el.dataset.room);});
-  _cb().querySelectorAll('[data-rem]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const owner=b.dataset.owner==='1';if(!confirm(owner?'Delete this collaboration for everyone? (The shared game stays in anyone’s own saves if they saved it.)':'Remove this collaboration from your list?'))return;try{await cloudApi('/collab/remove',{token:cloudToken,roomId:b.dataset.rem});cloudCollabList();}catch(err){cloudError(err);}});
+  _cb().querySelectorAll('[data-rem]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();const owner=b.dataset.owner==='1';if(!await cjConfirm(owner?'Delete this collaboration for everyone? (The shared game stays in anyone’s own saves if they saved it.)':'Remove this collaboration from your list?',{title:'Remove',danger:true,okLabel:owner?'Delete':'Remove'}))return;try{await cloudApi('/collab/remove',{token:cloudToken,roomId:b.dataset.rem});cloudCollabList();}catch(err){cloudError(err);}});
 }catch(e){cloudError(e);}}
 document.getElementById('o-again') .onclick=()=>{hideOv();startPlay();};
 document.getElementById('o-build1').onclick=()=>{hideOv();switchMode('build');};
@@ -6661,6 +7151,25 @@ document.getElementById('t-hand').onclick=()=>{
 };
 
 function toast(msg,bg='#ef4444'){const el=document.getElementById('toast');el.textContent=msg;el.style.background=bg;el.classList.remove('hide');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.add('hide'),3000);}
+// ── Styled, accessible kid-friendly dialogs (replace native alert/confirm/prompt) ──
+function _cjDlgCSS(){if(document.getElementById('cj-dlg-css'))return;const s=document.createElement('style');s.id='cj-dlg-css';s.textContent='.cj-dlg-back{position:fixed;inset:0;background:rgba(20,16,30,.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:16px}.cj-dlg-back.hide{display:none}.cj-dlg{background:var(--panel,#2b2740);color:var(--ink,#fff);border:2px solid var(--gold,#d4b24a);border-radius:18px;max-width:380px;width:100%;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.45);font-family:var(--font,inherit);text-align:center}.cj-dlg h3{margin:0 0 8px;color:var(--gold,#d4b24a);font-size:20px}.cj-dlg p{margin:0 0 16px;font-size:15px;line-height:1.4}.cj-dlg-input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:16px;margin-bottom:16px;font-family:var(--font,inherit)}.cj-dlg-row{display:flex;gap:10px;justify-content:center}.cj-dlg-btn{min-width:96px;min-height:46px;padding:10px 18px;border-radius:12px;border:none;font-weight:800;font-size:15px;cursor:pointer;font-family:var(--font,inherit)}.cj-dlg-btn.ok{background:var(--gold,#d4b24a);color:#231c10}.cj-dlg-btn.ok.danger{background:#e25555;color:#fff}.cj-dlg-btn.cancel{background:rgba(255,255,255,.16);color:#fff}.cj-dlg-btn:focus-visible{outline:3px solid #9cd2ff;outline-offset:2px}';document.head.appendChild(s);}
+function cjModal(o){o=o||{};_cjDlgCSS();return new Promise(res=>{
+  let m=document.getElementById('cj-dialog');if(!m){m=document.createElement('div');m.id='cj-dialog';m.className='cj-dlg-back hide';document.body.appendChild(m);}
+  const hasInput=!!o.input,esc=(typeof cesc==='function')?cesc:(x=>String(x==null?'':x));
+  m.innerHTML='<div class="cj-dlg" role="dialog" aria-modal="true" aria-label="'+esc(o.title||o.message||'Message')+'">'+(o.title?'<h3>'+esc(o.title)+'</h3>':'')+(o.message?'<p>'+esc(o.message)+'</p>':'')+(hasInput?'<input class="cj-dlg-input" type="text" value="'+esc(o.def||'')+'" placeholder="'+esc(o.placeholder||'')+'">':'')+'<div class="cj-dlg-row">'+(o.cancel===null?'':'<button class="cj-dlg-btn cancel">'+esc(o.cancelLabel||'Cancel')+'</button>')+'<button class="cj-dlg-btn ok'+(o.danger?' danger':'')+'">'+esc(o.okLabel||'OK')+'</button></div></div>';
+  m.classList.remove('hide');
+  const inp=m.querySelector('.cj-dlg-input'),okB=m.querySelector('.cj-dlg-btn.ok'),caB=m.querySelector('.cj-dlg-btn.cancel');
+  const prevFocus=document.activeElement;
+  setTimeout(()=>{if(inp){inp.focus();inp.select();}else okB.focus();},0);
+  function done(val){m.classList.add('hide');m.innerHTML='';document.removeEventListener('keydown',onKey,true);try{if(prevFocus&&prevFocus.focus)prevFocus.focus();}catch(e){}res(val);}
+  function onKey(e){if(e.key==='Escape'){e.preventDefault();done(hasInput?null:false);}else if(e.key==='Enter'&&(hasInput||document.activeElement===okB)){e.preventDefault();done(hasInput?inp.value:true);}else if(e.key==='Tab'){const f=[caB,okB,inp].filter(Boolean);const i=f.indexOf(document.activeElement);e.preventDefault();f[(i+(e.shiftKey?-1:1)+f.length)%f.length].focus();}}
+  okB.onclick=()=>done(hasInput?inp.value:true);if(caB)caB.onclick=()=>done(hasInput?null:false);
+  m.onclick=e=>{if(e.target===m)done(hasInput?null:false);};
+  document.addEventListener('keydown',onKey,true);
+});}
+function cjAlert(message,title){return cjModal({title:title||'',message,cancel:null,okLabel:'OK'});}
+function cjConfirm(message,o){o=o||{};return cjModal({title:o.title||'',message,okLabel:o.okLabel||'Yes',cancelLabel:o.cancelLabel||'Cancel',danger:o.danger});}
+function cjPrompt(message,def,o){o=o||{};return cjModal({title:o.title||'',message,input:true,def:def||'',placeholder:o.placeholder||'',okLabel:o.okLabel||'OK'});}
 function hideOv(){document.getElementById('ov-win').classList.add('hide');document.getElementById('ov-dead').classList.add('hide');}
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -7207,8 +7716,9 @@ function loop(){
   if(!document.getElementById('design-modal').classList.contains('hide'))return;
   if(!document.getElementById('share-modal').classList.contains('hide'))return;
   gemA+=0.07;goalA+=0.055;tick++;
+  if(projectType==='3d'){td3Frame();return;} // 3D world renders Babylon + steps its own interpreter
   if(projectType==='turtle'){turtleFrame();return;} // turtle playground renders + steps its own interpreter
- if(projectType==='stage'){if(stagePlaying)stageFrame();drawStage();return;} // unified Stage view: always render, run only when Go is on
+ if(projectType==='stage'){if(stagePlaying){stageFrame();drawStage();}else if(stageNeedsDraw||(tick&3)===0){drawStage();stageNeedsDraw=false;}return;} // play = 60fps; idle = ~15fps (or on demand) to save battery on Chromebooks
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
  if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{ks3Frame();updatePlayer();updateCam();updateMovers();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow(' You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow(' Target Reached!');}}
@@ -7227,7 +7737,7 @@ function checkURL(){
     const d=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(p)))));
     applyPayload(d); // sets grid/theme/sprites/bg and stashes blocklyXml in _pendingXml
     return true;
-  }catch(e){return false;}
+  }catch(e){setTimeout(()=>toast('That share link looks broken or is too old to open.','#ef4444'),400);return false;}
 }
 
 const savedSprites=localStorage.getItem('bap_sprites');
@@ -7277,14 +7787,13 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.08.10';
+const CJ_VERSION='2026.08.14';
 const CJ_WHATSNEW=[
- "Fixed: in platform games with more than one page, gems, stars and chests you've already collected no longer come back when you revisit a page — and if your goal is to reach the finish before a time runs out, the timer now keeps counting across pages instead of starting again.",
- "Work together more easily! When you tap Collaborate, you can now pick a class and choose up to 5 classmates to build the same game with — even across different classes. You'll see everyone by their display name and real name, so it's easy to find your friends.",
- "A brand-new look! CodeJump now has its own set of hand-designed icons all the way through — the menus, the blocks, the building tiles and the Stage and KS1 editors. Everything feels cleaner and more polished, with the same colourful, friendly feel.",
- "New: Turtle! Pick the Turtle project to type Logo code (fd 100, rt 90, repeat, even your own commands) and watch a turtle draw pictures. Tap Commands and Examples to get going.",
- "When you build a Stage project together, you can now see each other's mouse pointers — with names on coloured arrows — so you always know where your partner is working.",
- "Fixed: saving Stage and Turtle projects to your device now keeps everything, and teacher login cards print properly too."
+ "Friendlier pop-ups! CodeJump now uses its own colourful message boxes instead of plain browser ones — and asks “are you sure?” before you delete a character or page, or start a new project over unsaved work.",
+ "Saved Stage and Turtle games now show a coloured label on the home screen, so they're easy to spot.",
+ "Easier for everyone: read-aloud works in every year group, bigger buttons, clearer keyboard highlights, and message blocks now show a number as well as a colour.",
+ "Lots of small fixes — the Stage speech bubble now stays up for the whole time, examples tell you they're Key Stage 2 examples, and the platformer editor fits better on tablets held upright.",
+ "Behind the scenes: stronger account safety — changing your password now signs you out on other devices, and teachers can only manage pupils they added."
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

@@ -2033,16 +2033,19 @@ function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
-function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote){if(projectType!=='stage')collabSnapshotSoon();else if(keyStage==='ks1'&&typeof collabSnapshotSoon==='function')collabSnapshotSoon();}} // platformer + KS1 Stage sync via snapshots (KS1 data is small); KS2/3 Stage uses granular ops
+function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote){
+  if(projectType==='stage'){if(keyStage==='ks1'&&typeof collabSnapshotSoon==='function')collabSnapshotSoon();} // KS1 Stage syncs via snapshots (small data); KS2/3 Stage uses granular ops
+  else if(projectType==='platformer'&&typeof collabSyncConfigs==='function')collabSyncConfigs(); // platformer: granular config/theme ops — NO full snapshot (that clobbered other pages)
+}}
 function clearDirty(){dirty=false;}
 function autoSaveDraft(){if(!dirty)return;try{commitLevel();const link={save:curSaveId,cloud:(typeof cloudProjectId!=='undefined'?cloudProjectId:null),title:(typeof cloudProjectTitle!=='undefined'?cloudProjectTitle:''),cls:(typeof cloudProjectClass!=='undefined'?cloudProjectClass:null)};localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload(),link}));}catch(e){}}
 setInterval(autoSaveDraft,15000);
 window.addEventListener('beforeunload',e=>{if(dirty){autoSaveDraft();e.preventDefault();e.returnValue='';}});
-function gotoLevel(i){if(i<0||i>=LEVELS.length||i===curLevel){return;}commitLevel();curLevel=i;activateLevel(i);history=[];future=[];renderPagesStrip();}
-function addLevel(){commitLevel();LEVELS.push(blankLevel());curLevel=LEVELS.length-1;activateLevel(curLevel);history=[];future=[];renderPagesStrip();markDirty();toast('Page '+LEVELS.length+' added ','#10b981');}
-function deleteLevel(i){if(LEVELS.length<=1){toast('A game needs at least one page.','#ef4444');return;}markDirty();LEVELS.splice(i,1);if(curLevel>=LEVELS.length)curLevel=LEVELS.length-1;else if(curLevel>i)curLevel--;activateLevel(curLevel);history=[];future=[];renderPagesStrip();}
-function dupLevel(i){commitLevel();const copy=cleanLevel(JSON.parse(JSON.stringify(LEVELS[i])));LEVELS.splice(i+1,0,copy);curLevel=i+1;activateLevel(curLevel);history=[];future=[];renderPagesStrip();markDirty();toast('Page duplicated','#10b981');}
-function moveLevel(i,dir){const j=i+dir;if(j<0||j>=LEVELS.length)return;markDirty();commitLevel();const t=LEVELS[i];LEVELS[i]=LEVELS[j];LEVELS[j]=t;if(curLevel===i)curLevel=j;else if(curLevel===j)curLevel=i;activateLevel(curLevel);renderPagesStrip();}
+function gotoLevel(i){if(i<0||i>=LEVELS.length||i===curLevel){return;}commitLevel();curLevel=i;activateLevel(i);history=[];future=[];renderPagesStrip();if(typeof collabResetSyncBaseline==='function')collabResetSyncBaseline();}
+function addLevel(){commitLevel();const nl=blankLevel();LEVELS.push(nl);curLevel=LEVELS.length-1;activateLevel(curLevel);history=[];future=[];renderPagesStrip();markDirty();if(typeof collabLvl==='function')collabLvl({act:'add',level:nl});toast('Page '+LEVELS.length+' added ','#10b981');}
+function deleteLevel(i){if(LEVELS.length<=1){toast('A game needs at least one page.','#ef4444');return;}markDirty();if(typeof collabLvl==='function')collabLvl({act:'del',i});LEVELS.splice(i,1);if(curLevel>=LEVELS.length)curLevel=LEVELS.length-1;else if(curLevel>i)curLevel--;activateLevel(curLevel);history=[];future=[];renderPagesStrip();}
+function dupLevel(i){commitLevel();const copy=cleanLevel(JSON.parse(JSON.stringify(LEVELS[i])));LEVELS.splice(i+1,0,copy);curLevel=i+1;activateLevel(curLevel);history=[];future=[];renderPagesStrip();markDirty();if(typeof collabLvl==='function')collabLvl({act:'dup',i,level:copy});toast('Page duplicated','#10b981');}
+function moveLevel(i,dir){const j=i+dir;if(j<0||j>=LEVELS.length)return;markDirty();if(typeof collabLvl==='function')collabLvl({act:'move',i,dir});commitLevel();const t=LEVELS[i];LEVELS[i]=LEVELS[j];LEVELS[j]=t;if(curLevel===i)curLevel=j;else if(curLevel===j)curLevel=i;activateLevel(curLevel);renderPagesStrip();}
 function renderPagesStrip(){
   const wrap=document.getElementById('pages');if(!wrap)return;wrap.innerHTML='';
   if(curLevel>0)commitLevel(); // keep thumbnails fresh for non-active pages
@@ -5382,7 +5385,7 @@ function initBlockly(){
   window._pendingXml=null;
   Blockly.Xml.domToWorkspace(xml,blocklyWorkspace);
   blocklyReady=true;
-  blocklyWorkspace.addChangeListener(()=>{readBlocklyConfig();if(blocklyReady&&!_suppressBlocklyDirty){markDirty();if(projectType==='stage'){if(typeof collabStageXmlSoon==='function')collabStageXmlSoon();if(typeof collabActive!=='undefined'&&collabActive&&typeof stageSyncVars==='function')stageSyncVars();}}});
+  blocklyWorkspace.addChangeListener(()=>{readBlocklyConfig();if(blocklyReady&&!_suppressBlocklyDirty){markDirty();if(projectType==='stage'){if(typeof collabStageXmlSoon==='function')collabStageXmlSoon();if(typeof collabActive!=='undefined'&&collabActive&&typeof stageSyncVars==='function')stageSyncVars();}else if(projectType==='platformer'&&typeof collabProgSoon==='function')collabProgSoon();}});
   Blockly.svgResize(blocklyWorkspace);
 }
 
@@ -5616,7 +5619,7 @@ function ks3LiveCheck(){const r=CJPy.check(document.getElementById('ks3-code').v
 function updateCodeModeUI(){const ed=document.getElementById('ks3-editor'),bd=document.getElementById('blockly-div');if(!ed||!bd)return;const cmds=document.getElementById('cp-cmds');if(cmds)cmds.style.display=isKS3()?'':'none';if(isKS3()){ed.classList.remove('hide');bd.style.display='none';}else{ed.classList.add('hide');bd.style.display='';}}
 function showKs3Editor(){const ta=document.getElementById('ks3-code');ta.value=(ks3Code==null?KS3_DEFAULT:ks3Code);ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();updateCodeModeUI();setTimeout(()=>ta.focus(),40);}
 function wireKs3Editor(){const ta=document.getElementById('ks3-code');if(!ta)return;
-  ta.addEventListener('input',()=>{ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();});
+  ta.addEventListener('input',()=>{ks3Code=ta.value;ks3RefreshGutter();ks3LiveCheck();markDirty&&markDirty();if(typeof collabProgSoon==='function')collabProgSoon();});
   ta.addEventListener('scroll',()=>{document.getElementById('ks3-gutter').scrollTop=ta.scrollTop;});
   ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;ta.value=ta.value.slice(0,s)+'    '+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+4;ks3Code=ta.value;ks3RefreshGutter();}});
 }
@@ -6944,7 +6947,7 @@ function collabConnect(roomId){if(!cloudToken){toast('Sign in to collaborate','#
   ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}collabOnMessage(m);};
   ws.onclose=()=>{if(collabWS===ws){collabActive=false;collabWS=null;updateCollabBar();}};
   ws.onerror=()=>{};}
-function collabApplyRemote(fn){collabApplyingRemote=true;try{fn();}catch(e){}collabApplyingRemote=false;}
+function collabApplyRemote(fn){collabApplyingRemote=true;try{fn();}catch(e){}collabApplyingRemote=false;if(collabActive&&projectType==='platformer'&&mode==='build'&&typeof collabResetSyncBaseline==='function')collabResetSyncBaseline();}
 function collabOnMessage(m){
   if(m.type==='init'){collabMe=m.you;collabMembers={};(m.members||[]).forEach(x=>collabMembers[x.uid]=x);collabActive=true;
     if(m.doc&&m.doc.levels){collabApplyRemote(()=>collabApplyDoc(m.doc));if(typeof hideHome==='function')hideHome();if(typeof hideTeacher==='function')hideTeacher();
@@ -6959,10 +6962,14 @@ function collabOnMessage(m){
   else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage')renderCollabStageCursors();}
   else if(m.type==='full'){toast('That live room is full (max 6 people)','#ef4444');collabDisconnect(true);}}
 function collabApplyOp(op){if(!op)return;
-  if(op.k!=='cell'){applyStageOp(op);return;} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
-  const lvl=op.lvl||0;
-  if(lvl===curLevel){const g=op.layer==='water'?waterGrid:grid;if(g[op.r])g[op.r][op.c]=op.t;}
-  else if(LEVELS[lvl]){const g=op.layer==='water'?LEVELS[lvl].waterGrid:LEVELS[lvl].grid;if(g&&g[op.r])g[op.r][op.c]=op.t;}}
+  if(op.k==='cell'){const lvl=op.lvl||0;
+    if(lvl===curLevel){const g=op.layer==='water'?waterGrid:grid;if(g[op.r])g[op.r][op.c]=op.t;}
+    else if(LEVELS[lvl]){const g=op.layer==='water'?LEVELS[lvl].waterGrid:LEVELS[lvl].grid;if(g&&g[op.r])g[op.r][op.c]=op.t;}return;}
+  if(op.k==='cfg'){applyCfgOp(op);return;}
+  if(op.k==='meta'){applyMetaOp(op);return;}
+  if(op.k==='lvl'){applyLvlOp(op);return;}
+  if(op.k==='prog'){applyProgOp(op);return;}
+  applyStageOp(op);} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
 // ── Stage collaboration: granular ops (Google-Docs-style, like the platformer's tile ops) ──
 function collabStageOp(op){if(!collabActive||collabApplyingRemote)return;collabSend({type:'op',op});}
 function collabSprite(s){if(s)collabStageOp({k:'st_sprite',id:s.id,name:s.name,x:Math.round(s.x),y:Math.round(s.y),dir:s.dir,size:s.size,visible:s.visible!==false});}
@@ -7025,8 +7032,50 @@ function collabRefreshCode(){ // live-update the open code editor (KS3 text; KS2
 function collabCell(r,c,layer){if(!collabActive||collabApplyingRemote)return;
   if(layer==='both'){collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:'grid',r,c,t:grid[r][c]}});collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:'water',r,c,t:waterGrid[r][c]}});}
   else collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:layer||'grid',r,c,t:(layer==='water'?waterGrid:grid)[r][c]}});}
+// ── Platformer granular collaboration: configs/theme/levels/program sync as small
+//    ops (no full snapshots), so edits on different pages never clobber each other. ──
+const CFG_SHORT={mover:'moverCfg',enemy:'enemyCfg',door:'doorCfg',key:'keyCfg',sign:'signCfg',chest:'chestCfg',tele:'teleCfg',button:'buttonCfg',gate:'gateCfg'};
+function _liveCfgMaps(){return{mover:moverCfg,enemy:enemyCfg,door:doorCfg,key:keyCfg,sign:signCfg,chest:chestCfg,tele:teleCfg,button:buttonCfg,gate:gateCfg};}
+function _cloneJSON(o){try{return JSON.parse(JSON.stringify(o));}catch(e){return{};}}
+let _collabSync=null,_progT=null;
+function _snapSyncState(lvl){const m=_liveCfgMaps(),c={};for(const n in m)c[n]=_cloneJSON(m[n]);return{lvl,cfgs:c,theme,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null}};}
+function collabResetSyncBaseline(){if(collabActive&&projectType==='platformer')_collabSync=_snapSyncState(curLevel);}
+// Diff the current page's config maps + theme/background against the last sync and emit only what changed.
+function collabSyncConfigs(){
+  if(!collabActive||collabApplyingRemote||projectType!=='platformer'||mode!=='build')return;
+  const lvl=curLevel,maps=_liveCfgMaps();
+  if(!_collabSync||_collabSync.lvl!==lvl){_collabSync=_snapSyncState(lvl);return;}
+  for(const n in maps){const cur=maps[n],prev=_collabSync.cfgs[n]||{};
+    for(const k in cur){if(JSON.stringify(cur[k])!==JSON.stringify(prev[k]))collabSend({type:'op',op:{k:'cfg',lvl,n,key:k,v:cur[k]}});}
+    for(const k in prev){if(!(k in cur))collabSend({type:'op',op:{k:'cfg',lvl,n,key:k,v:null}});}
+  }
+  const bg={top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},pbg=_collabSync.customBg;
+  if(theme!==_collabSync.theme||JSON.stringify(bg)!==JSON.stringify(pbg))collabSend({type:'op',op:{k:'meta',lvl,theme,customBg:bg}});
+  _collabSync=_snapSyncState(lvl);
+}
+function applyCfgOp(op){const lvl=op.lvl||0,full=CFG_SHORT[op.n];if(!full)return;
+  if(lvl===curLevel){const m=_liveCfgMaps()[op.n];if(m){if(op.v)m[op.key]=op.v;else delete m[op.key];}}
+  else if(LEVELS[lvl]){LEVELS[lvl][full]=LEVELS[lvl][full]||{};if(op.v)LEVELS[lvl][full][op.key]=op.v;else delete LEVELS[lvl][full][op.key];}}
+function applyMetaOp(op){const lvl=op.lvl||0;
+  if(lvl===curLevel){if(op.theme!=null){theme=op.theme;const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;_skyKey='';}
+    if(op.customBg!==undefined){customBg={top:(op.customBg&&op.customBg.top)||null,bottom:(op.customBg&&op.customBg.bottom)||null,art:(op.customBg&&op.customBg.art)?[...op.customBg.art]:null};_bgArtKey='';}}
+  else if(LEVELS[lvl]){if(op.theme!=null)LEVELS[lvl].theme=op.theme;if(op.customBg!==undefined)LEVELS[lvl].customBg=op.customBg;}}
+function applyLvlOp(op){commitLevel();
+  if(op.act==='add')LEVELS.push(op.level?cleanLevel(op.level):blankLevel());
+  else if(op.act==='dup'){if(LEVELS[op.i])LEVELS.splice(op.i+1,0,op.level?cleanLevel(op.level):cleanLevel(_cloneJSON(LEVELS[op.i])));}
+  else if(op.act==='del'){if(LEVELS.length>1&&LEVELS[op.i]){LEVELS.splice(op.i,1);if(curLevel>=LEVELS.length)curLevel=LEVELS.length-1;else if(curLevel>op.i)curLevel--;}}
+  else if(op.act==='move'){const j=op.i+op.dir;if(LEVELS[op.i]&&LEVELS[j]){const t=LEVELS[op.i];LEVELS[op.i]=LEVELS[j];LEVELS[j]=t;if(curLevel===op.i)curLevel=j;else if(curLevel===j)curLevel=op.i;}}
+  curLevel=Math.max(0,Math.min(curLevel,LEVELS.length-1));activateLevel(curLevel);renderPagesStrip();collabResetSyncBaseline();}
+function applyProgOp(op){
+  if(op.xml!=null){window._pendingXml=op.xml;if(blocklyWorkspace&&projectType==='platformer'){_suppressBlocklyDirty=true;try{blocklyWorkspace.clear();Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(op.xml||getDefaultXml()),blocklyWorkspace);}catch(e){}_suppressBlocklyDirty=false;if(typeof readBlocklyConfig==='function')readBlocklyConfig();}}
+  if(op.ks3!=null){ks3Code=op.ks3;const ta=document.getElementById('ks3-code'),ed=document.getElementById('ks3-editor');if(ta&&ed&&!ed.classList.contains('hide')){const ss=ta.selectionStart;ta.value=ks3Code;try{ta.selectionStart=ta.selectionEnd=Math.min(ss,ta.value.length);}catch(e){}if(typeof ks3RefreshGutter==='function')ks3RefreshGutter();if(typeof ks3LiveCheck==='function')ks3LiveCheck();}}}
+function collabLvl(op){if(collabActive&&!collabApplyingRemote&&projectType==='platformer')collabSend({type:'op',op:Object.assign({k:'lvl'},op)});}
+function collabProgSoon(){if(!collabActive||collabApplyingRemote||projectType!=='platformer')return;clearTimeout(_progT);_progT=setTimeout(()=>{
+  if(isKS3()){collabSend({type:'op',op:{k:'prog',ks3:ks3Code}});}
+  else{let xml='';try{xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');}catch(e){}collabSend({type:'op',op:{k:'prog',xml}});}
+},400);}
 function collabSnapshotSoon(){if(!collabActive||collabApplyingRemote)return;clearTimeout(_collabSnapT);_collabSnapT=setTimeout(collabSnapshotNow,450);}
-function collabSnapshotNow(){if(!collabActive)return;commitLevel();collabSend({type:'snapshot',doc:buildPayload()});}
+function collabSnapshotNow(){if(!collabActive)return;commitLevel();collabSend({type:'snapshot',doc:buildPayload()});if(typeof collabResetSyncBaseline==='function')collabResetSyncBaseline();}
 function collabCursor(c,r){if(!collabActive)return;const now=Date.now();if(now-_collabCurT<70)return;_collabCurT=now;collabSend({type:'cursor',cell:{r,c,lvl:curLevel}});}
 // Presence bar + Leave button (built on the fly)
 function updateCollabBar(){let bar=document.getElementById('collab-bar');

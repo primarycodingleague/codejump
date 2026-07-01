@@ -722,6 +722,7 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .bg-preset:hover{transform:translateY(-2px);border-color:var(--gold);}
 .bg-preset .swatch{height:28px;border-radius:5px;margin-bottom:5px;}
 .design-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+#design-scope .dbtn.active{background:var(--gold);color:#000;border-color:var(--gold);}
 .dbtn{
   padding:8px 14px;border:1px solid var(--gray);border-radius:3px;
   font-family:var(--font);font-weight:700;font-size:11px;letter-spacing:.8px;text-transform:uppercase;
@@ -1860,6 +1861,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
  <button id="d-close" title="Close without saving" aria-label="Close"></button>
  <h2> Design Studio</h2>
     <div class="design-tabs" id="design-tabs"></div>
+    <div id="design-scope" style="display:none;justify-content:center;align-items:center;gap:8px;margin:0 0 10px;flex-wrap:wrap;">
+      <span style="color:#bbb;font-size:12px;">Use this design for:</span>
+      <button class="dbtn" id="dscope-project">Whole project</button>
+      <button class="dbtn" id="dscope-page">This page</button>
+    </div>
     <div id="bg-mode" style="display:none;justify-content:center;gap:8px;margin:0 0 10px;">
  <button class="dbtn" id="bgm-gradient"> Gradient</button>
  <button class="dbtn" id="bgm-paint"> Paint your own</button>
@@ -2046,6 +2052,7 @@ let beltCfg={};  // per-conveyor speed: "r,c" -> {spd:1|2|3} slow/normal/fast
 let gemA=0,goalA=0,tick=0;
 let customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
 let customBg={top:null,bottom:null,art:null}; // top/bottom = gradient; art = 16×16 painted sky (overrides gradient)
+let pageSprites={}; // per-PAGE sprite overrides: key -> 16×16 colour array (overrides the whole-project customSprites on THIS page only)
 function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().sky[1]];}
 
 // ── MULTI-LEVEL (pages) ──────────────────────────────────────────────────
@@ -2053,12 +2060,12 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // always mirror the page currently being edited (curLevel) or played (playLevel).
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
-function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,cave:caveMode,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg))};}
-function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',cave:false,customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{},teleCfg:{},buttonCfg:{},gateCfg:{},rotCfg:{},fanCfg:{},beltCfg:{}};}
+function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,cave:caveMode,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg)),pageSprites:JSON.parse(JSON.stringify(pageSprites))};}
+function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',cave:false,customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{},teleCfg:{},buttonCfg:{},gateCfg:{},rotCfg:{},fanCfg:{},beltCfg:{},pageSprites:{}};}
 // NEVER snapshot while playing — during play the globals hold the running level's
 // runtime state, not the editor design, so committing would overwrite a page's design.
 function commitLevel(){if(mode==='play')return;if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
-function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';caveMode=!!L.cave;customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};teleCfg=L.teleCfg?JSON.parse(JSON.stringify(L.teleCfg)):{};buttonCfg=L.buttonCfg?JSON.parse(JSON.stringify(L.buttonCfg)):{};gateCfg=L.gateCfg?JSON.parse(JSON.stringify(L.gateCfg)):{};rotCfg=Object.assign({},L.rotCfg||{});fanCfg=L.fanCfg?JSON.parse(JSON.stringify(L.fanCfg)):{};beltCfg=L.beltCfg?JSON.parse(JSON.stringify(L.beltCfg)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof updateCaveBtn==='function')updateCaveBtn();_skyKey='';_bgArtKey='';}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';caveMode=!!L.cave;customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};teleCfg=L.teleCfg?JSON.parse(JSON.stringify(L.teleCfg)):{};buttonCfg=L.buttonCfg?JSON.parse(JSON.stringify(L.buttonCfg)):{};gateCfg=L.gateCfg?JSON.parse(JSON.stringify(L.gateCfg)):{};rotCfg=Object.assign({},L.rotCfg||{});fanCfg=L.fanCfg?JSON.parse(JSON.stringify(L.fanCfg)):{};beltCfg=L.beltCfg?JSON.parse(JSON.stringify(L.beltCfg)):{};pageSprites=L.pageSprites?JSON.parse(JSON.stringify(L.pageSprites)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof updateCaveBtn==='function')updateCaveBtn();_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
@@ -5855,7 +5862,8 @@ function runStartScripts(){cjRunHats('when_game_starts');}
 // drawing 256 little rectangles every frame.
 const _sprCache={};
 function spriteCanvas(name){
-  const spr=customSprites[name];if(!spr)return null;
+  const spr=(pageSprites&&(name in pageSprites))?pageSprites[name]:customSprites[name];if(!spr)return null; // page override wins over the whole-project design
+  if(!Array.isArray(spr))return null;
   const e=_sprCache[name];
   if(e&&e.ref===spr)return e.cv;
   const cv=document.createElement('canvas');cv.width=GRID_PX;cv.height=GRID_PX;
@@ -6395,8 +6403,8 @@ buildPalette();
 function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
 
 let histSaved=false;
-function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),cave:caveMode,moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg))};}
-function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);if('cave' in s)caveMode=!!s.cave;moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});doorCfg=Object.assign({},s.doorCfg||{});keyCfg=Object.assign({},s.keyCfg||{});signCfg=Object.assign({},s.signCfg||{});chestCfg=s.chestCfg?JSON.parse(JSON.stringify(s.chestCfg)):{};teleCfg=s.teleCfg?JSON.parse(JSON.stringify(s.teleCfg)):{};buttonCfg=s.buttonCfg?JSON.parse(JSON.stringify(s.buttonCfg)):{};gateCfg=s.gateCfg?JSON.parse(JSON.stringify(s.gateCfg)):{};rotCfg=Object.assign({},s.rotCfg||{});fanCfg=s.fanCfg?JSON.parse(JSON.stringify(s.fanCfg)):{};beltCfg=s.beltCfg?JSON.parse(JSON.stringify(s.beltCfg)):{};commitLevel();renderPagesStrip();}
+function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),cave:caveMode,moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg)),pageSprites:JSON.parse(JSON.stringify(pageSprites))};}
+function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);if('cave' in s)caveMode=!!s.cave;moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});doorCfg=Object.assign({},s.doorCfg||{});keyCfg=Object.assign({},s.keyCfg||{});signCfg=Object.assign({},s.signCfg||{});chestCfg=s.chestCfg?JSON.parse(JSON.stringify(s.chestCfg)):{};teleCfg=s.teleCfg?JSON.parse(JSON.stringify(s.teleCfg)):{};buttonCfg=s.buttonCfg?JSON.parse(JSON.stringify(s.buttonCfg)):{};gateCfg=s.gateCfg?JSON.parse(JSON.stringify(s.gateCfg)):{};rotCfg=Object.assign({},s.rotCfg||{});fanCfg=s.fanCfg?JSON.parse(JSON.stringify(s.fanCfg)):{};beltCfg=s.beltCfg?JSON.parse(JSON.stringify(s.beltCfg)):{};pageSprites=s.pageSprites?JSON.parse(JSON.stringify(s.pageSprites)):{};commitLevel();renderPagesStrip();}
 function pushHistory(){history.push(snapState());if(history.length>80)history.shift();future=[];histSaved=true;}
 function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}future.push(snapState());restoreState(history.pop());markDirty();toast('Undone!','#6366f1');}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone!','#6366f1');}
@@ -6597,7 +6605,7 @@ function buildPayload(){
   if(projectType==='stage'&&typeof stageSaveCurrent==='function'){stageSaveCurrent();stageSyncVars();} // flush the on-screen sprite's edits + variable names into stageState
   if(projectType==='turtle'){const _tta=document.getElementById('turtle-code');if(_tta)turtleCode=_tta.value;} // flush the editor into the saved code
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{}}));
+  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
   return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
@@ -6639,8 +6647,10 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
   gateCfg:sanitizeGateCfg(L&&L.gateCfg),
   rotCfg:sanitizeRotCfg(L&&L.rotCfg),
   fanCfg:sanitizeFanCfg(L&&L.fanCfg),
-  beltCfg:sanitizeBeltCfg(L&&L.beltCfg)
+  beltCfg:sanitizeBeltCfg(L&&L.beltCfg),
+  pageSprites:sanitizePageSprites(L&&L.pageSprites)
 };}
+function sanitizePageSprites(m){const out={};if(!m||typeof m!=='object')return out;const keys=Object.keys(customSprites);for(const k in m){if(keys.indexOf(k)<0&&k.indexOf('key_')!==0)continue;const a=m[k];if(!Array.isArray(a))continue;out[k]=a.slice(0,256).map(x=>(typeof x==='string'&&/^#?[0-9a-fA-F]{0,8}$/.test(x))?x:'');}return out;}
 function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
@@ -7355,7 +7365,9 @@ function openDesigner(){
   document.getElementById('design-modal').classList.remove('hide');
   // Clone existing custom sprites; non-custom targets load their default lazily (on select).
   DT.filter(t=>t.type==='sprite').forEach(t=>{
-    const cur=customSprites[t.key];
+    const hasPage=(t.key in pageSprites);
+    dScope[t.key]=hasPage?'page':'project';               // remember whether this design is page-specific
+    const cur=hasPage?pageSprites[t.key]:customSprites[t.key];
     pdata[t.key]=Array.isArray(cur)?[...cur]:null; // null = default, rasterised when the tab is opened
     dTouched[t.key]=Array.isArray(cur);
   });
@@ -7368,13 +7380,18 @@ function openDesigner(){
 }
 function closeDesigner(){document.getElementById('design-modal').classList.add('hide');}
 let dTouched={}; // which sprite targets the user has changed this session
+let dScope={};   // per sprite key: 'project' (whole game) or 'page' (this page only)
+function renderDScope(){const sc=dScope[dTarget]||'project';const pb=document.getElementById('dscope-page');if(pb)pb.textContent='This page (Page '+(curLevel+1)+')';const pj=document.getElementById('dscope-project');if(pj)pj.classList.toggle('active',sc==='project');if(pb)pb.classList.toggle('active',sc==='page');}
+function setDScope(s){if((DT.find(t=>t.key===dTarget)||{}).type!=='sprite')return;dScope[dTarget]=s;dTouched[dTarget]=true;renderDScope();}
+document.getElementById('dscope-project').onclick=()=>setDScope('project');
+document.getElementById('dscope-page').onclick=()=>setDScope('page');
 function spriteKeyToTile(k){return ({platform:T.PLATFORM,grass:T.GRASS,gem:T.GEM,star:T.STAR,spike:T.SPIKE,bounce:T.BOUNCE,mover:T.MOVER,start:T.START,goal:T.GOAL,cloud:T.CLOUD,ladder:T.LADDER,oneway:T.ONEWAY,lava:T.LAVA,tree:T.TREE,flower:T.FLOWER,bush:T.BUSH,sign:T.SIGN})[k];}
 function _hex2(x){return ('0'+(x&255).toString(16)).slice(-2);}
 // Render a target's DEFAULT art into a 16×16 colour array, so the editor can show the current look.
 function rasterizeDefault(key){
   const out=new Array(256).fill('');
   const oc=document.createElement('canvas');oc.width=TS;oc.height=TS;const octx=oc.getContext('2d');
-  const oldCtx=ctx,oldCustom=customSprites[key];ctx=octx;customSprites[key]=null; // force the vector default
+  const oldCtx=ctx,oldCustom=customSprites[key],oldPage=pageSprites[key];ctx=octx;customSprites[key]=null;delete pageSprites[key]; // force the vector default (ignore any custom/page art)
   try{
     if(key==='player'){const op=player,ocam=camX,ocamY=camY;camX=0;camY=0;player={x:0,y:0,vx:0,facingRight:true,onGround:true};drawPlayer();player=op;camX=ocam;camY=ocamY;}
     else if(key==='enemy')drawEnemyAt(0,0,0,1,'A');
@@ -7382,7 +7399,7 @@ function rasterizeDefault(key){
     else if(key.indexOf('key_')===0)drawTile(T.KEY,0,0,{color:key.slice(4)});
     else{const tid=spriteKeyToTile(key);if(tid!=null)drawTile(tid,0,0,null);}
   }catch(e){}
-  ctx=oldCtx;customSprites[key]=oldCustom;
+  ctx=oldCtx;customSprites[key]=oldCustom;if(oldPage!==undefined)pageSprites[key]=oldPage;
   let img;try{img=octx.getImageData(0,0,TS,TS).data;}catch(e){return out;}
   for(let r=0;r<16;r++)for(let c=0;c<16;c++){const sx=Math.min(TS-1,Math.floor((c+0.5)*TS/16)),sy=Math.min(TS-1,Math.floor((r+0.5)*TS/16));const i=(sy*TS+sx)*4;if(img[i+3]>110)out[r*16+c]='#'+_hex2(img[i])+_hex2(img[i+1])+_hex2(img[i+2]);}
   return out;
@@ -7405,6 +7422,8 @@ function selDTarget(k){
   document.querySelectorAll('.design-tab').forEach((b,i)=>b.classList.toggle('active',DT[i].key===k));
   const isBg=(DT.find(t=>t.key===k)||{}).type==='bg';
   const bgPaint=isBg&&bgMode==='paint';
+  document.getElementById('design-scope').style.display=isBg?'none':'flex'; // whole-project / this-page choice (sprites only)
+  if(!isBg)renderDScope();
   // Pixel editor (canvas + colours + preview) shows for sprites AND for bg "paint" mode.
   const showPixel=!isBg||bgPaint;
   document.getElementById('design-area').style.display=showPixel?'flex':'none';
@@ -7492,13 +7511,15 @@ document.getElementById('d-clear').onclick=()=>{
 };
 document.getElementById('d-reset').onclick=()=>{
   if(dTarget==='bg'){pdata.bg=new Array(256).fill('');customBg={top:null,bottom:null,art:null};_skyKey='';_bgArtKey='';renderBgEditor();if(bgMode==='paint')renderPix();toast('Background reset','#585555');}
-  else{pdata[dTarget]=rasterizeDefault(dTarget);dTouched[dTarget]=false;customSprites[dTarget]=null;renderPix();toast('Reset to default','#585555');}
+  else{delete pageSprites[dTarget];pdata[dTarget]=rasterizeDefault(dTarget);dTouched[dTarget]=false;if(dScope[dTarget]!=='page')customSprites[dTarget]=null;dScope[dTarget]='project';renderDScope();renderPix();toast('Reset to default','#585555');}
 };
 document.getElementById('d-done').onclick=()=>{
   // Save sprites: only overwrite targets the user changed. An empty (but touched) sprite = invisible.
   DT.filter(t=>t.type==='sprite').forEach(t=>{
  if(!dTouched[t.key])return; // untouched keep whatever it was (custom or default)
-    customSprites[t.key]=(pdata[t.key]&&pdata[t.key].some(c=>c!==''))?[...pdata[t.key]]:[];
+    const data=(pdata[t.key]&&pdata[t.key].some(c=>c!==''))?[...pdata[t.key]]:[];
+    if(dScope[t.key]==='page'){pageSprites[t.key]=data;} // this page only — leave the whole-project design untouched
+    else{customSprites[t.key]=data;delete pageSprites[t.key];} // whole project — and drop any page-only override here
   });
   // Save bg — gradient colours always; painted art only in "paint" mode (else clear it)
   customBg.top=document.getElementById('bg-top-pick').value||null;
@@ -7709,6 +7730,11 @@ function updatePlayer(){
   }
   else p.vy=Math.min(p.vy+grav(),18);
   p.x+=p.vx;resolveX(p);p.y+=p.vy;resolveY(p);
+  // Quicksand holds the player: they sink to the BOTTOM of the sand pool but can't drop through into open air below
+  {const mc=Math.floor((p.x+PW/2)/TS);let lowSand=-1;
+    for(let r=Math.floor(p.y/TS);r<=Math.floor((p.y+PH-1)/TS);r++)if(tileAt(mc,r)===T.QUICKSAND)lowSand=r; // lowest sand row the player overlaps
+    if(lowSand>=0){const pb=lowSand+1; // row just below the sand pool
+      if(!isSolid(mc,pb)&&tileAt(mc,pb)!==T.QUICKSAND&&p.y+PH>pb*TS){p.y=pb*TS-PH;if(p.vy>0)p.vy=0;p.onGround=true;}}} // rest on the sand floor, allow a struggle-jump out
   // Fully submerged in quicksand = drowning: give a moment to escape, then lose a life
   if(p.inv<=0&&tileAt(midC,Math.floor((p.y+5)/TS))===T.QUICKSAND){p.sinkT=(p.sinkT||0)+1;if(p.sinkT>=45){p.sinkT=0;toast('Sank in the quicksand!','#a8894b');killPlayer();}}
   else p.sinkT=Math.max(0,(p.sinkT||0)-2);
@@ -7847,6 +7873,15 @@ function drawPlay(){
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y-camY,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   for(const f of fans)drawFanBeam(f.c,f.r,f.rot,f.reach,-camX,-camY);
   if(player&&(!player.dead||tick%6<3))drawPlayer();
+  // Quicksand: veil the submerged part of the player with sand so they look buried in it (not standing on top)
+  if(playing&&player&&!player.dead){const mc=Math.floor((player.x+PW/2)/TS),fr=Math.floor((player.y+PH-2)/TS);
+    if(tileAt(mc,fr)===T.QUICKSAND||tileAt(mc,Math.floor((player.y+PH/2)/TS))===T.QUICKSAND){
+      let sr=fr;while(tileAt(mc,sr-1)===T.QUICKSAND)sr--; // sr = topmost sand row = the surface
+      const surfaceY=sr*TS-camY,px=player.x-camX,feetY=player.y+PH-camY,top=Math.max(surfaceY,player.y-camY-4);
+      if(feetY>top){ctx.save();ctx.fillStyle='rgba(194,168,106,.82)';ctx.fillRect(px-3,top,PW+6,feetY-top);
+        ctx.fillStyle='rgba(160,132,72,.7)';ctx.fillRect(px-4,surfaceY-2,PW+8,3); // sandy rim at the surface line
+        ctx.restore();}
+    }}
  // "Press to read" prompt above a sign the player is in front of
  if(signNear){const bx=signNear.c*TS-camX+TS/2,by=signNear.r*TS-10-camY;ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText(' Read').width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText(' Read',bx,by-3);ctx.restore();}
  if(chestNear){const bx=chestNear.c*TS-camX+TS/2,by=chestNear.r*TS-10-camY;const lbl=chestNear.locked?' Locked':' Open';ctx.save();ctx.font='bold 12px Nunito';ctx.textAlign='center';const tw=ctx.measureText(lbl).width+14;ctx.fillStyle='rgba(0,0,0,.7)';ctx.beginPath();ctx.roundRect?ctx.roundRect(bx-tw/2,by-16,tw,18,6):ctx.rect(bx-tw/2,by-16,tw,18);ctx.fill();ctx.fillStyle='#fff';ctx.fillText(lbl,bx,by-3);ctx.restore();}

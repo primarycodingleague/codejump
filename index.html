@@ -337,8 +337,12 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .pal-item:hover{border-color:var(--gold);}
 .pal-item.sel{background:var(--gold);color:var(--black);border-color:var(--gold);}
 .pal-icon{font-size:20px;line-height:1;}
-.pal-group{font-family:var(--font);font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);opacity:.85;padding:7px 2px 2px;margin-top:2px;border-top:1px solid var(--gray);text-align:center;}
-.pal-group:first-child{border-top:none;margin-top:0;}
+.pal-group{font-family:var(--font);font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--gold);opacity:.85;padding:7px 2px 2px;margin-top:2px;border-top:1px solid var(--gray);text-align:center;cursor:pointer;user-select:none;}
+.pal-group:hover{opacity:1;}
+.pal-groupwrap{display:flex;flex-direction:column;gap:4px;}
+.pal-search{width:100%;box-sizing:border-box;background:var(--black);color:var(--white);border:1px solid var(--gray);border-radius:3px;padding:5px 6px;font-family:var(--font);font-size:11px;margin-bottom:2px;}
+.pal-search::placeholder{color:#888;}
+.pal-search:focus{border-color:var(--gold);outline:none;}
 
 /* ── PAGES (multi-level) RAIL ───────────────────────────────────────── */
 #pages{background:#2b2b2b;width:104px;min-width:104px;padding:8px 6px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;border-right:1px solid var(--gray);}
@@ -1307,6 +1311,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <button class="hbtn" data-demo="forest"><svg class="ic"><use href="#i-tree"></use></svg> &nbsp;Forest Adventure</button>
       <button class="hbtn" data-demo="space"><svg class="ic"><use href="#i-rocket"></use></svg> &nbsp;Space Jump</button>
       <button class="hbtn" data-demo="ocean"><svg class="ic"><use href="#i-fish"></use></svg> &nbsp;Ocean Quest</button>
+      <button class="hbtn" data-demo="gizmos"><svg class="ic"><use href="#i-crate"></use></svg> &nbsp;Gadget Playground</button>
     </div>
 
     <!-- My Levels -->
@@ -1999,7 +2004,7 @@ const TILE_DESC={
   [T.FAN]:'A fan that blows a strong current. Float and glide along the air — great for reaching high places. Tap it to choose which way it blows (up, right, down or left) and how far the wind reaches (its push distance).',
   [T.CRATE]:'A wooden crate you can PUSH. Walk into it to shove it along, drop it into gaps, stack it to climb up, or park it on a button to hold a gate open. It falls if nothing is underneath it.',
   [T.ICE]:'Slippery ice! You slide along it and take a moment to stop — mind you don’t skid off the edge.',
-  [T.CLIMB]:'A sticky wall! Jump into it to cling on, press Up/Down to slide, and jump again to leap off — bounce between two walls to climb up. Your grip only lasts about 2 seconds, so keep moving!',
+  [T.CLIMB]:'A cling wall! Jump into it and you grab on automatically. Press Jump with an arrow to aim your leap — jump ACROSS to a facing wall, grab again, and jump back to bounce side to side and climb. Your grip only lasts about 2 seconds, so time your jumps!',
   [T.DASH]:'A dash power-up. Grab it, then double-tap Left or Right to zoom forward in a quick dash.',
   [T.DJUMP]:'A double-jump power-up. Grab it and you can jump again in mid-air for the rest of the page.',
   [T.SPIKEBALL]:'A rolling spike ball that patrols back and forth. It can’t be stomped — touching it costs a life. Great for guarding a path.',
@@ -2070,6 +2075,7 @@ let toggleCfg={};// per toggle-switch: "r,c" -> {color} (flips same-colour gates
 let rotCfg={};   // per-tile rotation (spikes/fans/bounce): "r,c" -> 0|90|180|270 degrees
 let fanCfg={};   // per-fan settings: "r,c" -> {reach:tiles} how far the wind pushes
 let beltCfg={};  // per-conveyor speed: "r,c" -> {spd:1|2|3} slow/normal/fast
+let hazardCfg={};// per spike-ball / shooter / falling-block: "r,c" -> {spd:1|2|3} slow/normal/fast (patrol speed / fire rate / fall speed)
 let gemA=0,goalA=0,tick=0;
 let customSprites={player:null,enemy:null,enemy2:null,platform:null,grass:null,gem:null,star:null,spike:null,bounce:null,mover:null,start:null,goal:null,cloud:null,ladder:null};
 let customBg={top:null,bottom:null,art:null}; // top/bottom = gradient; art = 16×16 painted sky (overrides gradient)
@@ -2081,18 +2087,19 @@ function getSkyColors(){return[customBg.top||th().sky[0], customBg.bottom||th().
 // always mirror the page currently being edited (curLevel) or played (playLevel).
 // The Blockly rules program and customSprites are shared across the whole game.
 let LEVELS=[], curLevel=0, playLevel=0;
-function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,cave:caveMode,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),toggleCfg:JSON.parse(JSON.stringify(toggleCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg)),pageSprites:JSON.parse(JSON.stringify(pageSprites))};}
-function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',cave:false,customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{},teleCfg:{},buttonCfg:{},gateCfg:{},toggleCfg:{},rotCfg:{},fanCfg:{},beltCfg:{},pageSprites:{}};}
+function snapLevel(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),theme,cave:caveMode,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null},moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),toggleCfg:JSON.parse(JSON.stringify(toggleCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg)),hazardCfg:JSON.parse(JSON.stringify(hazardCfg)),pageSprites:JSON.parse(JSON.stringify(pageSprites))};}
+function blankLevel(){return{grid:mkGrid(),waterGrid:mkGrid(),theme:'forest',cave:false,customBg:{top:null,bottom:null,art:null},moverCfg:{},enemyCfg:{},doorCfg:{},keyCfg:{},signCfg:{},chestCfg:{},teleCfg:{},buttonCfg:{},gateCfg:{},toggleCfg:{},rotCfg:{},fanCfg:{},beltCfg:{},hazardCfg:{},pageSprites:{}};}
 // NEVER snapshot while playing — during play the globals hold the running level's
 // runtime state, not the editor design, so committing would overwrite a page's design.
 function commitLevel(){if(mode==='play')return;if(LEVELS[curLevel])LEVELS[curLevel]=snapLevel();}
-function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';caveMode=!!L.cave;customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};teleCfg=L.teleCfg?JSON.parse(JSON.stringify(L.teleCfg)):{};buttonCfg=L.buttonCfg?JSON.parse(JSON.stringify(L.buttonCfg)):{};gateCfg=L.gateCfg?JSON.parse(JSON.stringify(L.gateCfg)):{};toggleCfg=L.toggleCfg?JSON.parse(JSON.stringify(L.toggleCfg)):{};rotCfg=Object.assign({},L.rotCfg||{});fanCfg=L.fanCfg?JSON.parse(JSON.stringify(L.fanCfg)):{};beltCfg=L.beltCfg?JSON.parse(JSON.stringify(L.beltCfg)):{};pageSprites=L.pageSprites?JSON.parse(JSON.stringify(L.pageSprites)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof updateCaveBtn==='function')updateCaveBtn();_skyKey='';_bgArtKey='';}
+function activateLevel(i){const L=LEVELS[i];if(!L)return;grid=L.grid.map(r=>[...r]);waterGrid=(L.waterGrid?L.waterGrid.map(r=>[...r]):mkGrid());theme=L.theme||'forest';caveMode=!!L.cave;customBg={top:(L.customBg&&L.customBg.top)||null,bottom:(L.customBg&&L.customBg.bottom)||null,art:(L.customBg&&L.customBg.art)?[...L.customBg.art]:null};moverCfg=Object.assign({},L.moverCfg||{});enemyCfg=Object.assign({},L.enemyCfg||{});doorCfg=Object.assign({},L.doorCfg||{});keyCfg=Object.assign({},L.keyCfg||{});signCfg=Object.assign({},L.signCfg||{});chestCfg=L.chestCfg?JSON.parse(JSON.stringify(L.chestCfg)):{};teleCfg=L.teleCfg?JSON.parse(JSON.stringify(L.teleCfg)):{};buttonCfg=L.buttonCfg?JSON.parse(JSON.stringify(L.buttonCfg)):{};gateCfg=L.gateCfg?JSON.parse(JSON.stringify(L.gateCfg)):{};toggleCfg=L.toggleCfg?JSON.parse(JSON.stringify(L.toggleCfg)):{};rotCfg=Object.assign({},L.rotCfg||{});fanCfg=L.fanCfg?JSON.parse(JSON.stringify(L.fanCfg)):{};beltCfg=L.beltCfg?JSON.parse(JSON.stringify(L.beltCfg)):{};hazardCfg=L.hazardCfg?JSON.parse(JSON.stringify(L.hazardCfg)):{};pageSprites=L.pageSprites?JSON.parse(JSON.stringify(L.pageSprites)):{};const ts=document.getElementById('theme-sel');if(ts)ts.value=theme;if(typeof updateCaveBtn==='function')updateCaveBtn();_skyKey='';_bgArtKey='';}
 function resetSingleLevel(){LEVELS=[snapLevel()];curLevel=0;playLevel=0;renderPagesStrip();}
 // ── Unsaved-changes tracking + autosave ──────────────────────────────────
 let dirty=false, blocklyReady=false, _suppressBlocklyDirty=false;
 function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActive&&!collabApplyingRemote){
   if(projectType==='stage'){if(keyStage==='ks1'&&typeof collabSnapshotSoon==='function')collabSnapshotSoon();} // KS1 Stage syncs via snapshots (small data); KS2/3 Stage uses granular ops
   else if(projectType==='platformer'&&typeof collabSyncConfigs==='function')collabSyncConfigs(); // platformer: granular config/theme ops — NO full snapshot (that clobbered other pages)
+  else if(projectType==='turtle'&&typeof collabTurtleSoon==='function')collabTurtleSoon(); // turtle: sync the Logo code as a small text op
 }}
 function clearDirty(){dirty=false;}
 function autoSaveDraft(){if(!dirty)return;try{commitLevel();const link={save:curSaveId,cloud:(typeof cloudProjectId!=='undefined'?cloudProjectId:null),title:(typeof cloudProjectTitle!=='undefined'?cloudProjectTitle:''),cls:(typeof cloudProjectClass!=='undefined'?cloudProjectClass:null)};localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload(),link}));}catch(e){}}
@@ -2313,6 +2320,24 @@ const DEMOS={
     grid[10][9]=T.SPIKE;grid[10][10]=T.SPIKE;
     grid[8][13]=T.ENEMY;grid[9][7]=T.MOVER;
     for(let c=0;c<COLS;c++)if(c%5===0)grid[4][c]=T.CLOUD;
+  },
+  gizmos:()=>{
+    grid=mkGrid();theme='forest';
+    moverCfg={};enemyCfg={};buttonCfg={};gateCfg={};toggleCfg={};beltCfg={};rotCfg={};fanCfg={};
+    for(let c=0;c<COLS;c++)grid[11][c]=T.GRASS;
+    grid[10][1]=T.START;
+    // crate → button → gate
+    grid[10][3]=T.CRATE;grid[10][5]=T.BUTTON;buttonCfg['10,5']={color:'red'};
+    grid[10][7]=T.GATE;grid[9][7]=T.GATE;gateCfg['10,7']={color:'red',dur:'forever'};gateCfg['9,7']={color:'red',dur:'forever'};
+    grid[9][4]=T.GEM;
+    // slippery ice, a dash pickup and a gap to dash across
+    [9,10,11].forEach(c=>grid[11][c]=T.ICE);
+    grid[8][10]=T.DASH;grid[11][13]=0;grid[11][14]=0;grid[7][12]=T.STAR;
+    // a spike ball patrolling the landing
+    grid[10][16]=T.SPIKEBALL;grid[9][16]=T.GEM;
+    // sticky-wall climb to a finish up high
+    for(let r=4;r<11;r++){grid[r][17]=T.CLIMB;grid[r][19]=T.CLIMB;}
+    grid[3][17]=T.GRASS;grid[3][18]=T.GOAL;grid[3][19]=T.GRASS;
   },
   ocean:()=>{
     grid=mkGrid();theme='water';
@@ -3389,7 +3414,7 @@ function renderCostumeColors(){const wrap=document.getElementById('cm-colors');i
     b.onclick=()=>{co.color=col;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};wrap.appendChild(b);});}
 function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
 function cmPaintNew(){const s=stageState.sprites[stageSel];openPaintEditor({w:300,h:300,name:'costume'+(s.costumes.length+1),onSave:(dataURL,name)=>{s.costumes.push({name:name||'costume',img:dataURL});s.costumeIdx=s.costumes.length-1;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
-function paintCostumeEditor(co){openPaintEditor({w:300,h:300,img:co.img,name:co.name,onSave:(dataURL,name)=>{co.img=dataURL;co.name=name||co.name;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
+function paintCostumeEditor(co){openPaintEditor({w:300,h:300,img:co.img,name:co.name,onSave:(dataURL,name)=>{co.img=dataURL;co.name=name||co.name;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();const s=stageState.sprites[stageSel],idx=s?s.costumes.indexOf(co):-1;if(idx>=0&&typeof collabCostumeImg==='function')collabCostumeImg(s,idx,dataURL,co.name);else cmEmitCostumes();}});} // editing one existing image → image-delta op
 
 // ── Bitmap paint editor ───────────────────────────────────────────────────
 const paintState={tool:'brush',size:8,onSave:null,drawing:false,start:null,snap:null,undo:[],redo:[]};
@@ -3467,7 +3492,7 @@ function renderBackdropEdit(){const bd=stageState.backdrops[stageState.backdropI
   else{const lab=document.createElement('label');lab.style.cssText='color:#bbb;font-size:13px;display:flex;gap:8px;justify-content:center;align-items:center;';lab.appendChild(document.createTextNode('Colour: '));const ci=document.createElement('input');ci.type='color';ci.value=bd.color||'#bfe3ff';ci.oninput=()=>{bd.color=ci.value;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();};lab.appendChild(ci);ed.appendChild(lab);}}
 function bdAddSolid(){const i=stageState.backdrops.length;stageState.backdrops.push({name:'backdrop'+(i+1),color:'#87ceeb'});stageState.backdropIdx=i;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();}
 function bdPaintNew(){openPaintEditor({w:480,h:288,name:'backdrop'+(stageState.backdrops.length+1),onSave:(url,name)=>{stageState.backdrops.push({name:name||'backdrop',img:url});stageState.backdropIdx=stageState.backdrops.length-1;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();}});}
-function bdPaintEdit(bd){openPaintEditor({w:480,h:288,img:bd.img,name:bd.name,onSave:(url,name)=>{bd.img=url;bd.name=name||bd.name;delete bd._el;renderBackdropManager();markDirty();if(typeof collabBackdrops==='function')collabBackdrops();}});}
+function bdPaintEdit(bd){openPaintEditor({w:480,h:288,img:bd.img,name:bd.name,onSave:(url,name)=>{bd.img=url;bd.name=name||bd.name;delete bd._el;renderBackdropManager();markDirty();const idx=stageState.backdrops.indexOf(bd);if(idx>=0&&typeof collabBackdropImg==='function')collabBackdropImg(idx,url,bd.name);else if(typeof collabBackdrops==='function')collabBackdrops();}});} // editing one existing backdrop image → image-delta op
 function stBackdropOptions(){const opts=(stageState&&stageState.backdrops)?stageState.backdrops.map(b=>[b.name,b.name]):[];return opts.length?opts:[['backdrop1','backdrop1']];}
 // ── Stage block interpreter ──────────────────────────────────────────────
 // Scripts run as generator "fibers" (one step per frame) so wait / repeat /
@@ -4959,6 +4984,10 @@ function defineBlocks(){
   Blockly.Blocks['when_level_start']={init:function(){
  this.appendDummyInput().appendField(' when I land on a page');this.setNextStatement(true);this.setColour(45);
   }};
+  Blockly.Blocks['when_dash']={init:function(){this.appendDummyInput().appendField('when I dash');this.setNextStatement(true);this.setColour(45);}};
+  Blockly.Blocks['when_wall_jump']={init:function(){this.appendDummyInput().appendField('when I wall-jump');this.setNextStatement(true);this.setColour(45);}};
+  Blockly.Blocks['when_hit']={init:function(){this.appendDummyInput().appendField('when I get hurt');this.setNextStatement(true);this.setColour(45);}};
+  Blockly.Blocks['when_press_button']={init:function(){this.appendDummyInput().appendField('when a button is pressed');this.setNextStatement(true);this.setColour(45);}};
   Blockly.Blocks['every_n_seconds']={init:function(){
     this.appendDummyInput().appendField('⏰ every').appendField(new Blockly.FieldNumber(2,1,120,1),'N').appendField('seconds');this.setNextStatement(true);this.setColour(45);
   }};
@@ -5297,7 +5326,8 @@ function getToolbox(){
   const events=[{kind:'block',type:'when_key_pressed'},{kind:'block',type:'when_game_starts'}];
   if(keyStage==='ks2')events.push(
     {kind:'block',type:'when_collect_gem'},{kind:'block',type:'when_touch_enemy'},
-    {kind:'block',type:'when_level_start'},{kind:'block',type:'every_n_seconds'});
+    {kind:'block',type:'when_level_start'},{kind:'block',type:'every_n_seconds'},
+    {kind:'block',type:'when_dash'},{kind:'block',type:'when_wall_jump'},{kind:'block',type:'when_hit'},{kind:'block',type:'when_press_button'});
   const game=[
     {kind:'category',name:'Events',colour:'45',contents:events},
     {kind:'category',name:'Player',colour:'210',contents:[
@@ -6184,10 +6214,10 @@ Object.keys(TOOL_DESC).forEach(id=>{const el=document.getElementById(id);if(el){
 // ═══════════════════════════════════════════════════════════════════════
 function tileReferenceHTML(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<div class="help-grouphead">'+name+'</div>';TILES.filter(t=>t.g===g).forEach(t=>{h+='<div class="help-ref"><span class="hr-ic">'+t.icon+'</span><span class="hr-tx"><b>'+t.label+'</b> — '+(TILE_DESC[t.id]||'')+'</span></div>';});});return h;}
 const HELP_TABS=[
- ['start',' Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b> Build</b> — place blocks on the grid to make your level.</li><li><b>▶ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b> Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start </b> and a <b>Finish </b>.</li><li>Press <b>▶ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('ks1')"> Let’s make a game! (KS1) </button><button class="help-launch" onclick="ks1Starter()"> Give me a starter game (KS1) </button><button class="help-launch" onclick="startMission('first')"> Try a guided build </button><button class="help-launch" onclick="startMission('gadgets')"> Puzzle with buttons &amp; gates (KS2) </button><button class="help-launch" onclick="startMission('ks3')">‍ Your first Python game (KS3) </button>`],
+ ['start',' Start',`<h3>Welcome to CodeJump!</h3><p>Build your own platform game, design how it looks, code the rules, and play it — then share it.</p><h3>The buttons at the top</h3><ul><li><b> Build</b> — place blocks on the grid to make your level.</li><li><b>▶ Play</b> — test your game any time.</li><li><b>&lt;/&gt; Code</b> — set the rules with snap-together blocks.</li><li><b> Design</b> — draw your own pictures.</li></ul><h3>Make a game in 3 steps</h3><ul><li>Pick a block on the left, then click the grid to place it.</li><li>Add a <b>Start </b> and a <b>Finish </b>.</li><li>Press <b>▶ Play</b> and have fun!</li></ul><p style="opacity:.7">Tip: hover over any block or button to see what it does.</p><button class="help-launch" onclick="startMission('ks1')"> Let’s make a game! (KS1) </button><button class="help-launch" onclick="ks1Starter()"> Give me a starter game (KS1) </button><button class="help-launch" onclick="startMission('first')"> Try a guided build </button><button class="help-launch" onclick="startMission('gadgets')"> Puzzle with buttons &amp; gates (KS2) </button><button class="help-launch" onclick="startMission('crates')"> Crate &amp; button puzzle (KS2) </button><button class="help-launch" onclick="startMission('climbing')"> Wall-jump climb (KS2) </button><button class="help-launch" onclick="startMission('ks3')">‍ Your first Python game (KS3) </button>`],
  ['build',' Building',`<p>In <b>Build</b> mode, pick a tool at the top:</p><ul><li><b> Paint</b> — place the selected block.</li><li><b> Fill Row</b> — fill a whole row (great for floors).</li><li><b> Erase</b> — remove blocks (peels the item first, then any water behind it).</li><li><b> Undo / Redo</b>, <b> Clear</b> the page, and <b>▶ This Page</b> to test one page.</li></ul><p>Some blocks have extra settings — just <b>tap them after placing</b>: moving platforms, enemies, doors, keys and signs.</p><p>Use the <b>pages</b> strip to add, duplicate (⧉), reorder (▲▼) and delete pages for a multi-level adventure.</p><h3> Game size (Key Stage 2 &amp; 3)</h3><p>When you start a new game you can choose its size — <b>Standard</b>, <b>Wide</b>, <b>Large</b> or <b>Huge</b> — for much bigger adventures. In Build you see the whole level at once; when you Play, the camera follows the player around the larger world.</p><h3>Every block, explained</h3>`+tileReferenceHTML()],
  ['design',' Designing',`<p>Open <b> Design</b> to draw your own 16×16 pictures for the player, enemies, blocks, keys and more.</p><ul><li>Pick a tab to choose what to draw.</li><li>It shows the <b>current design</b> — tweak it, <b> Clear</b> to make something blank/invisible, or <b> Reset</b> for the default.</li><li>Use <b> Fill all</b> to fill the canvas, and the eraser to rub out.</li><li>The <b>Background</b> tab lets you pick sky colours or paint your own sky.</li></ul>`],
- ['code',' Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b> Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, or every few seconds.</li><li><b> Player</b> — movement and speed.</li><li><b> Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b> Physics</b> — gravity, jump height, bounce, double jump.</li><li><b> Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b> Rules</b> — lives and points.</li><li><b> Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b> Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: keys & doors, <b>chests</b> (lockable), <b>teleport pads</b>, and <b>buttons</b> that open <b>gates</b> — see the <b>Building</b> tab for what each does.</p>
+ ['code',' Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b> Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, every few seconds, and now <b>when you dash, wall-jump, get hurt, or press a button</b>.</li><li><b> Player</b> — movement and speed.</li><li><b> Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b> Physics</b> — gravity, jump height, bounce, double jump.</li><li><b> Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b> Rules</b> — lives and points.</li><li><b> Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b> Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: keys & doors, <b>chests</b> (lockable), <b>teleport pads</b>, and <b>buttons</b> that open <b>gates</b> — see the <b>Building</b> tab for what each does.</p>
  <h3>‍ Key Stage 3 — write Python-style code</h3>
    <p>KS3 games swap the blocks for a real <b>code editor</b>. You write Python-style code, and these functions run by themselves:</p>
    <ul><li><code>on_start()</code> — once when the game begins.</li><li><code>on_update()</code> — every frame (~60×/second).</li><li><code>on_key(key)</code> — when a key is pressed, e.g. <code>"left"</code>, <code>"space"</code>.</li><li><code>on_gem()</code> / <code>on_enemy()</code> — collecting a gem / touching an enemy.</li></ul>
@@ -6343,7 +6373,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>Every block &amp; tile</h3>
   `+guideTileRef()+`
   <h3>Coding blocks (Key Stage 2)</h3>
-  <p>Events fire scripts (game start, collect a gem, touch an enemy, land on a page, every N seconds). Actions change score/lives, show a message, play a sound, go to a page, win, or end the game. These combine with standard Logic, Loops, Maths, Variables and Functions. A friendly limit stops runaway loops, so nothing freezes.</p>
+  <p>Events fire scripts (game start, collect a gem, touch an enemy, land on a page, every N seconds, dash, wall-jump, get hurt, press a button). Actions change score/lives, show a message, play a sound, go to a page, win, or end the game. These combine with standard Logic, Loops, Maths, Variables and Functions. A friendly limit stops runaway loops, so nothing freezes.</p>
   <p><b>Win conditions</b> (Win category): reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b>, plus a custom win message. <b>Smart enemies</b> (Enemies category): make Enemy A/B <b>chase the player</b>, and enable <b>jump-to-defeat</b> (stomp).</p>
   <p><b>Key Stage 2 grid extras:</b> keys &amp; doors, lockable <b>chests</b>, <b>teleport pads</b> (same-colour pairs), and <b>buttons</b> that open same-colour <b>gates</b> — all listed with the other blocks above.</p>
   <h3>Key Stage 3 — text coding (Python-style)</h3>
@@ -6372,6 +6402,7 @@ function printGuide(){doPrint(teacherGuideHTML());}
 // ═══════════════════════════════════════════════════════════════════════
 function _palItem(label){return [...document.querySelectorAll('#palette .pal-item')].find(e=>{const s=e.querySelector('span:last-child');return s&&s.textContent.trim().toLowerCase().startsWith(label.toLowerCase());});}
 function _gridHas(id){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===id)return true;return false;}
+function _countTile(id){let n=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===id)n++;return n;}
 function _floorMade(){let n=0;for(let c=0;c<COLS;c++)if(grid[ROWS-1][c]===T.GRASS||grid[ROWS-1][c]===T.PLATFORM)n++;return n>=6;}
 const MISSIONS={
  first:{title:'Make your first game',steps:[
@@ -6390,6 +6421,22 @@ const MISSIONS={
  {text:'Add a <b>Chest </b> and tap it to put treasure inside.',hl:()=>_palItem('Chest'),check:()=>_gridHas(T.CHEST)},
  {text:'Press <b>▶ Play</b> — step on the button to open the gate, then dash to the finish!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
  {text:' Brilliant puzzle! Try teleport pads next, or set a points/time goal in &lt;/&gt; Code.',final:true,check:()=>false},
+ ]},
+ climbing:{title:'Wall-jump climb',ks2:true,steps:[
+ {text:'Make a floor: pick <b>Grass Top </b> and click along the bottom.',hl:()=>_palItem('Grass'),check:_floorMade},
+ {text:'Add a <b>Start </b> near the bottom-left.',hl:()=>_palItem('Start'),check:()=>_gridHas(T.START)},
+ {text:'Place two tall <b>Sticky Wall </b> columns facing each other, a small gap apart.',hl:()=>_palItem('Sticky'),check:()=>_countTile(T.CLIMB)>=4},
+ {text:'Put the <b>Finish </b> up high, above the walls.',hl:()=>_palItem('Finish'),check:()=>_gridHas(T.GOAL)},
+ {text:'Press <b>▶ Play</b> — jump into a wall to grab it, then press <b>Jump + an arrow</b> to leap to the other wall. Bounce up to the finish!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
+ {text:' Wall-jump master! Try guarding the climb with a Spike Ball, or add a Dash power-up.',final:true,check:()=>false},
+ ]},
+ crates:{title:'Crate & button puzzle',ks2:true,steps:[
+ {text:'Make a floor with <b>Grass Top </b>.',hl:()=>_palItem('Grass'),check:_floorMade},
+ {text:'Add a <b>Start </b> and a <b>Finish </b> at each end.',hl:()=>_palItem('Start'),check:()=>_gridHas(T.START)&&_gridHas(T.GOAL)},
+ {text:'Place a <b>Gate </b> to block the path, and a <b>Button </b> — tap each to give them the <b>same colour</b>.',hl:()=>_palItem('Gate'),check:()=>_gridHas(T.GATE)&&_gridHas(T.BUTTON)},
+ {text:'Add a <b>Crate </b> the player can push onto the button.',hl:()=>_palItem('Crate'),check:()=>_gridHas(T.CRATE)},
+ {text:'Press <b>▶ Play</b> — push the crate onto the button to hold the gate open, then walk through!',hl:()=>document.getElementById('btn-play'),check:()=>mode==='play'},
+ {text:' Clever! A crate resting on a button holds its gate open even after you walk away.',final:true,check:()=>false},
  ]},
  ks3:{title:'Your first Python game',ks3:true,steps:[
  {text:'Make a floor: pick <b>Grass Top </b> and click along the bottom.',hl:()=>_palItem('Grass'),check:_floorMade},
@@ -6465,22 +6512,42 @@ function drawBuild(){
   ctx.restore();
 }
 
+let palCollapsed=new Set();
 function buildPalette(){
   const pal=document.getElementById('palette');pal.innerHTML='';
   const vis=TILES.filter(ti=>!(keyStage==='ks1'&&(ti.id===T.KEY||ti.id===T.ENEMY2||ti.id===T.TELEPORT||ti.id===T.BUTTON||ti.id===T.GATE)));
-  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');if(keyStage==='ks1')speak(label+'. '+(TILE_DESC[ti.id]||''));};attachTip(d,'<b>'+label+'</b>'+(TILE_DESC[ti.id]?'<br>'+TILE_DESC[ti.id]:''));return d;};
+  const mkItem=ti=>{const label=(keyStage==='ks1'&&ti.id===T.ENEMY)?'Enemy':ti.label;const d=document.createElement('div');d.className='pal-item'+(selTile===ti.id?' sel':'');d.dataset.label=label.toLowerCase();d.innerHTML=`<span class="pal-icon">${ti.icon}</span><span>${label}</span>`;d.onclick=()=>{selTile=ti.id;tool='paint';document.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');setTool('paint');if(keyStage==='ks1')speak(label+'. '+(TILE_DESC[ti.id]||''));};attachTip(d,'<b>'+label+'</b>'+(TILE_DESC[ti.id]?'<br>'+TILE_DESC[ti.id]:''));return d;};
+  // Search box (all key stages) — filters blocks live
+  const sb=document.createElement('input');sb.className='pal-search';sb.type='search';sb.placeholder=(keyStage==='ks1')?'Find…':'Search blocks…';sb.setAttribute('aria-label','Search blocks');sb.value=_palQuery||'';sb.oninput=()=>{_palQuery=sb.value;palFilter();};pal.appendChild(sb);
   if(keyStage==='ks2'){
-    TILE_GROUPS.forEach(([g,name])=>{const items=vis.filter(ti=>ti.g===g);if(!items.length)return;const h=document.createElement('div');h.className='pal-group';h.textContent=name;pal.appendChild(h);items.forEach(ti=>pal.appendChild(mkItem(ti)));});
+    TILE_GROUPS.forEach(([g,name])=>{const items=vis.filter(ti=>ti.g===g);if(!items.length)return;
+      const col=palCollapsed.has(g);
+      const h=document.createElement('div');h.className='pal-group'+(col?' collapsed':'');h.dataset.group=g;h.textContent=(col?'▸ ':'▾ ')+name;
+      h.onclick=()=>{if(palCollapsed.has(g))palCollapsed.delete(g);else palCollapsed.add(g);buildPalette();};
+      pal.appendChild(h);
+      const wrap=document.createElement('div');wrap.className='pal-groupwrap';wrap.dataset.group=g;if(col)wrap.style.display='none';
+      items.forEach(ti=>wrap.appendChild(mkItem(ti)));pal.appendChild(wrap);
+    });
   }else{
     vis.forEach(ti=>pal.appendChild(mkItem(ti)));
   }
+  palFilter();
+}
+let _palQuery='';
+function palFilter(){const q=(_palQuery||'').trim().toLowerCase();
+  document.querySelectorAll('#palette .pal-item').forEach(it=>{it.style.display=(!q||(it.dataset.label||'').indexOf(q)>=0)?'':'none';});
+  // While searching, reveal every group that has a match and hide empty ones; empty search restores collapse state
+  document.querySelectorAll('#palette .pal-groupwrap').forEach(w=>{const hdr=w.previousElementSibling;
+    if(!q){const col=palCollapsed.has(w.dataset.group);w.style.display=col?'none':'';if(hdr)hdr.style.display='';}
+    else{const any=[...w.querySelectorAll('.pal-item')].some(it=>it.style.display!=='none');w.style.display=any?'':'none';if(hdr)hdr.style.display=any?'':'none';}
+  });
 }
 buildPalette();
 function setTool(t){tool=t;document.getElementById('t-paint').classList.toggle('active',t==='paint');document.getElementById('t-erase').classList.toggle('active',t==='erase');document.getElementById('t-fill').classList.toggle('active',t==='fill');}
 
 let histSaved=false;
-function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),cave:caveMode,moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),toggleCfg:JSON.parse(JSON.stringify(toggleCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg)),pageSprites:JSON.parse(JSON.stringify(pageSprites))};}
-function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);if('cave' in s)caveMode=!!s.cave;moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});doorCfg=Object.assign({},s.doorCfg||{});keyCfg=Object.assign({},s.keyCfg||{});signCfg=Object.assign({},s.signCfg||{});chestCfg=s.chestCfg?JSON.parse(JSON.stringify(s.chestCfg)):{};teleCfg=s.teleCfg?JSON.parse(JSON.stringify(s.teleCfg)):{};buttonCfg=s.buttonCfg?JSON.parse(JSON.stringify(s.buttonCfg)):{};gateCfg=s.gateCfg?JSON.parse(JSON.stringify(s.gateCfg)):{};toggleCfg=s.toggleCfg?JSON.parse(JSON.stringify(s.toggleCfg)):{};rotCfg=Object.assign({},s.rotCfg||{});fanCfg=s.fanCfg?JSON.parse(JSON.stringify(s.fanCfg)):{};beltCfg=s.beltCfg?JSON.parse(JSON.stringify(s.beltCfg)):{};pageSprites=s.pageSprites?JSON.parse(JSON.stringify(s.pageSprites)):{};commitLevel();renderPagesStrip();}
+function snapState(){return{grid:grid.map(r=>[...r]),waterGrid:waterGrid.map(r=>[...r]),cave:caveMode,moverCfg:Object.assign({},moverCfg),enemyCfg:Object.assign({},enemyCfg),doorCfg:Object.assign({},doorCfg),keyCfg:Object.assign({},keyCfg),signCfg:Object.assign({},signCfg),chestCfg:JSON.parse(JSON.stringify(chestCfg)),teleCfg:JSON.parse(JSON.stringify(teleCfg)),buttonCfg:JSON.parse(JSON.stringify(buttonCfg)),gateCfg:JSON.parse(JSON.stringify(gateCfg)),toggleCfg:JSON.parse(JSON.stringify(toggleCfg)),rotCfg:Object.assign({},rotCfg),fanCfg:JSON.parse(JSON.stringify(fanCfg)),beltCfg:JSON.parse(JSON.stringify(beltCfg)),hazardCfg:JSON.parse(JSON.stringify(hazardCfg)),pageSprites:JSON.parse(JSON.stringify(pageSprites))};}
+function restoreState(s){grid=s.grid.map(r=>[...r]);if(s.waterGrid)waterGrid=s.waterGrid.map(r=>[...r]);if('cave' in s)caveMode=!!s.cave;moverCfg=Object.assign({},s.moverCfg||{});enemyCfg=Object.assign({},s.enemyCfg||{});doorCfg=Object.assign({},s.doorCfg||{});keyCfg=Object.assign({},s.keyCfg||{});signCfg=Object.assign({},s.signCfg||{});chestCfg=s.chestCfg?JSON.parse(JSON.stringify(s.chestCfg)):{};teleCfg=s.teleCfg?JSON.parse(JSON.stringify(s.teleCfg)):{};buttonCfg=s.buttonCfg?JSON.parse(JSON.stringify(s.buttonCfg)):{};gateCfg=s.gateCfg?JSON.parse(JSON.stringify(s.gateCfg)):{};toggleCfg=s.toggleCfg?JSON.parse(JSON.stringify(s.toggleCfg)):{};rotCfg=Object.assign({},s.rotCfg||{});fanCfg=s.fanCfg?JSON.parse(JSON.stringify(s.fanCfg)):{};beltCfg=s.beltCfg?JSON.parse(JSON.stringify(s.beltCfg)):{};hazardCfg=s.hazardCfg?JSON.parse(JSON.stringify(s.hazardCfg)):{};pageSprites=s.pageSprites?JSON.parse(JSON.stringify(s.pageSprites)):{};commitLevel();renderPagesStrip();}
 function pushHistory(){history.push(snapState());if(history.length>80)history.shift();future=[];histSaved=true;}
 function undo(){if(!history.length){toast('Nothing to undo!','#6366f1');return;}future.push(snapState());restoreState(history.pop());markDirty();toast('Undone!','#6366f1');}
 function redo(){if(!future.length){toast('Nothing to redo!','#6366f1');return;}history.push(snapState());restoreState(future.pop());markDirty();toast('Redone!','#6366f1');}
@@ -6489,7 +6556,7 @@ function cellFromEvent(e){const r=canvas.getBoundingClientRect();const cx=(e.cli
  if(mode==='play')return{col:Math.floor((cx+camX)/TS),row:Math.floor((cy+camY)/TS)}; // screen world via camera
   const v=buildView();return{col:Math.floor((cx-v.ox)/v.sc/TS),row:Math.floor((cy-v.oy)/v.sc/TS)};} // build is scaled-to-fit
 function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const key=`${col},${row}`;if(key===lastCell)return;lastCell=key;const mk=row+','+col;const prev=grid[row][col];const wasMover=prev===T.MOVER,wasEnemy=(prev===T.ENEMY||prev===T.ENEMY2),wasDoor=prev===T.DOOR,wasKey=prev===T.KEY,wasSign=prev===T.SIGN,wasChest=prev===T.CHEST,wasTele=prev===T.TELEPORT,wasBtn=prev===T.BUTTON,wasGate=prev===T.GATE;
-  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];if(wasChest)delete chestCfg[mk];if(wasTele)delete teleCfg[mk];if(wasBtn)delete buttonCfg[mk];if(wasGate)delete gateCfg[mk];delete rotCfg[mk];delete fanCfg[mk];delete beltCfg[mk];delete toggleCfg[mk];};
+  const dropMeta=()=>{if(wasMover)delete moverCfg[mk];if(wasEnemy)delete enemyCfg[mk];if(wasDoor)delete doorCfg[mk];if(wasKey)delete keyCfg[mk];if(wasSign)delete signCfg[mk];if(wasChest)delete chestCfg[mk];if(wasTele)delete teleCfg[mk];if(wasBtn)delete buttonCfg[mk];if(wasGate)delete gateCfg[mk];delete rotCfg[mk];delete fanCfg[mk];delete beltCfg[mk];delete toggleCfg[mk];delete hazardCfg[mk];};
   if(erase){ // peel the foreground item first, then the water behind it
     if(grid[row][col]!==T.EMPTY){grid[row][col]=T.EMPTY;dropMeta();}
     else if(waterGrid[row][col]){waterGrid[row][col]=0;}
@@ -6510,8 +6577,9 @@ function paint(col,row,erase){if(col<0||col>=COLS||row<0||row>=ROWS)return;const
   if(selTile===T.GATE&&!gateCfg[mk])gateCfg[mk]={color:'red',dur:'forever'};
   collabCell(row,col,'grid');}
 // Tapping any placed moving platform OR enemy (in Paint mode) opens its travel editor.
-function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}if(t===T.CHEST){openChestEditor(row,col);return true;}if(t===T.TELEPORT){openTeleEditor(row,col);return true;}if(t===T.BUTTON){openColorEditor('button',row,col);return true;}if(t===T.GATE){openColorEditor('gate',row,col);return true;}if(t===T.TOGGLE){openColorEditor('toggle',row,col);return true;}if(t===T.FAN){openFanEditor(row,col);return true;}if(t===T.SPIKE||t===T.BOUNCE){rotateTileAt(row,col);return true;}if(t===T.CONVEYOR_L||t===T.CONVEYOR_R){cycleBeltSpeed(row,col);return true;}return false;}
+function tryTravelEdit(col,row){if(mode!=='build'||tool!=='paint')return false;if(col<0||col>=COLS||row<0||row>=ROWS)return false;const t=grid[row][col];if(t===T.MOVER){openMoverEditor(row,col);return true;}if(t===T.ENEMY||t===T.ENEMY2){openEnemyEditor(row,col);return true;}if(t===T.DOOR){openDoorEditor(row,col);return true;}if(t===T.KEY){openKeyEditor(row,col);return true;}if(t===T.SIGN){openSignEditor(row,col);return true;}if(t===T.CHEST){openChestEditor(row,col);return true;}if(t===T.TELEPORT){openTeleEditor(row,col);return true;}if(t===T.BUTTON){openColorEditor('button',row,col);return true;}if(t===T.GATE){openColorEditor('gate',row,col);return true;}if(t===T.TOGGLE){openColorEditor('toggle',row,col);return true;}if(t===T.FAN){openFanEditor(row,col);return true;}if(t===T.SPIKE||t===T.BOUNCE){rotateTileAt(row,col);return true;}if(t===T.CONVEYOR_L||t===T.CONVEYOR_R){cycleBeltSpeed(row,col);return true;}if(t===T.SPIKEBALL||t===T.SHOOTER||t===T.FALLBLOCK){cycleHazardSpeed(row,col);return true;}return false;}
 function cycleBeltSpeed(row,col){const mk=row+','+col;pushHistory();const nxt=(((beltCfg[mk]||{}).spd||2)%3)+1;beltCfg[mk]={spd:nxt};commitLevel();markDirty();toast('Belt speed: '+(['','Slow','Normal','Fast'][nxt]),'#6366f1');}
+function cycleHazardSpeed(row,col){const mk=row+','+col,t=grid[row][col];pushHistory();const nxt=(((hazardCfg[mk]||{}).spd||2)%3)+1;hazardCfg[mk]={spd:nxt};commitLevel();markDirty();const lbl=t===T.SHOOTER?'Fire rate: ':'Speed: ';toast(lbl+(['','Slow','Normal','Fast'][nxt]),'#6366f1');}
 function rotateTileAt(row,col){const mk=row+','+col,t=grid[row][col];pushHistory();const nxt=((rotCfg[mk]||0)+90)%360;if(nxt===0)delete rotCfg[mk];else rotCfg[mk]=nxt;commitLevel();markDirty();const dir={0:'up',90:'right',180:'down',270:'left'}[nxt];toast((t===T.BOUNCE?'Bounce launches ':'Spikes point ')+dir,'#6366f1');}
 let fanKey=null;
 function openFanEditor(row,col){fanKey=row+','+col;if(!fanCfg[fanKey])fanCfg[fanKey]={reach:3};fanRenderEditor();document.getElementById('fan-modal').classList.remove('hide');}
@@ -6681,7 +6749,7 @@ function buildPayload(){
   if(projectType==='stage'&&typeof stageSaveCurrent==='function'){stageSaveCurrent();stageSyncVars();} // flush the on-screen sprite's edits + variable names into stageState
   if(projectType==='turtle'){const _tta=document.getElementById('turtle-code');if(_tta)turtleCode=_tta.value;} // flush the editor into the saved code
   const xml=blocklyWorkspace?Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace)):(window._pendingXml||'');
-  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},pageSprites:L.pageSprites||{}}));
+  const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},hazardCfg:L.hazardCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
   return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
@@ -6725,6 +6793,7 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
   rotCfg:sanitizeRotCfg(L&&L.rotCfg),
   fanCfg:sanitizeFanCfg(L&&L.fanCfg),
   beltCfg:sanitizeBeltCfg(L&&L.beltCfg),
+  hazardCfg:sanitizeBeltCfg(L&&L.hazardCfg),
   pageSprites:sanitizePageSprites(L&&L.pageSprites)
 };}
 function sanitizePageSprites(m){const out={};if(!m||typeof m!=='object')return out;const ok=DT.filter(t=>t.type==='sprite').map(t=>t.key);for(const k in m){if(ok.indexOf(k)<0)continue;const a=m[k];if(!Array.isArray(a))continue;out[k]=a.slice(0,256).map(x=>(typeof x==='string'&&/^#?[0-9a-fA-F]{0,8}$/.test(x))?x:'');}return out;}
@@ -6848,7 +6917,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='turtle'&&projectType!=='3d'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Turtle & 3D have no live collaboration yet
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='3d'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // 3D has no live collaboration yet (turtle now does)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -7136,13 +7205,18 @@ function collabApplyOp(op){if(!op)return;
   if(op.k==='meta'){applyMetaOp(op);return;}
   if(op.k==='lvl'){applyLvlOp(op);return;}
   if(op.k==='prog'){applyProgOp(op);return;}
+  if(op.k==='t_code'){turtleCode=op.code||'';const ta=document.getElementById('turtle-code');if(ta&&document.activeElement!==ta)ta.value=turtleCode;return;} // turtle: apply remote code (don't stomp your own typing)
   applyStageOp(op);} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
+let _turtleCollabT=null;
+function collabTurtleSoon(){if(!collabActive||collabApplyingRemote||projectType!=='turtle')return;clearTimeout(_turtleCollabT);_turtleCollabT=setTimeout(()=>{const ta=document.getElementById('turtle-code');collabSend({type:'op',op:{k:'t_code',code:(ta?ta.value:turtleCode)||''}});},300);}
 // ── Stage collaboration: granular ops (Google-Docs-style, like the platformer's tile ops) ──
 function collabStageOp(op){if(!collabActive||collabApplyingRemote)return;collabSend({type:'op',op});}
 function collabSprite(s){if(s)collabStageOp({k:'st_sprite',id:s.id,name:s.name,x:Math.round(s.x),y:Math.round(s.y),dir:s.dir,size:s.size,visible:s.visible!==false});}
 let _stMoveT=null;
 function collabSpriteThrottled(s){if(!collabActive||collabApplyingRemote||_stMoveT)return;_stMoveT=setTimeout(()=>{_stMoveT=null;collabSprite(s);},80);}
 function collabSpriteCostumes(s){if(s)collabStageOp({k:'st_cos',id:s.id,costumes:s.costumes,costumeIdx:s.costumeIdx|0});}
+function collabCostumeImg(s,idx,img,name){if(s&&idx>=0)collabStageOp({k:'st_cosimg',id:s.id,idx,img,name});} // send just one painted costume image (image-delta, avoids re-shipping every costume)
+function collabBackdropImg(idx,img,name){if(idx>=0)collabStageOp({k:'st_bdimg',idx,img,name});}
 function collabSpriteAdd(s){if(s)collabStageOp({k:'st_add',sprite:{id:s.id,name:s.name,x:s.x,y:s.y,dir:s.dir,size:s.size,visible:s.visible,costumes:s.costumes,costumeIdx:s.costumeIdx,xml:s.xml||''}});}
 function collabSpriteDel(id){collabStageOp({k:'st_del',id});}
 function collabBackdrops(){if(stageState)collabStageOp({k:'st_bd',backdrops:stageState.backdrops,backdropIdx:stageState.backdropIdx|0});}
@@ -7176,6 +7250,8 @@ function applyStageOp(op){if(!stageState||!op)return;
   else if(op.k==='st_del'){const i=stageState.sprites.findIndex(s=>s.id===op.id);if(i>=0&&stageState.sprites.length>1){stageState.sprites.splice(i,1);if(stageSel>=stageState.sprites.length)stageSel=stageState.sprites.length-1;stageLoadSpriteScripts(stageSel);renderSpritePanel();}}
   else if(op.k==='st_bd'){let bds=Array.isArray(op.backdrops)?op.backdrops.map(sanitizeBackdrop).filter(Boolean):[];if(!bds.length)bds=[{name:'backdrop1',color:'#bfe3ff'}];stageState.backdrops=bds;stageState.backdropIdx=Math.max(0,Math.min(op.backdropIdx|0,bds.length-1));if(typeof renderStagePane==='function')renderStagePane();const bm=document.getElementById('backdrop-modal');if(bm&&!bm.classList.contains('hide'))renderBackdropManager();}
   else if(op.k==='st_var'){stageState.vars=Array.isArray(op.vars)?op.vars.filter(x=>typeof x==='string'):[];stageState.lists=Array.isArray(op.lists)?op.lists.filter(x=>typeof x==='string'):[];if(typeof stageSyncVars==='function')stageSyncVars();}
+  else if(op.k==='st_cosimg'){const s=_stById(op.id);if(s&&s.costumes&&s.costumes[op.idx]&&typeof op.img==='string'){s.costumes[op.idx].img=op.img.slice(0,900000);if(op.name!=null)s.costumes[op.idx].name=String(op.name).slice(0,30);delete s.costumes[op.idx]._el;renderSpritePanel();}} // just one painted costume image
+  else if(op.k==='st_bdimg'){if(stageState.backdrops&&stageState.backdrops[op.idx]&&typeof op.img==='string'){stageState.backdrops[op.idx].img=op.img.slice(0,900000);if(op.name!=null)stageState.backdrops[op.idx].name=String(op.name).slice(0,30);delete stageState.backdrops[op.idx]._el;if(typeof renderStagePane==='function')renderStagePane();}} // just one painted backdrop image
 }
 function collabApplyDoc(doc){commitLevel();applyPayload(doc);collabRefreshCode();
   if(keyStage==='ks1'&&document.body.classList.contains('ks1-mode')&&typeof ks1RenderSprites==='function'){ks1RenderSprites();ks1RenderScripts();ks1RenderPages();} // refresh the KS1 ScratchJr panels after a remote change
@@ -7201,8 +7277,8 @@ function collabCell(r,c,layer){if(!collabActive||collabApplyingRemote)return;
   else collabSend({type:'op',op:{k:'cell',lvl:curLevel,layer:layer||'grid',r,c,t:(layer==='water'?waterGrid:grid)[r][c]}});}
 // ── Platformer granular collaboration: configs/theme/levels/program sync as small
 //    ops (no full snapshots), so edits on different pages never clobber each other. ──
-const CFG_SHORT={mover:'moverCfg',enemy:'enemyCfg',door:'doorCfg',key:'keyCfg',sign:'signCfg',chest:'chestCfg',tele:'teleCfg',button:'buttonCfg',gate:'gateCfg',rot:'rotCfg',fan:'fanCfg',belt:'beltCfg',toggle:'toggleCfg'};
-function _liveCfgMaps(){return{mover:moverCfg,enemy:enemyCfg,door:doorCfg,key:keyCfg,sign:signCfg,chest:chestCfg,tele:teleCfg,button:buttonCfg,gate:gateCfg,rot:rotCfg,fan:fanCfg,belt:beltCfg,toggle:toggleCfg};}
+const CFG_SHORT={mover:'moverCfg',enemy:'enemyCfg',door:'doorCfg',key:'keyCfg',sign:'signCfg',chest:'chestCfg',tele:'teleCfg',button:'buttonCfg',gate:'gateCfg',rot:'rotCfg',fan:'fanCfg',belt:'beltCfg',toggle:'toggleCfg',hazard:'hazardCfg'};
+function _liveCfgMaps(){return{mover:moverCfg,enemy:enemyCfg,door:doorCfg,key:keyCfg,sign:signCfg,chest:chestCfg,tele:teleCfg,button:buttonCfg,gate:gateCfg,rot:rotCfg,fan:fanCfg,belt:beltCfg,toggle:toggleCfg,hazard:hazardCfg};}
 function _cloneJSON(o){try{return JSON.parse(JSON.stringify(o));}catch(e){return{};}}
 let _collabSync=null,_progT=null;
 function _snapSyncState(lvl){const m=_liveCfgMaps(),c={};for(const n in m)c[n]=_cloneJSON(m[n]);return{lvl,cfgs:c,theme,cave:caveMode,customBg:{top:customBg.top,bottom:customBg.bottom,art:customBg.art?[...customBg.art]:null}};}
@@ -7702,7 +7778,7 @@ function isGateOpen(r,c){const t=gateOpenUntil[r+','+c];return t!==undefined&&ti
 function anyGateOpen(color){for(const k in gateOpenUntil){if(tick<gateOpenUntil[k]&&(gateCfg[k]||{}).color===color)return true;}return false;}
 function openGatesOfColor(color){let newlyOpened=false;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.GATE&&(gateCfg[r+','+c]||{}).color===color){const cfg=gateCfg[r+','+c]||{};const dur=cfg.dur;const until=(dur===undefined||dur==='forever')?Infinity:tick+(parseInt(dur,10)||5)*60;if(!isGateOpen(r,c))newlyOpened=true;gateOpenUntil[r+','+c]=until;}}return newlyOpened;}
 function checkButtons(){if(!player)return;const p=player;const cs=[Math.floor(p.x/TS),Math.floor((p.x+PW-1)/TS)],rs=[Math.floor(p.y/TS),Math.floor((p.y+PH-1)/TS)];
-  for(const c of cs)for(const r of rs){if(tileAt(c,r)===T.BUTTON){const col=(buttonCfg[r+','+c]||{}).color;if(col&&openGatesOfColor(col)){chirp(660,0.08,'square',0.06);chirp(990,0.09,'square',0.05);toast('A gate opened!',KEY_COLORS[col]||'#10b981');}}}
+  for(const c of cs)for(const r of rs){if(tileAt(c,r)===T.BUTTON){const col=(buttonCfg[r+','+c]||{}).color;if(col&&openGatesOfColor(col)){chirp(660,0.08,'square',0.06);chirp(990,0.09,'square',0.05);toast('A gate opened!',KEY_COLORS[col]||'#10b981');cjRunHats('when_press_button');ks3Call('on_button');}}}
   // A crate resting on a button holds it down (keeps its gates open)
   if(crates.length)for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(grid[r][c]===T.BUTTON&&crateOnCell(c,r)){const col=(buttonCfg[r+','+c]||{}).color;if(col)openGatesOfColor(col);}}}
 function checkGateTimers(){let changed=false;for(const k in gateOpenUntil){const t=gateOpenUntil[k];if(t!==Infinity&&tick>=t){delete gateOpenUntil[k];changed=true;}}if(changed)chirp(280,0.12,'square',0.05);}
@@ -7831,19 +7907,19 @@ function crateOnCell(c,r){for(const cr of crates){if(cr.x+TS-4>c*TS&&cr.x+4<(c+1
 function drawCrates(){for(const cr of crates){const px=cr.x-camX,py=cr.y-camY;if(px+TS<0||px>CW||py+TS<0||py>CH)continue;drawTile(T.CRATE,px,py,null);}}
 // ── Wave 2 hazards: spike-ball (patrol), falling block, shooter+projectiles ──
 let spikeballs=[],fallblocks=[],shooters=[],shots=[];
-function initSpikeballs(){spikeballs=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.SPIKEBALL)spikeballs.push({x:c*TS,y:r*TS,vx:1.7,row:r});}
+function initSpikeballs(){spikeballs=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.SPIKEBALL)spikeballs.push({x:c*TS,y:r*TS,vx:1.7*({1:0.55,2:1,3:1.7}[(hazardCfg[r+','+c]||{}).spd|0]||1),row:r});}
 function updateSpikeballs(){for(const sb of spikeballs){sb.x+=sb.vx;const col=sb.vx>0?Math.floor((sb.x+TS)/TS):Math.floor(sb.x/TS);if(isSolid(col,sb.row))sb.vx*=-1;const fc=sb.vx>0?Math.floor((sb.x+TS)/TS):Math.floor(sb.x/TS);if(sb.row+1<ROWS&&!isSolid(fc,sb.row+1)&&!crateOnCell(fc,sb.row+1))sb.vx*=-1;if(sb.x<0){sb.x=0;sb.vx=Math.abs(sb.vx);}if(sb.x+TS>COLS*TS){sb.x=COLS*TS-TS;sb.vx=-Math.abs(sb.vx);}}}
 function drawSpikeballs(){for(const sb of spikeballs){const px=sb.x-camX,py=sb.y-camY;if(px+TS<0||px>CW)continue;drawTile(T.SPIKEBALL,px,py,null);}}
-function initFallblocks(){fallblocks=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.FALLBLOCK)fallblocks.push({x:c*TS,y:r*TS,oy:r*TS,c,state:'idle',vy:0,wait:0});}
+function initFallblocks(){fallblocks=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.FALLBLOCK)fallblocks.push({x:c*TS,y:r*TS,oy:r*TS,c,state:'idle',vy:0,wait:0,mult:({1:0.65,2:1,3:1.6}[(hazardCfg[r+','+c]||{}).spd|0]||1)});}
 function updateFallblocks(){for(const fb of fallblocks){
   if(fb.state==='idle'){if(player&&Math.floor((player.x+PW/2)/TS)===fb.c&&player.y>fb.y+TS-4&&player.y<fb.y+TS*7){fb.state='fall';fb.vy=0;chirp(220,0.1,'square',0.05);}}
-  else if(fb.state==='fall'){fb.vy=Math.min(fb.vy+grav()*1.5,22);fb.y+=fb.vy;const br=Math.floor((fb.y+TS-1)/TS);if((isSolid(fb.c,br)||crateOnCell(fb.c,br))&&fb.vy>0){fb.y=br*TS-TS;fb.state='wait';fb.wait=45;chirp(110,0.18,'sawtooth',0.06);}else if(fb.y>worldH()){fb.state='wait';fb.wait=30;}}
+  else if(fb.state==='fall'){fb.vy=Math.min(fb.vy+grav()*1.5*(fb.mult||1),24);fb.y+=fb.vy;const br=Math.floor((fb.y+TS-1)/TS);if((isSolid(fb.c,br)||crateOnCell(fb.c,br))&&fb.vy>0){fb.y=br*TS-TS;fb.state='wait';fb.wait=45;chirp(110,0.18,'sawtooth',0.06);}else if(fb.y>worldH()){fb.state='wait';fb.wait=30;}}
   else if(fb.state==='wait'){if(--fb.wait<=0)fb.state='rise';}
-  else{fb.y-=3;if(fb.y<=fb.oy){fb.y=fb.oy;fb.state='idle';}}
+  else{fb.y-=3*(fb.mult||1);if(fb.y<=fb.oy){fb.y=fb.oy;fb.state='idle';}}
 }}
 function drawFallblocks(){for(const fb of fallblocks){const px=fb.x-camX,py=fb.y-camY;if(px+TS<0||px>CW)continue;drawTile(T.FALLBLOCK,px,py,null);}}
-function initShooters(){shooters=[];shots=[];let n=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.SHOOTER)shooters.push({x:c*TS,y:r*TS,cool:70+((n++)*23)%50});}
-function updateShooters(){if(!player)return;for(const sh of shooters){if(--sh.cool<=0){sh.cool=110;const dir=(player.x+PW/2<sh.x+TS/2)?-1:1;shots.push({x:sh.x+TS/2+dir*8,y:sh.y+TS/2,vx:dir*4.2});chirp(320,0.08,'square',0.05);}}
+function initShooters(){shooters=[];shots=[];let n=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]===T.SHOOTER)shooters.push({x:c*TS,y:r*TS,cool:70+((n++)*23)%50,rate:{1:175,2:110,3:62}[(hazardCfg[r+','+c]||{}).spd|0]||110});}
+function updateShooters(){if(!player)return;for(const sh of shooters){if(--sh.cool<=0){sh.cool=sh.rate||110;const dir=(player.x+PW/2<sh.x+TS/2)?-1:1;shots.push({x:sh.x+TS/2+dir*8,y:sh.y+TS/2,vx:dir*4.2});chirp(320,0.08,'square',0.05);}}
   for(const s of shots){s.x+=s.vx;const col=Math.floor((s.x+(s.vx>0?5:-5))/TS),row=Math.floor(s.y/TS);if(isSolid(col,row))s.dead=true;if(s.x<-30||s.x>worldW()+30)s.dead=true;}
   shots=shots.filter(s=>!s.dead);}
 function drawShots(){for(const s of shots){const px=s.x-camX,py=s.y-camY;ctx.save();ctx.fillStyle='#ff5722';ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#bf360c';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='rgba(255,183,77,.6)';ctx.beginPath();ctx.arc(px-s.vx,py,3,0,Math.PI*2);ctx.fill();ctx.restore();}}
@@ -7865,21 +7941,27 @@ function updatePlayer(){
   const spd=pSpd(),midC=Math.floor((p.x+PW/2)/TS),topR=Math.floor(p.y/TS),midR=Math.floor((p.y+PH/2)/TS);
   const onLad=tileAt(midC,topR)===T.LADDER||tileAt(midC,midR)===T.LADDER;
   // Sticky (Climb) walls: cling to the side and wall-jump across; grip only lasts ~2s per wall so you can't camp
-  let wallDir=0;{const br1=Math.floor((p.y+6)/TS),br2=Math.floor((p.y+PH-6)/TS),lC=Math.floor((p.x-1)/TS),rC=Math.floor((p.x+PW)/TS);
-    if(tileAt(lC,br1)===T.CLIMB||tileAt(lC,br2)===T.CLIMB)wallDir=-1;else if(tileAt(rC,br1)===T.CLIMB||tileAt(rC,br2)===T.CLIMB)wallDir=1;}
+  let wallDir=0,wallCol=-1;{const br1=Math.floor((p.y+6)/TS),br2=Math.floor((p.y+PH-6)/TS),lC=Math.floor((p.x-1)/TS),rC=Math.floor((p.x+PW)/TS);
+    if(tileAt(lC,br1)===T.CLIMB||tileAt(lC,br2)===T.CLIMB){wallDir=-1;wallCol=lC;}else if(tileAt(rC,br1)===T.CLIMB||tileAt(rC,br2)===T.CLIMB){wallDir=1;wallCol=rC;}}
   let clinging=false;
-  if(!p.onGround&&wallDir!==0){if(p.wallSide!==wallDir){p.wallGrip=120;p.wallSide=wallDir;}if((p.wallGrip|0)>0){clinging=true;p.wallGrip--;}}
-  if(p.onGround){p.wallSide=0;p.wallGrip=0;}
+  // Touch a cling wall in the air and you grab on automatically (no need to hold a key to stay on).
+  if(!p.onGround&&wallDir!==0){
+    if(p.gripWall!==wallCol){p.wallGrip=120;p.gripWall=wallCol;} // a fresh 2s grip only when you reach a NEW wall
+    if((p.wallGrip|0)>0){clinging=true;p.wallGrip--;}
+  }
+  if(p.onGround){p.gripWall=-1;p.wallGrip=0;}
   const feetRow=Math.floor((p.y+PH)/TS),onIce=p.onGround&&(tileAt(midC,feetRow)===T.ICE||tileAt(Math.floor((p.x+5)/TS),feetRow)===T.ICE||tileAt(Math.floor((p.x+PW-5)/TS),feetRow)===T.ICE);
   const L=isLeft(),R=isRight();if(L)p.facingRight=false;else if(R)p.facingRight=true;
   // Dash power-up: double-tap a direction for a quick burst
   if(pDash&&(p.dashCd|0)<=0){
-    if(L&&!p.lPrev){if(p.lastTapDir===-1&&tick-(p.lastTapTick||-99)<14){p.dashT=8;p.dashDir=-1;p.dashCd=28;chirp(760,0.08,'square',0.05);chirp(1020,0.07,'square',0.04);}p.lastTapDir=-1;p.lastTapTick=tick;}
-    else if(R&&!p.rPrev){if(p.lastTapDir===1&&tick-(p.lastTapTick||-99)<14){p.dashT=8;p.dashDir=1;p.dashCd=28;chirp(760,0.08,'square',0.05);chirp(1020,0.07,'square',0.04);}p.lastTapDir=1;p.lastTapTick=tick;}
+    if(L&&!p.lPrev){if(p.lastTapDir===-1&&tick-(p.lastTapTick||-99)<14){p.dashT=8;p.dashDir=-1;p.dashCd=28;chirp(760,0.08,'square',0.05);chirp(1020,0.07,'square',0.04);cjRunHats('when_dash');ks3Call('on_dash');}p.lastTapDir=-1;p.lastTapTick=tick;}
+    else if(R&&!p.rPrev){if(p.lastTapDir===1&&tick-(p.lastTapTick||-99)<14){p.dashT=8;p.dashDir=1;p.dashCd=28;chirp(760,0.08,'square',0.05);chirp(1020,0.07,'square',0.04);cjRunHats('when_dash');ks3Call('on_dash');}p.lastTapDir=1;p.lastTapTick=tick;}
   }
   p.lPrev=L;p.rPrev=R;if(p.dashCd>0)p.dashCd--;
   const tvx=L?-spd:R?spd:0;
-  if(onIce)p.vx+=(tvx-p.vx)*(tvx?0.10:0.035); // slippery: eases in, skids to a stop
+  if(clinging){p.vx=0;} // stuck to the wall — arrows don't move you, they only aim your next jump
+  else if((p.wjT|0)>0){p.wjT--;if(tvx&&Math.sign(tvx)!==Math.sign(p.wjVx||0)){p.vx=tvx;p.wjT=0;}else p.vx=p.wjVx;} // keep wall-jump momentum so you sail to the facing wall (unless you steer back)
+  else if(onIce)p.vx+=(tvx-p.vx)*(tvx?0.10:0.035); // slippery: eases in, skids to a stop
   else if(tvx)p.vx=tvx; else p.vx*=0.65;
   if(p.dashT>0){p.vx=p.dashDir*11;p.dashT--;p.inv=Math.max(p.inv,2);} // dash burst
   if(onLad){if(isUp()){p.vy=-3;p.onLadder=true;}else if(isDown()){p.vy=3;p.onLadder=true;}else if(p.onLadder)p.vy=0;if(p.onLadder)p.x=midC*TS+(TS-PW)/2;}else p.onLadder=false;
@@ -7903,7 +7985,7 @@ function updatePlayer(){
     if(p.onGround){p.vy=jumpForce();p.onGround=false;p.jumps=1;chirp(523,0.07,'square',0.045);}
     else if(inWater){p.vy=jumpForce()*0.8;p.waterLeap=true;chirp(587,0.07,'sine',0.045);} // leap out of water onto a ledge
     else if(inSand){p.vy=jumpForce()*0.5;chirp(330,0.08,'sawtooth',0.05);} // struggle upward out of quicksand
-    else if(clinging){p.vy=jumpForce()*0.98;p.vx=-wallDir*pSpd()*1.5;p.jumps=1;clinging=false;p.wallGrip=0;p.wallSide=0;chirp(680,0.07,'square',0.05);chirp(920,0.06,'square',0.04);}
+    else if(clinging){const aim=isLeft()?-1:isRight()?1:-wallDir;p.vy=jumpForce()*0.98;p.wjVx=aim*pSpd()*1.6;p.vx=p.wjVx;p.wjT=16;p.jumps=1;clinging=false;p.wallGrip=0;chirp(680,0.07,'square',0.05);chirp(920,0.06,'square',0.04);cjRunHats('when_wall_jump');ks3Call('on_wall_jump');} // arrow aims the jump; no arrow = leap away from the wall
     else if((gameConfig.doubleJump||pDJump)&&(p.jumps||0)<2){p.vy=jumpForce()*0.9;p.jumps=2;chirp(659,0.07,'square',0.045);}
   }
   p.jumpPrev=jp;
@@ -7915,7 +7997,7 @@ function updatePlayer(){
     else if(fanRot===180)p.vy=Math.min(p.vy+0.9,7);      // blows down
     else{p.vy=Math.min(p.vy+grav(),18);p.vx=Math.max(-6,Math.min(6,p.vx+(fanRot===90?0.9:-0.9)));} // sideways gust
   }
-  else if(clinging){if(isUp())p.vy=-2.6;else if(isDown())p.vy=3.4;else p.vy=Math.min(p.vy+grav()*0.35,1.4);} // cling: climb up, slide down, or slow-slide
+  else if(clinging){p.vy=0;} // cling: STICK in place — the only way up is to wall-jump across to the opposite wall
   else p.vy=Math.min(p.vy+grav(),18);
   p.x+=p.vx;resolveX(p);p.y+=p.vy;resolveY(p);
   // Quicksand holds the player: they sink to the BOTTOM of the sand pool but can't drop through into open air below
@@ -8019,7 +8101,7 @@ function checkGoal(){
   }
 }
 function loseNow(title,msg){playing=false;stopMusic();const ov=document.getElementById('ov-dead');const h=ov.querySelector('h2');const p=ov.querySelector('p');if(h)h.textContent=title||' Oh No!';if(p)p.textContent=msg||'You ran out of lives! Give it another go!';ov.classList.remove('hide');endGamePromo();speak((title||'Oh no')+'. '+(msg||'Give it another go'));}
-function killPlayer(){if(player.inv>0)return;lives--;chirp(110,0.3,'sawtooth',0.06);if(lives<=0){loseNow(' Oh No!','You ran out of lives! Give it another go!');return;}player.dead=true;player.deadTimer=50;player.inv=90;}
+function killPlayer(){if(player.inv>0)return;lives--;chirp(110,0.3,'sawtooth',0.06);cjRunHats('when_hit');ks3Call('on_hit');if(lives<=0){loseNow(' Oh No!','You ran out of lives! Give it another go!');return;}player.dead=true;player.deadTimer=50;player.inv=90;}
 function updateCam(){if(!player)return;
   const tx=player.x-CW/2+PW/2;camX+=(tx-camX)*.12;camX=Math.max(0,Math.min(camX,Math.max(0,worldW()-CW)));
   const ty=player.y-CH/2+PH/2;camY+=(ty-camY)*.12;camY=Math.max(0,Math.min(camY,Math.max(0,worldH()-CH)));}
@@ -8208,9 +8290,13 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.08.26';
+const CJ_VERSION='2026.08.28';
 const CJ_WHATSNEW=[
- "Ten NEW blocks! Pushable Crates (shove them, stack them, park them on buttons), slippery Ice, Climb Walls, Dash and Double-Jump power-ups, a rolling Spike Ball, a Falling Block, a Shooter cannon, and colour Switches that flip gates open and shut.",
+ "You can now collaborate LIVE on Turtle (Logo) projects too — share the room and code together in real time.",
+ "New 'Gadget Playground' example game + two guided builds (Crate & button puzzle, Wall-jump climb) — find them in the Help ❓ Start tab.",
+ "Spike Balls, Shooters and Falling Blocks can now be set to Slow / Normal / Fast — just tap them.",
+ "New coding blocks: 'when I dash', 'when I wall-jump', 'when I get hurt', and 'when a button is pressed'.",
+ "Ten NEW blocks! Pushable Crates (shove them, stack them, park them on buttons), slippery Ice, Cling Walls, Dash and Double-Jump power-ups, a rolling Spike Ball, a Falling Block, a Shooter cannon, and colour Switches that flip gates open and shut.",
  "Every one of the new blocks can be redrawn in the Design Studio too.",
  "Design Studio now lets you draw EVERY block — including Crumble, Belts, Quicksand, Fan, Sand, Checkpoint, and the colour Buttons, Gates and Teleports (each colour separately, so colour-matching still works).",
  "You can now choose whether a design is for your WHOLE PROJECT or just THIS PAGE (the page number is shown) — it's whole-project by default.",

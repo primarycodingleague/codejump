@@ -1,7 +1,12 @@
 # Wedding Website
 
-A single-page, self-contained wedding site served by GitHub Pages at
-`https://codejump.primarycodingleague.co.uk/wedding/`.
+A single-page, self-contained wedding site for **mackenziewedding.co.uk**,
+served by GitHub Pages.
+
+> **Note:** currently staged in the `codejump` repo while the dedicated
+> `mackenziewedding` repository is created. Its permanent home is that repo,
+> with `index.html` at the root alongside a `CNAME` file containing
+> `mackenziewedding.co.uk`.
 
 Guests can:
 

@@ -653,6 +653,33 @@ stale — do this automatically as part of the same task:
 6. KS2-only features must be hidden in KS1 (palette filter in `buildPalette`, the `setKeyStage`
    reselect guard, and `ks2`-gated editors/blocks) — and say "(Key Stage 2)" in their description.
 
+## KS3 Python — CJPy upgraded to "real Python" coverage (app 2026.09.03) — DONE & verified
+User feedback: KS3 "didn't seem to use actual Python". Decision: follow the **MakeCode model** (their Python is
+"Static Python" — an own-implementation subset over their engine, NOT CPython), i.e. extend CJPy rather than embed
+Skulpt/Pyodide — keeps single-file/offline/sandboxed/friendly-errors. CJPy (~5545) now covers what KS3 lessons use,
+so textbook code runs as written:
+- **Language:** augmented assignment (`+= -= *= /= //= %= **=`), `**` power (right-assoc, Python precedence),
+  f-strings (`f"Score: {x}"`, `{{ }}` escapes, nested quotes/brackets; parsed in tokenizer → FSTR token, expr parts
+  re-parsed via `parse(toks,exprOnly)`), `print(...)` (multi-arg → `say`), dicts (JS `Map`: literals, index get/set,
+  `in`, `for k in d`, `.get/.keys/.values/.items/.pop/.clear/.update`, `del d[k]`), `in`/`not in`, **chained
+  comparisons** (`0 <= x < 10` → Chain node), slicing (`a[1:3]`, `[::-1]`, full Python clamp semantics, `SliceGet`),
+  `del`, `import random` / `import math` / `from X import ...` (MODULES; **`random` is BOTH the legacy callable
+  `random(a,b)` AND a module** — a function with `__module`/`__items` props, so old saves keep working),
+  string methods (upper/lower/strip/lstrip/rstrip/title/capitalize/split/join/replace/find/count/startswith/
+  endswith/isdigit/isalpha), list methods (+insert/index/count/sort/reverse/extend/clear/copy, pop(i)), builtins
+  sorted/list/dict/bool/type/round(x,n), `input()` → friendly "use on_key" error.
+- **Python-correct semantics (deliberate breaking changes):** `"a"+1` now ERRORS with a friendly "use str() or an
+  f-string" hint (was silent JS concat — old saves relying on it will surface the error toast, message tells the
+  fix); `==` is deep value equality for lists; `%` follows Python sign rules; `"ab"*3`/`[0]*5` repetition;
+  `sort`/`sorted` numeric-aware. `CJPy.str` (exported pyStr) renders values Python-style (`[1, 'a', True]`) and
+  `say()`/`print()` use it.
+- **Docs synced:** KS3_BUILTINS table + openCommands Language section + Help 'code' KS3 paragraph + teacherGuideHTML
+  KS3 paragraph all list the new coverage.
+- **Verified:** 106-case node suite (scratchpad test-cjpy.js — legacy + new features + a full "lesson program") and
+  a 15-check Playwright run in the real page (ks3Compile/ks3Call/game API/status bar/Commands modal/KS3_DEFAULT).
+- **NOT done (next per user):** the API "construction kit" pass — widening KS3_API toward MakeCode-Arcade-style
+  sprite/object creation; and possibly Blockly→Python one-way view (mbToPython pattern) as a KS2→KS3 bridge.
+
 ## Share links — CLOUD SHORT LINKS (v5) — DONE & verified
 - **Problem:** old share was `?lvl=<base64 of whole project>` in the URL → broke for Stage projects with painted
   costumes/backdrops (an 18k-char URL). **Fixed** with cloud-backed short links.

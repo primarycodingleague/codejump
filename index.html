@@ -5548,7 +5548,7 @@ function readBlocklyConfig(){
 // ═══════════════════════════════════════════════════════════════════════
 const CJPy=(function(){
   function PyErr(msg,line){const e=new Error(msg);e.cjMsg=msg;e.cjLine=line||0;return e;}
-  const KW=new Set(['if','elif','else','while','for','in','def','return','True','False','None','and','or','not','break','continue','range']);
+  const KW=new Set(['if','elif','else','while','for','in','def','return','True','False','None','and','or','not','break','continue','range','import','from','del']);
   function tokenize(src){
     const lines=String(src).replace(/\r\n?/g,'\n').split('\n');const toks=[];const indents=[0];
     for(let ln=0;ln<lines.length;ln++){
@@ -5564,11 +5564,47 @@ const CJPy=(function(){
         if(ch===' '||ch==='\t'){j++;continue;}
         if(ch==='#')break;
         if(/[0-9]/.test(ch)||(ch==='.'&&/[0-9]/.test(L[j+1]||''))){let s=j;while(j<L.length&&/[0-9.]/.test(L[j]))j++;toks.push({t:'NUM',v:parseFloat(L.slice(s,j)),ln:ln+1});continue;}
-        if(/[A-Za-z_]/.test(ch)){let s=j;while(j<L.length&&/[A-Za-z0-9_]/.test(L[j]))j++;const w=L.slice(s,j);toks.push({t:KW.has(w)?'KW':'NAME',v:w,ln:ln+1});continue;}
+        if(/[A-Za-z_]/.test(ch)){
+          let s=j;while(j<L.length&&/[A-Za-z0-9_]/.test(L[j]))j++;const w=L.slice(s,j);
+          if((w==='f'||w==='F')&&(L[j]==='"'||L[j]==="'")){ // f-string: f"score: {s}"
+            const q=L[j];j++;const parts=[];let cur='';
+            while(j<L.length&&L[j]!==q){
+              const c=L[j];
+              if(c==='\\'&&j+1<L.length){j++;cur+=({n:'\n',t:'\t'}[L[j]]||L[j]);j++;continue;}
+              if(c==='{'&&L[j+1]==='{'){cur+='{';j+=2;continue;}
+              if(c==='}'&&L[j+1]==='}'){cur+='}';j+=2;continue;}
+              if(c==='}')throw PyErr('There is a "}" without a matching "{" inside the f-string',ln+1);
+              if(c==='{'){
+                if(cur){parts.push({s:cur});cur='';}
+                j++;let depth=0,qq=null,e='';
+                while(j<L.length){
+                  const d=L[j];
+                  if(qq){e+=d;if(d===qq)qq=null;j++;continue;}
+                  if(d==='"'||d==="'"){qq=d;e+=d;j++;continue;}
+                  if(d==='{'||d==='['||d==='(')depth++;
+                  else if(d===']'||d===')')depth--;
+                  else if(d==='}'){if(depth===0)break;depth--;}
+                  e+=d;j++;
+                }
+                if(L[j]!=='}')throw PyErr('A "{" in the f-string is missing its closing "}"',ln+1);
+                j++;
+                if(!e.trim())throw PyErr('There is an empty { } inside the f-string',ln+1);
+                parts.push({e:e,ln:ln+1});continue;
+              }
+              cur+=c;j++;
+            }
+            if(L[j]!==q)throw PyErr('A piece of text is missing its closing quote',ln+1);
+            j++;if(cur)parts.push({s:cur});
+            toks.push({t:'FSTR',parts:parts,ln:ln+1});continue;
+          }
+          toks.push({t:KW.has(w)?'KW':'NAME',v:w,ln:ln+1});continue;
+        }
         if(ch==='"'||ch==="'"){const q=ch;j++;let str='';while(j<L.length&&L[j]!==q){if(L[j]==='\\'&&j+1<L.length){j++;str+=({n:'\n',t:'\t'}[L[j]]||L[j]);}else str+=L[j];j++;}if(L[j]!==q)throw PyErr('A piece of text is missing its closing quote',ln+1);j++;toks.push({t:'STR',v:str,ln:ln+1});continue;}
+        const three=L.substr(j,3);
+        if(three==='**='||three==='//='){toks.push({t:'OP',v:three,ln:ln+1});j+=3;continue;}
         const two=L.substr(j,2);
-        if(['==','!=','<=','>=','//','**'].includes(two)){toks.push({t:'OP',v:two,ln:ln+1});j+=2;continue;}
-        if('+-*/%()[],:.<>='.includes(ch)){toks.push({t:'OP',v:ch,ln:ln+1});j++;continue;}
+        if(['==','!=','<=','>=','//','**','+=','-=','*=','/=','%='].includes(two)){toks.push({t:'OP',v:two,ln:ln+1});j+=2;continue;}
+        if('+-*/%()[],:.<>={}'.includes(ch)){toks.push({t:'OP',v:ch,ln:ln+1});j++;continue;}
         throw PyErr('I do not understand the symbol "'+ch+'"',ln+1);
       }
       toks.push({t:'NEWLINE',ln:ln+1});
@@ -5576,7 +5612,7 @@ const CJPy=(function(){
     while(indents.length>1){indents.pop();toks.push({t:'DEDENT',ln:lines.length});}
     toks.push({t:'EOF',ln:lines.length});return toks;
   }
-  function parse(toks){
+  function parse(toks,exprOnly){
     let p=0;const peek=()=>toks[p],nx=()=>toks[p++];
     const accept=(t,v)=>{const k=toks[p];if(k.t===t&&(v===undefined||k.v===v)){p++;return k;}return null;};
     const expect=(t,v)=>{const k=accept(t,v);if(!k)throw PyErr('I expected "'+(v||t)+'" here',toks[p].ln);return k;};
@@ -5592,8 +5628,13 @@ const CJPy=(function(){
         if(tk.v==='return'){nx();let arg=null;if(peek().t!=='NEWLINE')arg=expr();expect('NEWLINE');return{type:'Return',arg,ln:tk.ln};}
         if(tk.v==='break'){nx();expect('NEWLINE');return{type:'Break',ln:tk.ln};}
         if(tk.v==='continue'){nx();expect('NEWLINE');return{type:'Continue',ln:tk.ln};}
+        if(tk.v==='import'){nx();const names=[expect('NAME').v];while(accept('OP',','))names.push(expect('NAME').v);expect('NEWLINE');return{type:'Import',names,ln:tk.ln};}
+        if(tk.v==='from'){nx();const mod=expect('NAME').v;expect('KW','import');const names=[];if(accept('OP','*'))names.push('*');else{names.push(expect('NAME').v);while(accept('OP',','))names.push(expect('NAME').v);}expect('NEWLINE');return{type:'FromImport',mod,names,ln:tk.ln};}
+        if(tk.v==='del'){nx();const t=expr();expect('NEWLINE');return{type:'Del',target:t,ln:tk.ln};}
       }
       const e=expr();
+      const AUG={'+=':'+','-=':'-','*=':'*','/=':'/','//=':'//','%=':'%','**=':'**'};
+      if(peek().t==='OP'&&AUG[peek().v]){const op=AUG[nx().v];const val=expr();expect('NEWLINE');return{type:'Assign',target:e,val:{type:'Bin',op,l:e,r:val,ln:tk.ln},ln:tk.ln};}
       if(peek().t==='OP'&&peek().v==='='){nx();const val=expr();expect('NEWLINE');return{type:'Assign',target:e,val,ln:tk.ln};}
       expect('NEWLINE');return{type:'ExprStmt',expr:e,ln:tk.ln};
     }
@@ -5607,13 +5648,31 @@ const CJPy=(function(){
     function orE(){let l=andE();while(peek().t==='KW'&&peek().v==='or'){nx();l={type:'Logic',op:'or',l,r:andE()};}return l;}
     function andE(){let l=notE();while(peek().t==='KW'&&peek().v==='and'){nx();l={type:'Logic',op:'and',l,r:notE()};}return l;}
     function notE(){if(peek().t==='KW'&&peek().v==='not'){const tk=nx();return{type:'Unary',op:'not',e:notE(),ln:tk.ln};}return cmp();}
-    function cmp(){let l=add();while(peek().t==='OP'&&['==','!=','<','>','<=','>='].includes(peek().v)){const op=nx().v;l={type:'Bin',op,l,r:add()};}return l;}
-    function add(){let l=mul();while(peek().t==='OP'&&['+','-'].includes(peek().v)){const op=nx().v;l={type:'Bin',op,l,r:mul()};}return l;}
-    function mul(){let l=un();while(peek().t==='OP'&&['*','/','//','%'].includes(peek().v)){const op=nx().v;l={type:'Bin',op,l,r:un()};}return l;}
-    function un(){if(peek().t==='OP'&&peek().v==='-'){const tk=nx();return{type:'Unary',op:'-',e:un(),ln:tk.ln};}return postfix();}
+    function cmp(){let l=add();const ops=[],rands=[l];let ln0=0;
+      while(true){const k=peek();let op=null;
+        if(k.t==='OP'&&['==','!=','<','>','<=','>='].includes(k.v)){op=nx().v;ln0=k.ln;}
+        else if(k.t==='KW'&&k.v==='in'){nx();op='in';ln0=k.ln;}
+        else if(k.t==='KW'&&k.v==='not'&&toks[p+1]&&toks[p+1].t==='KW'&&toks[p+1].v==='in'){nx();nx();op='not in';ln0=k.ln;}
+        else break;
+        ops.push(op);rands.push(add());}
+      if(!ops.length)return l;
+      if(ops.length===1)return{type:'Bin',op:ops[0],l:rands[0],r:rands[1],ln:ln0};
+      return{type:'Chain',ops,rands,ln:ln0};}
+    function add(){let l=mul();while(peek().t==='OP'&&['+','-'].includes(peek().v)){const tk=nx();l={type:'Bin',op:tk.v,l,r:mul(),ln:tk.ln};}return l;}
+    function mul(){let l=un();while(peek().t==='OP'&&['*','/','//','%'].includes(peek().v)){const tk=nx();l={type:'Bin',op:tk.v,l,r:un(),ln:tk.ln};}return l;}
+    function un(){if(peek().t==='OP'&&peek().v==='-'){const tk=nx();return{type:'Unary',op:'-',e:un(),ln:tk.ln};}return power();}
+    function power(){const base=postfix();if(peek().t==='OP'&&peek().v==='**'){const tk=nx();return{type:'Bin',op:'**',l:base,r:un(),ln:tk.ln};}return base;}
     function postfix(){let e=prim();while(true){const tk=peek();
       if(tk.t==='OP'&&tk.v==='('){nx();const args=[];if(peek().v!==')'){args.push(expr());while(accept('OP',','))args.push(expr());}expect('OP',')');e={type:'Call',callee:e,args,ln:tk.ln};}
-      else if(tk.t==='OP'&&tk.v==='['){nx();const idx=expr();expect('OP',']');e={type:'Index',obj:e,index:idx,ln:tk.ln};}
+      else if(tk.t==='OP'&&tk.v==='['){nx();
+        let start=null,end=null,step=null,isSlice=false;
+        if(peek().v!==':'&&peek().v!==']')start=expr();
+        if(accept('OP',':')){isSlice=true;
+          if(peek().v!==':'&&peek().v!==']')end=expr();
+          if(accept('OP',':')&&peek().v!==']')step=expr();}
+        expect('OP',']');
+        if(!isSlice&&!start)throw PyErr('There is nothing inside the [ ]',tk.ln);
+        e=isSlice?{type:'SliceGet',obj:e,start,end,step,ln:tk.ln}:{type:'Index',obj:e,index:start,ln:tk.ln};}
       else if(tk.t==='OP'&&tk.v==='.'){nx();const name=expect('NAME').v;e={type:'Attr',obj:e,name,ln:tk.ln};}
       else break;
     }return e;}
@@ -5625,48 +5684,201 @@ const CJPy=(function(){
       if(tk.t==='KW'&&tk.v==='range'){nx();return{type:'Name',v:'range',ln:tk.ln};}
       if(tk.t==='NAME'){nx();return{type:'Name',v:tk.v,ln:tk.ln};}
       if(tk.t==='OP'&&tk.v==='('){nx();const e=expr();expect('OP',')');return e;}
-      if(tk.t==='OP'&&tk.v==='['){nx();const items=[];if(peek().v!==']'){items.push(expr());while(accept('OP',','))items.push(expr());}expect('OP',']');return{type:'ListLit',items,ln:tk.ln};}
+      if(tk.t==='OP'&&tk.v==='['){nx();const items=[];if(peek().v!==']'){items.push(expr());while(accept('OP',',')){if(peek().v===']')break;items.push(expr());}}expect('OP',']');return{type:'ListLit',items,ln:tk.ln};}
+      if(tk.t==='OP'&&tk.v==='{'){nx();const keys=[],vals=[];
+        if(peek().v!=='}'){keys.push(expr());expect('OP',':');vals.push(expr());while(accept('OP',',')){if(peek().v==='}')break;keys.push(expr());expect('OP',':');vals.push(expr());}}
+        expect('OP','}');return{type:'DictLit',keys,vals,ln:tk.ln};}
+      if(tk.t==='FSTR'){nx();const parts=tk.parts.map(pt=>{
+        if(pt.s!==undefined)return{s:pt.s};
+        try{return{a:parse(tokenize(pt.e),true)};}
+        catch(err){throw PyErr((err.cjMsg||err.message)+' — inside an f-string { }',tk.ln);}
+      });return{type:'FStr',parts,ln:tk.ln};}
       throw PyErr('I did not expect "'+(tk.v||tk.t)+'" here',tk.ln);
     }
+    if(exprOnly){skipNL();const e=expr();skipNL();if(peek().t!=='EOF')throw PyErr('I did not expect "'+(peek().v||peek().t)+'" here',peek().ln);return e;}
     return program();
+  }
+  // ── value helpers (Python-style semantics) ──
+  function pyRepr(v){if(typeof v==='string')return "'"+v+"'";return pyStr(v);}
+  function pyStr(v){
+    if(v===true)return'True';if(v===false)return'False';if(v==null)return'None';
+    if(Array.isArray(v))return'['+v.map(pyRepr).join(', ')+']';
+    if(v instanceof Map){const ps=[];v.forEach((val,k)=>ps.push(pyRepr(k)+': '+pyRepr(val)));return'{'+ps.join(', ')+'}';}
+    return String(v);
+  }
+  function pyEq(l,r){if(Array.isArray(l)&&Array.isArray(r)){if(l.length!==r.length)return false;for(let i=0;i<l.length;i++)if(!pyEq(l[i],r[i]))return false;return true;}return l===r;}
+  function pyIn(x,c,ln){
+    if(typeof c==='string'){if(typeof x!=='string')throw PyErr('You can only look for text inside text',ln);return c.indexOf(x)>=0;}
+    if(Array.isArray(c))return c.some(v=>pyEq(v,x));
+    if(c instanceof Map)return c.has(x);
+    throw PyErr('"in" needs a list, text or dictionary on the right',ln);
+  }
+  function pySort(a,ln){
+    const allNum=a.every(x=>typeof x==='number'||typeof x==='boolean');
+    const allStr=a.every(x=>typeof x==='string');
+    if(!allNum&&!allStr)throw PyErr('You can only sort a list of all numbers or all text',ln);
+    a.sort(allNum?(x,y)=>x-y:undefined);
+  }
+  function pySlice(o,s,e,st,ln){
+    if(typeof o!=='string'&&!Array.isArray(o))throw PyErr('You can only slice [a:b] a list or text',ln);
+    const n=o.length;st=(st==null?1:Math.trunc(st));if(st===0)throw PyErr('The slice step cannot be 0',ln);
+    if(s!=null)s=Math.trunc(s);if(e!=null)e=Math.trunc(e);
+    const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+    let a,b;
+    if(st>0){a=s==null?0:cl(s<0?s+n:s,0,n);b=e==null?n:cl(e<0?e+n:e,0,n);}
+    else{a=s==null?n-1:cl(s<0?s+n:s,-1,n-1);b=e==null?-1:cl(e<0?e+n:e,-1,n-1);}
+    const out=[];if(st>0)for(let i=a;i<b;i+=st)out.push(o[i]);else for(let i=a;i>b;i+=st)out.push(o[i]);
+    return typeof o==='string'?out.join(''):out;
   }
   function makeRuntime(program,api,opts){
     opts=opts||{};const maxOps=opts.maxOps||400000;let ops=0;
     const guard=()=>{if(++ops>maxOps)throw PyErr('Your code ran for too long — is there an endless loop?',0);};
     const funcs=Object.create(null);
+    // ── modules: import random / import math (random is ALSO callable as legacy random(a,b)) ──
+    const _randint=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+    const randomFn=(...a)=>a.length>=2?_randint(a[0],a[1]):Math.random();
+    randomFn.__module=true;
+    randomFn.__items={randint:_randint,random:()=>Math.random(),uniform:(a,b)=>a+Math.random()*(b-a),
+      choice:a=>{if(!Array.isArray(a)||!a.length)throw PyErr('random.choice needs a list with something in it',0);return a[Math.floor(Math.random()*a.length)];},
+      shuffle:a=>{if(Array.isArray(a))for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}}};
+    const mathMod=Object.create(null);mathMod.__module=true;
+    mathMod.__items={sqrt:Math.sqrt,floor:Math.floor,ceil:Math.ceil,trunc:Math.trunc,fabs:Math.abs,pow:Math.pow,
+      sin:Math.sin,cos:Math.cos,tan:Math.tan,pi:Math.PI,e:Math.E,degrees:x=>x*180/Math.PI,radians:x=>x*Math.PI/180};
+    const MODULES={random:randomFn,math:mathMod};
     const builtins=Object.assign(Object.create(null),{
       range:(...a)=>{let s=0,e=0,st=1;if(a.length===1)e=a[0];else if(a.length===2){s=a[0];e=a[1];}else{s=a[0];e=a[1];st=a[2]||1;}const out=[];if(st>0)for(let i=s;i<e;i+=st)out.push(i);else if(st<0)for(let i=s;i>e;i+=st)out.push(i);return out;},
-      len:x=>x==null?0:x.length,str:x=>x===true?'True':x===false?'False':x==null?'None':String(x),
-      int:x=>Math.trunc(Number(x))||0,float:x=>Number(x)||0,abs:Math.abs,round:Math.round,
+      len:x=>x==null?0:(x instanceof Map?x.size:x.length),
+      str:pyStr,
+      int:x=>Math.trunc(Number(x))||0,float:x=>Number(x)||0,abs:Math.abs,
+      round:(x,n)=>{if(!n)return Math.round(x);const m=Math.pow(10,Math.trunc(n));return Math.round(x*m)/m;},
       min:(...a)=>Math.min(...(a.length===1&&Array.isArray(a[0])?a[0]:a)),max:(...a)=>Math.max(...(a.length===1&&Array.isArray(a[0])?a[0]:a)),
       sum:a=>(Array.isArray(a)?a.reduce((s,x)=>s+x,0):0),
-      randint:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,random:(a,b)=>Math.floor(Math.random()*(b-a+1))+a,
+      sorted:a=>{if(!Array.isArray(a))throw PyErr('sorted() needs a list',0);const c=a.slice();pySort(c,0);return c;},
+      list:x=>x==null?[]:Array.isArray(x)?x.slice():typeof x==='string'?x.split(''):x instanceof Map?Array.from(x.keys()):[x],
+      dict:()=>new Map(),
+      bool:x=>truthy(x),
+      type:x=>typeof x==='boolean'?'bool':typeof x==='number'?(Number.isInteger(x)?'int':'float'):typeof x==='string'?'str':Array.isArray(x)?'list':x instanceof Map?'dict':x==null?'NoneType':'function',
+      input:()=>{throw PyErr('input() is not available in a game — use def on_key(key): instead',0);},
+      randint:_randint,random:randomFn,math:mathMod,
     },api&&api.funcs||{});
-    function truthy(v){return !(v===false||v===null||v===0||v===''||v===undefined||(Array.isArray(v)&&v.length===0));}
+    if(!builtins.print)builtins.print=function(){const msg=Array.prototype.slice.call(arguments).map(pyStr).join(' ');if(typeof builtins.say==='function')builtins.say(msg);};
+    function truthy(v){return !(v===false||v===null||v===0||v===''||v===undefined||(Array.isArray(v)&&v.length===0)||(v instanceof Map&&v.size===0));}
     function Ret(v){this.v=v;}const BREAK={},CONT={};
     function lookup(scopes,name,ln){for(const s of scopes){if(name in s)return s[name];}if(name in builtins)return builtins[name];if(name in funcs)return funcs[name];throw PyErr('I do not know what "'+name+'" means',ln);}
     function callFn(fn,args,ln){guard();if(typeof fn==='function')return fn(...args);if(fn&&fn.__user){const local=Object.create(null);fn.params.forEach((pn,i)=>local[pn]=args[i]);const r=execBlock(fn.body,[local,fn.closure]);return r instanceof Ret?r.v:undefined;}throw PyErr('That is not something you can call with ( )',ln);}
-    function binop(op,l,r,ln){switch(op){case'+':return l+r;case'-':return l-r;case'*':return l*r;case'/':if(r===0)throw PyErr('You cannot divide by zero',ln);return l/r;case'//':if(r===0)throw PyErr('You cannot divide by zero',ln);return Math.floor(l/r);case'%':return l%r;case'==':return l===r;case'!=':return l!==r;case'<':return l<r;case'>':return l>r;case'<=':return l<=r;case'>=':return l>=r;}}
-    function idx(o,i,ln){if(o==null||(typeof o!=='string'&&!Array.isArray(o)))throw PyErr('You can only use [ ] on a list or text',ln);let k=Math.trunc(i);if(k<0)k+=o.length;if(k<0||k>=o.length)throw PyErr('That position is outside the list',ln);return o[k];}
-    function method(o,name,ln){if(Array.isArray(o)){if(name==='append')return x=>{o.push(x);};if(name==='pop')return ()=>o.pop();if(name==='remove')return x=>{const i=o.indexOf(x);if(i>=0)o.splice(i,1);};}throw PyErr('I do not know the command ".'+name+'" for that value',ln);}
+    function num(v,ln){if(typeof v==='number')return v;if(typeof v==='boolean')return v?1:0;throw PyErr('You can only do maths with numbers — use int() or float() to convert',ln);}
+    function repStr(s,n){n=Math.trunc(n);if(n<=0)return'';let out='';for(let i=0;i<n;i++)out+=s;return out;}
+    function repList(a,n){n=Math.trunc(n);const out=[];for(let i=0;i<n;i++)out.push(...a);return out;}
+    function binop(op,l,r,ln){switch(op){
+      case'+':
+        if(typeof l==='string'&&typeof r==='string')return l+r;
+        if(Array.isArray(l)&&Array.isArray(r))return l.concat(r);
+        if((typeof l==='string')!==(typeof r==='string'))throw PyErr('You can only join text with text — use str() or an f-string, e.g. f"Score: {x}"',ln);
+        return num(l,ln)+num(r,ln);
+      case'-':return num(l,ln)-num(r,ln);
+      case'*':
+        if(typeof l==='string'&&typeof r==='number')return repStr(l,r);
+        if(typeof r==='string'&&typeof l==='number')return repStr(r,l);
+        if(Array.isArray(l)&&typeof r==='number')return repList(l,r);
+        if(Array.isArray(r)&&typeof l==='number')return repList(r,l);
+        return num(l,ln)*num(r,ln);
+      case'/':if(num(r,ln)===0)throw PyErr('You cannot divide by zero',ln);return num(l,ln)/num(r,ln);
+      case'//':if(num(r,ln)===0)throw PyErr('You cannot divide by zero',ln);return Math.floor(num(l,ln)/num(r,ln));
+      case'%':{const b=num(r,ln);if(b===0)throw PyErr('You cannot divide by zero',ln);const a=num(l,ln);return((a%b)+b)%b;}
+      case'**':return Math.pow(num(l,ln),num(r,ln));
+      case'==':return pyEq(l,r);case'!=':return !pyEq(l,r);
+      case'in':return pyIn(l,r,ln);case'not in':return !pyIn(l,r,ln);
+      case'<':case'>':case'<=':case'>=':{
+        const bothStr=typeof l==='string'&&typeof r==='string';
+        if(!bothStr){l=num(l,ln);r=num(r,ln);}
+        return op==='<'?l<r:op==='>'?l>r:op==='<='?l<=r:l>=r;}
+    }}
+    function idx(o,i,ln){
+      if(o instanceof Map){if(!o.has(i))throw PyErr('That key is not in the dictionary: '+pyStr(i),ln);return o.get(i);}
+      if(o==null||(typeof o!=='string'&&!Array.isArray(o)))throw PyErr('You can only use [ ] on a list, text or dictionary',ln);
+      let k=Math.trunc(i);if(k<0)k+=o.length;if(k<0||k>=o.length)throw PyErr('That position is outside the list',ln);return o[k];}
+    function method(o,name,ln){
+      if(Array.isArray(o)){
+        if(name==='append')return x=>{o.push(x);};
+        if(name==='pop')return i=>{if(i===undefined)return o.pop();let k=Math.trunc(i);if(k<0)k+=o.length;if(k<0||k>=o.length)throw PyErr('That position is outside the list',ln);return o.splice(k,1)[0];};
+        if(name==='remove')return x=>{const i=o.findIndex(v=>pyEq(v,x));if(i>=0)o.splice(i,1);};
+        if(name==='insert')return(i,x)=>{let k=Math.trunc(i);if(k<0)k+=o.length;o.splice(Math.max(0,Math.min(o.length,k)),0,x);};
+        if(name==='index')return x=>{const i=o.findIndex(v=>pyEq(v,x));if(i<0)throw PyErr('That value is not in the list',ln);return i;};
+        if(name==='count')return x=>o.filter(v=>pyEq(v,x)).length;
+        if(name==='sort')return()=>{pySort(o,ln);};
+        if(name==='reverse')return()=>{o.reverse();};
+        if(name==='extend')return x=>{if(!Array.isArray(x))throw PyErr('.extend() needs a list',ln);for(const v of x)o.push(v);};
+        if(name==='clear')return()=>{o.length=0;};
+        if(name==='copy')return()=>o.slice();
+      }
+      if(typeof o==='string'){
+        if(name==='upper')return()=>o.toUpperCase();
+        if(name==='lower')return()=>o.toLowerCase();
+        if(name==='strip')return()=>o.trim();
+        if(name==='lstrip')return()=>o.replace(/^\s+/,'');
+        if(name==='rstrip')return()=>o.replace(/\s+$/,'');
+        if(name==='title')return()=>o.replace(/\w\S*/g,w=>w[0].toUpperCase()+w.slice(1).toLowerCase());
+        if(name==='capitalize')return()=>o?o[0].toUpperCase()+o.slice(1).toLowerCase():o;
+        if(name==='split')return sep=>sep===undefined?o.trim().split(/\s+/).filter(x=>x!==''):String(o).split(String(sep));
+        if(name==='join')return a=>{if(!Array.isArray(a))throw PyErr('.join() needs a list',ln);return a.map(x=>{if(typeof x!=='string')throw PyErr('.join() needs a list of text — use str() on each item',ln);return x;}).join(o);};
+        if(name==='replace')return(a,b)=>o.split(String(a)).join(String(b));
+        if(name==='find')return x=>o.indexOf(String(x));
+        if(name==='count')return x=>{const s=String(x);if(!s)return 0;return o.split(s).length-1;};
+        if(name==='startswith')return x=>o.lastIndexOf(String(x),0)===0;
+        if(name==='endswith')return x=>{const s=String(x);return o.length>=s.length&&o.slice(o.length-s.length)===s;};
+        if(name==='isdigit')return()=>o.length>0&&/^[0-9]+$/.test(o);
+        if(name==='isalpha')return()=>o.length>0&&/^[A-Za-z]+$/.test(o);
+      }
+      if(o instanceof Map){
+        if(name==='get')return(k,d)=>o.has(k)?o.get(k):(d===undefined?null:d);
+        if(name==='keys')return()=>Array.from(o.keys());
+        if(name==='values')return()=>Array.from(o.values());
+        if(name==='items')return()=>Array.from(o.entries()).map(e=>[e[0],e[1]]);
+        if(name==='pop')return(k,d)=>{if(o.has(k)){const v=o.get(k);o.delete(k);return v;}if(d!==undefined)return d;throw PyErr('That key is not in the dictionary: '+pyStr(k),ln);};
+        if(name==='clear')return()=>{o.clear();};
+        if(name==='update')return m=>{if(m instanceof Map)m.forEach((v,k)=>o.set(k,v));};
+      }
+      throw PyErr('I do not know the command ".'+name+'" for that value',ln);}
     function evalE(n,scopes){guard();switch(n.type){
       case'Lit':return n.v;
       case'Name':return lookup(scopes,n.v,n.ln);
       case'ListLit':return n.items.map(i=>evalE(i,scopes));
+      case'DictLit':{const m=new Map();for(let i=0;i<n.keys.length;i++)m.set(evalE(n.keys[i],scopes),evalE(n.vals[i],scopes));return m;}
+      case'FStr':return n.parts.map(pt=>pt.s!==undefined?pt.s:pyStr(evalE(pt.a,scopes))).join('');
       case'Index':return idx(evalE(n.obj,scopes),evalE(n.index,scopes),n.ln);
-      case'Attr':return method(evalE(n.obj,scopes),n.name,n.ln);
-      case'Unary':{const v=evalE(n.e,scopes);return n.op==='-'?-v:!truthy(v);}
+      case'SliceGet':return pySlice(evalE(n.obj,scopes),n.start?evalE(n.start,scopes):null,n.end?evalE(n.end,scopes):null,n.step?evalE(n.step,scopes):null,n.ln);
+      case'Attr':{const o=evalE(n.obj,scopes);if(o&&o.__module){if(!(n.name in o.__items))throw PyErr('"'+n.name+'" is not part of that module',n.ln);return o.__items[n.name];}return method(o,n.name,n.ln);}
+      case'Unary':{const v=evalE(n.e,scopes);return n.op==='-'?-num(v,n.ln):!truthy(v);}
       case'Logic':{const l=evalE(n.l,scopes);if(n.op==='and')return truthy(l)?evalE(n.r,scopes):l;return truthy(l)?l:evalE(n.r,scopes);}
       case'Bin':return binop(n.op,evalE(n.l,scopes),evalE(n.r,scopes),n.ln);
+      case'Chain':{let l=evalE(n.rands[0],scopes);for(let i=0;i<n.ops.length;i++){const r=evalE(n.rands[i+1],scopes);if(!truthy(binop(n.ops[i],l,r,n.ln)))return false;l=r;}return true;}
       case'Call':{const fn=n.callee.type==='Name'?lookup(scopes,n.callee.v,n.ln):evalE(n.callee,scopes);return callFn(fn,n.args.map(a=>evalE(a,scopes)),n.ln);}
     }throw PyErr('I cannot work out that value',n.ln);}
     function execBlock(body,scopes){for(const st of body){const r=execStmt(st,scopes);if(r instanceof Ret||r===BREAK||r===CONT)return r;}}
     function execStmt(n,scopes){guard();switch(n.type){
-      case'Assign':{const val=evalE(n.val,scopes);const t=n.target;if(t.type==='Name')scopes[0][t.v]=val;else if(t.type==='Index'){const o=evalE(t.obj,scopes);let k=Math.trunc(evalE(t.index,scopes));if(Array.isArray(o)){if(k<0)k+=o.length;o[k]=val;}else throw PyErr('You can only change positions in a list',n.ln);}else throw PyErr('You cannot assign to that',n.ln);return;}
+      case'Assign':{const val=evalE(n.val,scopes);const t=n.target;
+        if(t.type==='Name')scopes[0][t.v]=val;
+        else if(t.type==='Index'){const o=evalE(t.obj,scopes);const kk=evalE(t.index,scopes);
+          if(o instanceof Map)o.set(kk,val);
+          else if(Array.isArray(o)){let k=Math.trunc(kk);if(k<0)k+=o.length;if(k<0||k>=o.length)throw PyErr('That position is outside the list',n.ln);o[k]=val;}
+          else throw PyErr('You can only change items in a list or dictionary',n.ln);}
+        else throw PyErr('You cannot assign to that',n.ln);return;}
       case'ExprStmt':evalE(n.expr,scopes);return;
       case'If':{for(const c of n.clauses)if(truthy(evalE(c.cond,scopes)))return execBlock(c.body,scopes);if(n.els)return execBlock(n.els,scopes);return;}
       case'While':{let g=0;while(truthy(evalE(n.cond,scopes))){if(++g>200000)throw PyErr('This loop repeated too many times',n.ln);const r=execBlock(n.body,scopes);if(r instanceof Ret)return r;if(r===BREAK)break;}return;}
-      case'For':{const list=evalE(n.iter,scopes);if(!Array.isArray(list)&&typeof list!=='string')throw PyErr('You can only loop "for ... in" a list or range()',n.ln);for(const it of list){scopes[0][n.name]=it;const r=execBlock(n.body,scopes);if(r instanceof Ret)return r;if(r===BREAK)break;}return;}
+      case'For':{let list=evalE(n.iter,scopes);if(list instanceof Map)list=Array.from(list.keys());if(!Array.isArray(list)&&typeof list!=='string')throw PyErr('You can only loop "for ... in" a list, text, dictionary or range()',n.ln);for(const it of list){scopes[0][n.name]=it;const r=execBlock(n.body,scopes);if(r instanceof Ret)return r;if(r===BREAK)break;}return;}
+      case'Import':{for(const nm of n.names)if(!MODULES[nm])throw PyErr('I do not have a module called "'+nm+'" — try random or math',n.ln);return;}
+      case'FromImport':{const mod=MODULES[n.mod];if(!mod)throw PyErr('I do not have a module called "'+n.mod+'" — try random or math',n.ln);
+        if(n.names[0]==='*'){for(const k in mod.__items)scopes[0][k]=mod.__items[k];}
+        else for(const nm of n.names){if(!(nm in mod.__items))throw PyErr('"'+n.mod+'" does not have "'+nm+'"',n.ln);scopes[0][nm]=mod.__items[nm];}
+        return;}
+      case'Del':{const t=n.target;
+        if(t.type==='Index'){const o=evalE(t.obj,scopes);const k=evalE(t.index,scopes);
+          if(o instanceof Map){if(!o.delete(k))throw PyErr('That key is not in the dictionary: '+pyStr(k),n.ln);}
+          else if(Array.isArray(o)){let i=Math.trunc(k);if(i<0)i+=o.length;if(i<0||i>=o.length)throw PyErr('That position is outside the list',n.ln);o.splice(i,1);}
+          else throw PyErr('You can only delete from a list or dictionary',n.ln);}
+        else if(t.type==='Name'){let done=false;for(const s of scopes){if(t.v in s){delete s[t.v];done=true;break;}}if(!done)throw PyErr('I do not know what "'+t.v+'" means',n.ln);}
+        else throw PyErr('You cannot delete that',n.ln);return;}
       case'Def':funcs[n.name]={__user:true,params:n.params,body:n.body,closure:scopes[0]};return;
       case'Return':return new Ret(n.arg?evalE(n.arg,scopes):undefined);
       case'Break':return BREAK;case'Continue':return CONT;
@@ -5678,6 +5890,7 @@ const CJPy=(function(){
   return {
     check(src){try{parse(tokenize(src));return{ok:true};}catch(e){return{ok:false,msg:e.cjMsg||e.message,line:e.cjLine||0};}},
     run(src,api,opts){const program=parse(tokenize(src));return makeRuntime(program,api,opts);},
+    str:pyStr, // Python-style display of a CJPy value (lists/dicts/True/None)
   };
 })();
 
@@ -5740,7 +5953,7 @@ const KS3_API=[
     {name:'get_lives',sig:'get_lives()',desc:'How many lives are left.',fn:()=>lives},
   ]},
  {cat:' Game actions',items:[
-    {name:'say',sig:'say(message)',desc:'Show a message on screen.',fn:m=>toast(''+(m===true?'True':m===false?'False':String(m)),'#4a90d9')},
+    {name:'say',sig:'say(message)',desc:'Show a message on screen.',fn:m=>toast(CJPy.str(m),'#4a90d9')},
  {name:'win',sig:'win()',desc:'Win the game now.',fn:()=>{if(playing)winNow(' You Win!');}},
  {name:'game_over',sig:'game_over()',desc:'End the game (a loss).',fn:()=>{if(playing)loseNow(' Game Over','Your code ended the game.');}},
     {name:'next_page',sig:'next_page()',desc:'Go to the next page.',fn:()=>nextLevel()},
@@ -5763,21 +5976,29 @@ const KS3_API=[
   ]},
 ];
 const KS3_BUILTINS=[
+  {sig:'print(x, ...)',desc:'Show values on screen (works like say).'},
+  {sig:'f"Score: {score}"',desc:'An f-string — puts values inside text.'},
   {sig:'range(n) · range(a,b)',desc:'A list of numbers, e.g. for i in range(5):'},
-  {sig:'len(list)',desc:'How many items in a list or piece of text.'},
+  {sig:'len(x)',desc:'How many items in a list, text or dictionary.'},
   {sig:'sum(list)',desc:'Adds up a list of numbers.'},
   {sig:'min(a,b) · max(a,b)',desc:'Smallest / largest value.'},
   {sig:'randint(a,b) · random(a,b)',desc:'A random whole number from a to b.'},
   {sig:'str(x) · int(x) · float(x)',desc:'Change between text and numbers.'},
-  {sig:'abs(x) · round(x)',desc:'Absolute value / round to nearest whole.'},
-  {sig:'mylist.append(x)',desc:'Add x to the end of a list.'},
+  {sig:'abs(x) · round(x)',desc:'Absolute value / round (round(x, 2) for decimals).'},
+  {sig:'sorted(list) · mylist.sort()',desc:'Put a list in order.'},
+  {sig:'mylist.append(x) · .pop() · .remove(x)',desc:'Add / take from a list (also .insert, .index, .count, .reverse).'},
+  {sig:'"text".upper() · .lower() · .split() · .replace(a,b)',desc:'Text commands (also .strip, .find, .count, .startswith, .join).'},
+  {sig:'scores = {"amy": 10}',desc:'A dictionary — look things up by name: scores["amy"] (also .get, .keys, .values).'},
+  {sig:'x in mylist',desc:'True if x is inside a list, text or dictionary.'},
+  {sig:'a[1:3] · a[::-1]',desc:'A slice — part of a list or text (the second reverses it).'},
+  {sig:'import random · import math',desc:'random.randint(a,b), random.choice(list), math.sqrt(x), math.pi and more.'},
 ];
 function ks3MakeApi(){const funcs={};KS3_API.forEach(g=>g.items.forEach(it=>{funcs[it.name]=it.fn;}));return{funcs};}
 function ks3Compile(){ks3Runtime=null;ks3Error=false;if(!isKS3())return;try{ks3Runtime=CJPy.run(ks3Code||'',ks3MakeApi(),{maxOps:200000});ks3SetStatus('ok');}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast(''+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
 function ks3Call(name,args){if(!ks3Runtime||ks3Error||!ks3Runtime.has(name))return;try{ks3Runtime.resetOps();ks3Runtime.call(name,args||[]);}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast(''+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
 function ks3Frame(){if(!isKS3())return;ks3Input.left=ks3Input.right=ks3Input.jump=false;ks3Call('on_update');}
 function cmdRow(sig,desc){return '<div class="cmd-row"><code>'+sig.replace(/</g,'&lt;')+'</code><span>'+desc+'</span></div>';}
-function openCommands(){let h='<h3> Special functions (events)</h3><p style="font-size:12px;opacity:.7;margin-bottom:4px;">Write these with <code>def</code> and the game calls them for you.</p>';KS3_EVENTS.forEach(e=>h+=cmdRow(e.sig,e.desc));KS3_API.forEach(g=>{h+='<h3>'+g.cat+'</h3>';g.items.forEach(it=>h+=cmdRow(it.sig,it.desc));});h+='<h3> Built-in helpers &amp; lists</h3>';KS3_BUILTINS.forEach(b=>h+=cmdRow(b.sig,b.desc));h+='<h3> Language</h3>'+cmdRow('if / elif / else','Make choices.')+cmdRow('while … :','Repeat while something is true.')+cmdRow('for x in … :','Repeat over a range or list.')+cmdRow('def name(a, b):','Make your own function.')+cmdRow('= == != &lt; &gt; &lt;= &gt;=','Set a value / compare values.')+cmdRow('and or not','Combine True/False.');document.getElementById('cmd-content').innerHTML=h;document.getElementById('cmd-content').scrollTop=0;document.getElementById('cmd-modal').classList.remove('hide');}
+function openCommands(){let h='<h3> Special functions (events)</h3><p style="font-size:12px;opacity:.7;margin-bottom:4px;">Write these with <code>def</code> and the game calls them for you.</p>';KS3_EVENTS.forEach(e=>h+=cmdRow(e.sig,e.desc));KS3_API.forEach(g=>{h+='<h3>'+g.cat+'</h3>';g.items.forEach(it=>h+=cmdRow(it.sig,it.desc));});h+='<h3> Built-in helpers &amp; lists</h3>';KS3_BUILTINS.forEach(b=>h+=cmdRow(b.sig,b.desc));h+='<h3> Language</h3>'+cmdRow('if / elif / else','Make choices.')+cmdRow('while … :','Repeat while something is true.')+cmdRow('for x in … :','Repeat over a range, list, text or dictionary.')+cmdRow('def name(a, b):','Make your own function.')+cmdRow('= == != &lt; &gt; &lt;= &gt;=','Set a value / compare values (you can chain: 0 &lt;= x &lt; 10).')+cmdRow('x += 1','Shorthand for x = x + 1 (also -= *= /= //= %= **=).')+cmdRow('x ** 2','To the power of (x squared).')+cmdRow('and or not · x in list','Combine True/False / check if something is inside.')+cmdRow('del d[key]','Remove an item from a dictionary or list.');document.getElementById('cmd-content').innerHTML=h;document.getElementById('cmd-content').scrollTop=0;document.getElementById('cmd-modal').classList.remove('hide');}
 function ks3KeyName(code){const m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',Space:'space',Enter:'enter'};if(m[code])return m[code];if(code.indexOf('Key')===0)return code.slice(3).toLowerCase();if(code.indexOf('Digit')===0)return code.slice(5);return code.toLowerCase();}
 function ks3OnKey(name){if(isKS3())ks3Call('on_key',[name]);}
 
@@ -6246,7 +6467,7 @@ const HELP_TABS=[
  <h3>‍ Key Stage 3 — write Python-style code</h3>
    <p>KS3 games swap the blocks for a real <b>code editor</b>. You write Python-style code, and these functions run by themselves:</p>
    <ul><li><code>on_start()</code> — once when the game begins.</li><li><code>on_update()</code> — every frame (~60×/second).</li><li><code>on_key(key)</code> — when a key is pressed, e.g. <code>"left"</code>, <code>"space"</code>.</li><li><code>on_gem()</code> / <code>on_enemy()</code> — collecting a gem / touching an enemy.</li></ul>
-   <p>Handy commands: <code>move_left() move_right() jump() is_key("right") add_score(10) set_lives(3) say("hi") win() game_over() player_x() on_ground() random(1,6)</code> — plus variables, <code>if/elif/else</code>, <code>while</code>, <code>for … in range()</code>, lists, and your own functions with <code>def</code>. The editor checks your code as you type and shows friendly errors with line numbers.</p>
+   <p>Handy commands: <code>move_left() move_right() jump() is_key("right") add_score(10) set_lives(3) say("hi") win() game_over() player_x() on_ground() random(1,6)</code> — plus real Python essentials: variables, <code>if/elif/else</code>, <code>while</code>, <code>for … in</code>, lists, <b>dictionaries</b>, <code>print()</code>, <b>f-strings</b> (<code>f"Score: {s}"</code>), <code>+=</code>, text commands like <code>.upper()</code> and <code>.split()</code>, slices like <code>word[0:3]</code>, <code>import random</code> / <code>import math</code>, and your own functions with <code>def</code>. The editor checks your code as you type and shows friendly errors with line numbers.</p>
  <p> <b>Don't remember a command?</b> Tap <b> Commands</b> in the code editor for the full, searchable list of everything you can use — grouped by what it does.</p>
    <p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
  ['cloud',' Cloud & Teamwork',`<h3>Your account</h3><p>If your school has cloud saving switched on, tap <b> Sign in</b> (top of the home screen, or the <b> Cloud</b> button) and make an account — a <b>display name</b>, a password, your name, and whether you're a <b>student</b> or <b>teacher</b>. Then your games follow you to <b>any device</b> — no codes to remember.</p>
@@ -6402,7 +6623,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p><b>Win conditions</b> (Win category): reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b>, plus a custom win message. <b>Smart enemies</b> (Enemies category): make Enemy A/B <b>chase the player</b>, and enable <b>jump-to-defeat</b> (stomp).</p>
   <p><b>Key Stage 2 grid extras:</b> keys &amp; doors, lockable <b>chests</b>, <b>teleport pads</b> (same-colour pairs), and <b>buttons</b> that open same-colour <b>gates</b> — all listed with the other blocks above.</p>
   <h3>Key Stage 3 — text coding (Python-style)</h3>
-  <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python-style language (no <code>eval</code>; capped loops so nothing freezes) featuring variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, and <b>functions</b> with <code>def</code>. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>, <code>random</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
+  <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python language (no <code>eval</code>; capped loops so nothing freezes) covering the constructs KS3 schemes of work teach: variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, <b>dictionaries</b>, <b>functions</b> with <code>def</code>, <code>print()</code>, <b>f-strings</b>, augmented assignment (<code>+=</code>), string methods (<code>.upper()</code>, <code>.split()</code>…), slicing, <code>in</code> membership tests, and <code>import random</code> / <code>import math</code> — so code from standard Python lessons and textbooks runs as written. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
  <p>Pupils don't need to memorise anything: the <b> Commands</b> button in the editor opens a complete, grouped reference of every command and event, each with a one-line explanation — so the whole API (movement, scoring, sensing, settings and sound) is always one tap away.</p>
   <h3>Cloud save &amp; classes (optional)</h3>
  <p>If your organisation sets up the (free) cloud backend, an <b> Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes a class a child their work</b>. <b>Pupils</b> join classes in <b> Cloud Settings</b> (a child can be in several), then when saving choose <b> My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
@@ -8331,25 +8552,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.09.02';
+const CJ_VERSION='2026.09.03';
 const CJ_WHATSNEW=[
- "🚪 New Trapdoor block! A wooden floor that drops open and anything on it falls through. Tap it to choose how it opens: on a Timer (slow/normal/fast), at Random, when a Key is collected, or when a Button is pressed. Great for traps and puzzles. (Key Stage 2 & 3.)",
- "You can now collaborate LIVE on Turtle (Logo) projects too — share the room and code together in real time.",
- "New 'Gadget Playground' example game + two guided builds (Crate & button puzzle, Wall-jump climb) — find them in the Help ❓ Start tab.",
- "Spike Balls, Shooters and Falling Blocks can now be set to Slow / Normal / Fast — just tap them.",
- "New coding blocks: 'when I dash', 'when I wall-jump', 'when I get hurt', and 'when a button is pressed'.",
- "Ten NEW blocks! Pushable Crates (shove them, stack them, park them on buttons), slippery Ice, Cling Walls, Dash and Double-Jump power-ups, a rolling Spike Ball, a Falling Block, a Shooter cannon, and colour Switches that flip gates open and shut.",
- "Every one of the new blocks can be redrawn in the Design Studio too.",
- "Design Studio now lets you draw EVERY block — including Crumble, Belts, Quicksand, Fan, Sand, Checkpoint, and the colour Buttons, Gates and Teleports (each colour separately, so colour-matching still works).",
- "You can now choose whether a design is for your WHOLE PROJECT or just THIS PAGE (the page number is shown) — it's whole-project by default.",
- "Conveyor belts now have a speed setting too — tap a belt to make it slow, normal or fast.",
- "New Quicksand block! It slowly pulls your player down and you can barely move — wade or jump out fast, or you'll sink under and lose a life.",
- "New Sand block — a firm, safe block that looks just like Quicksand, perfect for tricking your friends!",
- "Spikes, Fans and Bounce pads can now be ROTATED — tap them to spin which way they face, so ceiling spikes, side-blowing fans and sideways bounces all work.",
- "New Fan block — it blows a strong current (in any direction) so you can float and glide to reach high places. Tap a fan to set its direction and how far the wind reaches (its push distance).",
- "Moving platforms now have a Speed setting (slow, normal or fast) — and can travel UP and DOWN as well as left and right.",
- "New Cave mode (Key Stage 2+): in Play your player is lit by a spotlight while the rest of the page stays dark — a brilliant extra challenge.",
- "Building together is smoother — when classmates work on the same game, edits on different pages no longer overwrite each other."
+ "🐍 Key Stage 3 Python is now REAL Python! Code from your Python lessons runs as written: print(), f-strings like f\"Score: {s}\", x += 1, dictionaries, text commands like .upper() and .split(), slices like word[0:3], 2**10, 'in' checks, del, and import random / import math (random.randint, random.choice, math.sqrt and more).",
+ "🐍 Better Python errors too — friendly messages for things like joining text with a number (it suggests an f-string) and looking up a missing dictionary key.",
+ "🐍 The Commands reference in the KS3 code editor lists all the new Python — tap 'Commands' to explore.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

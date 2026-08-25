@@ -692,8 +692,23 @@ so textbook code runs as written:
   KS3_API; Help code tab; teacher guide). Verified: 108-case node suite + 18-check Playwright play-session
   (spawn/velocity/gravity-landing/on_touch handler mutating score + removing itself/stale-id friendly error/
   Commands rows/KS3_DEFAULT) + canvas screenshot.
-- **NOT done (possible next):** Blockly→Python one-way view (mbToPython pattern) as a KS2→KS3 bridge; sprite
-  animation helpers; a KS3 sprites guided mission.
+- **KS2→KS3 bridge "See it in Python" — DONE & verified (app 2026.09.05):** a `cp-python` button in the KS2
+  code-panel run bar (platformer + ks2 only, toggled in `updateCodeModeUI`; TOOL_DESC entry) opens the cmd-modal
+  (headers now have ids `cmd-title`/`cmd-sub`, set via `cmdModalTitle` — openCommands resets them) showing the
+  pupil's Blockly program translated to RUNNABLE KS3 Python by **`cjBlocksToPython()`** (+`cjPyExpr` precedence-
+  aware expressions, `cjPyStmts` statements, `cjPyDef`, `openBlocksPython` UI w/ copy button). Semantics mirror the
+  REAL block behaviour: `when_key_pressed`+movement → `if is_key(...)` checks in **on_update** (KS2 key hats are
+  held-key bindings, NOT events); `every_n_seconds` → frame counter (`timer += 1 / if timer >= N*60`) with
+  `global`; config blocks with a Settings API → `set_speed/set_gravity/set_jump/double_jump/set_lives`; other
+  config blocks → friendly `# game setting (choose in Blocks): …` comments (`CJPY_CFG_NOTES`); hats → on_start/
+  on_gem/on_enemy/on_hit/on_button/on_dash/on_wall_jump/on_page; text_join → f-string; procedures → def (params
+  excluded from `global`); workspace variables initialised `x = 0` at top, functions that assign them get
+  `global x`. **CJPy gained `global` + `pass` keywords** (GLOBALS Symbol marker per fn scope; Assign checks it) and
+  `math.log/log10`; KS3_API gained `get_page()`/`get_timer()` (so those value blocks translate). **Quality bar:
+  generated output must parse AND run in CJPy** — verified: 114-case node suite; 19-check Playwright test builds a
+  rich workspace via XML, asserts the exact translations, `CJPy.check` passes, runs the output against
+  `ks3MakeApi()` (timer awards score at frame 120; `global combo` persists across events); modal screenshot.
+- **NOT done (possible next):** sprite animation helpers; a KS3 sprites guided mission.
 
 ## Share links — CLOUD SHORT LINKS (v5) — DONE & verified
 - **Problem:** old share was `?lvl=<base64 of whole project>` in the URL → broke for Stage projects with painted

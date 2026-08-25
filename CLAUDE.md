@@ -677,8 +677,23 @@ so textbook code runs as written:
   KS3 paragraph all list the new coverage.
 - **Verified:** 106-case node suite (scratchpad test-cjpy.js — legacy + new features + a full "lesson program") and
   a 15-check Playwright run in the real page (ks3Compile/ks3Call/game API/status bar/Commands modal/KS3_DEFAULT).
-- **NOT done (next per user):** the API "construction kit" pass — widening KS3_API toward MakeCode-Arcade-style
-  sprite/object creation; and possibly Blockly→Python one-way view (mbToPython pattern) as a KS2→KS3 bridge.
+- **API construction kit — DONE & verified (app 2026.09.04):** KS3_API gained a **Sprites** category
+  (MakeCode-Arcade-style objects created FROM code): `add_sprite(image,x,y)` (emoji OR Design Studio name; returns
+  an id; tile coords, cap 200), `remove_sprite`, `set_sprite_pos`/`move_sprite`/`sprite_x`/`sprite_y` (tile floats),
+  `set_sprite_speed` (tiles/sec), `set_sprite_gravity` (falls + lands on `isSolid` tiles), `set_sprite_size`,
+  `sprite_say` (speech bubble ~2s), `touching_player`/`touching_sprite`, `on_touch(s,handler)` (**user functions
+  pass as VALUES** — CJPy runtime gained `invoke(fnVal,args)`; app-side `ks3Invoke`), `hurt_player` (→killPlayer).
+  Engine: `ks3Sprites`/`ks3AddSprite`/`ks3UpdateSprites` (called in the play chain after updateEnemies; edge-
+  triggered touch, falls-off-world cull)/`ks3DrawSprites` (in drawPlay before drawPlayer; drawCustomSprite else
+  emoji fillText; bubble). Runtime-only — never persisted. Lifecycle: cleared in `loadPlayLevel` (page change) and
+  `startPlay`; **new event `on_page(page)`** fires at the end of loadPlayLevel (next to `when_level_start`) + after
+  on_start in startPlay. Also documented the previously-undocumented events in KS3_EVENTS: on_hit/on_button/
+  on_dash/on_wall_jump (they already fired). `KS3_DEFAULT` now demos a bee sprite. Docs synced (Commands auto via
+  KS3_API; Help code tab; teacher guide). Verified: 108-case node suite + 18-check Playwright play-session
+  (spawn/velocity/gravity-landing/on_touch handler mutating score + removing itself/stale-id friendly error/
+  Commands rows/KS3_DEFAULT) + canvas screenshot.
+- **NOT done (possible next):** Blockly→Python one-way view (mbToPython pattern) as a KS2→KS3 bridge; sprite
+  animation helpers; a KS3 sprites guided mission.
 
 ## Share links — CLOUD SHORT LINKS (v5) — DONE & verified
 - **Problem:** old share was `?lvl=<base64 of whole project>` in the URL → broke for Stage projects with painted

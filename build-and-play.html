@@ -5885,7 +5885,7 @@ const CJPy=(function(){
     }}
     const global=Object.create(null);
     execBlock(program.body,[global]);
-    return {funcs,global,has:name=>!!funcs[name],call:(name,args)=>{const fn=funcs[name];if(!fn)return undefined;return callFn(fn,args||[],0);},resetOps:()=>{ops=0;}};
+    return {funcs,global,has:name=>!!funcs[name],call:(name,args)=>{const fn=funcs[name];if(!fn)return undefined;return callFn(fn,args||[],0);},invoke:(fn,args)=>callFn(fn,args||[],0),resetOps:()=>{ops=0;}};
   }
   return {
     check(src){try{parse(tokenize(src));return{ok:true};}catch(e){return{ok:false,msg:e.cjMsg||e.message,line:e.cjLine||0};}},
@@ -5906,6 +5906,9 @@ const KS3_DEFAULT=[
 "",
 "def on_start():",
 "    say(\"Let's go!\")",
+"    # make your own game objects with sprites:",
+"    bee = add_sprite(\"🐝\", 6, 3)",
+"    set_sprite_speed(bee, -2, 0)",
 "",
 "def on_update():",
 "    if is_key(\"right\"):",
@@ -5936,6 +5939,11 @@ const KS3_EVENTS=[
   {sig:'def on_key(key):',desc:'Runs when a key is pressed (key is the name).'},
   {sig:'def on_gem():',desc:'Runs when the player collects a gem.'},
   {sig:'def on_enemy():',desc:'Runs when the player touches an enemy.'},
+  {sig:'def on_hit():',desc:'Runs when the player gets hurt.'},
+  {sig:'def on_button():',desc:'Runs when the player presses a button block.'},
+  {sig:'def on_dash():',desc:'Runs when the player dashes (double-tap an arrow).'},
+  {sig:'def on_wall_jump():',desc:'Runs when the player wall-jumps.'},
+  {sig:'def on_page(page):',desc:'Runs when a page starts (page is its number). Sprites you added are cleared first.'},
 ];
 const KS3_API=[
  {cat:' Move the player',items:[
@@ -5967,6 +5975,22 @@ const KS3_API=[
     {name:'on_ground',sig:'on_ground()',desc:'True if the player is on solid ground.',fn:()=>!!(player&&player.onGround)},
     {name:'gems_collected',sig:'gems_collected()',desc:'How many gems collected so far.',fn:()=>gemsGot},
     {name:'gems_total',sig:'gems_total()',desc:'How many gems are in this page.',fn:()=>gemsTotal},
+  ]},
+ {cat:' Sprites — make your own objects',items:[
+    {name:'add_sprite',sig:'add_sprite(image, x, y)',desc:'Make a sprite at column x, row y. image = an emoji ("🐝") or a Design Studio name ("gem"). Keep the id it returns in a variable!',fn:(img,x,y)=>ks3AddSprite(img,x,y)},
+    {name:'remove_sprite',sig:'remove_sprite(s)',desc:'Remove a sprite.',fn:s=>{ks3Spr(s,'remove_sprite').dead=true;}},
+    {name:'set_sprite_pos',sig:'set_sprite_pos(s, x, y)',desc:'Move a sprite to column x, row y (decimals allowed).',fn:(s,x,y)=>{const o=ks3Spr(s,'set_sprite_pos');o.x=((+x||0)+0.5)*TS;o.y=((+y||0)+0.5)*TS;}},
+    {name:'move_sprite',sig:'move_sprite(s, dx, dy)',desc:'Nudge a sprite by dx columns and dy rows.',fn:(s,dx,dy)=>{const o=ks3Spr(s,'move_sprite');o.x+=(+dx||0)*TS;o.y+=(+dy||0)*TS;}},
+    {name:'sprite_x',sig:'sprite_x(s)',desc:'The sprite\'s column (a decimal).',fn:s=>ks3Spr(s,'sprite_x').x/TS-0.5},
+    {name:'sprite_y',sig:'sprite_y(s)',desc:'The sprite\'s row (a decimal).',fn:s=>ks3Spr(s,'sprite_y').y/TS-0.5},
+    {name:'set_sprite_speed',sig:'set_sprite_speed(s, vx, vy)',desc:'Make it move by itself — vx/vy in tiles per second (negative = left/up).',fn:(s,vx,vy)=>{const o=ks3Spr(s,'set_sprite_speed');o.vx=(+vx||0)*TS/60;o.vy=(+vy||0)*TS/60;}},
+    {name:'set_sprite_gravity',sig:'set_sprite_gravity(s, on)',desc:'True = the sprite falls and lands on solid blocks.',fn:(s,on)=>{ks3Spr(s,'set_sprite_gravity').grav=!!on;}},
+    {name:'set_sprite_size',sig:'set_sprite_size(s, tiles)',desc:'How big the sprite is, in tiles (1 = one block).',fn:(s,t)=>{ks3Spr(s,'set_sprite_size').size=Math.max(0.25,Math.min(4,+t||1));}},
+    {name:'sprite_say',sig:'sprite_say(s, message)',desc:'A speech bubble above the sprite for 2 seconds.',fn:(s,m)=>{const o=ks3Spr(s,'sprite_say');o.say=CJPy.str(m);o.sayT=120;}},
+    {name:'touching_player',sig:'touching_player(s)',desc:'True while the sprite touches the player.',fn:s=>{const o=ks3Spr(s,'touching_player');return !!(player&&!player.dead&&ks3SprTouchRect(o,player.x,player.y,PW,PH));}},
+    {name:'touching_sprite',sig:'touching_sprite(a, b)',desc:'True while two sprites touch.',fn:(a,b)=>ks3SprOverlap(ks3Spr(a,'touching_sprite'),ks3Spr(b,'touching_sprite'))},
+    {name:'on_touch',sig:'on_touch(s, my_function)',desc:'Run one of your functions when the player touches the sprite: def caught(s): … then on_touch(bee, caught). It gets the sprite id.',fn:(s,fn)=>{ks3Spr(s,'on_touch').onTouch=fn;}},
+    {name:'hurt_player',sig:'hurt_player()',desc:'Hurt the player (lose a life) — for making enemy sprites.',fn:()=>{if(playing)killPlayer();}},
   ]},
  {cat:' Settings',items:[
     {name:'set_speed',sig:'set_speed(name)',desc:'Player speed: "slow","normal","fast".',fn:v=>{if(['slow','normal','fast'].indexOf(v)>=0)gameConfig.playerSpeed=v;}},
@@ -6001,6 +6025,50 @@ function cmdRow(sig,desc){return '<div class="cmd-row"><code>'+sig.replace(/</g,
 function openCommands(){let h='<h3> Special functions (events)</h3><p style="font-size:12px;opacity:.7;margin-bottom:4px;">Write these with <code>def</code> and the game calls them for you.</p>';KS3_EVENTS.forEach(e=>h+=cmdRow(e.sig,e.desc));KS3_API.forEach(g=>{h+='<h3>'+g.cat+'</h3>';g.items.forEach(it=>h+=cmdRow(it.sig,it.desc));});h+='<h3> Built-in helpers &amp; lists</h3>';KS3_BUILTINS.forEach(b=>h+=cmdRow(b.sig,b.desc));h+='<h3> Language</h3>'+cmdRow('if / elif / else','Make choices.')+cmdRow('while … :','Repeat while something is true.')+cmdRow('for x in … :','Repeat over a range, list, text or dictionary.')+cmdRow('def name(a, b):','Make your own function.')+cmdRow('= == != &lt; &gt; &lt;= &gt;=','Set a value / compare values (you can chain: 0 &lt;= x &lt; 10).')+cmdRow('x += 1','Shorthand for x = x + 1 (also -= *= /= //= %= **=).')+cmdRow('x ** 2','To the power of (x squared).')+cmdRow('and or not · x in list','Combine True/False / check if something is inside.')+cmdRow('del d[key]','Remove an item from a dictionary or list.');document.getElementById('cmd-content').innerHTML=h;document.getElementById('cmd-content').scrollTop=0;document.getElementById('cmd-modal').classList.remove('hide');}
 function ks3KeyName(code){const m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',Space:'space',Enter:'enter'};if(m[code])return m[code];if(code.indexOf('Key')===0)return code.slice(3).toLowerCase();if(code.indexOf('Digit')===0)return code.slice(5);return code.toLowerCase();}
 function ks3OnKey(name){if(isKS3())ks3Call('on_key',[name]);}
+// ── KS3 Python sprites — objects CREATED from code (MakeCode-Arcade-style construction kit) ──
+// Runtime-only (never persisted). Positions are tile coords like player_x/player_y; px internally.
+let ks3Sprites=[],ks3SpriteSeq=1;
+function ks3Spr(id,cmd){const s=ks3Sprites.find(o=>o.id===id&&!o.dead);if(!s)throw new Error(cmd+': there is no sprite with that id — use the value add_sprite() gave you, e.g. bee = add_sprite("🐝", 3, 5)');return s;}
+function ks3AddSprite(img,x,y){
+  if(typeof img!=='string'||!img)throw new Error('add_sprite needs a picture first — an emoji or a Design Studio name, e.g. add_sprite("🐝", 3, 5)');
+  if(ks3Sprites.length>=200)throw new Error('Too many sprites (200 is the limit) — remove_sprite() some first');
+  const s={id:ks3SpriteSeq++,img,x:((+x||0)+0.5)*TS,y:((+y||0)+0.5)*TS,vx:0,vy:0,size:1,grav:false,onTouch:null,_touch:false,say:'',sayT:0,dead:false};
+  ks3Sprites.push(s);return s.id;
+}
+function ks3SprTouchRect(s,x,y,w,h){const half=s.size*TS/2;return s.x+half>x&&s.x-half<x+w&&s.y+half>y&&s.y-half<y+h;}
+function ks3SprOverlap(a,b){const ha=a.size*TS/2;return ks3SprTouchRect(b,a.x-ha,a.y-ha,ha*2,ha*2);}
+function ks3Invoke(fn,args){if(!ks3Runtime||ks3Error)return;try{ks3Runtime.resetOps();if(typeof fn==='string')ks3Runtime.call(fn,args||[]);else ks3Runtime.invoke(fn,args||[]);}catch(e){ks3Error=true;ks3SetStatus('err',e.cjMsg||e.message,e.cjLine);toast(''+(e.cjMsg||e.message)+(e.cjLine?(' (line '+e.cjLine+')'):''),'#ef4444');}}
+function ks3UpdateSprites(){
+  if(!isKS3()||!ks3Sprites.length)return;
+  for(const s of ks3Sprites){
+    if(s.dead)continue;
+    s.x+=s.vx;s.y+=s.vy;
+    if(s.grav){s.vy=Math.min(s.vy+GRAV,14);
+      const half=s.size*TS/2,col=Math.floor(s.x/TS),row=Math.floor((s.y+half)/TS);
+      if(s.vy>=0&&isSolid(col,row)){s.y=row*TS-half;s.vy=0;}}
+    if(s.sayT>0)s.sayT--;
+    if(s.y>ROWS*TS+TS*6){s.dead=true;continue;} // fell out of the world
+    if(player&&!player.dead){
+      const t=ks3SprTouchRect(s,player.x,player.y,PW,PH);
+      if(t&&!s._touch){s._touch=true;if(s.onTouch)ks3Invoke(s.onTouch,[s.id]);}
+      else if(!t)s._touch=false;
+    }
+  }
+  ks3Sprites=ks3Sprites.filter(s=>!s.dead);
+}
+function ks3DrawSprites(){
+  for(const s of ks3Sprites){
+    const w=s.size*TS,px=s.x-camX,py=s.y-camY;
+    if(px+w/2<0||px-w/2>CW||py+w/2<0||py-w/2>CH)continue;
+    if(!drawCustomSprite(s.img,px-w/2,py-w/2,w,w)){
+      ctx.save();ctx.font=Math.round(w*0.82)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s.img,px,py+w*0.04);ctx.restore();
+    }
+    if(s.sayT>0&&s.say){ctx.save();ctx.font='bold 13px Nunito';ctx.textAlign='center';const tw=ctx.measureText(s.say).width+14,bx=px,by=py-w/2-8;
+      ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.beginPath();
+      if(ctx.roundRect)ctx.roundRect(bx-tw/2,by-18,tw,20,7);else ctx.rect(bx-tw/2,by-18,tw,20);
+      ctx.fill();ctx.stroke();ctx.fillStyle='#000';ctx.fillText(s.say,bx,by-3);ctx.restore();}
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // BLOCK INTERPRETER (Phase 1) — runs KS2 "code" blocks at game events.
@@ -6466,7 +6534,8 @@ const HELP_TABS=[
  ['code',' Coding',`<p>Open <b>&lt;/&gt; Code</b> to set your game's rules with blocks. Drag blocks from the coloured categories and snap them together.</p><ul><li><b> Events</b> — when keys are pressed, when the game starts, and (KS2) when you collect a gem, touch an enemy, land on a page, every few seconds, and now <b>when you dash, wall-jump, get hurt, or press a button</b>.</li><li><b> Player</b> — movement and speed.</li><li><b> Enemies</b> — how enemies move, including <b>chase the player</b> and <b>jump on enemies to defeat them</b> (stomp).</li><li><b> Physics</b> — gravity, jump height, bounce, double jump.</li><li><b> Win</b> — how to win: reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b> — plus a custom win message.</li><li><b> Rules</b> — lives and points.</li><li><b> Sound</b> — choose the music.</li></ul><p><b>Key Stage 2</b> also gets real coding blocks — Actions, Values, Logic, Loops, Math, Text, Variables and Functions — that the game runs live. <b> Clear code</b> removes everything.</p><p>Key Stage 2 also unlocks special blocks on the grid: keys & doors, <b>chests</b> (lockable), <b>teleport pads</b>, and <b>buttons</b> that open <b>gates</b> — see the <b>Building</b> tab for what each does.</p>
  <h3>‍ Key Stage 3 — write Python-style code</h3>
    <p>KS3 games swap the blocks for a real <b>code editor</b>. You write Python-style code, and these functions run by themselves:</p>
-   <ul><li><code>on_start()</code> — once when the game begins.</li><li><code>on_update()</code> — every frame (~60×/second).</li><li><code>on_key(key)</code> — when a key is pressed, e.g. <code>"left"</code>, <code>"space"</code>.</li><li><code>on_gem()</code> / <code>on_enemy()</code> — collecting a gem / touching an enemy.</li></ul>
+   <ul><li><code>on_start()</code> — once when the game begins.</li><li><code>on_update()</code> — every frame (~60×/second).</li><li><code>on_key(key)</code> — when a key is pressed, e.g. <code>"left"</code>, <code>"space"</code>.</li><li><code>on_gem()</code> / <code>on_enemy()</code> / <code>on_hit()</code> / <code>on_button()</code> — collecting a gem, touching an enemy, getting hurt, pressing a button.</li><li><code>on_page(page)</code> — when a page starts.</li></ul>
+   <p><b>Make your own objects with sprites:</b> <code>bee = add_sprite("🐝", 6, 3)</code> then <code>set_sprite_speed(bee, -2, 0)</code>, <code>set_sprite_gravity(bee, True)</code>, <code>sprite_say(bee, "buzz!")</code>, and react with <code>on_touch(bee, my_function)</code> or <code>touching_player(bee)</code> — build collectables, chasing enemies (<code>hurt_player()</code>), moving helpers, whole mini-games. Sprites can wear any emoji or one of your Design Studio drawings.</p>
    <p>Handy commands: <code>move_left() move_right() jump() is_key("right") add_score(10) set_lives(3) say("hi") win() game_over() player_x() on_ground() random(1,6)</code> — plus real Python essentials: variables, <code>if/elif/else</code>, <code>while</code>, <code>for … in</code>, lists, <b>dictionaries</b>, <code>print()</code>, <b>f-strings</b> (<code>f"Score: {s}"</code>), <code>+=</code>, text commands like <code>.upper()</code> and <code>.split()</code>, slices like <code>word[0:3]</code>, <code>import random</code> / <code>import math</code>, and your own functions with <code>def</code>. The editor checks your code as you type and shows friendly errors with line numbers.</p>
  <p> <b>Don't remember a command?</b> Tap <b> Commands</b> in the code editor for the full, searchable list of everything you can use — grouped by what it does.</p>
    <p style="opacity:.7">Key Stage 1 keeps the simple game blocks (no keys, one enemy, easier win options).</p>`],
@@ -6623,7 +6692,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p><b>Win conditions</b> (Win category): reach the goal, collect all gems, survive a timer, <b>reach a target score</b>, or <b>race the clock to the finish</b>, plus a custom win message. <b>Smart enemies</b> (Enemies category): make Enemy A/B <b>chase the player</b>, and enable <b>jump-to-defeat</b> (stomp).</p>
   <p><b>Key Stage 2 grid extras:</b> keys &amp; doors, lockable <b>chests</b>, <b>teleport pads</b> (same-colour pairs), and <b>buttons</b> that open same-colour <b>gates</b> — all listed with the other blocks above.</p>
   <h3>Key Stage 3 — text coding (Python-style)</h3>
-  <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python language (no <code>eval</code>; capped loops so nothing freezes) covering the constructs KS3 schemes of work teach: variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, <b>dictionaries</b>, <b>functions</b> with <code>def</code>, <code>print()</code>, <b>f-strings</b>, augmented assignment (<code>+=</code>), string methods (<code>.upper()</code>, <code>.split()</code>…), slicing, <code>in</code> membership tests, and <code>import random</code> / <code>import math</code> — so code from standard Python lessons and textbooks runs as written. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
+  <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python language (no <code>eval</code>; capped loops so nothing freezes) covering the constructs KS3 schemes of work teach: variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, <b>dictionaries</b>, <b>functions</b> with <code>def</code>, <code>print()</code>, <b>f-strings</b>, augmented assignment (<code>+=</code>), string methods (<code>.upper()</code>, <code>.split()</code>…), slicing, <code>in</code> membership tests, and <code>import random</code> / <code>import math</code> — so code from standard Python lessons and textbooks runs as written. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b>, <b>on_hit</b>, <b>on_button</b>, <b>on_page</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>). A <b>sprite API</b> (in the MakeCode Arcade spirit) lets pupils <i>create</i> game objects from code — <code>add_sprite</code>, velocity, gravity, speech bubbles, and <code>on_touch(sprite, handler)</code> callbacks passing their own functions as values — so they can program collectables, enemies and mini-games rather than only steering the built-in player. Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
  <p>Pupils don't need to memorise anything: the <b> Commands</b> button in the editor opens a complete, grouped reference of every command and event, each with a one-line explanation — so the whole API (movement, scoring, sensing, settings and sound) is always one tap away.</p>
   <h3>Cloud save &amp; classes (optional)</h3>
  <p>If your organisation sets up the (free) cloud backend, an <b> Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes a class a child their work</b>. <b>Pupils</b> join classes in <b> Cloud Settings</b> (a child can be in several), then when saving choose <b> My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
@@ -8011,15 +8080,15 @@ function isDown() {return keys['ArrowDown']||keys['KeyS'];}
 function isSolid(col,row){if(col<0||col>=COLS)return true;if(row<0)return false;if(row>=ROWS)return true;const t=grid[row][col];if(t===T.CRUMBLE)return crumbleState[row+','+col]!=='gone';if(t===T.GATE)return !isGateOpen(row,col);if(t===T.TRAPDOOR)return !isTrapOpen(row,col);if(t===T.DOOR){const dc=doorCfg[row+','+col];if(dc&&dc.mode==='barrier')return !playerKeys[dc.key];return false;}return t===T.PLATFORM||t===T.GRASS||t===T.CONVEYOR_L||t===T.CONVEYOR_R||t===T.SAND||t===T.ICE||t===T.CLIMB;}
 function tileAt(col,row){if(col<0||col>=COLS||row<0||row>=ROWS)return T.EMPTY;return grid[row][col];}
 
-function loadPlayLevel(i){activateLevel(i);camX=0;camY=0;crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;teleCool=0;teleFrom=null;gateOpenUntil={};toggledColors={};_toggleKey=null;upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];pDash=false;pDJump=false;spawnPlayer();initEnemies();initMovers();initFans();initCrates();initSpikeballs();initFallblocks();initShooters();initTrapdoors();initItems();
+function loadPlayLevel(i){activateLevel(i);camX=0;camY=0;ks3Sprites=[];crumbleState={};crumbleT={};signShownT={};signNear=null;chestNear=null;teleCool=0;teleFrom=null;gateOpenUntil={};toggledColors={};_toggleKey=null;upPrev=false;air=AIR_MAX;airCount=6;airBubbles=[];pDash=false;pDJump=false;spawnPlayer();initEnemies();initMovers();initFans();initCrates();initSpikeballs();initFallblocks();initShooters();initTrapdoors();initItems();
   // Restore collectibles already taken on this page (so they don't respawn or re-award points when you come back)
   const pre=i+':';chestOpened={};Object.keys(openedChests).forEach(k=>{if(k.indexOf(pre)===0)chestOpened[k.slice(pre.length)]=true;});
   items.forEach(it=>{if(collectedItems[pre+it.r+','+it.c]){it.got=true;if(it.type===T.KEY)playerKeys[it.color]=true;}});
   gemsTotal=items.filter(it=>it.type===T.GEM).length;gemsGot=items.filter(it=>it.type===T.GEM&&it.got).length;
-  renderStaticLayer();cjRunHats('when_level_start');}
+  renderStaticLayer();cjRunHats('when_level_start');ks3Call('on_page',[i+1]);}
 let _testFromLevel=null;
 function testThisPage(){_testFromLevel=curLevel;switchMode('play');}
-function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;collectedItems={};openedChests={};gameTimer=(gameConfig.timerSeconds||60)*60;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();if(isKS3()){ks3Compile();ks3Call('on_start');}}
+function startPlay(){if(typeof clearTouchKeys==='function')clearTouchKeys();playLevel=(_testFromLevel!=null?_testFromLevel:0);_testFromLevel=null;score=0;lives=gameConfig.lives;confetti=[];playing=true;playerKeys={};checkpoint=null;collectedItems={};openedChests={};gameTimer=(gameConfig.timerSeconds||60)*60;hideOv();cjInitEvents();loadPlayLevel(playLevel);runStartScripts();if(isKS3()){ks3Sprites=[];ks3SpriteSeq=1;ks3Compile();ks3Call('on_start');ks3Call('on_page',[playLevel+1]);}}
 function nextLevel(){playLevel++;if(playLevel>=LEVELS.length){winNow(' You Win!');return;}chirp(660,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Page '+(playLevel+1)+' of '+LEVELS.length+'! ','#10b981');}
 function prevLevel(){if(playLevel<=0){toast('This is the first page!','#ae853e');return;}playLevel--;chirp(440,0.08,'square',0.07);checkpoint=null;loadPlayLevel(playLevel);if(player)player.inv=60;toast('Back to page '+(playLevel+1)+'! ','#10b981');}
 // Resume after a game over: restart the CURRENT page (not the whole game), keeping score & keys.
@@ -8414,6 +8483,7 @@ function drawPlay(){
   enemies.forEach(e=>drawEnemyAt(e.x-camX,e.y-camY,e.anim,e.pat==='upDown'?1:e.vx>0?1:-1,e.kind));
   for(const f of fans)drawFanBeam(f.c,f.r,f.rot,f.reach,-camX,-camY);
   drawCrates();drawSpikeballs();drawFallblocks();drawShots();
+  if(ks3Sprites.length)ks3DrawSprites();
   if(player&&(!player.dead||tick%6<3))drawPlayer();
   // Quicksand: veil the submerged part of the player with sand so they look buried in it (not standing on top)
   if(playing&&player&&!player.dead){const mc=Math.floor((player.x+PW/2)/TS),fr=Math.floor((player.y+PH-2)/TS);
@@ -8486,7 +8556,7 @@ function loop(){
  if(projectType==='stage'){if(stagePlaying){stageFrame();drawStage();}else if(stageNeedsDraw||(tick&3)===0){drawStage();stageNeedsDraw=false;}return;} // play = 60fps; idle = ~15fps (or on demand) to save battery on Chromebooks
   if(mode==='build'){drawBuild();return;}
   if(mode==='code')return;
- if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{ks3Frame();updatePlayer();updateCam();updateMovers();updateCrates();updateSpikeballs();updateFallblocks();updateShooters();updateEnemies();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkToggles();updateTrapdoors();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow(' You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow(' Target Reached!');}}
+ if(playing){if(player.dead){player.deadTimer--;if(player.deadTimer<=0){player.dead=false;spawnPlayer();}}else{ks3Frame();updatePlayer();updateCam();updateMovers();updateCrates();updateSpikeballs();updateFallblocks();updateShooters();updateEnemies();ks3UpdateSprites();checkItems();checkHazards();checkCheckpoint();checkSign();checkTeleport();checkButtons();checkToggles();updateTrapdoors();checkGateTimers();checkAir();updateCrumble();checkDoor();if(playing)checkGoal();if(playing)cjTickTimers();if(gameConfig.winCondition==='timer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;winNow(' You Survived!');}}if(gameConfig.winCondition==='beatTimer'&&playing){gameTimer--;if(gameTimer<=0){gameTimer=0;loseNow('⏰ Out of Time!','You didn’t reach the finish in time!');}}if(gameConfig.winCondition==='score'&&playing&&score>=(gameConfig.targetScore||50))winNow(' Target Reached!');}}
   drawPlay();
 }
 
@@ -8552,11 +8622,12 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.09.03';
+const CJ_VERSION='2026.09.04';
 const CJ_WHATSNEW=[
- "🐍 Key Stage 3 Python is now REAL Python! Code from your Python lessons runs as written: print(), f-strings like f\"Score: {s}\", x += 1, dictionaries, text commands like .upper() and .split(), slices like word[0:3], 2**10, 'in' checks, del, and import random / import math (random.randint, random.choice, math.sqrt and more).",
- "🐍 Better Python errors too — friendly messages for things like joining text with a number (it suggests an f-string) and looking up a missing dictionary key.",
- "🐍 The Commands reference in the KS3 code editor lists all the new Python — tap 'Commands' to explore.",
+ "🐍 KS3 Python SPRITES! Create your own game objects from code: bee = add_sprite(\"🐝\", 6, 3), then set_sprite_speed, set_sprite_gravity, sprite_say, on_touch(bee, my_function), touching_player and hurt_player — build collectables, chasing enemies and whole mini-games. Sprites can wear any emoji or your own Design Studio drawings.",
+ "🐍 New Python events: on_hit(), on_button(), on_dash(), on_wall_jump() and on_page(page) — react to everything that happens in your game.",
+ "🐍 KS3 Python is now REAL Python! Code from your Python lessons runs as written: print(), f-strings like f\"Score: {s}\", x += 1, dictionaries, text commands like .upper() and .split(), slices like word[0:3], 2**10, 'in' checks, del, and import random / import math.",
+ "🐍 Friendlier Python errors (joining text with a number suggests an f-string) — and the Commands reference in the code editor lists everything new.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

@@ -501,6 +501,13 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   mount option `cloud`: me/api/wsUrl/saves/loadSave/signIn), `withCritterLab(fn)`, roster button `#cr-showdown`, and
   `cloudCollabList` routes Showdown rooms to `critterApp.openShowdown`. Tested end to end against a local `wrangler dev`
   of codejump-cloud (scratch copy with CLOUD_URL pointed at it).
+- **Video guides** (2 Oct 2026): `critter/guides/g1-build-your-first-critter`, `g2-fix-the-wobble-with-beats`,
+  `g3-lift-higher-for-hurdles` (.mp4 1280×800 25 fps, captions + British voice-over, + .jpg posters), played from the
+  **Guides** button (`showGuides`, list in `GUIDES`). Recorded from the real app frame by frame: a virtual clock drives
+  requestAnimationFrame/performance.now, one screenshot per 1/25 s (screen recording under software WebGL was ~4 fps). Voice-over: Kokoro-82M (Apache-2.0, npm kokoro-js + kokoro-q8-shards; tokenizer from expo-kokoro), voice bf_emma at 0.95 speed, run locally; each caption is spoken and the video waits for the line.
+  The recipe (2 Walking leg pairs = 1.0 m Sprint; back pair Opposite beat = 2.8 m; Lift higher on front + back feet =
+  Hurdles 2.3 → 2.9 m) depends on the Walking leg defaults and the physics, so **re-record if those change**. The
+  recorder (rec2.js + g1/g2/g3.js, Playwright) lives in the session scratchpad, not the repo; ask for it to be rebuilt.
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 

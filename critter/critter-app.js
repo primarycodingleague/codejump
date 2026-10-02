@@ -31,6 +31,7 @@ var TEMPLATE = `
       <button type="button" class="zl-icon" id="zUndo" title="Undo (Ctrl+Z)" aria-label="Undo">${ic('undo-2')}</button>
       <button type="button" class="zl-icon" id="zRedo" title="Redo (Ctrl+Y)" aria-label="Redo">${ic('redo-2')}</button>
       <button type="button" class="zl-tool" id="zKeys" title="Keyboard shortcuts (?)">${ic('keyboard')} Keys</button>
+      <button type="button" class="zl-tool" id="zGuides" title="Short videos: build a Critter that walks">${ic('play')} Guides</button>
       <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Critters</button>
       <button type="button" class="zl-tool" id="zShowdown" title="Race your Critters against each other with your class">${ic('users')} Showdown</button>
     </div>
@@ -1516,6 +1517,25 @@ var thumbs = (function () {
   };
 })();
 
+// Video guides (critter/guides/*.mp4, recorded from the real app; see CLAUDE.md "Video guides").
+var GUIDES = [
+  { file: 'g1-build-your-first-critter', title: '1 · Build your first walking Critter', about: 'Give a body two pairs of walking legs, then test it in the Sprint.' },
+  { file: 'g2-fix-the-wobble-with-beats', title: '2 · Fix the wobble with beats', about: 'Use the beat chart and Opposite beat to make it trot. Nearly three times as far!' },
+  { file: 'g3-lift-higher-for-hurdles', title: '3 · Lift higher for Hurdles', about: 'Make the white foot loops taller so it clears the humps.' }
+];
+function guideUrl(f) { return new URL('./guides/' + f, import.meta.url).href; }
+function showGuides() {
+  openDialog('Video guides: make a Critter that walks', '<p class="zl-muted" style="margin-top:0;">Three short videos (about a minute and a half each, with a voice-over and captions). Watch one, then try it yourself.</p><div class="zl-videos">' +
+    GUIDES.map(function (g) {
+      return '<figure><video controls preload="none" playsinline poster="' + guideUrl(g.file + '.jpg') + '" src="' + guideUrl(g.file + '.mp4') + '"></video>' +
+        '<figcaption><strong>' + esc(g.title) + '</strong><span>' + esc(g.about) + '</span></figcaption></figure>';
+    }).join('') + '</div>');
+  // only one plays at a time
+  var vids = dialog.querySelectorAll('video');
+  vids.forEach(function (v) { v.addEventListener('play', function () { vids.forEach(function (o) { if (o !== v) o.pause(); }); }); });
+  dialog.addEventListener('close', function stop() { vids.forEach(function (v) { v.pause(); }); dialog.removeEventListener('close', stop); });
+}
+
 function showStarters() {
   var keys = Object.keys(Z.STARTERS);
   openDialog('Start from a ready-made Critter', '<p class="zl-muted" style="margin-top:0;">Each of these really moves. Open one, test it, then change it and see what happens.</p><div class="zl-gallery">' +
@@ -2019,6 +2039,7 @@ function boot() {
   $('zStarters').addEventListener('click', showStarters);
   $('zKeys').addEventListener('click', showKeys);
   $('zShowdown').addEventListener('click', showdownMenu);
+  $('zGuides').addEventListener('click', showGuides);
   $('zGo').addEventListener('click', go);
   $('zOpp').addEventListener('change', function () { state.opponent = this.value; resetRun(); });
   $('zPreview').addEventListener('change', drawBeats);
@@ -2133,6 +2154,8 @@ return {
   showdownMenu: function () { showdownMenu(); },
   openShowdown: function (roomId) { sdOpen(roomId, null); },
   hostShowdown: function (code, name) { sdSetup(code, name); },
+  // the video guides dialog
+  showGuides: function () { showGuides(); },
   destroy: function () { destroyed = true; if (sd) sdClose(true); document.removeEventListener('keydown', onKey); if (state.sim) state.sim.free(); root.innerHTML = ''; }
 };
 }

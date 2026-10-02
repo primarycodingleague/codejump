@@ -660,6 +660,55 @@ function quickAdd(kind) {
   addPart(kind, parent.id, spot[0], spot[1]);
 }
 
+/* ------------------------------------------------------------------ copy, cut, paste, duplicate */
+
+// The clipboard holds a part (and everything on it). Kept in this browser so it can go between Critters.
+var CLIP_KEY = 'cj-critter-clipboard', clip = null;
+try { clip = JSON.parse(localStorage.getItem(CLIP_KEY) || 'null'); } catch (e) { clip = null; }
+function setClip(snip) { clip = snip; try { localStorage.setItem(CLIP_KEY, JSON.stringify(snip)); } catch (e) { /* storage off: still works this session */ } }
+
+function chosenPart(verb) {
+  var b = Z.block(state.critter, state.selected);
+  if (!b) { toast('Choose a part to ' + verb + ' first: tap it, or press N.'); return null; }
+  if (!b.mount) { toast('The body holds everything together, so it can\u2019t be ' + (verb === 'cut' ? 'cut' : verb === 'copy' ? 'copied' : 'duplicated') + '. Choose a part.'); return null; }
+  return b;
+}
+function copySelected() {
+  var b = chosenPart('copy'); if (!b) return false;
+  setClip(Z.copyPart(state.critter, b.id));
+  toast('Copied ' + partNames(state.critter)[b.id] + (clip.blocks.length > 1 ? ' (and the ' + (clip.blocks.length - 1) + ' part' + (clip.blocks.length > 2 ? 's' : '') + ' on it)' : '') + '. Choose where it goes and press Paste.');
+  renderInspector(); return true;
+}
+function cutSelected() {
+  var b = chosenPart('cut'); if (!b) return;
+  setClip(Z.copyPart(state.critter, b.id));
+  remember();
+  Z.remove(state.critter, b.id);
+  state.selected = null; state.pathPoint = null;
+  changed({ inspector: true });
+  toast('Cut. Choose where it goes and press Paste.');
+}
+// Paste onto the chosen part (or the body). If the chosen part is the copied one's own spot, it goes next to it.
+function pasteClip() {
+  if (!clip) { toast('Nothing to paste yet. Choose a part and press Copy first.'); return; }
+  var z = state.critter, chosen = Z.block(z, state.selected), parent = chosen || z.blocks[0], near = null;
+  if (chosen && chosen.mount && chosen.kind === clip.blocks[0].kind && clip.blocks.length === Z.subtreeSize(z, chosen.id)) { parent = Z.block(z, chosen.mount.parent); near = chosen.mount; }
+  placeSnippet(clip, parent.id, near, 'Pasted');
+}
+function duplicateSelected() {
+  var b = chosenPart('duplicate'); if (!b) return;
+  placeSnippet(Z.copyPart(state.critter, b.id), b.mount.parent, b.mount, 'Duplicated');
+}
+function placeSnippet(snip, parentId, near, verb) {
+  var z = state.critter, before = JSON.stringify(z), spot = Z.freeSpot(z, parentId, near);
+  var nb = Z.pastePart(z, snip, parentId, spot.face, spot.at, { mirror: $('zMirror').checked });
+  if (!nb) { toast('There isn\u2019t room for that (' + Z.MAX_BLOCKS + ' parts max). Remove something, or switch off "Add in pairs".'); return; }
+  state.history.push(before); if (state.history.length > 80) state.history.shift(); state.future = [];
+  state.selected = nb.id; state.pathPoint = null;
+  changed({ inspector: true });
+  toast(verb + (nb.twin ? ' as a pair' : '') + '. Drag it to wherever you want it.');
+}
+
 /* ------------------------------------------------------------------ inspector */
 
 function speedFromPeriod(p) { return Math.round(Math.max(1, Math.min(10, 1 + (2.5 - p) / 0.24))); }
@@ -703,24 +752,37 @@ function bindSeg(id, fn) {
 }
 function on(id, fn) { var el = $(id); if (el) el.addEventListener('click', fn); }
 
+function editRow(b) {
+  var part = b && b.mount;
+  return '<div class="zl-edit" role="toolbar" aria-label="Copy and paste">' +
+    '<button type="button" id="eCopy"' + (part ? '' : ' disabled') + ' title="Copy (Ctrl+C)">Copy</button>' +
+    '<button type="button" id="eCut"' + (part ? '' : ' disabled') + ' title="Cut (Ctrl+X)">Cut</button>' +
+    '<button type="button" id="ePaste"' + (clip ? '' : ' disabled') + ' title="Paste (Ctrl+V)">Paste</button>' +
+    '<button type="button" id="eDup"' + (part ? '' : ' disabled') + ' title="Duplicate (Ctrl+D)">Duplicate</button></div>';
+}
+function bindEditRow() { on('eCopy', copySelected); on('eCut', cutSelected); on('ePaste', pasteClip); on('eDup', duplicateSelected); }
+
 function renderInspector() {
   var box = $('zInspector'), z = state.critter, b = Z.block(z, state.selected);
   if (!b) {
-    box.innerHTML = '<h2>' + esc(z.name) + '</h2><p class="zl-empty">' + (z.blocks.length < 2
+    box.innerHTML = '<h2>' + esc(z.name) + '</h2>' + (clip ? editRow(null) : '') + '<p class="zl-empty">' + (z.blocks.length < 2
       ? 'Your Critter is just a body so far. Drag a <strong>Walking leg</strong> onto its underside, or tap one to stick a pair underneath.'
       : 'Tap a part to change its shape and how it moves. Tap the body for the Critter’s cycle speed and turning. Drag the background to look around.') + '</p>' +
       '<p class="zl-empty">' + z.blocks.length + ' of ' + Z.MAX_BLOCKS + ' parts used.</p>' + bestLine(z);
+    bindEditRow();
     return;
   }
   var names = partNames(z), j = Z.jointFor(z, b.id), twin = b.twin && Z.block(z, b.twin), tab = state.tab;
   var html = '<h2>' + esc(names[b.id]) + '</h2>' +
     (twin ? '<p class="zl-twin">Mirrored with ' + esc(names[twin.id]) + '. Changes copy across; timing stays its own.</p>' : '') +
+    editRow(b) +
     '<div class="zl-tabs" role="tablist"><button type="button" role="tab" data-tab="shape" class="' + (tab === 'shape' ? 'on' : '') + '">Shape</button>' +
     '<button type="button" role="tab" data-tab="motion" class="' + (tab === 'motion' ? 'on' : '') + '">Motion</button></div>';
   html += tab === 'shape' ? shapeTab(b) : b.mount ? motionTab(b, j, names) : bodyMotionTab(z);
   box.innerHTML = html;
   icons();
   box.querySelectorAll('.zl-tabs button').forEach(function (btn) { btn.addEventListener('click', function () { state.tab = btn.dataset.tab; renderInspector(); }); });
+  bindEditRow();
   if (tab === 'shape') bindShape(b);
   else if (b.mount) bindMotion(b, j);
   else bindBodyMotion(z);
@@ -1462,7 +1524,8 @@ function boot() {
 
 // Keyboard shortcuts (also listed in the Keys dialog and CodeJump's Help → Keys tab).
 var SHORTCUTS = {
-  build: [['Ctrl + Z / Ctrl + Y', 'Undo / redo'], ['Delete', 'Remove the chosen part (and its twin)'], ['Esc', 'Stop choosing a part'],
+  build: [['Ctrl + Z / Ctrl + Y', 'Undo / redo'], ['Ctrl + C / Ctrl + X', 'Copy / cut the chosen part (and everything on it)'],
+    ['Ctrl + V', 'Paste onto the chosen part (or the body)'], ['Ctrl + D', 'Duplicate the chosen part next to itself'], ['Delete', 'Remove the chosen part (and its twin)'], ['Esc', 'Stop choosing a part'],
     ['N / Shift + N', 'Choose the next / previous part'], ['P', 'Choose the part it hangs from'],
     ['Arrow keys', 'Slide the chosen part around the side it’s on (hold Shift for big steps)'],
     ['[ and ]', 'Lean the chosen part'], [', and .', 'Splay the chosen part'], ['+ and −', 'Make the chosen part bigger / smaller'],
@@ -1497,6 +1560,12 @@ function onKey(e) {
 
   if (cmd && lk === 'z') { done(); if (e.shiftKey) redo(); else undo(); return; }
   if (cmd && lk === 'y') { done(); redo(); return; }
+  if (cmd && state.mode === 'build' && (lk === 'c' || lk === 'x' || lk === 'v' || lk === 'd')) {
+    if (lk === 'c' && !state.selected) return; // nothing chosen: let the browser copy any selected text
+    done();
+    if (lk === 'c') copySelected(); else if (lk === 'x') cutSelected(); else if (lk === 'v') pasteClip(); else duplicateSelected();
+    return;
+  }
   if (cmd || e.altKey) return; // leave browser shortcuts alone
   if (k === '?') { done(); showKeys(); return; }
 

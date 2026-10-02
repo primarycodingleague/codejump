@@ -481,6 +481,10 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
 - **Keyboard shortcuts:** `onKey` in critter-app.js (document keydown; works wherever focus is, ignored while typing in a
   text box or while a CodeJump `-modal`/`cj-dialog` popup is open; leaves other Ctrl/Alt combos to the browser). The list
   lives in `SHORTCUTS` (shown by the Keys button / `?`) and is repeated in `CRITTER_HELP`'s Keys tab — change both together.
+- **Copy / Cut / Paste / Duplicate:** core `copyPart` (subtree snippet `{kind:'critter-part',blocks,joints}`, twin fields
+  dropped) / `pastePart` (new ids; makes a mirrored pair when the target is a twin or the spot is off the middle line) /
+  `freeSpot` (next free spot along the part's side). UI: buttons under the part name (`editRow`) + Ctrl+C/X/V/D; the
+  clipboard is localStorage `cj-critter-clipboard`, so it carries between Critters. Each action is one undo step.
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 

@@ -153,3 +153,7 @@
 .zk .zl-wheel-side input[type="range"] { width: 100%; accent-color: var(--zk-gold); }
 .zk .zl-wheel-now { height: 30px; border-radius: 8px; border: 2px solid var(--zk-line); margin: 8px 0 4px; }
 .zk .zl-wheel-side output { font-size: 12px; font-weight: 700; color: var(--zk-muted); font-family: ui-monospace, monospace; }
+.zk .zl-edit { display: flex; gap: 4px; margin: 6px 0 8px; }
+.zk .zl-edit button { flex: 1; font-size: 12px; font-weight: 800; border: 2px solid var(--zk-line); background: var(--zk-sunk); color: #eee; border-radius: 8px; padding: 6px 2px; cursor: pointer; }
+.zk .zl-edit button:hover { border-color: var(--zk-gold); }
+.zk .zl-edit button:disabled { opacity: 0.35; cursor: default; border-color: var(--zk-line); }

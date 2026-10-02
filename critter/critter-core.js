@@ -283,6 +283,86 @@ export function syncTwin(z, b) {
   if (j && tj) { tj.motion.amplitude = j.motion.amplitude; tj.minAngle = j.minAngle; tj.maxAngle = j.maxAngle; tj.aim = { on: j.aim.on, angle: j.aim.angle }; }
 }
 
+/* ---- copy & paste: a "snippet" is a part plus everything hanging off it, detached from any Critter ---- */
+
+// Copy a part (not the body) and everything hanging off it. Returns a snippet, or null.
+export function copyPart(z, id) {
+  var b = block(z, id);
+  if (!b || !b.mount) return null;
+  var ids = subtree(z, id);
+  var blocks = z.blocks.filter(function (c) { return ids[c.id]; }).map(function (c) { var o = JSON.parse(JSON.stringify(c)); delete o.twin; return o; });
+  var joints = z.joints.filter(function (j) { return ids[j.blockB]; }).map(function (j) { return JSON.parse(JSON.stringify(j)); });
+  return { kind: 'critter-part', blocks: blocks, joints: joints };
+}
+
+// Put a snippet's parts into the Critter; mirrored = a left/right mirror image (and on the opposite beat).
+function insertSnippet(z, snip, parentId, face, at, mirrored) {
+  var map = {};
+  snip.blocks.forEach(function (sb, i) {
+    var nb = JSON.parse(JSON.stringify(sb));
+    nb.id = nextId(z.blocks, 'b'); delete nb.twin;
+    if (i === 0) nb.mount = Object.assign({}, sb.mount, { parent: parentId, face: face, at: at.slice() });
+    else {
+      nb.mount = Object.assign({}, sb.mount, { parent: map[sb.mount.parent] });
+      if (mirrored) { nb.mount.face = mirrorFace(sb.mount.face); nb.mount.at = mirrorAt(sb.mount.face, sb.mount.at); }
+    }
+    if (mirrored) { nb.mount.splay = -num(sb.mount.splay, 0); if (nb.path) nb.path.phase = (nb.path.phase + 0.5) % 1; }
+    map[sb.id] = nb.id;
+    z.blocks.push(nb);
+  });
+  snip.joints.forEach(function (sj) {
+    var nj = JSON.parse(JSON.stringify(sj));
+    nj.id = nextId(z.joints, 'j');
+    nj.blockA = map[sj.blockA] || parentId; nj.blockB = map[sj.blockB];
+    if (mirrored) nj.motion.phase = (num(nj.motion.phase, 0) + 0.5) % 1;
+    z.joints.push(nj);
+  });
+  return map;
+}
+
+/* Paste a snippet onto `parentId` at `face`/`at`. With opts.mirror (and a spot off the middle line, or a
+ * parent that has a twin) you get a mirror-image pair. Returns the new top block, or null if it won't fit. */
+export function pastePart(z, snip, parentId, face, at, opts) {
+  opts = opts || {};
+  var parent = block(z, parentId);
+  if (!snip || snip.kind !== 'critter-part' || !Array.isArray(snip.blocks) || !snip.blocks.length || !parent || !FACES[face]) return null;
+  at = [Math.round(clamp(num(at[0], 0), -0.5, 0.5) * 100) / 100, Math.round(clamp(num(at[1], 0), -0.5, 0.5) * 100) / 100];
+  var pair = opts.mirror && (parent.twin || !onCentreline(face, at));
+  if (z.blocks.length + snip.blocks.length * (pair ? 2 : 1) > MAX_BLOCKS) return null;
+  var a = insertSnippet(z, snip, parentId, face, at, false);
+  if (pair) {
+    var b = insertSnippet(z, snip, parent.twin || parentId, mirrorFace(face), mirrorAt(face, at), true);
+    snip.blocks.forEach(function (sb) { block(z, a[sb.id]).twin = b[sb.id]; block(z, b[sb.id]).twin = a[sb.id]; });
+  }
+  return block(z, a[snip.blocks[0].id]);
+}
+
+// A free spot on `parent` for a new part: next to `near` (same face) if given, else the usual spots.
+export function freeSpot(z, parentId, near) {
+  var parent = block(z, parentId), kids = children(z, parentId);
+  var taken = function (face, at) {
+    return kids.some(function (k) { return k.mount.face === face && Math.abs(k.mount.at[0] - at[0]) < 0.1 && Math.abs(k.mount.at[1] - at[1]) < 0.1; }) ||
+      kids.some(function (k) { return k.mount.face === face && Math.abs(k.mount.at[0] - at[0]) < 0.1 && Math.abs(k.mount.at[1] + at[1]) < 0.1 && k.twin; });
+  };
+  var tries = [];
+  if (near) {
+    // step along the parent's length first: on the sides that's the face's second axis, elsewhere its first
+    var along = near.face === '+z' || near.face === '-z' ? 1 : 0;
+    [along, 1 - along].forEach(function (ax) {
+      [0.2, -0.2, 0.4, -0.4].forEach(function (d) { var a = near.at.slice(); a[ax] += d; tries.push([near.face, a]); });
+    });
+  }
+  tries = tries.concat(parent && parent.mount ? [['+x', [0, 0]], ['+y', [0, 0]], ['-y', [0, 0]]]
+    : [['-y', [0.35, 0.35]], ['-y', [-0.35, 0.35]], ['-y', [0, 0.35]], ['+z', [0, 0]], ['+x', [0, 0]], ['-x', [0, 0]], ['+y', [0, 0]]]);
+  for (var i = 0; i < tries.length; i++) {
+    var t = tries[i], at = [Math.round(t[1][0] * 100) / 100, Math.round(t[1][1] * 100) / 100];
+    if (Math.abs(at[0]) <= 0.45 && Math.abs(at[1]) <= 0.45 && !taken(t[0], at)) return { face: t[0], at: at };
+  }
+  return near ? { face: near.face, at: near.at.slice() } : { face: '-y', at: [0, 0] };
+}
+
+export function subtreeSize(z, id) { return Object.keys(subtree(z, id)).length; }
+
 // The ids of a block and everything hanging off it.
 export function subtree(z, id) {
   var out = {}; out[id] = true;

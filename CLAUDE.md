@@ -21,7 +21,7 @@
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## Project types — `projectType` ('platformer' | 'stage') — NEW, in progress
+## Project types — `projectType` ('platformer' | 'stage' | 'turtle' | '3d' | 'zook') — NEW, in progress
 The app is becoming a multi-engine "one-stop shop". A `let projectType` global (declared by
 `keyStage`) is the seam every engine plugs into. It's written/read in `buildPayload`/`applyPayload`
 (**legacy saves with no field default to 'platformer'**, so nothing old breaks). After the age-group
@@ -440,6 +440,36 @@ platformer & stage untouched.
   payload works. KS2+ only (hidden in KS1); launches blank; ❓ Help shows TURTLE_HELP; Collaborate hidden in Share.
 - **TODO / not yet built:** a turtle thumbnail for saved-project tiles (currently blank); more examples/guided missions;
   possibly `pr`/print output.
+
+## Zook project type — `projectType==='zook'` — NEW (2026-10-02, branch `claude/zook-project-type`, not on main yet)
+A 3D creature lab modelled on the BBC Bamzooki "Zook Kit" (call it "Zook", never "Bamzooki"/"Zook Kit" in the UI —
+those are BBC names). Pupils build a creature from superellipsoid **blobs** (Length/Height/Width/Squareness/Pointiness)
+and ready-made **limbs** (walking leg, long leg, tail, neck & head), give joints **swings** (amplitude + movement-cycle
+phase) or a limb an **IK motion path** (drag white IK points; CCD IK drives up to 3 joints), set the body's Motion tab
+(cycle speed, turning sharpness/smoothness, muscle power), then Rapier physics runs it in **contests**: Sprint, Hurdles,
+Block Push, High Jump, Lap, Head-to-head race, Super Sumo (vs itself or a starter) and Free roam (tap to move the red
+target). Every Zook steers itself towards the red target (inside stride/swing shortens; joints with "bend towards the
+target" aim at it). Moved here from the Coding Hubs site, where it began as "Zook Lab".
+- **Files (NOT in the single HTML file):** `zook/zook-core.js` (data model, IK, steering, contests; ES module, no DOM, runs
+  in Node via `runHeadless(RAPIER, zook, contest, opponent)` — deterministic; the format of the Zook JSON is documented at
+  its top), `zook/zook-app.js` (the UI; `mount(root,{zook,onChange,toast})` → `{getZook,setZook,pause,destroy}`),
+  `zook/zook-app.css` (all scoped under `.zk`, dark CodeJump look), `zook/vendor/three-0.186.1-zook.min.js` (Three.js +
+  OrbitControls + RoundedBoxGeometry, esbuild bundle) and `zook/vendor/rapier3d-compat-0.21.0.min.js` (Rapier 3D, wasm
+  inlined, ~1.6 MB gzipped).
+- **Lazy-loaded like 3D World:** `loadZookEngine()` does `import(zookBase()+'zook-app.js')` only when a Zook project opens,
+  so the rest of the app stays light/offline. `zookBase()` = `zook/` next to the page, or the live site's `/zook/` when
+  running from a downloaded playable .html. Needs internet the first time.
+- **Seams in build-and-play.html:** `#pt-modal` tile `data-pt="zook"` (icon `#i-zook`, hidden for KS1 like Turtle) →
+  `startNewZook(ks)`; `enterZookUI()`/`exitZookUI()` (`body.zook-mode`, mounts into `#zook-ui` inside `#cwrap`; CSS hides
+  every platformer/stage/turtle/3D control incl. Cave/mute/hand); every other enter*UI, `showHome` and `switchMode` call
+  `exitZookUI`; `loop()` returns early for zook (the app has its own rAF loop, idle while hidden). Payload field
+  **`zook`** (the Zook JSON; `zookCurrent()`), restored in `applyPayload` (`zookData` → `enterZookUI` → `setZook`). The
+  app calls `onChange` → `markDirty()` (muted by `_zookQuiet` while loading). Device save, cloud, short-link share,
+  hand-in and playable .html all work through the normal payload (the worker stores payloads verbatim — no worker
+  change); **live collaborate is hidden for Zook** (`openShareModal` filter). Help: `ZOOK_HELP` via `helpTabs()`;
+  Teacher Guide has a Zook section; home save thumbnails show an orange "Zook" badge.
+- **Starters** (in zook-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
+  Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 
 ## 3D World project type — `projectType==='3d'` — PROTOTYPE (Babylon.js), behind `THREED_ON`
 **PARKED (2026-06-16): `THREED_ON=false`** so the 🧊 option is hidden from `#pt-modal` and none of the 3D work ships —

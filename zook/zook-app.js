@@ -13,7 +13,7 @@ import * as Z from './zook-core.js';
 // lucide-style names used below -> CodeJump's own SVG icon symbols (#i-…)
 var ICONS = { wrench: 'i-build', flag: 'i-flag', 'undo-2': 'i-undo', 'redo-2': 'i-redo', sparkles: 'i-spark', 'trash-2': 'i-trash',
   x: 'i-x', play: 'i-play', square: 'i-stop', 'rotate-ccw': 'i-reset', zap: 'i-dash', mountain: 'i-jump2', box: 'i-crate',
-  'arrow-up-from-line': 'i-arr-u', users: 'i-people', swords: 'i-bump', crosshair: 'i-target' };
+  'arrow-up-from-line': 'i-arr-u', keyboard: 'i-key', users: 'i-people', swords: 'i-bump', crosshair: 'i-target' };
 function ic(name) { return '<svg class="ic"><use href="#' + (ICONS[name] || 'i-spark') + '"></use></svg>'; }
 
 var CSS_URL = new URL('./zook-app.css', import.meta.url).href;
@@ -29,6 +29,7 @@ var TEMPLATE = `
     <div class="zl-tools">
       <button type="button" class="zl-icon" id="zUndo" title="Undo (Ctrl+Z)" aria-label="Undo">${ic('undo-2')}</button>
       <button type="button" class="zl-icon" id="zRedo" title="Redo (Ctrl+Y)" aria-label="Redo">${ic('redo-2')}</button>
+      <button type="button" class="zl-tool" id="zKeys" title="Keyboard shortcuts (?)">${ic('keyboard')} Keys</button>
       <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Zooks</button>
     </div>
   </div>
@@ -46,7 +47,7 @@ var TEMPLATE = `
     <div class="zl-canvas-wrap">
       <canvas id="buildCanvas" aria-label="Your Zook in 3D. Drag to look around, tap a part to choose it."></canvas>
       <div class="zl-canvas-msg" id="buildMsg" hidden></div>
-      <div class="zl-canvas-tip" id="buildTip">Drag a part to move it · drag the background to look around · pinch or scroll to zoom</div>
+      <div class="zl-canvas-tip" id="buildTip">Drag a part to move it · drag the background to look around · press ? for keyboard shortcuts</div>
     </div>
     <aside class="zl-inspector" id="zInspector" aria-live="polite"></aside>
   </div>
@@ -1377,6 +1378,7 @@ function boot() {
   $('zUndo').addEventListener('click', undo);
   $('zRedo').addEventListener('click', redo);
   $('zStarters').addEventListener('click', showStarters);
+  $('zKeys').addEventListener('click', showKeys);
   $('zGo').addEventListener('click', go);
   $('zOpp').addEventListener('change', function () { state.opponent = this.value; resetRun(); });
   $('zPreview').addEventListener('change', drawBeats);
@@ -1385,14 +1387,86 @@ function boot() {
   requestAnimationFrame(frame);
 }
 
+// Keyboard shortcuts (also listed in the Keys dialog and CodeJump's Help → Keys tab).
+var SHORTCUTS = {
+  build: [['Ctrl + Z / Ctrl + Y', 'Undo / redo'], ['Delete', 'Remove the chosen part (and its twin)'], ['Esc', 'Stop choosing a part'],
+    ['N / Shift + N', 'Choose the next / previous part'], ['P', 'Choose the part it hangs from'],
+    ['Arrow keys', 'Slide the chosen part around the side it’s on (hold Shift for big steps)'],
+    ['[ and ]', 'Lean the chosen part'], [', and .', 'Splay the chosen part'], ['+ and −', 'Make the chosen part bigger / smaller'],
+    ['W', 'Wiggle preview on / off'], ['M', 'Add in pairs (mirror) on / off'], ['F', 'Fit the Zook in the view'],
+    ['Enter or T', 'Test it!'], ['?', 'Show these keys']],
+  test: [['Space', 'Go / Stop'], ['1 – 8', 'Pick a contest'], ['T', 'Turbo on / off'], ['B or Esc', 'Back to Build'], ['?', 'Show these keys']]
+};
+
+function showKeys() {
+  var table = function (rows) { return '<table class="zl-keys">' + rows.map(function (r) { return '<tr><th><kbd>' + esc(r[0]) + '</kbd></th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>'; };
+  openDialog('Keyboard shortcuts', '<h4>Building</h4>' + table(SHORTCUTS.build) + '<h4>Testing</h4>' + table(SHORTCUTS.test) +
+    '<p class="zl-muted">On a Mac, use ⌘ instead of Ctrl.</p>');
+}
+
+// Change the chosen part from the keyboard: one undo step per key press (held keys add to it).
+function tweak(e, fn) {
+  var b = Z.block(state.zook, state.selected);
+  if (!b) { toast('Choose a part first: tap it, or press N.'); return; }
+  if (!e.repeat) remember();
+  if (fn(b) !== false) { Z.syncTwin(state.zook, b); changed({ inspector: true }); }
+}
+function clampSize(v, lo, hi) { return Math.max(lo, Math.min(hi, Math.round(v))); }
+
 function onKey(e) {
   if (destroyed || !visible() || dialog.open) return;
-  var tag = (e.target.tagName || '').toLowerCase(), typing = tag === 'input' && e.target.type === 'text' || tag === 'textarea' || tag === 'select';
-  if (!root.contains(e.target) && e.target !== document.body) return;
-  if ((e.ctrlKey || e.metaKey) && !typing && e.key.toLowerCase() === 'z') { e.preventDefault(); e.stopPropagation(); if (e.shiftKey) redo(); else undo(); }
-  else if ((e.ctrlKey || e.metaKey) && !typing && e.key.toLowerCase() === 'y') { e.preventDefault(); e.stopPropagation(); redo(); }
-  else if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && state.mode === 'build' && state.selected && tag !== 'input') { e.preventDefault(); deleteSelected(); }
-  else if (e.key === 'Escape' && state.selected) { state.selected = null; state.pathPoint = null; builder.sync(); renderInspector(); }
+  if (document.querySelector('#cj-dialog:not(.hide), [id$="-modal"]:not(.hide)')) return; // a CodeJump popup is open
+  var t = e.target, tag = (t.tagName || '').toLowerCase();
+  if (tag === 'textarea' || tag === 'select' || t.isContentEditable || (tag === 'input' && t.type !== 'range' && t.type !== 'checkbox')) return; // typing
+  var slider = tag === 'input' && t.type === 'range', k = e.key, lk = k.length === 1 ? k.toLowerCase() : k, z = state.zook;
+  var cmd = e.ctrlKey || e.metaKey;
+  function done() { e.preventDefault(); e.stopPropagation(); }
+
+  if (cmd && lk === 'z') { done(); if (e.shiftKey) redo(); else undo(); return; }
+  if (cmd && lk === 'y') { done(); redo(); return; }
+  if (cmd || e.altKey) return; // leave browser shortcuts alone
+  if (k === '?') { done(); showKeys(); return; }
+
+  if (state.mode === 'test') {
+    if (k === ' ') { done(); go(); }
+    else if (lk === 't') { done(); $('zTurbo').checked = !$('zTurbo').checked; }
+    else if (lk === 'b' || k === 'Escape') { done(); setMode('build'); }
+    else if (/^[1-8]$/.test(k)) { var c = Object.keys(Z.CONTESTS)[Number(k) - 1]; if (c) { done(); state.contest = c; renderContests(); resetRun(); } }
+    return;
+  }
+
+  if (k === 'Delete' || (k === 'Backspace' && !slider)) { if (state.selected) { done(); deleteSelected(); } return; }
+  if (k === 'Escape') { if (state.selected) { done(); state.selected = null; state.pathPoint = null; builder.sync(); renderInspector(); drawBeats(); } return; }
+  if (k === 'Enter' || lk === 't') { done(); setMode('test'); return; }
+  if (lk === 'n') {
+    done();
+    var ids = z.blocks.map(function (b) { return b.id; }), i = ids.indexOf(state.selected);
+    state.selected = ids[((i < 0 ? (e.shiftKey ? 0 : -1) : i) + (e.shiftKey ? -1 : 1) + ids.length) % ids.length];
+    state.pathPoint = null; builder.sync(); renderInspector(); drawBeats(); return;
+  }
+  if (lk === 'p') { var sb = Z.block(z, state.selected); if (sb && sb.mount) { done(); state.selected = sb.mount.parent; state.pathPoint = null; builder.sync(); renderInspector(); drawBeats(); } return; }
+  if (lk === 'w') { done(); $('zPreview').checked = !$('zPreview').checked; drawBeats(); toast('Wiggle preview ' + ($('zPreview').checked ? 'on' : 'off')); return; }
+  if (lk === 'm') { done(); $('zMirror').checked = !$('zMirror').checked; toast('Add in pairs ' + ($('zMirror').checked ? 'on' : 'off')); return; }
+  if (lk === 'f') { done(); builder.fit(); return; }
+  if (slider) return; // arrows and +/- move a focused slider as normal
+
+  var arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
+  if (arrows[k]) {
+    done();
+    var st = e.shiftKey ? 0.15 : 0.05, d = arrows[k];
+    tweak(e, function (b) {
+      if (!b.mount) { toast('The body is where everything hangs from, so it stays put.'); return false; }
+      return Z.move(z, b.id, b.mount.parent, b.mount.face, [b.mount.at[0] + d[0] * st, b.mount.at[1] + d[1] * st]);
+    });
+    return;
+  }
+  if (k === '[' || k === ']') { done(); tweak(e, function (b) { if (!b.mount) return false; b.mount.lean = Math.max(-90, Math.min(90, b.mount.lean + (k === ']' ? 5 : -5))); }); return; }
+  if (k === ',' || k === '.') { done(); tweak(e, function (b) { if (!b.mount) return false; b.mount.splay = Math.max(-60, Math.min(60, b.mount.splay + (k === '.' ? 5 : -5))); }); return; }
+  if (k === '+' || k === '=' || k === '-' || k === '_') {
+    done();
+    var f = k === '+' || k === '=' ? 1.1 : 1 / 1.1;
+    tweak(e, function (b) { b.size = [clampSize(b.size[0] * f, 6, 180), clampSize(b.size[1] * f, 4, 80), clampSize(b.size[2] * f, 4, 120)]; });
+  }
 }
 
 var destroyed = false;

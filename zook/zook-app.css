@@ -110,7 +110,7 @@
 .zk .zl-muted { color: var(--zk-muted); font-size: 13.5px; }
 
 /* ---------- dialog + toast ---------- */
-.zk .zl-dialog { border: 2px solid var(--zk-gold); border-radius: 16px; padding: 0; width: min(760px, calc(100% - 32px)); max-height: 86vh; background: var(--zk-panel); color: #fff; }
+.zk .zl-dialog { margin: auto; border: 2px solid var(--zk-gold); border-radius: 16px; padding: 0; width: min(760px, calc(100% - 32px)); max-height: 86vh; background: var(--zk-panel); color: #fff; }
 .zk .zl-dialog::backdrop { background: rgba(0,0,0,0.7); }
 .zk .zl-dialog .head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--zk-line); }
 .zk .zl-dialog .head h3 { margin: 0; font-size: 17px; font-weight: 900; }
@@ -141,3 +141,8 @@
   .zk #arenaCanvas { height: 400px; }
   .zk .zl-inspector { max-height: none; }
 }
+.zk .zl-dialog h4 { margin: 4px 0 8px; font-size: 14px; color: var(--zk-gold); }
+.zk .zl-keys { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.zk .zl-keys th { text-align: left; white-space: nowrap; padding: 5px 12px 5px 0; vertical-align: top; width: 1%; }
+.zk .zl-keys td { padding: 5px 0; font-size: 13.5px; color: #ddd; }
+.zk kbd { display: inline-block; font-family: inherit; font-size: 12px; font-weight: 800; background: var(--zk-sunk); border: 1px solid var(--zk-line); border-bottom-width: 3px; border-radius: 6px; padding: 2px 7px; color: #fff; }

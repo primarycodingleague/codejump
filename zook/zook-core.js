@@ -302,7 +302,7 @@ export function move(z, id, parentId, face, at) {
   if (!b || !b.mount || !parent || !FACES[face]) return false;
   var mine = subtree(z, id), twin = b.twin && block(z, b.twin), theirs = twin ? subtree(z, twin.id) : {};
   if (mine[parentId] || theirs[parentId]) return false;
-  at = [clamp(num(at[0], 0), -0.5, 0.5), clamp(num(at[1], 0), -0.5, 0.5)];
+  at = [Math.round(clamp(num(at[0], 0), -0.5, 0.5) * 100) / 100, Math.round(clamp(num(at[1], 0), -0.5, 0.5) * 100) / 100];
   var wasSide = b.mount.face === '+z' || b.mount.face === '-z', isSide = face === '+z' || face === '-z';
   b.mount.parent = parentId; b.mount.face = face; b.mount.at = at;
   jointFor(z, id).blockA = parentId;

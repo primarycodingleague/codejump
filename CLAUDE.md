@@ -473,6 +473,9 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as "Zoo
   which mirrors the twin, removes the twin if the part lands on the middle line, refuses spots on its own subtree,
   and gives a walking leg the posture for its new spot (side = sprawled/sweep, underneath = hanging/swing) with
   fresh stepping loops (`limbPosture`). One undo step per drag.
+- **Keyboard shortcuts:** `onKey` in zook-app.js (document keydown; works wherever focus is, ignored while typing in a
+  text box or while a CodeJump `-modal`/`cj-dialog` popup is open; leaves other Ctrl/Alt combos to the browser). The list
+  lives in `SHORTCUTS` (shown by the Keys button / `?`) and is repeated in `ZOOK_HELP`'s Keys tab — change both together.
 - **Starters** (in zook-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 

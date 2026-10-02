@@ -488,19 +488,19 @@ body.threed-mode #threed-right{display:flex;flex-direction:column;width:46%;min-
   body.stage-mode #code-panel{flex:1 1 auto;min-height:300px;}
   body.stage-mode #rotate-hint{display:none !important;}
 }
-/* ── Zook (3D creature lab: zook/zook-app.js + zook/zook-app.css, lazy-loaded) ── */
-#zook-ui{display:none;}
-body.zook-mode #btn-build,body.zook-mode #btn-play,body.zook-mode #btn-code,
-body.zook-mode #t-paint,body.zook-mode #t-fill,body.zook-mode #t-erase,body.zook-mode #t-undo,
-body.zook-mode #t-redo,body.zook-mode #t-clear,body.zook-mode #t-testpage,body.zook-mode #theme-sel,
-body.zook-mode #btn-design,body.zook-mode #btn-read,body.zook-mode #palette,body.zook-mode #pages,
-body.zook-mode #play-mute,body.zook-mode #play-sfx,body.zook-mode #hint,body.zook-mode #touch-controls,
-body.zook-mode .cp-run-bar,body.zook-mode #ks3-editor,body.zook-mode #code-panel,body.zook-mode #turtle-ui,
-body.zook-mode #threed-right,body.zook-mode #stage-right,body.zook-mode #gc,body.zook-mode .stage-only,body.zook-mode .threed-only,
-body.zook-mode #t-cave,body.zook-mode #t-mute,body.zook-mode #t-hand{display:none !important;}
-body.zook-mode #cwrap{display:block;padding:10px;background:#1e1e1e;overflow:auto;}
-body.zook-mode #zook-ui{display:block;min-height:100%;}
-#zook-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
+/* ── Critter (3D creature lab: critter/critter-app.js + critter/critter-app.css, lazy-loaded) ── */
+#critter-ui{display:none;}
+body.critter-mode #btn-build,body.critter-mode #btn-play,body.critter-mode #btn-code,
+body.critter-mode #t-paint,body.critter-mode #t-fill,body.critter-mode #t-erase,body.critter-mode #t-undo,
+body.critter-mode #t-redo,body.critter-mode #t-clear,body.critter-mode #t-testpage,body.critter-mode #theme-sel,
+body.critter-mode #btn-design,body.critter-mode #btn-read,body.critter-mode #palette,body.critter-mode #pages,
+body.critter-mode #play-mute,body.critter-mode #play-sfx,body.critter-mode #hint,body.critter-mode #touch-controls,
+body.critter-mode .cp-run-bar,body.critter-mode #ks3-editor,body.critter-mode #code-panel,body.critter-mode #turtle-ui,
+body.critter-mode #threed-right,body.critter-mode #stage-right,body.critter-mode #gc,body.critter-mode .stage-only,body.critter-mode .threed-only,
+body.critter-mode #t-cave,body.critter-mode #t-mute,body.critter-mode #t-hand{display:none !important;}
+body.critter-mode #cwrap{display:block;padding:10px;background:#1e1e1e;overflow:auto;}
+body.critter-mode #critter-ui{display:block;min-height:100%;}
+#critter-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
 /* ── Turtle (Logo) playground ── */
 #turtle-ui{display:none;}
 body.turtle-mode #btn-build,body.turtle-mode #btn-play,body.turtle-mode #btn-code,
@@ -1284,7 +1284,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <symbol id="i-flower" viewBox="0 0 24 24"><g fill="#ec5fa0"><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/></g><circle cx="12" cy="12" r="3" fill="#ffd24a"/></symbol>
   <symbol id="i-bush" viewBox="0 0 24 24"><circle cx="8" cy="14" r="5" fill="#3b6d11"/><circle cx="16" cy="13" r="5.5" fill="#4e8a1a"/><circle cx="12" cy="16" r="5" fill="#639922"/></symbol>
   <symbol id="i-player" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2" fill="#f0b97a"/><rect x="8" y="11" width="8" height="9" rx="3" fill="#3b8eea"/></symbol>
-  <symbol id="i-zook" viewBox="0 0 24 24"><path d="M6.5 15.5l-2.5 5M10 16l-1 5M14 16l1 5M17.5 15.5l2.5 5" stroke="#f59f18" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="9.5" ry="6" fill="#38b6ff"/><circle cx="15.5" cy="10" r="2.3" fill="#fff"/><circle cx="19" cy="10.3" r="1.9" fill="#fff"/><circle cx="16.2" cy="10.2" r="1.1" fill="#111"/><circle cx="19.5" cy="10.4" r=".9" fill="#111"/></symbol>
+  <symbol id="i-critter" viewBox="0 0 24 24"><path d="M6.5 15.5l-2.5 5M10 16l-1 5M14 16l1 5M17.5 15.5l2.5 5" stroke="#f59f18" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="9.5" ry="6" fill="#38b6ff"/><circle cx="15.5" cy="10" r="2.3" fill="#fff"/><circle cx="19" cy="10.3" r="1.9" fill="#fff"/><circle cx="16.2" cy="10.2" r="1.1" fill="#111"/><circle cx="19.5" cy="10.4" r=".9" fill="#111"/></symbol>
   <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5 3.5 16.7V7.3z" fill="#7f77dd"/><path d="M3.7 7.2L12 12l8.3-4.8M12 12v9.3" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M12 2.5L3.5 7.3 12 12l8.5-4.7z" fill="#a59bf0"/></symbol>
   <symbol id="i-key2" viewBox="0 0 24 24"><circle cx="8" cy="9" r="4.5" fill="none" stroke="#ffd24a" stroke-width="2.4"/><path d="M11 12l8 8M16.5 17.5l2-2M19.5 20.5l1.5-1.5" stroke="#ffd24a" stroke-width="2.4" stroke-linecap="round"/></symbol>
 </svg>
@@ -1640,7 +1640,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <button class="ks-opt" data-pt="platformer"><span class="ks-emoji"><svg class="ic"><use href="#i-runner"></use></svg></span><b>Platformer</b><small>Build a level on a grid<br>and jump through it</small></button>
       <button class="ks-opt" data-pt="stage"><span class="ks-emoji"><svg class="ic"><use href="#i-stage"></use></svg></span><b>Stage</b><small>Sprites on a stage<br>(like Scratch)</small></button>
       <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle</b><small>Type Logo code to<br>draw pictures</small></button>
-      <button class="ks-opt" data-pt="zook"><span class="ks-emoji"><svg class="ic"><use href="#i-zook"></use></svg></span><b>Zook</b><small>Build a 3D creature<br>and race it — NEW!</small></button>
+      <button class="ks-opt" data-pt="critter"><span class="ks-emoji"><svg class="ic"><use href="#i-critter"></use></svg></span><b>Critter Lab</b><small>Build a 3D creature<br>and race it — NEW!</small></button>
       <button class="ks-opt" data-pt="3d"><span class="ks-emoji"><svg class="ic"><use href="#i-cube"></use></svg></span><b>3D World</b><small>Build a 3D scene<br>with blocks — NEW!</small></button>
     </div>
     <button class="ks-cancel" id="pt-cancel">Back</button>
@@ -1789,7 +1789,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
           </div>
         </div>
       </div>
-      <div id="zook-ui"></div>
+      <div id="critter-ui"></div>
       <div id="turtle-ui">
         <div id="turtle-left">
           <div id="turtle-bar">
@@ -2274,7 +2274,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 // HOME SCREEN
 // ═══════════════════════════════════════════════════════════════════════
 function showHome(){
-  if(document.body.classList.contains('zook-mode')&&typeof exitZookUI==='function')exitZookUI();
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
@@ -2304,7 +2304,7 @@ function renderHomeSaves(){
     const item=document.createElement('div');item.className='save-item';
     const thumbCanvas=document.createElement('canvas');
     thumbCanvas.className='save-thumb';thumbCanvas.width=80;thumbCanvas.height=48;
-    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],zook:['#f59f18','Zook']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
+    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
     else drawMiniThumb(thumbCanvas,save.grid,save.theme);
     const info=document.createElement('div');info.className='save-info';
     const nm=document.createElement('div');nm.className='save-name';nm.textContent=save.name||'';
@@ -2381,7 +2381,7 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   _pendingKs=b.dataset.ks;const szEl=document.getElementById('ks-size');_pendingSize=(_pendingKs==='ks1')?'standard':(szEl?szEl.value:'standard');
   document.getElementById('ks-modal').classList.add('hide');
   const ttOpt=document.querySelector('#pt-modal .ks-opt[data-pt="turtle"]');if(ttOpt)ttOpt.style.display=(_pendingKs==='ks1')?'none':''; // Turtle (typed Logo) is KS2+ only
-  const zkOpt=document.querySelector('#pt-modal .ks-opt[data-pt="zook"]');if(zkOpt)zkOpt.style.display=(_pendingKs==='ks1')?'none':''; // Zook (3D creatures + physics) is KS2+ only
+  const zkOpt=document.querySelector('#pt-modal .ks-opt[data-pt="critter"]');if(zkOpt)zkOpt.style.display=(_pendingKs==='ks1')?'none':''; // Critter (3D creatures + physics) is KS2+ only
   const tdOpt=document.querySelector('#pt-modal .ks-opt[data-pt="3d"]');if(tdOpt)tdOpt.style.display=(_pendingKs==='ks1'||!THREED_ON)?'none':''; // 3D is KS2+ only, behind the THREED_ON flag
   document.getElementById('pt-modal').classList.remove('hide');
 });
@@ -2392,7 +2392,7 @@ document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   if(b.dataset.pt==='stage')startNewStage(_pendingKs);
   else if(b.dataset.pt==='turtle')startNewTurtle(_pendingKs);
   else if(b.dataset.pt==='3d')startNew3D(_pendingKs);
-  else if(b.dataset.pt==='zook')startNewZook(_pendingKs);
+  else if(b.dataset.pt==='critter')startNewCritter(_pendingKs);
   else startNewProject(_pendingKs);
 });
 function startNewProject(ks){clearDirty();projectType='platformer';
@@ -2469,7 +2469,7 @@ function startNewStage(ks){clearDirty();projectType='stage';
 
 // ── Unified Scratch-style Stage view (no separate Build/Play/Code modes) ──
 function enterStageUI(){
-  if(document.body.classList.contains('zook-mode')&&typeof exitZookUI==='function')exitZookUI();
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
@@ -2568,7 +2568,7 @@ function turtleInit(){
 function turtleResetState(){turtle={x:0,y:0,h:0,pen:true,color:'#1565c0',size:3,show:true};}
 function turtleClearDrawing(){if(turtleDrawCtx)turtleDrawCtx.clearRect(0,0,TW,TH);turtleBg='#ffffff';}
 function enterTurtleUI(){
-  if(document.body.classList.contains('zook-mode')&&typeof exitZookUI==='function')exitZookUI();
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');
@@ -2591,46 +2591,46 @@ function exitTurtleUI(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// ZOOK — build a 3D creature from blobs + joints, give it swings and IK
-// stepping loops, then race it in physics contests (projectType==='zook').
-// The engine (zook/zook-app.js + zook-core.js, Three.js + Rapier 3D, ~2 MB
-// gzipped) is lazy-loaded only when a Zook project opens, like 3D World, so
-// the rest of CodeJump stays light/offline. The Zook itself is plain JSON in
-// payload.zook (see the format at the top of zook/zook-core.js).
+// CRITTER — build a 3D creature from blobs + joints, give it swings and IK
+// stepping loops, then race it in physics contests (projectType==='critter').
+// The engine (critter/critter-app.js + critter-core.js, Three.js + Rapier 3D, ~2 MB
+// gzipped) is lazy-loaded only when a Critter project opens, like 3D World, so
+// the rest of CodeJump stays light/offline. The Critter itself is plain JSON in
+// payload.critter (see the format at the top of critter/critter-core.js).
 // ═══════════════════════════════════════════════════════════════════════
-let zookData=null,zookApp=null,_zookLoading=null,_zookQuiet=false;
+let critterData=null,critterApp=null,_critterLoading=null,_critterQuiet=false;
 // Where the engine lives: next to this page, or the live site when running from a downloaded .html file.
-function zookBase(){return /^https?:/.test(location.protocol)?new URL('zook/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.primarycodingleague.co.uk/zook/';}
-function loadZookEngine(){
-  if(!_zookLoading)_zookLoading=import(zookBase()+'zook-app.js').catch(e=>{_zookLoading=null;throw e;});
-  return _zookLoading;}
-function zookCurrent(){return zookApp?zookApp.getZook():zookData;}
-function startNewZook(ks){clearDirty();projectType='zook';setKeyStage(ks);
+function critterBase(){return /^https?:/.test(location.protocol)?new URL('critter/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.primarycodingleague.co.uk/critter/';}
+function loadCritterEngine(){
+  if(!_critterLoading)_critterLoading=import(critterBase()+'critter-app.js').catch(e=>{_critterLoading=null;throw e;});
+  return _critterLoading;}
+function critterCurrent(){return critterApp?critterApp.getCritter():critterData;}
+function startNewCritter(ks){clearDirty();projectType='critter';setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
-  zookData=null;hideHome();enterZookUI(); // a fresh body to build on
+  critterData=null;hideHome();enterCritterUI(); // a fresh body to build on
 }
-function enterZookUI(){
+function enterCritterUI(){
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
   document.getElementById('app').classList.remove('hide');document.getElementById('home').classList.add('hide');
-  mode='code';document.body.classList.add('zook-mode');
-  const holder=document.getElementById('zook-ui'),want=zookData;
-  if(zookApp){_zookQuiet=true;try{zookApp.setZook(want);}finally{_zookQuiet=false;}return;}
-  holder.innerHTML='<div id="zook-loading">Getting the Zook lab ready…</div>';
-  loadZookEngine().then(mod=>{
-    if(zookApp){_zookQuiet=true;try{zookApp.setZook(zookData);}finally{_zookQuiet=false;}return;}
-    _zookQuiet=true;
-    try{zookApp=mod.mount(holder,{zook:zookData,onChange:()=>{if(!_zookQuiet&&projectType==='zook')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e')});}
-    finally{_zookQuiet=false;}
-  }).catch(()=>{holder.innerHTML='<div id="zook-loading">The Zook lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+  mode='code';document.body.classList.add('critter-mode');
+  const holder=document.getElementById('critter-ui'),want=critterData;
+  if(critterApp){_critterQuiet=true;try{critterApp.setCritter(want);}finally{_critterQuiet=false;}return;}
+  holder.innerHTML='<div id="critter-loading">Getting the Critter Lab ready…</div>';
+  loadCritterEngine().then(mod=>{
+    if(critterApp){_critterQuiet=true;try{critterApp.setCritter(critterData);}finally{_critterQuiet=false;}return;}
+    _critterQuiet=true;
+    try{critterApp=mod.mount(holder,{critter:critterData,onChange:()=>{if(!_critterQuiet&&projectType==='critter')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e')});}
+    finally{_critterQuiet=false;}
+  }).catch(()=>{holder.innerHTML='<div id="critter-loading">The Critter Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
-function exitZookUI(){
-  if(!document.body.classList.contains('zook-mode'))return;
-  if(zookApp){zookData=zookApp.getZook();zookApp.pause();}
-  document.body.classList.remove('zook-mode');
+function exitCritterUI(){
+  if(!document.body.classList.contains('critter-mode'))return;
+  if(critterApp){critterData=critterApp.getCritter();critterApp.pause();}
+  document.body.classList.remove('critter-mode');
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2980,7 +2980,7 @@ function td3BindOnce(){if(_td3Bound)return;_td3Bound=true;
     b.addEventListener('pointerdown',dn);b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);b.addEventListener('pointercancel',up);});
 }
 function enter3DUI(){
-  if(document.body.classList.contains('zook-mode')&&typeof exitZookUI==='function')exitZookUI();
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
@@ -6372,16 +6372,16 @@ square 100</pre><p>Now <code>square 60</code> draws a small square and <code>squ
  ['play',' Save & Share',`<h3>Run it</h3><p>Press <b>▶ Run</b> to draw and <b>⏹ Stop</b> to stop. If something's wrong, the message at the top tells you what to fix.</p><h3>Save &amp; share</h3><ul><li><b> Save</b> keeps your project (and auto-saves a draft); sign in to <b>save online</b> and open it anywhere.</li><li><b> Share</b> gives a short link to your exact picture.</li></ul>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
-const ZOOK_HELP=[
- ['start',' Start',`<h3>Welcome to the Zook lab!</h3><p>A <b>Zook</b> is a creature you build from blobs and joints. You design it; the <b>physics</b> decides how it moves. Then you race it in contests.</p><h3>Build</h3><ul><li><b>Drag</b> a blob or a limb from the left onto your Zook. It sticks where it touches. With <b>Add in pairs</b> on, you get a mirror twin on the other side.</li><li><b>Tap</b> a part to change it. <b>Drag</b> a part to slide it somewhere else on your Zook (its twin follows). Drag the background to look around; pinch or scroll to zoom.</li><li><b>Starter Zooks</b> gives you ready-made creatures that really move.</li></ul><h3>Test it!</h3><p>Press <b>Test it!</b>, pick a contest and press <b>Go!</b> Your Zook always heads for the <b>red target</b>.</p>`],
+const CRITTER_HELP=[
+ ['start',' Start',`<h3>Welcome to the Critter Lab!</h3><p>A <b>Critter</b> is a creature you build from blobs and joints. You design it; the <b>physics</b> decides how it moves. Then you race it in contests.</p><h3>Build</h3><ul><li><b>Drag</b> a blob or a limb from the left onto your Critter. It sticks where it touches. With <b>Add in pairs</b> on, you get a mirror twin on the other side.</li><li><b>Tap</b> a part to change it. <b>Drag</b> a part to slide it somewhere else on your Critter (its twin follows). Drag the background to look around; pinch or scroll to zoom.</li><li><b>Starter Critters</b> gives you ready-made creatures that really move.</li></ul><h3>Test it!</h3><p>Press <b>Test it!</b>, pick a contest and press <b>Go!</b> Your Critter always heads for the <b>red target</b>.</p>`],
  ['shape',' Shape',`<p>Every part is a <b>blob</b>. On the <b>Shape</b> tab:</p><ul><li><b>Length, Height, Width</b> — its size in centimetres.</li><li><b>Squareness</b> — from round like an egg (0%) to boxy (100%).</li><li><b>Pointiness</b> — tapers the far end to a point.</li><li><b>Grip</b> — Slippy, Normal or Grippy. Grippy feet hold the ground; slippy bodies slide.</li><li><b>Colour</b> and <b>Eyes</b>. The eyes on the body show which way is forwards.</li></ul>`],
  ['motion',' Motion',`<p>Tap a part, then its <b>Motion</b> tab. Every part hangs from a <b>joint</b>, which can:</p><ul><li><b>Still</b> — hold its angle.</li><li><b>Swing</b> — rock to and fro. Pick the <b>hinge</b> (Swing, Sweep or Twist), how far it swings, and its <b>movement cycle</b> (the timing dial). Opposite beats take turns.</li><li><b>Motion path</b> — the tip of the limb follows a loop of white <b>IK points</b>, and the limb bends itself to follow it. Drag the points in the 3D view; tap a blue dot to add one. The square point is the start; arrows show the way round.</li></ul><p><b>Lean</b> and <b>Splay</b> tip a part. <b>Bend towards the target</b> makes a joint turn to look at the red target (part targeting).</p><h3>The body's Motion tab</h3><ul><li><b>Cycle speed</b> — how fast every part does its move.</li><li><b>Turning sharpness</b> — a wide arc, or pivot on the spot.</li><li><b>Turning smoothness</b> — snap round, or ease round gently.</li><li><b>Muscle power</b> — how hard every joint pushes.</li></ul>`],
- ['contests',' Contests',`<ul><li><b>Sprint</b> — how far towards the target in 15 seconds.</li><li><b>Hurdles</b> — a sprint over humps that get steeper.</li><li><b>Block Push</b> — shove ten blocks in 13 seconds.</li><li><b>High Jump</b> — how high can it get?</li><li><b>Lap</b> — follow the target round eight flags.</li><li><b>Head-to-head</b> — race another Zook in the next lane.</li><li><b>Super Sumo</b> — push the other Zook off the platform!</li><li><b>Free roam</b> — tap the ground to move the target and watch it steer.</li></ul><p>Your best score in each contest is saved with your Zook.</p>`],
- ['keys',' Keys',`<p>Press <b>?</b> (or the <b>Keys</b> button) any time to see these.</p><h3>Building</h3><ul><li><b>Ctrl+Z / Ctrl+Y</b> — undo / redo</li><li><b>Delete</b> — remove the chosen part (and its twin)</li><li><b>Esc</b> — stop choosing a part</li><li><b>N / Shift+N</b> — choose the next / previous part · <b>P</b> — choose the part it hangs from</li><li><b>Arrow keys</b> — slide the chosen part around the side it's on (hold Shift for big steps)</li><li><b>[ ]</b> lean · <b>, .</b> splay · <b>+ −</b> bigger / smaller</li><li><b>W</b> wiggle preview · <b>M</b> add in pairs · <b>F</b> fit the Zook in view</li><li><b>Enter</b> or <b>T</b> — Test it!</li></ul><h3>Testing</h3><ul><li><b>Space</b> — Go / Stop · <b>1–8</b> — pick a contest · <b>T</b> — Turbo · <b>B</b> or <b>Esc</b> — back to Build</li></ul>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Zook lab needs the internet the first time it opens.</p>`],
+ ['contests',' Contests',`<ul><li><b>Sprint</b> — how far towards the target in 15 seconds.</li><li><b>Hurdles</b> — a sprint over humps that get steeper.</li><li><b>Block Push</b> — shove ten blocks in 13 seconds.</li><li><b>High Jump</b> — how high can it get?</li><li><b>Lap</b> — follow the target round eight flags.</li><li><b>Head-to-head</b> — race another Critter in the next lane.</li><li><b>Super Sumo</b> — push the other Critter off the platform!</li><li><b>Free roam</b> — tap the ground to move the target and watch it steer.</li></ul><p>Your best score in each contest is saved with your Critter.</p>`],
+ ['keys',' Keys',`<p>Press <b>?</b> (or the <b>Keys</b> button) any time to see these.</p><h3>Building</h3><ul><li><b>Ctrl+Z / Ctrl+Y</b> — undo / redo</li><li><b>Delete</b> — remove the chosen part (and its twin)</li><li><b>Esc</b> — stop choosing a part</li><li><b>N / Shift+N</b> — choose the next / previous part · <b>P</b> — choose the part it hangs from</li><li><b>Arrow keys</b> — slide the chosen part around the side it's on (hold Shift for big steps)</li><li><b>[ ]</b> lean · <b>, .</b> splay · <b>+ −</b> bigger / smaller</li><li><b>W</b> wiggle preview · <b>M</b> add in pairs · <b>F</b> fit the Critter in view</li><li><b>Enter</b> or <b>T</b> — Test it!</li></ul><h3>Testing</h3><ul><li><b>Space</b> — Go / Stop · <b>1–8</b> — pick a contest · <b>T</b> — Turbo · <b>B</b> or <b>Esc</b> — back to Build</li></ul>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Critter Lab needs the internet the first time it opens.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
-function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='zook')return ZOOK_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
+function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
 let helpTab='start';
 function openHelp(){const T=helpTabs();buildHelpTabs();selHelpTab(T[0][0]);document.getElementById('help-modal').classList.remove('hide');}
 function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';helpTabs().forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
@@ -6459,8 +6459,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <li><b> micro:bit (Key Stage 2 &amp; 3):</b> give a character the micro:bit costume for an on-screen, fully interactive micro:bit emulator — a 5×5 LED display, clickable A/B buttons, shake &amp; gestures, a sensor panel (light, temperature, compass, sound, tilt), music, and radio so two or more micro:bit sprites can message each other. No hardware needed.</li>
   </ul>
  <p>Hover (or tap-and-hold) any Stage block for a plain-English description, in every key stage. The <b> Help</b> guide automatically shows pages matched to the project type and key stage.</p>
- <h3> Zook (Key Stage 2 &amp; 3)</h3>
- <p>The <b>Zook</b> project is a 3D creature lab inspired by the BBC's Zook Kit: pupils build a creature from shaped <b>blobs</b> (length, height, width, squareness, pointiness) and ready-made <b>limbs</b>, give each joint a <b>swing</b> or a limb a <b>motion path</b> of draggable IK points, then release it into real <b>physics</b> (gravity, friction, momentum) where it heads for a red target. Movement is never scripted, so pupils learn by predicting, testing and tweaking: rhythm and timing (phase), symmetry, grip, balance and steering. <b>Contests:</b> Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head race, Super Sumo and Free roam, with a best score saved per contest. Zooks save, share and hand in like every other project. The 3D engine downloads the first time a Zook opens, so it needs internet then; live collaboration isn't available for Zooks yet.</p>
+ <h3> Critter Lab (Key Stage 2 &amp; 3)</h3>
+ <p>The <b>Critter Lab</b> project is a 3D creature builder: pupils build a creature from shaped <b>blobs</b> (length, height, width, squareness, pointiness) and ready-made <b>limbs</b>, give each joint a <b>swing</b> or a limb a <b>motion path</b> of draggable IK points, then release it into real <b>physics</b> (gravity, friction, momentum) where it heads for a red target. Movement is never scripted, so pupils learn by predicting, testing and tweaking: rhythm and timing (phase), symmetry, grip, balance and steering. <b>Contests:</b> Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head race, Super Sumo and Free roam, with a best score saved per contest. Critters save, share and hand in like every other project. The 3D engine downloads the first time a Critter opens, so it needs internet then; live collaboration isn't available for Critters yet.</p>
  <h3> Turtle (Logo)</h3>
  <p>The <b>Turtle</b> project is a text <b>Logo</b> playground (like the classic turtle-graphics languages): pupils type commands on the left and a turtle draws on the right. Press ▶ <b>Run</b> to draw, ⏹ <b>Stop</b> / <b>Clear</b> to start over, and use the <b> Speed</b> slider to watch the turtle move slowly or draw instantly. Built-in <b>Commands</b> and <b>Examples</b> buttons get pupils started.</p>
   <p>It supports movement (<code>fd/forward</code>, <code>bk/back</code>, <code>rt/right</code>, <code>lt/left</code>, <code>setxy</code>, <code>seth</code>, <code>home</code>), pen control (<code>pu/pd</code>, <code>setpensize</code>, <code>setpencolor</code>, <code>setbg</code>), <code>repeat</code> loops, <code>if</code>/<code>ifelse</code>, variables (<code>make "x …</code> and <code>:x</code>), arithmetic and <code>random</code>, and pupils can teach the turtle <b>their own commands</b> with <code>to NAME … end</code> — a great bridge from blocks to typed code, and ideal for maths links (angles, repetition, polygons). It works at any key stage, but typing suits <b>Key Stage 2 upward</b> best.</p>
@@ -6797,8 +6797,8 @@ canvas.addEventListener('click',e=>{if(mode!=='play')return;const{col,row}=cellF
 // ═══════════════════════════════════════════════════════════════════════
 function switchMode(m){
   // Turtle & Stage projects use their own unified views, not Build/Play/Code modes.
-  if(projectType==='zook'){enterZookUI();return;}
-  if(document.body.classList.contains('zook-mode')&&typeof exitZookUI==='function')exitZookUI();
+  if(projectType==='critter'){enterCritterUI();return;}
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(projectType==='3d'){enter3DUI();return;}
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(projectType==='turtle'){enterTurtleUI();return;}
@@ -6859,7 +6859,7 @@ function buildPayload(){
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},hazardCfg:L.hazardCfg||{},trapCfg:L.trapCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
-  return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),zook:(projectType==='zook'?zookCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
+  return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -6910,11 +6910,11 @@ function applyPayload(d){
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
-  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='zook')?'zook':'platformer'; // legacy payloads (no field) are always platformer
-  if(projectType!=='zook'&&typeof exitZookUI==='function')exitZookUI();
-  if(projectType==='zook'){
-    zookData=(d.zook&&typeof d.zook==='object')?d.zook:null; // zook-core's normalise() checks every field when it loads
-    if(typeof enterZookUI==='function')enterZookUI();
+  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':'platformer'; // legacy payloads (no field) are always platformer
+  if(projectType!=='critter'&&typeof exitCritterUI==='function')exitCritterUI();
+  if(projectType==='critter'){
+    critterData=(d.critter&&typeof d.critter==='object')?d.critter:null; // critter-core's normalise() checks every field when it loads
+    if(typeof enterCritterUI==='function')enterCritterUI();
   }else if(projectType==='3d'){
     if(typeof exitTurtleUI==='function')exitTurtleUI();if(typeof exitStageUI==='function')exitStageUI();
     if(typeof enter3DUI==='function')enter3DUI(); // the blocklyXml below loads the saved 3D program into the workspace
@@ -7030,7 +7030,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='3d'&&projectType!=='zook'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // 3D and Zook have no live collaboration yet (turtle now does)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='3d'&&projectType!=='critter'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // 3D and Critter have no live collaboration yet (turtle now does)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -8342,7 +8342,7 @@ function loop(){
   if(!document.getElementById('design-modal').classList.contains('hide'))return;
   if(!document.getElementById('share-modal').classList.contains('hide'))return;
   gemA+=0.07;goalA+=0.055;tick++;
-  if(projectType==='zook')return; // the Zook app runs its own render + physics loop
+  if(projectType==='critter')return; // the Critter app runs its own render + physics loop
   if(projectType==='3d'){td3Frame();return;} // 3D world renders Babylon + steps its own interpreter
   if(projectType==='turtle'){turtleFrame();return;} // turtle playground renders + steps its own interpreter
  if(projectType==='stage'){if(stagePlaying){stageFrame();drawStage();}else if(stageNeedsDraw||(tick&3)===0){drawStage();stageNeedsDraw=false;}return;} // play = 60fps; idle = ~15fps (or on demand) to save battery on Chromebooks
@@ -8416,10 +8416,10 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 const CJ_VERSION='2026.10.02';
 const CJ_WHATSNEW=[
- "🐾 NEW project type: Zook! Build a 3D creature from blobs and limbs, give its joints swings or stepping loops, then let real physics decide how it moves. (Key Stage 2 & 3.)",
+ "🐾 NEW project type: Critter Lab! Build a 3D critter from blobs and limbs, give its joints swings or stepping loops, then let real physics decide how it moves. (Key Stage 2 & 3.)",
  "Shape every blob with Length, Height, Width, Squareness and Pointiness, and drag the white IK points to change how a leg steps.",
- "Every Zook heads for the red target. Race it in 8 contests: Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head, Super Sumo and Free roam.",
- "Stuck? Tap Starter Zooks for four ready-made creatures to test and tweak.",
+ "Every Critter heads for the red target. Race it in 8 contests: Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head, Super Sumo and Free roam.",
+ "Stuck? Tap Starter Critters for four ready-made creatures to test and tweak.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

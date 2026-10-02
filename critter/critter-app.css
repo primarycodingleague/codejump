@@ -1,4 +1,4 @@
-/* CodeJump · Zook project type (zook/zook-app.js). Everything is scoped under .zk so nothing leaks into
+/* CodeJump · Critter project type (critter/critter-app.js). Everything is scoped under .zk so nothing leaks into
    the rest of CodeJump. Dark CodeJump look: black/grey panels, gold accents, Montserrat. */
 
 .zk { --zk-bg: #1e1e1e; --zk-panel: #2a2a2a; --zk-sunk: #151515; --zk-line: #444; --zk-text: #eee; --zk-muted: #aaa;

@@ -1,14 +1,14 @@
-/* CodeJump · Zook project type — the app: 3D builder (Three.js) with blobs, limbs and an IK-point
+/* CodeJump · Critter project type — the app: 3D builder (Three.js) with blobs, limbs and an IK-point
  * path editor, the body's Motion tab, beat chart, and the contest arena (Rapier physics via
- * zook-core.js). Lazy-loaded by CodeJump (build-and-play.html: loadZookEngine) only when a Zook project
- * opens, and mounted into #zook-ui. CodeJump owns saving/sharing: getZook() goes into the payload
- * (payload.zook) and onChange() marks the project dirty.
+ * critter-core.js). Lazy-loaded by CodeJump (build-and-play.html: loadCritterEngine) only when a Critter project
+ * opens, and mounted into #critter-ui. CodeJump owns saving/sharing: getCritter() goes into the payload
+ * (payload.critter) and onChange() marks the project dirty.
  *
- *   const app = (await import('./zook/zook-app.js')).mount(rootEl, { zook, onChange, toast });
- *   app.getZook() · app.setZook(z) · app.pause() · app.destroy()
+ *   const app = (await import('./critter/critter-app.js')).mount(rootEl, { critter, onChange, toast });
+ *   app.getCritter() · app.setCritter(z) · app.pause() · app.destroy()
  */
-import * as THREE from './vendor/three-0.186.1-zook.min.js';
-import * as Z from './zook-core.js';
+import * as THREE from './vendor/three-0.186.1-critter.min.js';
+import * as Z from './critter-core.js';
 
 // lucide-style names used below -> CodeJump's own SVG icon symbols (#i-…)
 var ICONS = { wrench: 'i-build', flag: 'i-flag', 'undo-2': 'i-undo', 'redo-2': 'i-redo', sparkles: 'i-spark', 'trash-2': 'i-trash',
@@ -16,12 +16,12 @@ var ICONS = { wrench: 'i-build', flag: 'i-flag', 'undo-2': 'i-undo', 'redo-2': '
   'arrow-up-from-line': 'i-arr-u', keyboard: 'i-key', users: 'i-people', swords: 'i-bump', crosshair: 'i-target' };
 function ic(name) { return '<svg class="ic"><use href="#' + (ICONS[name] || 'i-spark') + '"></use></svg>'; }
 
-var CSS_URL = new URL('./zook-app.css', import.meta.url).href;
+var CSS_URL = new URL('./critter-app.css', import.meta.url).href;
 
 var TEMPLATE = `
 <div class="zk">
   <div class="zl-bar">
-    <label class="zl-name"><span class="zk-sr">Zook name</span><input id="zName" type="text" maxlength="40" value="My Zook" aria-label="Zook name"></label>
+    <label class="zl-name"><span class="zk-sr">Critter name</span><input id="zName" type="text" maxlength="40" value="My Critter" aria-label="Critter name"></label>
     <div class="zl-modes" role="tablist" aria-label="Mode">
       <button type="button" role="tab" class="zl-mode active" data-mode="build" aria-selected="true">${ic('wrench')} Build</button>
       <button type="button" role="tab" class="zl-mode" data-mode="test" aria-selected="false">${ic('flag')} Test it!</button>
@@ -30,14 +30,14 @@ var TEMPLATE = `
       <button type="button" class="zl-icon" id="zUndo" title="Undo (Ctrl+Z)" aria-label="Undo">${ic('undo-2')}</button>
       <button type="button" class="zl-icon" id="zRedo" title="Redo (Ctrl+Y)" aria-label="Redo">${ic('redo-2')}</button>
       <button type="button" class="zl-tool" id="zKeys" title="Keyboard shortcuts (?)">${ic('keyboard')} Keys</button>
-      <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Zooks</button>
+      <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Critters</button>
     </div>
   </div>
 
   <div class="zl-stage" id="buildStage">
     <aside class="zl-palette" aria-label="Parts">
       <h2>Blobs</h2>
-      <p class="zl-hint">Drag a part onto your Zook. It sticks where it touches.</p>
+      <p class="zl-hint">Drag a part onto your Critter. It sticks where it touches.</p>
       <div class="zl-parts" id="zParts"></div>
       <h2 style="margin-top:14px;">Limbs</h2>
       <div class="zl-parts" id="zLimbs"></div>
@@ -45,7 +45,7 @@ var TEMPLATE = `
       <label class="zl-check"><input type="checkbox" id="zPreview" checked> Wiggle preview</label>
     </aside>
     <div class="zl-canvas-wrap">
-      <canvas id="buildCanvas" aria-label="Your Zook in 3D. Drag to look around, tap a part to choose it."></canvas>
+      <canvas id="buildCanvas" aria-label="Your Critter in 3D. Drag to look around, tap a part to choose it."></canvas>
       <div class="zl-canvas-msg" id="buildMsg" hidden></div>
       <div class="zl-canvas-tip" id="buildTip">Drag a part to move it · drag the background to look around · press ? for keyboard shortcuts</div>
     </div>
@@ -77,11 +77,11 @@ var TEMPLATE = `
   <div class="zl-toast" id="zToast" role="status"></div>
 </div>`;
 
-/* Mount the Zook app into `root`. host = { zook, onChange(), toast(msg, colour) }. */
+/* Mount the Critter app into `root`. host = { critter, onChange(), toast(msg, colour) }. */
 export function mount(root, host) {
 host = host || {};
-if (!document.querySelector('link[data-zook-css]')) {
-  var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = CSS_URL; link.setAttribute('data-zook-css', '');
+if (!document.querySelector('link[data-critter-css]')) {
+  var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = CSS_URL; link.setAttribute('data-critter-css', '');
   document.head.appendChild(link);
 }
 root.innerHTML = TEMPLATE;
@@ -90,18 +90,18 @@ var COLOURS = ['#38b6ff', '#f59f18', '#ff751f', '#00bf63', '#ff66c4', '#ae853e',
 var GRIPS = [['slippy', 'Slippy'], ['normal', 'Normal'], ['grippy', 'Grippy']];
 var HINGE_LABELS = [['swing', 'Swing'], ['sweep', 'Sweep'], ['twist', 'Twist']];
 var MOVES = [['still', 'Still'], ['swing', 'Swing'], ['path', 'Motion path']];
-var DEG = Z.DEG, M = 0.01; // the 3D scenes are in metres, the Zook in centimetres
+var DEG = Z.DEG, M = 0.01; // the 3D scenes are in metres, the Critter in centimetres
 
 var $ = function (id) { return document.getElementById(id); };
 var state = {
-  zook: null, selected: null, tab: 'shape', pathPoint: null, mode: 'build', history: [], future: [], sliding: false,
+  critter: null, selected: null, tab: 'shape', pathPoint: null, mode: 'build', history: [], future: [], sliding: false,
   contest: 'sprint', opponent: 'self', t: 0, lastFrame: 0, drag: null, sim: null, running: false, acc: 0, ctrl: null
 };
 var R = null; // Rapier, once loaded
 
 /* ------------------------------------------------------------------ storage + toast */
 
-// CodeJump owns saving (device, cloud, share links): tell it whenever the Zook changes.
+// CodeJump owns saving (device, cloud, share links): tell it whenever the Critter changes.
 function saveCurrent() { if (host.onChange) host.onChange(); }
 
 function toast(msg) {
@@ -116,44 +116,44 @@ function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&
 /* ------------------------------------------------------------------ history */
 
 function remember() {
-  state.history.push(JSON.stringify(state.zook));
+  state.history.push(JSON.stringify(state.critter));
   if (state.history.length > 80) state.history.shift();
   state.future = [];
   updateUndo();
 }
 function undo() {
   if (!state.history.length) return;
-  state.future.push(JSON.stringify(state.zook));
-  state.zook = JSON.parse(state.history.pop());
+  state.future.push(JSON.stringify(state.critter));
+  state.critter = JSON.parse(state.history.pop());
   changed({ inspector: true });
 }
 function redo() {
   if (!state.future.length) return;
-  state.history.push(JSON.stringify(state.zook));
-  state.zook = JSON.parse(state.future.pop());
+  state.history.push(JSON.stringify(state.critter));
+  state.critter = JSON.parse(state.future.pop());
   changed({ inspector: true });
 }
 function updateUndo() { $('zUndo').disabled = !state.history.length; $('zRedo').disabled = !state.future.length; }
 
 // Light refresh while a control is being dragged: new motion controller, redraw.
-function live() { state.ctrl = Z.controller(state.zook); saveCurrent(); builder.sync(); drawBeats(); }
+function live() { state.ctrl = Z.controller(state.critter); saveCurrent(); builder.sync(); drawBeats(); }
 
 // After any edit: save, redraw. opts.inspector rebuilds the side panel, opts.fit re-frames the camera.
 function changed(opts) {
   opts = opts || {};
-  if (state.selected && !Z.block(state.zook, state.selected)) { state.selected = null; state.pathPoint = null; }
-  state.ctrl = Z.controller(state.zook);
+  if (state.selected && !Z.block(state.critter, state.selected)) { state.selected = null; state.pathPoint = null; }
+  state.ctrl = Z.controller(state.critter);
   saveCurrent();
   builder.sync(opts.fit);
   if (opts.inspector) renderInspector();
-  $('zName').value = state.zook.name;
+  $('zName').value = state.critter.name;
   drawBeats();
   updateUndo();
   if (state.mode === 'test') resetRun();
 }
 
-function setZook(z) {
-  state.zook = Z.normalise(z);
+function setCritter(z) {
+  state.critter = Z.normalise(z);
   state.selected = null; state.pathPoint = null;
   changed({ fit: true, inspector: true });
 }
@@ -171,7 +171,7 @@ function partNames(z) {
 
 // The block whose motion path is being shown: the selected block's own, or the path that drives it.
 function pathTip() {
-  var z = state.zook, b = Z.block(z, state.selected);
+  var z = state.critter, b = Z.block(z, state.selected);
   if (!b) return null;
   if (b.path) return b;
   var d = Z.drivenBy(z, b.id);
@@ -303,7 +303,7 @@ var builder = (function () {
   var arrow = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 20), new THREE.MeshStandardMaterial({ color: '#00bf63' }));
   arrow.rotation.z = -Math.PI / 2; scene.add(arrow); // points the way the eyes face (+x)
 
-  var zookGroup = new THREE.Group(); scene.add(zookGroup);
+  var critterGroup = new THREE.Group(); scene.add(critterGroup);
   var ghostGroup = new THREE.Group(); scene.add(ghostGroup);
   var pathGroup = new THREE.Group(); scene.add(pathGroup);
   var meshes = {}, jointDots = {}, gizmo = null, signature = '', stillBounds = null;
@@ -321,18 +321,18 @@ var builder = (function () {
   lineMat.color.set('#111111'); arrowMat.color.set('#111111');
 
   function rebuild() {
-    disposeTree(zookGroup); meshes = {}; jointDots = {};
-    var z = state.zook, driven = {};
+    disposeTree(critterGroup); meshes = {}; jointDots = {};
+    var z = state.critter, driven = {};
     z.blocks.forEach(function (b) { if (b.path) Z.chainOf(z, b.id).blocks.forEach(function (id) { driven[id] = true; }); });
     var sel = state.selected, selB = sel && Z.block(z, sel), twin = selB && selB.twin;
-    z.blocks.forEach(function (b) { var m = blockMesh(b, { selected: b.id === sel || b.id === twin }); meshes[b.id] = m; zookGroup.add(m); });
+    z.blocks.forEach(function (b) { var m = blockMesh(b, { selected: b.id === sel || b.id === twin }); meshes[b.id] = m; critterGroup.add(m); });
     z.joints.forEach(function (j) {
       var d = new THREE.Mesh(jointGeo, driven[j.blockB] ? jointPath : j.motion.amplitude ? jointLive : jointStill);
-      d.userData.id = j.blockB; jointDots[j.id] = d; zookGroup.add(d);
+      d.userData.id = j.blockB; jointDots[j.id] = d; critterGroup.add(d);
     });
     gizmo = null;
     var j = selB && Z.jointFor(z, selB.id);
-    if (j && !Z.drivenBy(z, selB.id)) { gizmo = hingeGizmo(selB, j); zookGroup.add(gizmo); }
+    if (j && !Z.drivenBy(z, selB.id)) { gizmo = hingeGizmo(selB, j); critterGroup.add(gizmo); }
     stillBounds = Z.bounds(z);
   }
 
@@ -346,7 +346,7 @@ var builder = (function () {
   }
 
   function sync(refit) {
-    var z = state.zook;
+    var z = state.critter;
     var sig = JSON.stringify([z.blocks.map(function (b) { return [b.id, b.size, b.square, b.point, b.colour, b.friction, b.eyes, !!b.path, b.mount && b.mount.hinge]; }),
       z.joints.map(function (j) { return [j.id, j.motion.amplitude]; }), state.selected]);
     if (sig !== signature) { signature = sig; rebuild(); }
@@ -356,7 +356,7 @@ var builder = (function () {
   }
 
   function fit() {
-    var bb = stillBounds || Z.bounds(state.zook);
+    var bb = stillBounds || Z.bounds(state.critter);
     var c = new THREE.Vector3((bb.min[0] + bb.max[0]) / 2 * M, (bb.min[1] + bb.max[1]) / 2 * M, (bb.min[2] + bb.max[2]) / 2 * M);
     var size = Math.max(bb.max[0] - bb.min[0], bb.max[1] - bb.min[1], bb.max[2] - bb.min[2]) * M;
     controls.target.copy(c);
@@ -371,7 +371,7 @@ var builder = (function () {
     disposeTree(pathGroup); pathInfo = null;
     var tip = pathTip();
     if (!tip) return;
-    var z = state.zook, f = Z.pathFrame(z, tip.id), still = Z.pose(z), base = still.blocks[f.chain.base];
+    var z = state.critter, f = Z.pathFrame(z, tip.id), still = Z.pose(z), base = still.blocks[f.chain.base];
     var toWorld = function (uv) {
       var local = Z.add(Z.add(f.origin, Z.scale(f.U, uv[0])), Z.scale(f.V, uv[1]));
       var w = Z.add(base.p, Z.qRot(base.q, local));
@@ -392,9 +392,9 @@ var builder = (function () {
     pathInfo = { tip: tip, frame: f, base: base, plane: new THREE.Plane().setFromNormalAndCoplanarPoint(new THREE.Vector3(normal[0], normal[1], normal[2]), o) };
   }
 
-  // Draw the Zook at pose p (built, or mid-motion for the preview).
+  // Draw the Critter at pose p (built, or mid-motion for the preview).
   function apply(p) {
-    var z = state.zook, bb = stillBounds || Z.bounds(z), groundY = bb.min[1] * M - 0.003;
+    var z = state.critter, bb = stillBounds || Z.bounds(z), groundY = bb.min[1] * M - 0.003;
     floor.position.y = groundY; grid.position.y = groundY + 0.001;
     arrow.position.set(bb.max[0] * M + 0.35, groundY + 0.03, 0);
     floor.position.x = grid.position.x = (bb.min[0] + bb.max[0]) / 2 * M;
@@ -434,12 +434,12 @@ var builder = (function () {
   // Where would a part dropped at this pointer position stick? (uses the built pose)
   function snapAt(e, skip) {
     if (!inside(e)) return null;
-    apply(Z.pose(state.zook));
-    zookGroup.updateMatrixWorld(true);
+    apply(Z.pose(state.critter));
+    critterGroup.updateMatrixWorld(true);
     ray(e);
     var hit = raycaster.intersectObjects(Object.keys(meshes).filter(function (k) { return !(skip && skip[k]); }).map(function (k) { return meshes[k]; }), false)[0];
     if (!hit) return null;
-    var b = Z.block(state.zook, hit.object.userData.id), q = Z.pose(state.zook).blocks[b.id];
+    var b = Z.block(state.critter, hit.object.userData.id), q = Z.pose(state.critter).blocks[b.id];
     var local = Z.qRot(Z.qConj(q.q), [hit.point.x / M - q.p[0], hit.point.y / M - q.p[1], hit.point.z / M - q.p[2]]);
     var f = Z.faceAt(b.size, local);
     return { parent: b.id, face: f.face, at: f.at };
@@ -452,7 +452,7 @@ var builder = (function () {
     if (key === ghostKey) return;
     ghostKey = key; disposeTree(ghostGroup);
     if (!snap) return;
-    var copy = JSON.parse(JSON.stringify(state.zook)), before = {};
+    var copy = JSON.parse(JSON.stringify(state.critter)), before = {};
     copy.blocks.forEach(function (b) { before[b.id] = true; });
     if (!Z.attachLimb(copy, kind, snap.parent, snap.face, snap.at, { mirror: $('zMirror').checked })) return;
     var p = Z.pose(copy);
@@ -462,7 +462,7 @@ var builder = (function () {
   }
 
   // Pointer: drag a path point (on its plane), tap a "+" to add a point, press on a part to select it
-  // and drag it somewhere else on the Zook, drag the background (or the body) to orbit.
+  // and drag it somewhere else on the Critter, drag the background (or the body) to orbit.
   var down = null;
   canvas.addEventListener('pointerdown', function (e) {
     down = { x: e.clientX, y: e.clientY, path: pickPath(e) };
@@ -472,7 +472,7 @@ var builder = (function () {
       return;
     }
     if (down.path) return;
-    var id = pick(e), b = id && Z.block(state.zook, id);
+    var id = pick(e), b = id && Z.block(state.critter, id);
     if (b && b.mount) {
       controls.enabled = false; canvas.setPointerCapture(e.pointerId); state.held = true; // freeze the wiggle while it's held
       down.part = id; down.remembered = false; down.key = ''; down.hadTwin = !!b.twin;
@@ -483,12 +483,12 @@ var builder = (function () {
     if (down && down.part) {
       if (!state.moving && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6) return;
       state.moving = true; canvas.style.cursor = 'grabbing';
-      var z = state.zook, b = Z.block(z, down.part);
+      var z = state.critter, b = Z.block(z, down.part);
       if (!b) return;
       var skip = Z.subtree(z, b.id);
       if (b.twin) Object.assign(skip, Z.subtree(z, b.twin));
       var snap = snapAt(e, skip);
-      $('buildMsg').hidden = !!snap; $('buildMsg').textContent = 'Slide it onto another part of your Zook';
+      $('buildMsg').hidden = !!snap; $('buildMsg').textContent = 'Slide it onto another part of your Critter';
       if (!snap) return;
       var key = snap.parent + snap.face + snap.at.join(',');
       if (key === down.key) return;
@@ -510,7 +510,7 @@ var builder = (function () {
       var pts = pathInfo.tip.path.points, i = down.path.point;
       if (pts[i][0] === uv[0] && pts[i][1] === uv[1]) return;
       if (!down.remembered) { remember(); down.remembered = true; }
-      pts[i] = uv; Z.syncTwin(state.zook, pathInfo.tip); live();
+      pts[i] = uv; Z.syncTwin(state.critter, pathInfo.tip); live();
       return;
     }
     if (e.buttons || state.drag) return;
@@ -522,7 +522,7 @@ var builder = (function () {
     if (!d || state.drag) return;
     if (d.part) {
       var moved = state.moving; state.moving = false; $('buildMsg').hidden = true; canvas.style.cursor = '';
-      if (d.remembered) { changed({ inspector: true }); if (moved && Z.block(state.zook, d.part) && !Z.block(state.zook, d.part).twin && d.hadTwin) toast('It\u2019s in the middle now, so its twin was taken off.'); }
+      if (d.remembered) { changed({ inspector: true }); if (moved && Z.block(state.critter, d.part) && !Z.block(state.critter, d.part).twin && d.hadTwin) toast('It\u2019s in the middle now, so its twin was taken off.'); }
       return;
     }
     if (d.path && d.path.point != null) { if (d.remembered) changed(); return; }
@@ -549,7 +549,7 @@ function insertPoint(tip, at) {
   remember();
   var a = pts[(at - 1 + pts.length) % pts.length], b = pts[at % pts.length];
   pts.splice(at, 0, [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)]);
-  state.pathPoint = at; Z.syncTwin(state.zook, tip);
+  state.pathPoint = at; Z.syncTwin(state.critter, tip);
   changed({ inspector: true });
 }
 
@@ -617,7 +617,7 @@ function movePartDrag(e) {
   d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px';
   d.ghost.style.display = d.snap ? 'none' : 'block';
   $('buildMsg').hidden = !(d.over && !d.snap);
-  $('buildMsg').textContent = 'Drop it on your Zook';
+  $('buildMsg').textContent = 'Drop it on your Critter';
 }
 function endDrag() {
   var d = state.drag;
@@ -631,19 +631,19 @@ window.addEventListener('pointerup', function (e) {
   var d = endDrag();
   if (!d.moved) { quickAdd(d.kind); return; }
   if (d.snap) addPart(d.kind, d.snap.parent, d.snap.face, d.snap.at);
-  else if (d.over) toast('Parts need to touch your Zook. Drop it on one of its sides.');
+  else if (d.over) toast('Parts need to touch your Critter. Drop it on one of its sides.');
 });
 window.addEventListener('pointercancel', function (e) { if (state.drag && e.pointerId === state.drag.id) endDrag(); });
 
 function addPart(kind, parentId, face, at) {
-  var z = state.zook, before = JSON.stringify(z), count = z.blocks.length;
+  var z = state.critter, before = JSON.stringify(z), count = z.blocks.length;
   var b = Z.attachLimb(z, kind, parentId, face, at, { mirror: $('zMirror').checked });
   if (!b) { toast('There isn’t room for that (' + Z.MAX_BLOCKS + ' parts max). Remove something, or switch off "Add in pairs".'); return; }
   state.history.push(before); state.future = [];
   var tip = z.blocks.slice(count).filter(function (x) { return x.path; })[0];
   state.selected = tip ? tip.id : b.id; state.pathPoint = null;
   if (tip) state.tab = 'motion';
-  // re-frame the camera if the Zook has grown a lot
+  // re-frame the camera if the Critter has grown a lot
   var b0 = Z.bounds(JSON.parse(before)), b1 = Z.bounds(z);
   var span = function (bb) { return Math.max(bb.max[0] - bb.min[0], bb.max[1] - bb.min[1], bb.max[2] - bb.min[2]); };
   changed({ inspector: true, fit: span(b1) > span(b0) * 1.15 });
@@ -652,7 +652,7 @@ function addPart(kind, parentId, face, at) {
 
 // Tap (or Enter) on a part: hang it from the chosen part (or under the body) at the next free spot.
 function quickAdd(kind) {
-  var z = state.zook, parent = Z.block(z, state.selected) || z.blocks[0];
+  var z = state.critter, parent = Z.block(z, state.selected) || z.blocks[0];
   var used = Z.children(z, parent.id).map(function (b) { return b.mount.face + b.mount.at.join(','); });
   var spots = parent.mount ? [['+x', [0, 0]]]
     : [['-y', [0.35, 0.35]], ['-y', [-0.35, 0.35]], ['-y', [0, 0.35]], ['+x', [0, 0]], ['-x', [0, 0]], ['+y', [0, 0]]];
@@ -684,14 +684,14 @@ function dial(label, ph) {
     '<p class="zl-hint" style="margin-top:6px;">Parts with the dot in the same place move together. Opposite sides take turns.</p></div>';
 }
 
-// Wire a slider: the first nudge of a drag is one undo step; the Zook (and its twin) update live.
+// Wire a slider: the first nudge of a drag is one undo step; the Critter (and its twin) update live.
 function bindSlider(id, b, apply) {
   var input = $(id);
   if (!input) return;
   input.addEventListener('input', function () {
     if (!state.sliding) { remember(); state.sliding = true; }
     $(id + 'Out').textContent = apply(Number(input.value));
-    if (b) Z.syncTwin(state.zook, b);
+    if (b) Z.syncTwin(state.critter, b);
     live();
   });
   input.addEventListener('change', function () { state.sliding = false; changed(); });
@@ -704,11 +704,11 @@ function bindSeg(id, fn) {
 function on(id, fn) { var el = $(id); if (el) el.addEventListener('click', fn); }
 
 function renderInspector() {
-  var box = $('zInspector'), z = state.zook, b = Z.block(z, state.selected);
+  var box = $('zInspector'), z = state.critter, b = Z.block(z, state.selected);
   if (!b) {
     box.innerHTML = '<h2>' + esc(z.name) + '</h2><p class="zl-empty">' + (z.blocks.length < 2
-      ? 'Your Zook is just a body so far. Drag a <strong>Walking leg</strong> onto its underside, or tap one to stick a pair underneath.'
-      : 'Tap a part to change its shape and how it moves. Tap the body for the Zook’s cycle speed and turning. Drag the background to look around.') + '</p>' +
+      ? 'Your Critter is just a body so far. Drag a <strong>Walking leg</strong> onto its underside, or tap one to stick a pair underneath.'
+      : 'Tap a part to change its shape and how it moves. Tap the body for the Critter’s cycle speed and turning. Drag the background to look around.') + '</p>' +
       '<p class="zl-empty">' + z.blocks.length + ' of ' + Z.MAX_BLOCKS + ' parts used.</p>' + bestLine(z);
     return;
   }
@@ -751,11 +751,11 @@ function bindShape(b) {
   bindSlider('iWide', b, function (v) { b.size[2] = v; return v + ' cm'; });
   bindSlider('iSquare', b, function (v) { b.square = v / 100; return v + '%'; });
   bindSlider('iPoint', b, function (v) { b.point = v / 100; return v + '%'; });
-  bindSeg('iGrip', function (v) { b.friction = Z.FRICTION[v]; Z.syncTwin(state.zook, b); });
+  bindSeg('iGrip', function (v) { b.friction = Z.FRICTION[v]; Z.syncTwin(state.critter, b); });
   document.querySelectorAll('#iCol button').forEach(function (btn) {
-    btn.addEventListener('click', function () { remember(); b.colour = btn.dataset.c; Z.syncTwin(state.zook, b); changed({ inspector: true }); });
+    btn.addEventListener('click', function () { remember(); b.colour = btn.dataset.c; Z.syncTwin(state.critter, b); changed({ inspector: true }); });
   });
-  $('iEyes').addEventListener('change', function () { remember(); b.eyes = this.checked; Z.syncTwin(state.zook, b); changed(); });
+  $('iEyes').addEventListener('change', function () { remember(); b.eyes = this.checked; Z.syncTwin(state.critter, b); changed(); });
   on('iDel', deleteSelected);
   bindWheel(b);
 }
@@ -804,7 +804,7 @@ function bindWheel(b) {
   function apply() {
     var hex = hsvToHex(hsv);
     if (!remembered) { remember(); remembered = true; }
-    b.colour = hex; Z.syncTwin(state.zook, b);
+    b.colour = hex; Z.syncTwin(state.critter, b);
     builder.tint([b.id].concat(b.twin ? [b.twin] : []), hex);
     $('iNow').style.background = hex; $('iHex').textContent = hex;
     document.querySelectorAll('#iCol button').forEach(function (s) { s.classList.toggle('on', s.dataset.c === hex); });
@@ -830,7 +830,7 @@ function bindWheel(b) {
 function moveMode(b, j) { return b.path ? 'path' : j.motion.amplitude > 0 ? 'swing' : 'still'; }
 
 function motionTab(b, j, names) {
-  var z = state.zook, driver = Z.drivenBy(z, b.id);
+  var z = state.critter, driver = Z.drivenBy(z, b.id);
   if (driver && driver !== b.id) {
     return '<p class="zl-note">This joint is moved by <strong>' + esc(names[driver]) + '</strong>’s motion path (IK): the limb bends itself so its tip follows the white loop. <button type="button" id="iGoTip">Edit that path</button></p>' +
       '<div class="zl-row"><span class="zl-lbl">Hinge</span>' + seg('iHinge', HINGE_LABELS, b.mount.hinge) + '</div>' +
@@ -865,7 +865,7 @@ function motionTab(b, j, names) {
 }
 
 function bindMotion(b, j) {
-  var z = state.zook;
+  var z = state.critter;
   on('iGoTip', function () { state.selected = Z.drivenBy(z, b.id); state.pathPoint = null; builder.sync(); renderInspector(); drawBeats(); });
   bindSeg('iHinge', function (v) { b.mount.hinge = v; Z.syncTwin(z, b); });
   bindSeg('iMove', function (v) {
@@ -907,7 +907,7 @@ function bindMotion(b, j) {
 
 function bodyMotionTab(z) {
   var m = z.motion;
-  return '<p class="zl-hint">These settings are for the whole Zook. Every part takes one cycle to do its move.</p>' +
+  return '<p class="zl-hint">These settings are for the whole Critter. Every part takes one cycle to do its move.</p>' +
     slider('Cycle speed', 'mSpeed', 1, 10, 1, speedFromPeriod(m.period), m.period + ' s a cycle') +
     slider('Turning sharpness', 'mSharp', 0, 100, 5, Math.round(m.sharpness * 100), pct(m.sharpness)) +
     '<p class="zl-hint" style="margin-top:-4px;">Low: turns in a wide arc. High: pivots on the spot (inside legs walk backwards).</p>' +
@@ -979,10 +979,10 @@ function bindDial(obj) {
 }
 
 function deleteSelected() {
-  var b = Z.block(state.zook, state.selected);
+  var b = Z.block(state.critter, state.selected);
   if (!b || !b.mount) return;
   remember();
-  var gone = Z.remove(state.zook, b.id);
+  var gone = Z.remove(state.critter, b.id);
   state.selected = null; state.pathPoint = null;
   changed({ inspector: true });
   toast(gone.length > 1 ? 'Removed ' + gone.length + ' parts.' : 'Part removed.');
@@ -1012,7 +1012,7 @@ function beatRows(z) {
 }
 
 function drawBeats() {
-  var z = state.zook, rows = beatRows(z), period = z.motion.period;
+  var z = state.critter, rows = beatRows(z), period = z.motion.period;
   $('beatsWrap').hidden = state.mode !== 'build';
   beatCanvas.style.height = Math.max(1, rows.length) * BEAT_ROW + 8 + 'px';
   var s = sizeCanvas(beatCanvas), ctx = s.ctx, names = partNames(z);
@@ -1047,7 +1047,7 @@ function drawBeats() {
   }
 }
 beatCanvas.addEventListener('click', function (e) {
-  var r = beatCanvas.getBoundingClientRect(), i = Math.floor((e.clientY - r.top - 4) / BEAT_ROW), row = beatRows(state.zook)[i];
+  var r = beatCanvas.getBoundingClientRect(), i = Math.floor((e.clientY - r.top - 4) / BEAT_ROW), row = beatRows(state.critter)[i];
   if (row) { state.selected = row.id; state.tab = 'motion'; state.pathPoint = null; builder.sync(); renderInspector(); drawBeats(); }
 });
 
@@ -1055,7 +1055,7 @@ beatCanvas.addEventListener('click', function (e) {
 
 var arena = (function () {
   var canvas = $('arenaCanvas');
-  var renderer = null, scene, camera, controls, sun, courseGroup, zookGroup, propGroup, markerGroup, trail, trailPts;
+  var renderer = null, scene, camera, controls, sun, courseGroup, critterGroup, propGroup, markerGroup, trail, trailPts;
   var meshes = [], props = [], markers = [];
 
   function init() {
@@ -1070,7 +1070,7 @@ var arena = (function () {
     sun = lights(scene, 5);
     courseGroup = new THREE.Group(); scene.add(courseGroup);
     propGroup = new THREE.Group(); scene.add(propGroup);
-    zookGroup = new THREE.Group(); scene.add(zookGroup);
+    critterGroup = new THREE.Group(); scene.add(critterGroup);
     markerGroup = new THREE.Group(); scene.add(markerGroup);
     trailPts = new Float32Array(3 * 2000);
     var tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(trailPts, 3)); tg.setDrawRange(0, 0);
@@ -1147,10 +1147,10 @@ var arena = (function () {
   function load(sim) {
     if (!renderer) init();
     buildCourse(sim);
-    disposeTree(zookGroup); disposeTree(propGroup);
-    meshes = sim.zooks.map(function (zs) {
+    disposeTree(critterGroup); disposeTree(propGroup);
+    meshes = sim.critters.map(function (zs) {
       var out = {};
-      zs.zook.blocks.forEach(function (b) { var m = blockMesh(b); out[b.id] = m; zookGroup.add(m); });
+      zs.critter.blocks.forEach(function (b) { var m = blockMesh(b); out[b.id] = m; critterGroup.add(m); });
       return out;
     });
     props = sim.props.map(function (p) {
@@ -1167,7 +1167,7 @@ var arena = (function () {
 
   function focus(sim) {
     if (sim.contest === 'sumo') return { x: 0, z: 0 };
-    if (sim.contest === 'race' && sim.zooks[1]) { var a = sim.com(0), b = sim.com(1); return { x: (a.x + b.x) / 2, z: 0 }; }
+    if (sim.contest === 'race' && sim.critters[1]) { var a = sim.com(0), b = sim.com(1); return { x: (a.x + b.x) / 2, z: 0 }; }
     var c = sim.com(0); return { x: c.x, z: c.z };
   }
 
@@ -1200,7 +1200,7 @@ var arena = (function () {
   }
 
   function draw(sim) {
-    sim.zooks.forEach(function (zs, i) { Z.transforms(sim, i).forEach(function (t) { var m = meshes[i][t.id]; if (m) place(m, t.p, t.q, 1); }); });
+    sim.critters.forEach(function (zs, i) { Z.transforms(sim, i).forEach(function (t) { var m = meshes[i][t.id]; if (m) place(m, t.p, t.q, 1); }); });
     sim.props.forEach(function (p, i) { var t = p.body.translation(), r = p.body.rotation(); props[i].position.set(t.x, t.y, t.z); props[i].quaternion.set(r.x, r.y, r.z, r.w); });
     drawMarkers(sim);
     var c = sim.com(0), f = focus(sim);
@@ -1234,7 +1234,7 @@ function renderContests() {
   box.innerHTML = Object.keys(Z.CONTESTS).map(function (k) {
     var C = Z.CONTESTS[k];
     return '<button type="button" role="radio" class="zl-contest' + (k === state.contest ? ' on' : '') + '" data-c="' + k + '" aria-checked="' + (k === state.contest) + '">' +
-      ic(C.icon) + '<strong>' + C.label + '</strong><span>' + (C.seconds ? C.seconds + ' s' : 'no time limit') + (C.two ? ' · 2 Zooks' : '') + '</span></button>';
+      ic(C.icon) + '<strong>' + C.label + '</strong><span>' + (C.seconds ? C.seconds + ' s' : 'no time limit') + (C.two ? ' · 2 Critters' : '') + '</span></button>';
   }).join('');
   icons();
   box.querySelectorAll('button').forEach(function (b) {
@@ -1252,10 +1252,10 @@ function renderOpponents() {
   sel.innerHTML = opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === state.opponent ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
 }
 
-function opponentZook() {
+function opponentCritter() {
   var v = state.opponent || 'self';
   if (v.indexOf('starter:') === 0 && Z.STARTERS[v.slice(8)]) return Z.STARTERS[v.slice(8)].make();
-  return JSON.parse(JSON.stringify(state.zook));
+  return JSON.parse(JSON.stringify(state.critter));
 }
 
 var physicsReady = null;
@@ -1277,12 +1277,12 @@ function resetRun() {
   }
   if (state.sim) state.sim.free();
   var C = Z.CONTESTS[state.contest];
-  state.sim = Z.createSim(R, state.contest, C.two ? [state.zook, opponentZook()] : [state.zook]);
+  state.sim = Z.createSim(R, state.contest, C.two ? [state.critter, opponentCritter()] : [state.critter]);
   state.running = false; state.acc = 0;
   arena.load(state.sim);
   $('zResult').hidden = true;
   msg.hidden = state.contest !== 'roam'; msg.classList.add('low');
-  msg.textContent = 'Tap the ground to move the red target. Your Zook will head for it.';
+  msg.textContent = 'Tap the ground to move the red target. Your Critter will head for it.';
   setGo('Go!', 'play');
   hud();
 }
@@ -1300,16 +1300,16 @@ function go() {
 
 function hud() {
   var sim = state.sim; if (!sim) return;
-  var C = Z.CONTESTS[state.contest], r = sim.result(), best = state.zook.best && state.zook.best[state.contest];
+  var C = Z.CONTESTS[state.contest], r = sim.result(), best = state.critter.best && state.critter.best[state.contest];
   $('hudLabel').textContent = C.label;
-  $('hudDist').textContent = state.contest === 'sumo' ? (sim.zooks[0].out ? 'Out!' : sim.zooks[1] && sim.zooks[1].out ? 'They’re out!' : 'Push!') : r.text;
+  $('hudDist').textContent = state.contest === 'sumo' ? (sim.critters[0].out ? 'Out!' : sim.critters[1] && sim.critters[1].out ? 'They’re out!' : 'Push!') : r.text;
   $('hudTime').textContent = sim.seconds === Infinity ? sim.t.toFixed(0) + ' s' : Math.max(0, sim.seconds - sim.t).toFixed(1) + ' s left';
   $('hudBest').textContent = best != null && !C.two ? 'Best ' + fmtScore(state.contest, best) : '';
   $('hudBar').style.width = sim.seconds === Infinity ? '0' : Math.min(100, sim.t / sim.seconds * 100) + '%';
 }
 
 function finishRun() {
-  var sim = state.sim, z = state.zook, r = sim.result(), C = Z.CONTESTS[state.contest];
+  var sim = state.sim, z = state.critter, r = sim.result(), C = Z.CONTESTS[state.contest];
   state.running = false;
   setGo('Go again', 'rotate-ccw');
   var prev = z.best && z.best[state.contest];
@@ -1319,11 +1319,11 @@ function finishRun() {
   var big, msg, badge = isBest ? 'New best!' : C.label;
   if (sim.broken) { big = 'Oops!'; msg = 'Whoa, it came apart! Try smaller swings, slower cycles or less power.'; }
   else if (state.contest === 'sumo') { big = r.win === true ? 'You win!' : r.win === false ? 'You lose' : 'Draw'; msg = r.text + '.'; }
-  else if (state.contest === 'race') { big = r.win ? 'You win!' : 'You lose'; msg = 'Your Zook: ' + r.score.toFixed(1) + ' m. Opponent: ' + r.other.toFixed(1) + ' m.'; }
+  else if (state.contest === 'race') { big = r.win ? 'You win!' : 'You lose'; msg = 'Your Critter: ' + r.score.toFixed(1) + ' m. Opponent: ' + r.other.toFixed(1) + ' m.'; }
   else {
     big = fmtScore(state.contest, r.score);
     msg = r.text + '. ' + (state.contest === 'lap' && r.score < 2 ? 'Steering is the trick here: try the body’s turning sharpness, or legs on each side that can change their stride.'
-      : state.contest === 'highjump' ? 'Bigger swings, more power and all legs on the same beat make a springier Zook.'
+      : state.contest === 'highjump' ? 'Bigger swings, more power and all legs on the same beat make a springier Critter.'
       : state.contest === 'blockpush' ? 'A wide, heavy front end shoves more blocks.'
       : r.score < 0 ? 'It went backwards! Try reversing its foot loops, or flipping some beats.'
       : r.score < 0.5 ? 'It hardly moved. Try grippy feet, longer steps, or legs on opposite beats.' : 'Can you tweak it to do even better?');
@@ -1363,7 +1363,7 @@ function frame(now) {
   if (state.mode === 'build') {
     var wiggle = $('zPreview').checked && !state.drag && !state.moving;
     if (wiggle && !state.held) state.t += dt; // a pressed part stays exactly where it is until you let go
-    if (!state.drag && !state.moving) builder.apply(Z.pose(state.zook, wiggle && state.ctrl ? state.ctrl.angles(state.t, null) : null));
+    if (!state.drag && !state.moving) builder.apply(Z.pose(state.critter, wiggle && state.ctrl ? state.ctrl.angles(state.t, null) : null));
     builder.render();
     if (wiggle) drawBeats();
   } else if (state.sim) {
@@ -1381,7 +1381,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-/* ------------------------------------------------------------------ dialogs: starters, my zooks, share */
+/* ------------------------------------------------------------------ dialogs: starters, my critters, share */
 
 var dialog = $('zDialog');
 function openDialog(title, bodyHtml) {
@@ -1391,9 +1391,9 @@ function openDialog(title, bodyHtml) {
   if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
 }
 
-function fresh(z) { var c = JSON.parse(JSON.stringify(z)); c.id = Z.uid('zook'); c.best = {}; return c; }
+function fresh(z) { var c = JSON.parse(JSON.stringify(z)); c.id = Z.uid('critter'); c.best = {}; return c; }
 
-// Pictures of Zooks for the galleries, from one small offscreen renderer.
+// Pictures of Critters for the galleries, from one small offscreen renderer.
 var thumbs = (function () {
   var r = null, scene, camera, group;
   return function (z) {
@@ -1418,7 +1418,7 @@ var thumbs = (function () {
 
 function showStarters() {
   var keys = Object.keys(Z.STARTERS);
-  openDialog('Start from a ready-made Zook', '<p class="zl-muted" style="margin-top:0;">Each of these really moves. Open one, test it, then change it and see what happens.</p><div class="zl-gallery">' +
+  openDialog('Start from a ready-made Critter', '<p class="zl-muted" style="margin-top:0;">Each of these really moves. Open one, test it, then change it and see what happens.</p><div class="zl-gallery">' +
     keys.map(function (k) {
       var s = Z.STARTERS[k];
       return '<div class="zl-tile"><img alt="' + s.label + '" src="' + thumbs(s.make()) + '"><div class="meta"><strong>' + s.label + '</strong><span>' + s.blurb + '</span></div>' +
@@ -1426,8 +1426,8 @@ function showStarters() {
     }).join('') + '</div>');
   dialog.querySelectorAll('[data-open]').forEach(function (b) {
     b.addEventListener('click', function () {
-      remember(); setZook(fresh(Z.STARTERS[b.dataset.open].make())); dialog.close(); setMode('build');
-      toast('Here’s ' + state.zook.name + '. Press Test it! to watch it go.');
+      remember(); setCritter(fresh(Z.STARTERS[b.dataset.open].make())); dialog.close(); setMode('build');
+      toast('Here’s ' + state.critter.name + '. Press Test it! to watch it go.');
     });
   });
 }
@@ -1437,14 +1437,14 @@ function showStarters() {
 function boot() {
   eyeMats = [keepMat(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.3 })), keepMat(new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.2 }))];
   renderPalette();
-  state.zook = Z.normalise(host.zook || Z.newZook('My Zook'));
+  state.critter = Z.normalise(host.critter || Z.newCritter('My Critter'));
   changed({ inspector: true, fit: true });
   state.history = []; updateUndo();
   loadPhysics().catch(function () { /* reported when the arena opens */ });
 
   $('zName').addEventListener('input', function () {
     if (!state.sliding) { remember(); state.sliding = true; }
-    state.zook.name = this.value.slice(0, 40) || 'My Zook'; saveCurrent();
+    state.critter.name = this.value.slice(0, 40) || 'My Critter'; saveCurrent();
   });
   $('zName').addEventListener('change', function () { state.sliding = false; changed({ inspector: !state.selected }); });
   root.querySelectorAll('.zl-mode').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
@@ -1466,7 +1466,7 @@ var SHORTCUTS = {
     ['N / Shift + N', 'Choose the next / previous part'], ['P', 'Choose the part it hangs from'],
     ['Arrow keys', 'Slide the chosen part around the side it’s on (hold Shift for big steps)'],
     ['[ and ]', 'Lean the chosen part'], [', and .', 'Splay the chosen part'], ['+ and −', 'Make the chosen part bigger / smaller'],
-    ['W', 'Wiggle preview on / off'], ['M', 'Add in pairs (mirror) on / off'], ['F', 'Fit the Zook in the view'],
+    ['W', 'Wiggle preview on / off'], ['M', 'Add in pairs (mirror) on / off'], ['F', 'Fit the Critter in the view'],
     ['Enter or T', 'Test it!'], ['?', 'Show these keys']],
   test: [['Space', 'Go / Stop'], ['1 – 8', 'Pick a contest'], ['T', 'Turbo on / off'], ['B or Esc', 'Back to Build'], ['?', 'Show these keys']]
 };
@@ -1479,10 +1479,10 @@ function showKeys() {
 
 // Change the chosen part from the keyboard: one undo step per key press (held keys add to it).
 function tweak(e, fn) {
-  var b = Z.block(state.zook, state.selected);
+  var b = Z.block(state.critter, state.selected);
   if (!b) { toast('Choose a part first: tap it, or press N.'); return; }
   if (!e.repeat) remember();
-  if (fn(b) !== false) { Z.syncTwin(state.zook, b); changed({ inspector: true }); }
+  if (fn(b) !== false) { Z.syncTwin(state.critter, b); changed({ inspector: true }); }
 }
 function clampSize(v, lo, hi) { return Math.max(lo, Math.min(hi, Math.round(v))); }
 
@@ -1491,7 +1491,7 @@ function onKey(e) {
   if (document.querySelector('#cj-dialog:not(.hide), [id$="-modal"]:not(.hide)')) return; // a CodeJump popup is open
   var t = e.target, tag = (t.tagName || '').toLowerCase();
   if (tag === 'textarea' || tag === 'select' || t.isContentEditable || (tag === 'input' && t.type !== 'range' && t.type !== 'checkbox')) return; // typing
-  var slider = tag === 'input' && t.type === 'range', k = e.key, lk = k.length === 1 ? k.toLowerCase() : k, z = state.zook;
+  var slider = tag === 'input' && t.type === 'range', k = e.key, lk = k.length === 1 ? k.toLowerCase() : k, z = state.critter;
   var cmd = e.ctrlKey || e.metaKey;
   function done() { e.preventDefault(); e.stopPropagation(); }
 
@@ -1547,13 +1547,13 @@ boot();
 
 // What CodeJump talks to.
 return {
-  // the Zook as JSON (for buildPayload)
-  getZook: function () { return JSON.parse(JSON.stringify(state.zook)); },
-  // load a Zook (from applyPayload / a new project); clears undo history
-  setZook: function (z) { state.running = false; setZook(z || Z.newZook('My Zook')); state.history = []; state.future = []; updateUndo(); setMode('build'); },
-  // CodeJump is leaving Zook mode
+  // the Critter as JSON (for buildPayload)
+  getCritter: function () { return JSON.parse(JSON.stringify(state.critter)); },
+  // load a Critter (from applyPayload / a new project); clears undo history
+  setCritter: function (z) { state.running = false; setCritter(z || Z.newCritter('My Critter')); state.history = []; state.future = []; updateUndo(); setMode('build'); },
+  // CodeJump is leaving Critter mode
   pause: function () { state.running = false; if (state.mode === 'test') setMode('build'); },
-  newZook: function () { return Z.newZook('My Zook'); },
+  newCritter: function () { return Z.newCritter('My Critter'); },
   destroy: function () { destroyed = true; document.removeEventListener('keydown', onKey); if (state.sim) state.sim.free(); root.innerHTML = ''; }
 };
 }

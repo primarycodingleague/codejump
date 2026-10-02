@@ -1,31 +1,31 @@
-/* Zook Lab — core: the Zook data model, motion (swings, IK motion paths, steering towards the red
+/* Critter Lab — core: the Critter data model, motion (swings, IK motion paths, steering towards the red
  * target) and the Rapier physics contests.
  *
  * An ES module with no DOM and no rendering, so it runs in the browser and in Node (for tuning the
- * starter Zooks headlessly). Rapier is passed in (createSim(RAPIER, …)) rather than imported, so the
+ * starter Critters headlessly). Rapier is passed in (createSim(RAPIER, …)) rather than imported, so the
  * builder can load before the 1.6 MB physics engine has arrived.
  *
- * A Zook is one JSON document, the single source of truth (units: centimetres, degrees, seconds):
+ * A Critter is one JSON document, the single source of truth (units: centimetres, degrees, seconds):
  *   { version: 3, id, name, motion: { period, sharpness, smoothness, power }, blocks: [...], joints: [...],
  *     best: { contest: score } }
  *   block = { id, kind, size: [length, height, width], square (0–1), point (0–1), friction, colour, eyes,
  *             twin?, mount: { parent, face, at: [a, b], lean, splay, hinge }, path?: { points: [[u, v], …], phase } }
  *   joint = { id, blockA (parent), blockB (child), minAngle, maxAngle, motion: { amplitude, phase }, aim: { on, angle } }
  *
- * Parts are "blobs" (as in the original Zook Kit): superellipsoids that go from egg-shaped (square 0) to
+ * Parts are "blobs": superellipsoids that go from egg-shaped (square 0) to
  * boxy (square 1), tapering towards their far end with `point`. World axes: +x forwards (the way the
- * eyes face), +y up, +z to the Zook's right. Every block except the root hangs off a face of its parent
+ * eyes face), +y up, +z to the Critter's right. Every block except the root hangs off a face of its parent
  * ('+x', '-y', …) at `at` (fractions across that face, projected onto the blob's surface). Its long axis
  * points straight out of the face, tipped by `splay` (about its own y) and `lean` (about its own z). Its
  * joint is a hinge about one of its own axes: 'swing' (z), 'sweep' (y) or 'twist' (x).
  *
- * Motion, all on one beat (motion.period = the Zook Kit's "cycle speed"):
+ * Motion, all on one beat (motion.period = the "cycle speed"):
  *  - a joint can swing to and fro (motion.amplitude, motion.phase), or
  *  - a limb tip with a `path` follows a loop of IK points (in the plane its top joint swings in, relative
  *    to the block the limb hangs from); the limb's joints (up to 3) are solved by IK to reach it.
- *  - steering: the Zook turns towards its red target by shortening the stride (or swing) on the inside
+ *  - steering: the Critter turns towards its red target by shortening the stride (or swing) on the inside
  *    of the turn (turning sharpness: down to walking backwards, i.e. pivoting) and by bending any joint
- *    with aim.on towards the target (the Zook Kit's "part targeting").
+ *    with aim.on towards the target ("part targeting").
  */
 
 export var VERSION = 3;
@@ -53,15 +53,15 @@ export var LIMBS = {
   neck:  { label: 'Neck & head', blurb: 'Turns to look at the target', parts: ['leg', 'body'], knee: 0, aim: true }
 };
 
-// Contests (the Zook Kit's trials, plus TV-style contests).
+// Contests: classic trials plus head-to-head contests.
 export var CONTESTS = {
   sprint:    { label: 'Sprint',       seconds: 15, unit: 'm',  icon: 'zap',           about: 'Race towards the red target. How far in 15 seconds?' },
   hurdles:   { label: 'Hurdles',      seconds: 20, unit: 'm',  icon: 'mountain',      about: 'A sprint over humps that get steeper and steeper.' },
   blockpush: { label: 'Block Push',   seconds: 13, unit: 'm',  icon: 'box',           about: 'Shove ten big blocks. Score = how far they all moved.' },
   highjump:  { label: 'High Jump',    seconds: 10, unit: 'cm', icon: 'arrow-up-from-line', about: 'How high can it get its body off the ground?' },
   lap:       { label: 'Lap',          seconds: 60, unit: 'flags', icon: 'flag',      about: 'Follow the target round eight flags in a circle.' },
-  race:      { label: 'Head-to-head', seconds: 15, unit: 'm',  icon: 'users',         about: 'Two Zooks, two lanes, one race.', two: true },
-  sumo:      { label: 'Super Sumo',   seconds: 30, unit: '',   icon: 'swords',        about: 'Push the other Zook off the platform!', two: true },
+  race:      { label: 'Head-to-head', seconds: 15, unit: 'm',  icon: 'users',         about: 'Two Critters, two lanes, one race.', two: true },
+  sumo:      { label: 'Super Sumo',   seconds: 30, unit: '',   icon: 'swords',        about: 'Push the other Critter off the platform!', two: true },
   roam:      { label: 'Free roam',    seconds: 0,  unit: 'targets', icon: 'crosshair', about: 'Tap the ground to move the red target. Watch it steer.' }
 };
 
@@ -173,9 +173,9 @@ function volume(b) { return b.size[0] * b.size[1] * b.size[2] * (0.52 + 0.45 * n
 export function uid(prefix) { return prefix + '-' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36); }
 function nextId(list, prefix) { var n = 1, ids = {}; list.forEach(function (o) { ids[o.id] = 1; }); while (ids[prefix + n]) n++; return prefix + n; }
 
-export function newZook(name) {
+export function newCritter(name) {
   var p = PARTS.body;
-  return { version: VERSION, id: uid('zook'), name: name || 'My Zook', motion: { period: 1, sharpness: 0.6, smoothness: 0.5, power: 1 },
+  return { version: VERSION, id: uid('critter'), name: name || 'My Critter', motion: { period: 1, sharpness: 0.6, smoothness: 0.5, power: 1 },
     blocks: [{ id: 'b1', kind: 'body', size: p.size.slice(), square: p.square, point: p.point, friction: p.friction, colour: p.colour, eyes: true }],
     joints: [], best: {} };
 }
@@ -200,7 +200,7 @@ function mirrorAt(face, at) { return face === '+z' || face === '-z' ? at.slice()
 
 /* Attach a new blob of `kind` to `parentId` on `face` at `at`. With opts.mirror, a part off the
  * centreline (or on a part that already has a twin) gets a mirror-image twin on the other side, on the
- * opposite beat. Returns the new block (or null when the Zook is full). */
+ * opposite beat. Returns the new block (or null when the Critter is full). */
 export function attach(z, kind, parentId, face, at, opts) {
   opts = opts || {};
   var parent = block(z, parentId);
@@ -477,7 +477,7 @@ function solveIK(z, chain, tipBlock, target, angs, limits, iters) {
   return angs;
 }
 
-/* A motion controller for one Zook: angles(t, steer) gives every joint's bend (degrees) at time t.
+/* A motion controller for one Critter: angles(t, steer) gives every joint's bend (degrees) at time t.
  * steer = { turn: -1 (hard left) … 1 (hard right), aim: bearing to target in degrees (+ = left) } or null.
  * IK solutions warm-start from the last call, so limbs move smoothly. */
 export function controller(z) {
@@ -539,14 +539,14 @@ export function controller(z) {
 
 /* ------------------------------------------------------------------ tidy any input */
 
-// Make any Zook JSON (imported files, share links, old saves) into a safe, complete document.
-// Version 1 (2D prototype) and 2 (3D boxes) Zooks are converted.
+// Make any Critter JSON (imported files, share links, old saves) into a safe, complete document.
+// Version 1 (2D prototype) and 2 (3D boxes) Critters are converted.
 export function normalise(src) {
   src = src && typeof src === 'object' ? src : {};
   var ver = Number(src.version) || 1;
   var m0 = src.motion || {};
   var periods = (Array.isArray(src.joints) ? src.joints : []).map(function (j) { return j && j.motion && Number(j.motion.period); }).filter(function (p) { return p > 0; });
-  var z = { version: VERSION, id: String(src.id || uid('zook')).slice(0, 60), name: String(src.name || 'My Zook').slice(0, 40),
+  var z = { version: VERSION, id: String(src.id || uid('critter')).slice(0, 60), name: String(src.name || 'My Critter').slice(0, 40),
     motion: { period: clamp(num(m0.period, periods.length ? periods[0] : 1), 0.3, 3), sharpness: clamp(num(m0.sharpness, 0.6), 0, 1),
       smoothness: clamp(num(m0.smoothness, 0.5), 0, 1), power: clamp(num(m0.power, 1), 0.3, 2.5) },
     blocks: [], joints: [], best: {} };
@@ -581,7 +581,7 @@ export function normalise(src) {
     seen[id] = true;
     z.blocks.push(nb);
   });
-  if (!z.blocks.length) z.blocks = newZook().blocks;
+  if (!z.blocks.length) z.blocks = newCritter().blocks;
   delete z.blocks[0].mount; delete z.blocks[0].twin; delete z.blocks[0].path;
   z.blocks.forEach(function (b) { var t = b.twin && block(z, b.twin); if (!t || t.twin !== b.id || t === b) delete b.twin; });
   var paired = {};
@@ -614,7 +614,7 @@ function fromV1(m) {
   return { parent: String(m.parent), face: face, at: [a, 0], lean: -d, splay: 0, hinge: 'swing' };
 }
 
-/* ------------------------------------------------------------------ starter Zooks */
+/* ------------------------------------------------------------------ starter Critters */
 
 function setSwing(z, b, amplitude, phase) {
   var j = jointFor(z, b.id);
@@ -633,7 +633,7 @@ export var STARTER_TUNING = {
 export var STARTERS = {
   scuttler: { label: 'Scuttler', blurb: 'Four sprawling legs following stepping loops. Steers well.', make: function (c) {
     c = c || STARTER_TUNING.scuttler;
-    var z = newZook('Scuttler'), body = z.blocks[0];
+    var z = newCritter('Scuttler'), body = z.blocks[0];
     body.size = [100, 30, 56]; body.square = 0.45;
     z.motion.period = c.period; z.motion.sharpness = c.sharp; z.motion.smoothness = c.smooth; z.motion.power = c.power;
     [[c.at, c.ph[0]], [-c.at, c.ph[1]]].forEach(function (row) {
@@ -651,7 +651,7 @@ export var STARTERS = {
   } },
   crab: { label: 'Crab', blurb: 'Legs out to the sides that row it along. Fast on the flat!', make: function (c) {
     c = c || STARTER_TUNING.crab;
-    var z = newZook('Crab'), body = z.blocks[0];
+    var z = newCritter('Crab'), body = z.blocks[0];
     body.size = [70, 26, 70]; body.colour = '#e10000'; body.square = 0.7;
     z.motion.period = c.period; z.motion.sharpness = c.sharp;
     [[0.3, c.ph[0]], [-0.3, c.ph[1]]].forEach(function (row) {
@@ -665,7 +665,7 @@ export var STARTERS = {
   } },
   wriggler: { label: 'Wriggler', blurb: 'No legs at all: three segments that ripple along.', make: function (c) {
     c = c || STARTER_TUNING.wriggler;
-    var z = newZook('Wriggler'), a = z.blocks[0];
+    var z = newCritter('Wriggler'), a = z.blocks[0];
     z.motion.period = c.period;
     a.size = [60, 20, 44]; a.friction = FRICTION[c.f[0]]; a.square = 0.6;
     var b = attach(z, 'body', a.id, '-x', [0, 0]); b.size = [60, 20, 44]; b.friction = FRICTION[c.f[1]]; b.colour = '#ff66c4'; b.square = 0.6;
@@ -676,7 +676,7 @@ export var STARTERS = {
   } },
   hopper: { label: 'Hopper', blurb: 'Springy legs that all push at once. Built for the High Jump.', make: function (c) {
     c = c || STARTER_TUNING.hopper;
-    var z = newZook('Hopper'), body = z.blocks[0];
+    var z = newCritter('Hopper'), body = z.blocks[0];
     body.size = [70, 40, 50]; body.colour = '#00bf63'; body.square = 0.2;
     z.motion.period = c.period; z.motion.power = c.power;
     [0.3, -0.3].forEach(function (u) {
@@ -741,10 +741,10 @@ function buildCourse(R, world, kind) {
 var LAP = { c: [0, 0, -5], r: 5, n: 8 };
 function lapFlag(k) { var th = 2 * Math.PI * k / LAP.n; return [LAP.c[0] + LAP.r * Math.sin(th), 0, LAP.c[2] + LAP.r * Math.cos(th)]; }
 
-/* Put one Zook into the world at `at` ([x, z]) facing `yaw` (radians about +y). Bodies start unrotated
+/* Put one Critter into the world at `at` ([x, z]) facing `yaw` (radians about +y). Bodies start unrotated
  * (each collider carries its blob's rotation), so joint anchors and axes are given in world axes. */
-function addZook(R, world, zook, at, yaw, member, filter) {
-  var z = normalise(zook);
+function addCritter(R, world, critter, at, yaw, member, filter) {
+  var z = normalise(critter);
   var ps = pose(z), bb = bounds(z, ps);
   var qy = qAxis([0, 1, 0], yaw || 0);
   var centre = [(bb.min[0] + bb.max[0]) / 2, bb.min[1], (bb.min[2] + bb.max[2]) / 2];
@@ -783,7 +783,7 @@ function addZook(R, world, zook, at, yaw, member, filter) {
     rj.setMotorMaxForce(MOTOR.maxForce * kg);
     motors.push({ joint: j, rj: rj, kg: kg });
   });
-  var zs = { zook: z, list: list, motors: motors, ctrl: ctrl, turn: 0, root: bodies[z.blocks[0].id], out: false };
+  var zs = { critter: z, list: list, motors: motors, ctrl: ctrl, turn: 0, root: bodies[z.blocks[0].id], out: false };
   zs.start = comOf(zs);
   return zs;
 }
@@ -794,7 +794,7 @@ function comOf(zs) {
   return { x: x / m, y: y / m, z: zz / m };
 }
 
-// Which way the Zook faces (on the ground), and the signed bearing (degrees, + = left) to a point.
+// Which way the Critter faces (on the ground), and the signed bearing (degrees, + = left) to a point.
 function bearing(zs, target) {
   var r = zs.root.rotation(), f = qRot(qMul([r.x, r.y, r.z, r.w], zs.list[0].q0), [1, 0, 0]), c = comOf(zs);
   var dx = target[0] - c.x, dz = target[2] - c.z;
@@ -802,9 +802,9 @@ function bearing(zs, target) {
   return Math.atan2(cr, dt) / DEG;
 }
 
-/* Build a contest. zooks = [yourZook, opponent?]. Returns a sim you step(); each tick every Zook's
+/* Build a contest. critters = [yourCritter, opponent?]. Returns a sim you step(); each tick every Critter's
  * controller turns towards its target and the joint motors chase the resulting angles. */
-export function createSim(R, contest, zooks, opts) {
+export function createSim(R, contest, critters, opts) {
   opts = opts || {};
   contest = CONTESTS[contest] ? contest : 'sprint';
   var C = CONTESTS[contest];
@@ -812,19 +812,19 @@ export function createSim(R, contest, zooks, opts) {
   world.timestep = STEP;
   world.numSolverIterations = 8;
   var course = buildCourse(R, world, contest);
-  var two = C.two && zooks[1];
+  var two = C.two && critters[1];
   var Z0 = 0x0002, Z1 = 0x0008, GROUND_ALL = G_GROUND | G_PROP;
   var list = [];
   if (contest === 'sumo') {
-    list.push(addZook(R, world, zooks[0], [-1.2, 0, 0], 0, Z0, GROUND_ALL | Z1));
-    if (two) list.push(addZook(R, world, zooks[1], [1.2, 0, 0], Math.PI, Z1, GROUND_ALL | Z0));
+    list.push(addCritter(R, world, critters[0], [-1.2, 0, 0], 0, Z0, GROUND_ALL | Z1));
+    if (two) list.push(addCritter(R, world, critters[1], [1.2, 0, 0], Math.PI, Z1, GROUND_ALL | Z0));
   } else if (contest === 'race') {
-    list.push(addZook(R, world, zooks[0], [0, 0, -1.4], 0, Z0, GROUND_ALL));
-    if (two) list.push(addZook(R, world, zooks[1], [0, 0, 1.4], 0, Z1, GROUND_ALL));
+    list.push(addCritter(R, world, critters[0], [0, 0, -1.4], 0, Z0, GROUND_ALL));
+    if (two) list.push(addCritter(R, world, critters[1], [0, 0, 1.4], 0, Z1, GROUND_ALL));
   } else {
-    list.push(addZook(R, world, zooks[0], [0, 0, 0], 0, Z0, GROUND_ALL));
+    list.push(addCritter(R, world, critters[0], [0, 0, 0], 0, Z0, GROUND_ALL));
   }
-  var sim = { R: R, contest: contest, C: C, world: world, course: course.shapes, props: course.props, zooks: list, t: 0,
+  var sim = { R: R, contest: contest, C: C, world: world, course: course.shapes, props: course.props, critters: list, t: 0,
     seconds: C.seconds || Infinity, broken: false, flags: 0, reached: 0, maxRise: 0, roamTarget: [6, 0, 0], ended: false };
   sim.targetFor = function (i) {
     var zs = list[i], c = comOf(zs);
@@ -856,8 +856,8 @@ export function createSim(R, contest, zooks, opts) {
 function step(sim) {
   if (sim.done()) return;
   var t = sim.t + STEP, ease = Math.min(1, t / 0.5);
-  sim.zooks.forEach(function (zs, i) {
-    var m = zs.zook.motion, target = sim.targetFor(i), e = bearing(zs, target);
+  sim.critters.forEach(function (zs, i) {
+    var m = zs.critter.motion, target = sim.targetFor(i), e = bearing(zs, target);
     // turning smoothness: how far off course before turning hard, and how quickly the turn builds
     var want = clamp(e / (12 + 50 * m.smoothness), -1, 1);
     zs.turn += (want - zs.turn) * (0.25 - 0.22 * m.smoothness);
@@ -871,26 +871,26 @@ function step(sim) {
   });
   sim.world.step();
   sim.t = t;
-  sim.zooks.forEach(function (zs, i) {
+  sim.critters.forEach(function (zs, i) {
     var c = comOf(zs);
     if (!isFinite(c.x) || !isFinite(c.y) || c.y < -30 || c.y > 80) sim.broken = true;
     if (i === 0) sim.maxRise = Math.max(sim.maxRise, c.y - zs.start.y);
     if (sim.contest === 'sumo' && !zs.out && (c.y < -0.7 || Math.hypot(c.x, c.z) > 3.2)) zs.out = true;
   });
-  var c0 = comOf(sim.zooks[0]);
+  var c0 = comOf(sim.critters[0]);
   if (sim.contest === 'lap') {
     var f = lapFlag(sim.flags + 1);
     if (Math.hypot(c0.x - f[0], c0.z - f[2]) < 0.9) { sim.flags++; if (sim.flags >= LAP.n) { sim.ended = true; sim.lapTime = sim.t; } }
   } else if (sim.contest === 'roam') {
     if (Math.hypot(c0.x - sim.roamTarget[0], c0.z - sim.roamTarget[2]) < 0.7) { sim.reached++; sim.justReached = sim.t; sim.roamTarget = [c0.x + 6 * Math.cos(sim.reached * 2.2), 0, c0.z + 6 * Math.sin(sim.reached * 2.2)]; }
   } else if (sim.contest === 'sumo') {
-    if (sim.zooks.some(function (zs) { return zs.out; })) sim.ended = true;
+    if (sim.critters.some(function (zs) { return zs.out; })) sim.ended = true;
   }
 }
 
-// The contest's score for the player's Zook (index 0), plus a short sentence about it.
+// The contest's score for the player's Critter (index 0), plus a short sentence about it.
 function result(sim) {
-  var zs = sim.zooks[0], c = comOf(zs), C = sim.C, r = { contest: sim.contest, unit: C.unit, broken: sim.broken };
+  var zs = sim.critters[0], c = comOf(zs), C = sim.C, r = { contest: sim.contest, unit: C.unit, broken: sim.broken };
   switch (sim.contest) {
     case 'blockpush':
       r.score = sim.props.reduce(function (s, p) { return s + Math.max(0, p.body.translation().x - p.x0); }, 0);
@@ -904,7 +904,7 @@ function result(sim) {
     case 'roam':
       r.score = sim.reached; r.text = sim.reached + (sim.reached === 1 ? ' target' : ' targets') + ' reached'; break;
     case 'sumo':
-      var o = sim.zooks[1];
+      var o = sim.critters[1];
       if (!o) { r.score = 0; r.text = 'No opponent'; break; }
       var me = zs.out, them = o.out;
       if (me !== them) r.win = !me;
@@ -914,7 +914,7 @@ function result(sim) {
       break;
     case 'race':
       r.score = c.x - zs.start.x;
-      if (sim.zooks[1]) { var oc2 = comOf(sim.zooks[1]), od = oc2.x - sim.zooks[1].start.x; r.win = r.score > od; r.other = od; }
+      if (sim.critters[1]) { var oc2 = comOf(sim.critters[1]), od = oc2.x - sim.critters[1].start.x; r.win = r.score > od; r.other = od; }
       r.text = r.score.toFixed(1) + ' m' + (r.other != null ? ' vs ' + r.other.toFixed(1) + ' m' : ''); break;
     default:
       r.score = c.x - zs.start.x; r.text = r.score.toFixed(1) + ' m';
@@ -923,21 +923,21 @@ function result(sim) {
   return r;
 }
 
-// World transform of each block of Zook i, for drawing.
+// World transform of each block of Critter i, for drawing.
 export function transforms(sim, i) {
-  return sim.zooks[i || 0].list.map(function (o) {
+  return sim.critters[i || 0].list.map(function (o) {
     var t = o.body.translation(), r = o.body.rotation();
     return { id: o.block.id, p: [t.x, t.y, t.z], q: qMul([r.x, r.y, r.z, r.w], o.q0) };
   });
 }
 
 // Run a whole contest without drawing (tests and tuning). Free roam is capped at 30 s.
-export function runHeadless(R, zook, contest, opponent) {
-  var sim = createSim(R, contest || 'sprint', [zook, opponent]);
+export function runHeadless(R, critter, contest, opponent) {
+  var sim = createSim(R, contest || 'sprint', [critter, opponent]);
   var cap = sim.seconds === Infinity ? 30 : sim.seconds;
   while (!sim.done() && sim.t < cap - 1e-9) sim.step();
   var r = sim.result(), c = sim.com(0);
-  r.sideways = c.z - sim.zooks[0].start.z; r.seconds = sim.t;
+  r.sideways = c.z - sim.critters[0].start.z; r.seconds = sim.t;
   sim.free();
   return r;
 }

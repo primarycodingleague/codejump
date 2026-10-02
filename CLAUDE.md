@@ -21,7 +21,7 @@
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## Project types — `projectType` ('platformer' | 'stage' | 'turtle' | '3d' | 'zook') — NEW, in progress
+## Project types — `projectType` ('platformer' | 'stage' | 'turtle' | '3d' | 'critter') — NEW, in progress
 The app is becoming a multi-engine "one-stop shop". A `let projectType` global (declared by
 `keyStage`) is the seam every engine plugs into. It's written/read in `buildPayload`/`applyPayload`
 (**legacy saves with no field default to 'platformer'**, so nothing old breaks). After the age-group
@@ -441,33 +441,34 @@ platformer & stage untouched.
 - **TODO / not yet built:** a turtle thumbnail for saved-project tiles (currently blank); more examples/guided missions;
   possibly `pr`/print output.
 
-## Zook project type — `projectType==='zook'` — NEW (2026-10-02, branch `claude/zook-project-type`, not on main yet)
-A 3D creature lab modelled on the BBC Bamzooki "Zook Kit" (call it "Zook", never "Bamzooki"/"Zook Kit" in the UI —
-those are BBC names). Pupils build a creature from superellipsoid **blobs** (Length/Height/Width/Squareness/Pointiness)
+## Critter Lab project type — `projectType==='critter'` — NEW (2026-10-02, branch `claude/zook-project-type`, not on main yet)
+A 3D creature lab inspired by the BBC's Bamzooki creature builder. **Named "Critter Lab" (the creatures are "Critters")
+— Charlie, 2 Oct 2026**: it was first called "Zook", but Zook / Zook Kit / Bamzooki are BBC names, so never use them
+anywhere pupils or teachers can see (UI, help, guides, What's New, file or code names). Pupils build a creature from superellipsoid **blobs** (Length/Height/Width/Squareness/Pointiness)
 and ready-made **limbs** (walking leg, long leg, tail, neck & head), give joints **swings** (amplitude + movement-cycle
 phase) or a limb an **IK motion path** (drag white IK points; CCD IK drives up to 3 joints), set the body's Motion tab
 (cycle speed, turning sharpness/smoothness, muscle power), then Rapier physics runs it in **contests**: Sprint, Hurdles,
 Block Push, High Jump, Lap, Head-to-head race, Super Sumo (vs itself or a starter) and Free roam (tap to move the red
-target). Every Zook steers itself towards the red target (inside stride/swing shortens; joints with "bend towards the
-target" aim at it). Moved here from the Coding Hubs site, where it began as "Zook Lab".
-- **Files (NOT in the single HTML file):** `zook/zook-core.js` (data model, IK, steering, contests; ES module, no DOM, runs
-  in Node via `runHeadless(RAPIER, zook, contest, opponent)` — deterministic; the format of the Zook JSON is documented at
-  its top), `zook/zook-app.js` (the UI; `mount(root,{zook,onChange,toast})` → `{getZook,setZook,pause,destroy}`),
-  `zook/zook-app.css` (all scoped under `.zk`, dark CodeJump look), `zook/vendor/three-0.186.1-zook.min.js` (Three.js +
-  OrbitControls + RoundedBoxGeometry, esbuild bundle) and `zook/vendor/rapier3d-compat-0.21.0.min.js` (Rapier 3D, wasm
+target). Every Critter steers itself towards the red target (inside stride/swing shortens; joints with "bend towards the
+target" aim at it). Moved here from the Coding Hubs site, where it began as a prototype.
+- **Files (NOT in the single HTML file):** `critter/critter-core.js` (data model, IK, steering, contests; ES module, no DOM, runs
+  in Node via `runHeadless(RAPIER, critter, contest, opponent)` — deterministic; the format of the Critter JSON is documented at
+  its top), `critter/critter-app.js` (the UI; `mount(root,{critter,onChange,toast})` → `{getCritter,setCritter,pause,destroy}`),
+  `critter/critter-app.css` (all scoped under `.zk`, dark CodeJump look), `critter/vendor/three-0.186.1-critter.min.js` (Three.js +
+  OrbitControls + RoundedBoxGeometry, esbuild bundle) and `critter/vendor/rapier3d-compat-0.21.0.min.js` (Rapier 3D, wasm
   inlined, ~1.6 MB gzipped).
-- **Lazy-loaded like 3D World:** `loadZookEngine()` does `import(zookBase()+'zook-app.js')` only when a Zook project opens,
-  so the rest of the app stays light/offline. `zookBase()` = `zook/` next to the page, or the live site's `/zook/` when
+- **Lazy-loaded like 3D World:** `loadCritterEngine()` does `import(critterBase()+'critter-app.js')` only when a Critter project opens,
+  so the rest of the app stays light/offline. `critterBase()` = `critter/` next to the page, or the live site's `/critter/` when
   running from a downloaded playable .html. Needs internet the first time.
-- **Seams in build-and-play.html:** `#pt-modal` tile `data-pt="zook"` (icon `#i-zook`, hidden for KS1 like Turtle) →
-  `startNewZook(ks)`; `enterZookUI()`/`exitZookUI()` (`body.zook-mode`, mounts into `#zook-ui` inside `#cwrap`; CSS hides
+- **Seams in build-and-play.html:** `#pt-modal` tile `data-pt="critter"` (icon `#i-critter`, hidden for KS1 like Turtle) →
+  `startNewCritter(ks)`; `enterCritterUI()`/`exitCritterUI()` (`body.critter-mode`, mounts into `#critter-ui` inside `#cwrap`; CSS hides
   every platformer/stage/turtle/3D control incl. Cave/mute/hand); every other enter*UI, `showHome` and `switchMode` call
-  `exitZookUI`; `loop()` returns early for zook (the app has its own rAF loop, idle while hidden). Payload field
-  **`zook`** (the Zook JSON; `zookCurrent()`), restored in `applyPayload` (`zookData` → `enterZookUI` → `setZook`). The
-  app calls `onChange` → `markDirty()` (muted by `_zookQuiet` while loading). Device save, cloud, short-link share,
+  `exitCritterUI`; `loop()` returns early for critter (the app has its own rAF loop, idle while hidden). Payload field
+  **`critter`** (the Critter JSON; `critterCurrent()`), restored in `applyPayload` (`critterData` → `enterCritterUI` → `setCritter`). The
+  app calls `onChange` → `markDirty()` (muted by `_critterQuiet` while loading). Device save, cloud, short-link share,
   hand-in and playable .html all work through the normal payload (the worker stores payloads verbatim — no worker
-  change); **live collaborate is hidden for Zook** (`openShareModal` filter). Help: `ZOOK_HELP` via `helpTabs()`;
-  Teacher Guide has a Zook section; home save thumbnails show an orange "Zook" badge.
+  change); **live collaborate is hidden for Critter** (`openShareModal` filter). Help: `CRITTER_HELP` via `helpTabs()`;
+  Teacher Guide has a Critter section; home save thumbnails show an orange "Critter" badge.
 - **Moving parts:** press on a placed part and drag (orbit only starts on the background/body). The builder snaps to the
   surface under the pointer (skipping the part's own subtree and its twin's) and calls `Z.move(z,id,parent,face,at)`,
   which mirrors the twin, removes the twin if the part lands on the middle line, refuses spots on its own subtree,
@@ -477,10 +478,10 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as "Zoo
   part stays exactly where it was grabbed until release.
 - **Colour wheel** (Shape tab, under the swatches): `bindWheel` — canvas wheel (angle = hue, radius = saturation) +
   Brightness slider; recolours live via `builder.tint` (no mesh rebuild) and does the full redraw/undo step on release.
-- **Keyboard shortcuts:** `onKey` in zook-app.js (document keydown; works wherever focus is, ignored while typing in a
+- **Keyboard shortcuts:** `onKey` in critter-app.js (document keydown; works wherever focus is, ignored while typing in a
   text box or while a CodeJump `-modal`/`cj-dialog` popup is open; leaves other Ctrl/Alt combos to the browser). The list
-  lives in `SHORTCUTS` (shown by the Keys button / `?`) and is repeated in `ZOOK_HELP`'s Keys tab — change both together.
-- **Starters** (in zook-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
+  lives in `SHORTCUTS` (shown by the Keys button / `?`) and is repeated in `CRITTER_HELP`'s Keys tab — change both together.
+- **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 
 ## 3D World project type — `projectType==='3d'` — PROTOTYPE (Babylon.js), behind `THREED_ON`

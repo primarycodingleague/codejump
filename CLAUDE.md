@@ -473,6 +473,10 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as "Zoo
   which mirrors the twin, removes the twin if the part lands on the middle line, refuses spots on its own subtree,
   and gives a walking leg the posture for its new spot (side = sprawled/sweep, underneath = hanging/swing) with
   fresh stepping loops (`limbPosture`). One undo step per drag.
+- **Wiggle hold:** pressing on a part or a path point sets `state.held`, which stops the wiggle-preview clock, so the
+  part stays exactly where it was grabbed until release.
+- **Colour wheel** (Shape tab, under the swatches): `bindWheel` — canvas wheel (angle = hue, radius = saturation) +
+  Brightness slider; recolours live via `builder.tint` (no mesh rebuild) and does the full redraw/undo step on release.
 - **Keyboard shortcuts:** `onKey` in zook-app.js (document keydown; works wherever focus is, ignored while typing in a
   text box or while a CodeJump `-modal`/`cj-dialog` popup is open; leaves other Ctrl/Alt combos to the browser). The list
   lives in `SHORTCUTS` (shown by the Keys button / `?`) and is repeated in `ZOOK_HELP`'s Keys tab — change both together.

@@ -467,14 +467,14 @@ var builder = (function () {
   canvas.addEventListener('pointerdown', function (e) {
     down = { x: e.clientX, y: e.clientY, path: pickPath(e) };
     if (down.path && down.path.point != null) {
-      controls.enabled = false; canvas.setPointerCapture(e.pointerId);
+      controls.enabled = false; canvas.setPointerCapture(e.pointerId); state.held = true;
       state.pathPoint = down.path.point; down.remembered = false; renderInspector(); drawPath();
       return;
     }
     if (down.path) return;
     var id = pick(e), b = id && Z.block(state.zook, id);
     if (b && b.mount) {
-      controls.enabled = false; canvas.setPointerCapture(e.pointerId);
+      controls.enabled = false; canvas.setPointerCapture(e.pointerId); state.held = true; // freeze the wiggle while it's held
       down.part = id; down.remembered = false; down.key = ''; down.hadTwin = !!b.twin;
       if (id !== state.selected) { state.selected = id; state.pathPoint = null; sync(); renderInspector(); drawBeats(); }
     }
@@ -516,9 +516,9 @@ var builder = (function () {
     if (e.buttons || state.drag) return;
     canvas.style.cursor = pickPath(e) ? 'move' : pick(e) ? 'pointer' : 'grab';
   });
-  canvas.addEventListener('pointercancel', function () { if (down && down.part) { state.moving = false; $('buildMsg').hidden = true; if (down.remembered) changed({ inspector: true }); } down = null; controls.enabled = true; });
+  canvas.addEventListener('pointercancel', function () { state.held = false; if (down && down.part) { state.moving = false; $('buildMsg').hidden = true; if (down.remembered) changed({ inspector: true }); } down = null; controls.enabled = true; });
   canvas.addEventListener('pointerup', function (e) {
-    var d = down; down = null; controls.enabled = true;
+    var d = down; down = null; controls.enabled = true; state.held = false;
     if (!d || state.drag) return;
     if (d.part) {
       var moved = state.moving; state.moving = false; $('buildMsg').hidden = true; canvas.style.cursor = '';
@@ -538,7 +538,9 @@ var builder = (function () {
     renderer.render(scene, camera);
   }
 
-  return { sync: sync, fit: fit, apply: apply, render: render, snapAt: snapAt, ghost: ghost, controls: controls };
+  function tint(ids, hex) { ids.forEach(function (id) { var m = meshes[id]; if (m) m.material.color.set(hex); }); }
+
+  return { sync: sync, fit: fit, apply: apply, render: render, snapAt: snapAt, ghost: ghost, controls: controls, tint: tint };
 })();
 
 function insertPoint(tip, at) {
@@ -736,6 +738,9 @@ function shapeTab(b) {
     '<div class="zl-row"><span class="zl-lbl">Colour</span><div class="zl-swatches" id="iCol">' +
     COLOURS.map(function (c) { return '<button type="button" aria-label="Colour ' + c + '" data-c="' + c + '" class="' + (c === b.colour ? 'on' : '') + '" style="background:' + c + '"></button>'; }).join('') +
     '</div></div>' +
+    '<div class="zl-row zl-wheel-row"><canvas id="iWheel" class="zl-wheel" width="240" height="240" aria-label="Colour wheel: drag around it to pick any colour"></canvas>' +
+    '<div class="zl-wheel-side"><label for="iBright" class="zl-lbl">Brightness</label><input type="range" id="iBright" min="15" max="100" step="1" value="' + Math.round(hexToHsv(b.colour).v * 100) + '">' +
+    '<div class="zl-wheel-now" id="iNow" style="background:' + b.colour + '"></div><output id="iHex">' + b.colour + '</output></div></div>' +
     '<label class="zl-check" style="margin-top:6px;"><input type="checkbox" id="iEyes"' + (b.eyes ? ' checked' : '') + '> Eyes</label>' +
     (b.mount ? '<button type="button" class="zl-danger" id="iDel">' + ic('trash-2') + ' Remove ' + (b.twin ? 'this pair' : 'this part') + '</button>' : '');
 }
@@ -752,6 +757,74 @@ function bindShape(b) {
   });
   $('iEyes').addEventListener('change', function () { remember(); b.eyes = this.checked; Z.syncTwin(state.zook, b); changed(); });
   on('iDel', deleteSelected);
+  bindWheel(b);
+}
+
+/* ---- colour wheel: angle = hue, distance from the middle = how strong the colour is; brightness below ---- */
+
+function hexToHsv(hex) {
+  var n = parseInt(String(hex).slice(1), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+  if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: ((h * 60) + 360) % 360, s: mx ? d / mx : 0, v: mx };
+}
+function hsvToHex(c) {
+  var f = function (n) { var k = (n + c.h / 60) % 6; return c.v - c.v * c.s * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return '#' + [f(5), f(3), f(1)].map(function (x) { return ('0' + Math.round(x * 255).toString(16)).slice(-2); }).join('');
+}
+
+var wheelBase = null;
+function wheelImage(size) {
+  if (wheelBase && wheelBase.width === size) return wheelBase;
+  wheelBase = document.createElement('canvas'); wheelBase.width = wheelBase.height = size;
+  var g = wheelBase.getContext('2d'), img = g.createImageData(size, size), c = size / 2, r = c - 6;
+  for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) {
+    var dx = x + 0.5 - c, dy = y + 0.5 - c, d = Math.hypot(dx, dy), i = (y * size + x) * 4;
+    if (d > r + 1) continue;
+    var hex = hsvToHex({ h: (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360, s: Math.min(1, d / r), v: 1 }), n = parseInt(hex.slice(1), 16);
+    img.data[i] = n >> 16 & 255; img.data[i + 1] = n >> 8 & 255; img.data[i + 2] = n & 255; img.data[i + 3] = Math.round(255 * Math.max(0, Math.min(1, r + 1 - d)));
+  }
+  g.putImageData(img, 0, 0);
+  return wheelBase;
+}
+
+function bindWheel(b) {
+  var cv = $('iWheel'), bright = $('iBright');
+  if (!cv) return;
+  var g = cv.getContext('2d'), size = cv.width, c = size / 2, r = c - 6, hsv = hexToHsv(b.colour), down = false, remembered = false;
+  function draw() {
+    g.clearRect(0, 0, size, size);
+    g.drawImage(wheelImage(size), 0, 0);
+    g.beginPath(); g.arc(c, c, r + 0.5, 0, Math.PI * 2); g.fillStyle = 'rgba(0,0,0,' + (1 - hsv.v) + ')'; g.fill(); // darker = less bright
+    var a = hsv.h * Math.PI / 180, mx = c + Math.cos(a) * hsv.s * r, my = c + Math.sin(a) * hsv.s * r;
+    g.lineWidth = 4; g.strokeStyle = '#000'; g.beginPath(); g.arc(mx, my, 11, 0, Math.PI * 2); g.stroke();
+    g.lineWidth = 3; g.strokeStyle = '#fff'; g.beginPath(); g.arc(mx, my, 11, 0, Math.PI * 2); g.stroke();
+  }
+  // live: recolour the part (and its twin) straight away; the full redraw happens when you let go
+  function apply() {
+    var hex = hsvToHex(hsv);
+    if (!remembered) { remember(); remembered = true; }
+    b.colour = hex; Z.syncTwin(state.zook, b);
+    builder.tint([b.id].concat(b.twin ? [b.twin] : []), hex);
+    $('iNow').style.background = hex; $('iHex').textContent = hex;
+    document.querySelectorAll('#iCol button').forEach(function (s) { s.classList.toggle('on', s.dataset.c === hex); });
+    saveCurrent(); draw();
+  }
+  function finish() { if (remembered) { remembered = false; changed({ inspector: true }); } }
+  function pick(e) {
+    var rc = cv.getBoundingClientRect(), x = (e.clientX - rc.left) / rc.width * size - c, y = (e.clientY - rc.top) / rc.height * size - c;
+    hsv.h = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; hsv.s = Math.min(1, Math.hypot(x, y) / r);
+    if (hsv.v < 0.15) hsv.v = 1; // picking a colour on a black part brings the brightness back up
+    bright.value = Math.round(hsv.v * 100);
+    apply();
+  }
+  cv.addEventListener('pointerdown', function (e) { down = true; cv.setPointerCapture(e.pointerId); pick(e); });
+  cv.addEventListener('pointermove', function (e) { if (down) pick(e); });
+  cv.addEventListener('pointerup', function () { down = false; finish(); });
+  cv.addEventListener('pointercancel', function () { down = false; finish(); });
+  bright.addEventListener('input', function () { hsv.v = Number(bright.value) / 100; apply(); });
+  bright.addEventListener('change', finish);
+  draw();
 }
 
 function moveMode(b, j) { return b.path ? 'path' : j.motion.amplitude > 0 ? 'swing' : 'still'; }
@@ -1289,7 +1362,7 @@ function frame(now) {
   state.lastFrame = now;
   if (state.mode === 'build') {
     var wiggle = $('zPreview').checked && !state.drag && !state.moving;
-    if (wiggle) state.t += dt;
+    if (wiggle && !state.held) state.t += dt; // a pressed part stays exactly where it is until you let go
     if (!state.drag && !state.moving) builder.apply(Z.pose(state.zook, wiggle && state.ctrl ? state.ctrl.angles(state.t, null) : null));
     builder.render();
     if (wiggle) drawBeats();

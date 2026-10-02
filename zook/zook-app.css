@@ -146,3 +146,10 @@
 .zk .zl-keys th { text-align: left; white-space: nowrap; padding: 5px 12px 5px 0; vertical-align: top; width: 1%; }
 .zk .zl-keys td { padding: 5px 0; font-size: 13.5px; color: #ddd; }
 .zk kbd { display: inline-block; font-family: inherit; font-size: 12px; font-weight: 800; background: var(--zk-sunk); border: 1px solid var(--zk-line); border-bottom-width: 3px; border-radius: 6px; padding: 2px 7px; color: #fff; }
+.zk .zl-wheel-row { display: flex; gap: 12px; align-items: center; }
+.zk .zl-wheel { width: 120px; height: 120px; flex: none; touch-action: none; cursor: crosshair; }
+.zk .zl-wheel-side { flex: 1; min-width: 0; }
+.zk .zl-wheel-side .zl-lbl { display: block; font-size: 12.5px; font-weight: 800; color: #fff; margin-bottom: 2px; }
+.zk .zl-wheel-side input[type="range"] { width: 100%; accent-color: var(--zk-gold); }
+.zk .zl-wheel-now { height: 30px; border-radius: 8px; border: 2px solid var(--zk-line); margin: 8px 0 4px; }
+.zk .zl-wheel-side output { font-size: 12px; font-weight: 700; color: var(--zk-muted); font-family: ui-monospace, monospace; }

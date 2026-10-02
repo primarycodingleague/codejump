@@ -776,8 +776,9 @@ var G_GROUND = 0x0001, G_PROP = 0x0004;
 function groups(member, filter) { return (member << 16) | filter; }
 
 // Static ground + decorations (metres) for a contest; props are moving things (blocks).
-function buildCourse(R, world, kind) {
+function buildCourse(R, world, kind, sd) {
   var shapes = [], props = [];
+  var lanes = sd ? laneZs(sd.n) : null; // a Showdown gives every Critter its own lane
   var ground = world.createRigidBody(R.RigidBodyDesc.fixed());
   var GROUND = groups(G_GROUND, 0xffff);
   function col(desc, p, q) {
@@ -788,17 +789,18 @@ function buildCourse(R, world, kind) {
   var floorY = kind === 'sumo' ? -1.5 : 0;
   col(R.ColliderDesc.cuboid(300, 1, 300), [0, floorY - 1, 0]);
   shapes.push({ type: 'floor', y: floorY });
-  if (kind === 'sprint' || kind === 'hurdles' || kind === 'blockpush' || kind === 'highjump') shapes.push({ type: 'track', from: -2, to: kind === 'blockpush' || kind === 'highjump' ? 12 : 60, z: 0, width: 2.4 });
+  if (lanes && kind !== 'lap' && kind !== 'sumo') lanes.forEach(function (z) { shapes.push({ type: 'track', from: -2, to: kind === 'highjump' ? 12 : 60, z: z, width: 2.2 }); });
+  else if (kind === 'sprint' || kind === 'hurdles' || kind === 'blockpush' || kind === 'highjump') shapes.push({ type: 'track', from: -2, to: kind === 'blockpush' || kind === 'highjump' ? 12 : 60, z: 0, width: 2.4 });
   if (kind === 'race') { shapes.push({ type: 'track', from: -2, to: 60, z: -1.4, width: 2.2 }); shapes.push({ type: 'track', from: -2, to: 60, z: 1.4, width: 2.2 }); }
   if (kind === 'hurdles') {
     // humps of increasing steepness: same length, taller each time
     for (var k = 0; k < 7; k++) {
-      var x0 = 2.5 + k * 3.2, h = 0.06 + k * 0.05, L = 1.4;
-      var pts = [[x0, 0, -2], [x0 + L / 2, h, -2], [x0 + L, 0, -2], [x0, 0, 2], [x0 + L / 2, h, 2], [x0 + L, 0, 2]];
+      var x0 = 2.5 + k * 3.2, h = 0.06 + k * 0.05, L = 1.4, W = lanes ? Math.max(2, -lanes[0] + 1.3) : 2;
+      var pts = [[x0, 0, -W], [x0 + L / 2, h, -W], [x0 + L, 0, -W], [x0, 0, W], [x0 + L / 2, h, W], [x0 + L, 0, W]];
       var flat = new Float32Array([].concat.apply([], pts));
       var d = R.ColliderDesc.convexHull(flat);
       if (d) col(d, [0, 0, 0]);
-      shapes.push({ type: 'prism', x0: x0, length: L, height: h, width: 4 });
+      shapes.push({ type: 'prism', x0: x0, length: L, height: h, width: W * 2 });
     }
   } else if (kind === 'blockpush') {
     for (var i = 0; i < 10; i++) {
@@ -808,17 +810,24 @@ function buildCourse(R, world, kind) {
       props.push({ body: rb, half: [hs, hs, hs], x0: bx, colour: i % 2 ? '#ae853e' : '#c9a25a' });
     }
   } else if (kind === 'sumo') {
-    col(R.ColliderDesc.cylinder(0.75, 2.6), [0, -0.75, 0]);
-    shapes.push({ type: 'platform', r: 2.6, h: 1.5 });
+    var rr = sumoRadius(sd);
+    col(R.ColliderDesc.cylinder(0.75, rr), [0, -0.75, 0]);
+    shapes.push({ type: 'platform', r: rr, h: 1.5 });
   } else if (kind === 'lap') {
     shapes.push({ type: 'ring', c: [0, 0, -5], r: 5, width: 1.6 });
   } else if (kind === 'highjump') {
-    shapes.push({ type: 'pole', x: 1.6, z: -1.1 });
+    shapes.push({ type: 'pole', x: 1.6, z: lanes ? lanes[0] - 1.3 : -1.1 });
   }
   return { shapes: shapes, props: props };
 }
 
 var LAP = { c: [0, 0, -5], r: 5, n: 8 };
+// Showdown layout: lanes 2.6 m apart, centred on z = 0; a bigger sumo platform for three or four.
+export var SHOWDOWN = ['sprint', 'hurdles', 'highjump', 'lap', 'sumo'];
+export var SHOWDOWN_MAX = 4;
+var LANE = 2.6, CRITTER_BITS = [0x0002, 0x0008, 0x0010, 0x0020];
+function laneZs(n) { var out = []; for (var i = 0; i < n; i++) out.push((i - (n - 1) / 2) * LANE); return out; }
+function sumoRadius(sd) { return sd && sd.n > 2 ? 3.2 : 2.6; }
 function lapFlag(k) { var th = 2 * Math.PI * k / LAP.n; return [LAP.c[0] + LAP.r * Math.sin(th), 0, LAP.c[2] + LAP.r * Math.cos(th)]; }
 
 /* Put one Critter into the world at `at` ([x, z]) facing `yaw` (radians about +y). Bodies start unrotated
@@ -869,6 +878,7 @@ function addCritter(R, world, critter, at, yaw, member, filter) {
 }
 
 function comOf(zs) {
+  if (zs.gone) return zs.last || zs.start;
   var x = 0, y = 0, zz = 0, m = 0;
   zs.list.forEach(function (o) { var t = o.body.translation(), k = o.vol; x += t.x * k; y += t.y * k; zz += t.z * k; m += k; });
   return { x: x / m, y: y / m, z: zz / m };
@@ -891,11 +901,22 @@ export function createSim(R, contest, critters, opts) {
   var world = new R.World({ x: 0, y: -9.81, z: 0 });
   world.timestep = STEP;
   world.numSolverIterations = 8;
-  var course = buildCourse(R, world, contest);
+  if (opts.showdown && SHOWDOWN.indexOf(contest) < 0) { contest = 'sprint'; C = CONTESTS.sprint; }
+  if (opts.showdown && contest !== 'sumo') { world.free(); return showdownSim(R, contest, critters); }
+  var sd = opts.showdown ? { n: Math.max(1, Math.min(SHOWDOWN_MAX, critters.length)) } : null; // Super Sumo showdown: one shared world
+  var course = buildCourse(R, world, contest, sd);
   var two = C.two && critters[1];
   var Z0 = 0x0002, Z1 = 0x0008, GROUND_ALL = G_GROUND | G_PROP;
   var list = [];
-  if (contest === 'sumo') {
+  if (sd) {
+    // everyone starts round the edge facing the middle, and every Critter can shove every other one
+    var allBits = 0;
+    for (var b = 0; b < sd.n; b++) allBits |= CRITTER_BITS[b];
+    critters.slice(0, sd.n).forEach(function (cr, i) {
+      var bit = CRITTER_BITS[i], a = sd.n === 2 ? i * Math.PI : 2 * Math.PI * i / sd.n + Math.PI / 4, r0 = sd.n === 2 ? 1.2 : 1.6;
+      list.push(addCritter(R, world, cr, [r0 * Math.cos(a), 0, r0 * Math.sin(a)], Math.PI - a, bit, GROUND_ALL | (allBits & ~bit)));
+    });
+  } else if (contest === 'sumo') {
     list.push(addCritter(R, world, critters[0], [-1.2, 0, 0], 0, Z0, GROUND_ALL | Z1));
     if (two) list.push(addCritter(R, world, critters[1], [1.2, 0, 0], Math.PI, Z1, GROUND_ALL | Z0));
   } else if (contest === 'race') {
@@ -905,12 +926,16 @@ export function createSim(R, contest, critters, opts) {
     list.push(addCritter(R, world, critters[0], [0, 0, 0], 0, Z0, GROUND_ALL));
   }
   var sim = { R: R, contest: contest, C: C, world: world, course: course.shapes, props: course.props, critters: list, t: 0,
-    seconds: C.seconds || Infinity, broken: false, flags: 0, reached: 0, maxRise: 0, roamTarget: [6, 0, 0], ended: false };
+    seconds: C.seconds || Infinity, broken: false, flags: 0, reached: 0, maxRise: 0, roamTarget: [6, 0, 0], ended: false,
+    showdown: !!sd, sumoR: sumoRadius(sd) };
+  list.forEach(function (zs) { zs.flags = 0; zs.maxRise = 0; });
   sim.targetFor = function (i) {
     var zs = list[i], c = comOf(zs);
     switch (contest) {
       case 'lap': return lapFlag(sim.flags + 1);
-      case 'sumo': var o = list[1 - i]; if (!o) return [0, 0, 0]; var oc = comOf(o); return [oc.x, 0, oc.z];
+      case 'sumo':
+        if (sd) { var best = null, bd = Infinity; list.forEach(function (o2, k) { if (k === i || o2.out || o2.gone) return; var p2 = comOf(o2), d2 = Math.hypot(p2.x - c.x, p2.z - c.z); if (d2 < bd) { bd = d2; best = p2; } }); return best ? [best.x, 0, best.z] : [0, 0, 0]; }
+        var o = list[1 - i]; if (!o) return [0, 0, 0]; var oc = comOf(o); return [oc.x, 0, oc.z];
       case 'roam': return sim.roamTarget;
       case 'blockpush': return [9, 0, 0];
       case 'highjump': return [c.x + 3, 0, zs.start.z];
@@ -930,6 +955,7 @@ export function createSim(R, contest, critters, opts) {
   sim.done = function () { return sim.ended || sim.broken || (sim.seconds !== Infinity && sim.t >= sim.seconds - 1e-9); };
   sim.free = function () { try { world.free(); } catch (e) { /* already freed */ } };
   sim.result = function () { return result(sim); };
+  sim.standings = function () { return standings(sim); };
   return sim;
 }
 
@@ -937,6 +963,7 @@ function step(sim) {
   if (sim.done()) return;
   var t = sim.t + STEP, ease = Math.min(1, t / 0.5);
   sim.critters.forEach(function (zs, i) {
+    if (zs.gone || zs.finished) return;
     var m = zs.critter.motion, target = sim.targetFor(i), e = bearing(zs, target);
     // turning smoothness: how far off course before turning hard, and how quickly the turn builds
     var want = clamp(e / (12 + 50 * m.smoothness), -1, 1);
@@ -951,6 +978,7 @@ function step(sim) {
   });
   sim.world.step();
   sim.t = t;
+  if (sim.showdown) { showdownStep(sim); return; }
   sim.critters.forEach(function (zs, i) {
     var c = comOf(zs);
     if (!isFinite(c.x) || !isFinite(c.y) || c.y < -30 || c.y > 80) sim.broken = true;
@@ -966,6 +994,86 @@ function step(sim) {
   } else if (sim.contest === 'sumo') {
     if (sim.critters.some(function (zs) { return zs.out; })) sim.ended = true;
   }
+}
+
+/* A Showdown race (everything but sumo): each Critter runs in a world of its own, exactly as it would on its own
+ * in Test mode (so its score is the same as at home, whatever lane it's in), and is drawn in its lane. */
+function showdownSim(R, contest, critters) {
+  var C = CONTESTS[contest], n = Math.max(1, Math.min(SHOWDOWN_MAX, critters.length));
+  var tmp = new R.World({ x: 0, y: -9.81, z: 0 }), course = buildCourse(R, tmp, contest, { n: n });
+  tmp.free();
+  var offs = contest === 'lap' ? laneZs(n).map(function (z) { return z * 0.15; }) : laneZs(n);
+  var parts = critters.slice(0, n).map(function (c) { return createSim(R, contest, [c]); });
+  var sim = { R: R, contest: contest, C: C, course: course.shapes, props: [], parts: parts, offsets: offs, showdown: true,
+    critters: parts.map(function (p) { return p.critters[0]; }), t: 0, seconds: C.seconds || Infinity, broken: false };
+  sim.step = function () { if (sim.done()) return; parts.forEach(function (p) { if (!p.done()) p.step(); }); sim.t += STEP; };
+  sim.done = function () { return sim.t >= sim.seconds - 1e-9 || parts.every(function (p) { return p.done(); }); };
+  sim.com = function (i) { var c = parts[i || 0].com(0); return { x: c.x, y: c.y, z: c.z + offs[i || 0] }; };
+  sim.markers = function () {
+    if (contest === 'lap') {
+      var lead = Math.max.apply(null, parts.map(function (p) { return p.flags; })), m = [];
+      for (var k = 1; k <= LAP.n; k++) m.push({ p: lapFlag(k), kind: k <= lead ? 'done' : 'flag' });
+      return m;
+    }
+    return parts.map(function (p, i) { var t = p.targetFor(0); return { p: [t[0], 0, t[2] + offs[i]], kind: 'target', far: true }; });
+  };
+  sim.setTarget = function () {};
+  sim.standings = function () { return standings(sim); };
+  sim.result = function () { return parts[0].result(); };
+  sim.free = function () { parts.forEach(function (p) { p.free(); }); };
+  return sim;
+}
+
+// Super Sumo showdown bookkeeping: every Critter for itself. One that comes apart drops out (the bout goes on).
+function showdownStep(sim) {
+  var t = sim.t, R = sim.R;
+  sim.critters.forEach(function (zs) {
+    if (zs.gone) return;
+    var c = comOf(zs);
+    if (!isFinite(c.x) || !isFinite(c.y) || !isFinite(c.z) || c.y < -30 || c.y > 80) {
+      zs.gone = true; zs.goneAt = t;
+      zs.list.forEach(function (o) { try { sim.world.removeRigidBody(o.body); } catch (e) { /* already gone */ } });
+      return;
+    }
+    zs.last = c;
+    zs.maxRise = Math.max(zs.maxRise, c.y - zs.start.y);
+    if (!zs.out && (c.y < -0.7 || Math.hypot(c.x, c.z) > sim.sumoR + 0.6)) { zs.out = true; zs.outAt = t; }
+  });
+  var inRing = sim.critters.filter(function (zs) { return !zs.gone && !zs.out; }).length;
+  if (sim.critters.length > 1 ? inRing <= 1 : inRing === 0) sim.ended = true;
+  void R;
+}
+
+/* Showdown results: one row per Critter (in entry order) with score, words and place (1 = winner; ties share).
+ * Sprint/Hurdles = metres forwards, High Jump = cm, Lap = flags (a finished lap beats an unfinished one, faster
+ * is better), Super Sumo = still on the platform beats out; among those still on, nearer the middle; among those
+ * out, the later out. A Critter that came apart scores nothing. */
+function standings(sim) {
+  var rows = sim.parts ? sim.parts.map(function (p, i) {
+    var r = p.result(), row = { i: i, score: r.score, text: r.text, gone: p.broken };
+    if (sim.contest === 'lap') row.text = r.text.replace(' of ' + LAP.n + ' flags', '/' + LAP.n + ' flags');
+    if (p.broken || !isFinite(row.score)) { row.score = -1e6 + p.t; row.text = 'Came apart'; row.gone = true; }
+    return row;
+  }) : sim.critters.map(function (zs, i) {
+    var c = zs.gone ? (zs.last || zs.start) : comOf(zs), r = { i: i, gone: !!zs.gone };
+    switch (sim.contest) {
+      case 'highjump': r.score = Math.max(0, zs.maxRise * 100); r.text = Math.round(r.score) + ' cm'; break;
+      case 'lap':
+        r.score = zs.flags + (zs.finished ? Math.max(0, (60 - zs.lapTime) / 60) : 0);
+        r.text = zs.finished ? 'Lap in ' + zs.lapTime.toFixed(1) + ' s' : zs.flags + ' of ' + LAP.n + ' flags'; break;
+      case 'sumo':
+        var d = Math.hypot(c.x, c.z);
+        r.score = zs.out ? zs.outAt / 1000 : 10 - Math.min(9.9, d);
+        r.text = zs.out ? 'Out at ' + zs.outAt.toFixed(1) + ' s' : 'Still on'; break;
+      default: r.score = c.x - zs.start.x; r.text = r.score.toFixed(1) + ' m';
+    }
+    if (!isFinite(r.score)) r.score = 0;
+    if (zs.gone) { r.score = -1e6 + (zs.goneAt || 0); r.text = 'Came apart'; }
+    return r;
+  });
+  var order = rows.slice().sort(function (a, b) { return b.score - a.score; });
+  order.forEach(function (r, k) { r.place = k > 0 && Math.abs(order[k - 1].score - r.score) < 1e-6 ? order[k - 1].place : k + 1; });
+  return rows;
 }
 
 // The contest's score for the player's Critter (index 0), plus a short sentence about it.
@@ -1005,7 +1113,14 @@ function result(sim) {
 
 // World transform of each block of Critter i, for drawing.
 export function transforms(sim, i) {
-  return sim.critters[i || 0].list.map(function (o) {
+  if (sim.parts) {
+    var off = sim.offsets[i || 0], part = sim.parts[i || 0];
+    if (part.broken) return [];
+    return transforms(part, 0).map(function (t) { t.p[2] += off; return t; });
+  }
+  var zs = sim.critters[i || 0];
+  if (zs.gone) return [];
+  return zs.list.map(function (o) {
     var t = o.body.translation(), r = o.body.rotation();
     return { id: o.block.id, p: [t.x, t.y, t.z], q: qMul([r.x, r.y, r.z, r.w], o.q0) };
   });

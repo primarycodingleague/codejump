@@ -25,12 +25,14 @@ var TEMPLATE = `
     <div class="zl-modes" role="tablist" aria-label="Mode">
       <button type="button" role="tab" class="zl-mode active" data-mode="build" aria-selected="true">${ic('wrench')} Build</button>
       <button type="button" role="tab" class="zl-mode" data-mode="test" aria-selected="false">${ic('flag')} Test it!</button>
+      <button type="button" role="tab" class="zl-mode" data-mode="showdown" aria-selected="false" id="zSdTab" hidden>${ic('users')} Showdown</button>
     </div>
     <div class="zl-tools">
       <button type="button" class="zl-icon" id="zUndo" title="Undo (Ctrl+Z)" aria-label="Undo">${ic('undo-2')}</button>
       <button type="button" class="zl-icon" id="zRedo" title="Redo (Ctrl+Y)" aria-label="Redo">${ic('redo-2')}</button>
       <button type="button" class="zl-tool" id="zKeys" title="Keyboard shortcuts (?)">${ic('keyboard')} Keys</button>
       <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Critters</button>
+      <button type="button" class="zl-tool" id="zShowdown" title="Race your Critters against each other with your class">${ic('users')} Showdown</button>
     </div>
   </div>
 
@@ -70,6 +72,17 @@ var TEMPLATE = `
       <div class="zl-hud" id="zHud"><div class="lbl" id="hudLabel">Sprint</div><div class="dist" id="hudDist">0.0 m</div><div class="row"><span id="hudTime">15.0 s left</span><span id="hudBest"></span></div><div class="bar"><i id="hudBar"></i></div></div>
       <div class="zl-canvas-msg" id="arenaMsg" hidden></div>
       <div class="zl-result" id="zResult" hidden></div>
+    </div>
+  </div>
+
+  <div class="zl-sd" id="sdStage" hidden>
+    <aside class="zl-sd-side" id="sdSide" aria-live="polite"></aside>
+    <div class="zl-canvas-wrap arena">
+      <canvas id="sdCanvas" aria-label="The Showdown arena in 3D. Drag to look around."></canvas>
+      <div class="zl-hud" id="sdHud" hidden><div class="lbl" id="sdHudLabel">Sprint</div><div class="row"><span id="sdHudTime"></span></div><div class="bar"><i id="sdHudBar"></i></div></div>
+      <ol class="zl-sd-board" id="sdBoard" hidden></ol>
+      <div class="zl-canvas-msg" id="sdMsg" hidden></div>
+      <div class="zl-result" id="sdResult" hidden></div>
     </div>
   </div>
 
@@ -1115,10 +1128,10 @@ beatCanvas.addEventListener('click', function (e) {
 
 /* ------------------------------------------------------------------ arena (3D) */
 
-var arena = (function () {
-  var canvas = $('arenaCanvas');
-  var renderer = null, scene, camera, controls, sun, courseGroup, critterGroup, propGroup, markerGroup, trail, trailPts;
-  var meshes = [], props = [], markers = [];
+// One arena per canvas: the Test it! arena and the Showdown arena.
+function makeArena(canvas) {
+  var renderer = null, scene, camera, controls, sun, courseGroup, critterGroup, propGroup, markerGroup, tagGroup, trail, trailPts;
+  var meshes = [], props = [], markers = [], tags = [];
 
   function init() {
     renderer = makeRenderer(canvas);
@@ -1134,6 +1147,7 @@ var arena = (function () {
     propGroup = new THREE.Group(); scene.add(propGroup);
     critterGroup = new THREE.Group(); scene.add(critterGroup);
     markerGroup = new THREE.Group(); scene.add(markerGroup);
+    tagGroup = new THREE.Group(); scene.add(tagGroup);
     trailPts = new Float32Array(3 * 2000);
     var tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(trailPts, 3)); tg.setDrawRange(0, 0);
     trail = new THREE.Line(tg, new THREE.LineBasicMaterial({ color: '#e10000' })); trail.frustumCulled = false; scene.add(trail);
@@ -1141,7 +1155,7 @@ var arena = (function () {
     var down = null, raycaster = new THREE.Raycaster();
     canvas.addEventListener('pointerdown', function (e) { down = { x: e.clientX, y: e.clientY }; });
     canvas.addEventListener('pointerup', function (e) {
-      if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || !state.sim || state.sim.contest !== 'roam') { down = null; return; }
+      if (!down || canvas.id !== 'arenaCanvas' || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6 || !state.sim || state.sim.contest !== 'roam') { down = null; return; }
       down = null;
       var r = canvas.getBoundingClientRect();
       raycaster.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
@@ -1154,14 +1168,17 @@ var arena = (function () {
   }
 
   function textSprite(text, colour, scaleBy) {
-    var c = document.createElement('canvas'); c.width = 256; c.height = 96;
-    var g = c.getContext('2d');
-    g.font = '900 56px Montserrat, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.35)'; g.strokeText(text, 128, 48);
-    g.fillStyle = colour; g.fillText(text, 128, 48);
+    var c = document.createElement('canvas'), g = c.getContext('2d'), font = '900 56px Montserrat, sans-serif';
+    g.font = font;
+    var w = Math.max(256, Math.ceil(g.measureText(text).width) + 40);
+    c.width = w; c.height = 96;
+    g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 10; g.strokeStyle = 'rgba(0,0,0,0.35)'; g.strokeText(text, w / 2, 48);
+    g.fillStyle = colour; g.fillText(text, w / 2, 48);
     var tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false }));
-    s.scale.set(0.8 * (scaleBy || 1), 0.3 * (scaleBy || 1), 1);
+    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, depthTest: false }));
+    s.renderOrder = 20;
+    s.scale.set(0.8 * (scaleBy || 1) * w / 256, 0.3 * (scaleBy || 1), 1);
     return s;
   }
 
@@ -1206,10 +1223,12 @@ var arena = (function () {
     });
   }
 
-  function load(sim) {
+  // opts.tags = [{ text, colour }] puts a name over each Critter (Showdown)
+  function load(sim, opts) {
     if (!renderer) init();
     buildCourse(sim);
-    disposeTree(critterGroup); disposeTree(propGroup);
+    disposeTree(critterGroup); disposeTree(propGroup); disposeTree(tagGroup);
+    tags = ((opts && opts.tags) || []).map(function (t) { var sp = textSprite(t.text, t.colour, 1.25); tagGroup.add(sp); return sp; });
     meshes = sim.critters.map(function (zs) {
       var out = {};
       zs.critter.blocks.forEach(function (b) { var m = blockMesh(b); out[b.id] = m; critterGroup.add(m); });
@@ -1221,7 +1240,10 @@ var arena = (function () {
     });
     var c = sim.com(0), mid = focus(sim);
     controls.target.set(mid.x, Math.max(0.3, c.y), mid.z);
-    var back = sim.contest === 'lap' || sim.contest === 'roam' ? [-3, 4, 5] : sim.contest === 'sumo' ? [0, 4, 6] : sim.contest === 'race' ? [-0.6, 2, 6] : [-0.6, 1.4, 3.8];
+    var n = sim.critters.length, wide = sim.showdown ? Math.max(0, n - 2) * 1.6 : 0;
+    var back = sim.showdown ? (sim.contest === 'lap' ? [0, 8.5, 9.5] : sim.contest === 'sumo' ? [0, 5, 7.2] : [-2.2, 2.8 + wide * 0.5, 6.5 + wide]) :
+      sim.contest === 'lap' || sim.contest === 'roam' ? [-3, 4, 5] : sim.contest === 'sumo' ? [0, 4, 6] : sim.contest === 'race' ? [-0.6, 2, 6] : [-0.6, 1.4, 3.8];
+    if (sim.showdown) c = { y: 0.3 };
     camera.position.set(mid.x + back[0], c.y + back[1], mid.z + back[2]);
     trail.geometry.setDrawRange(0, 0); trail.userData.n = 0;
     draw(sim);
@@ -1229,6 +1251,11 @@ var arena = (function () {
 
   function focus(sim) {
     if (sim.contest === 'sumo') return { x: 0, z: 0 };
+    if (sim.showdown) {
+      if (sim.contest === 'lap') return { x: 0, z: -4 };
+      var xs = sim.critters.map(function (zs, i) { return sim.com(i).x; }).filter(isFinite);
+      return { x: xs.length ? xs.reduce(function (a, b) { return a + b; }, 0) / xs.length : 0, z: 0 };
+    }
     if (sim.contest === 'race' && sim.critters[1]) { var a = sim.com(0), b = sim.com(1); return { x: (a.x + b.x) / 2, z: 0 }; }
     var c = sim.com(0); return { x: c.x, z: c.z };
   }
@@ -1262,17 +1289,23 @@ var arena = (function () {
   }
 
   function draw(sim) {
-    sim.critters.forEach(function (zs, i) { Z.transforms(sim, i).forEach(function (t) { var m = meshes[i][t.id]; if (m) place(m, t.p, t.q, 1); }); });
+    sim.critters.forEach(function (zs, i) {
+      var ts = Z.transforms(sim, i);
+      if (!ts.length || !isFinite(ts[0].p[0])) { Object.keys(meshes[i]).forEach(function (id) { meshes[i][id].visible = false; }); if (tags[i]) tags[i].visible = false; return; }
+      ts.forEach(function (t) { var m = meshes[i][t.id]; if (m) place(m, t.p, t.q, 1); });
+      if (tags[i]) { var cc = sim.com(i); tags[i].position.set(cc.x, Math.max(cc.y, 0) + 0.75, cc.z); }
+    });
     sim.props.forEach(function (p, i) { var t = p.body.translation(), r = p.body.rotation(); props[i].position.set(t.x, t.y, t.z); props[i].quaternion.set(r.x, r.y, r.z, r.w); });
     drawMarkers(sim);
     var c = sim.com(0), f = focus(sim);
+    if (sim.showdown) c = { x: f.x, y: 0.4, z: f.z };
     if (isFinite(c.x)) {
       // follow the action, keeping whatever angle the viewer has orbited to
       var target = new THREE.Vector3(f.x, Math.max(0.25, Math.min(c.y, 1.5)), f.z), delta = target.sub(controls.target).multiplyScalar($('zTurbo').checked ? 0.4 : 0.15);
       controls.target.add(delta); camera.position.add(delta);
       sun.position.set(f.x + 2.5, 6, f.z + 3.5); sun.target.position.set(f.x, 0, f.z);
       var n = trail.userData.n || 0;
-      if (n < 2000 && (n === 0 || Math.hypot(trailPts[(n - 1) * 3] - c.x, trailPts[(n - 1) * 3 + 2] - c.z) > 0.03)) {
+      if (!sim.showdown && n < 2000 && (n === 0 || Math.hypot(trailPts[(n - 1) * 3] - c.x, trailPts[(n - 1) * 3 + 2] - c.z) > 0.03)) {
         trailPts[n * 3] = c.x; trailPts[n * 3 + 1] = 0.012; trailPts[n * 3 + 2] = c.z;
         trail.userData.n = n + 1; trail.geometry.setDrawRange(0, n + 1); trail.geometry.attributes.position.needsUpdate = true;
       }
@@ -1287,7 +1320,8 @@ var arena = (function () {
   }
 
   return { load: load, draw: draw, render: render };
-})();
+}
+var arena = makeArena($('arenaCanvas')), sdArena = null;
 
 /* ------------------------------------------------------------------ contests */
 
@@ -1411,6 +1445,8 @@ function setMode(mode) {
   $('buildStage').hidden = mode !== 'build';
   $('beatsWrap').hidden = mode !== 'build';
   $('testStage').hidden = mode !== 'test';
+  $('sdStage').hidden = mode !== 'showdown';
+  if (mode === 'showdown') { sdShow(); return; }
   if (mode === 'test') { renderContests(); state.autoGo = state.contest !== 'roam'; resetRun(); if (R && state.autoGo) go(); }
   else { state.running = false; requestAnimationFrame(drawBeats); }
 }
@@ -1428,6 +1464,8 @@ function frame(now) {
     if (!state.drag && !state.moving) builder.apply(Z.pose(state.critter, wiggle && state.ctrl ? state.ctrl.angles(state.t, null) : null));
     builder.render();
     if (wiggle) drawBeats();
+  } else if (state.mode === 'showdown') {
+    sdFrame(dt);
   } else if (state.sim) {
     if (state.running) {
       state.acc += dt * ($('zTurbo').checked ? 3 : 1);
@@ -1494,6 +1532,472 @@ function showStarters() {
   });
 }
 
+/* ------------------------------------------------------------------ Showdown: a teacher races up to four pupils' Critters
+ * Runs over CodeJump's live rooms (host.cloud gives api(), wsUrl(), me(), saves(), loadSave(), signIn()). The teacher's
+ * screen is in charge: it keeps the room's document (doc) and sends it to everyone; a pupil sends in one Critter
+ * (an 'sd_enter' op, which the room stamps with who sent it). When the race starts every screen runs the same
+ * contest, so pupils watch it live on their own screens too. */
+var SD_TITLE = 'Critter Showdown';
+var SD_COLOURS = ['#38b6ff', '#f59f18', '#00bf63', '#ff66c4'];
+var sd = null;
+
+function cloud() { return host.cloud || null; }
+function isSdTitle(t) { return String(t || '').indexOf(SD_TITLE) === 0; }
+function isSdDoc(d) { return !!(d && d.kind === 'critter-showdown' && Array.isArray(d.slots)); }
+function placeWord(n) { return n + (n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'); }
+function sdCritter(c) {
+  try { var z = Z.normalise(c); if (!z.blocks.length || z.blocks.length > Z.MAX_BLOCKS) return null; z.best = {}; return z; } catch (e) { return null; }
+}
+function contestChip(k, current, disabled) {
+  var C = Z.CONTESTS[k];
+  return '<button type="button" role="radio" class="zl-contest' + (k === current ? ' on' : '') + '" data-c="' + k + '" aria-checked="' + (k === current) + '"' + (disabled ? ' disabled' : '') + '>' +
+    ic(C.icon) + '<strong>' + (k === 'sumo' ? 'Super Sumo' : C.label) + '</strong><span>' + C.seconds + ' s</span></button>';
+}
+
+// The Showdown button: sign in, host one (teachers), or join one you've been picked for.
+function showdownMenu() {
+  var c = cloud(), me = c && c.me();
+  if (sd) { setMode('showdown'); return; }
+  if (!c) { openDialog(SD_TITLE, '<p class="zl-muted" style="margin-top:0;">Showdowns need CodeJump Cloud.</p>'); return; }
+  if (!me) {
+    openDialog(SD_TITLE, '<p class="zl-muted" style="margin-top:0;">Sign in to CodeJump Cloud to take part. Your teacher picks up to four of you, you each send in one of your saved Critters, and they race on the big screen.</p><div class="zl-sd-actions"><button type="button" class="zl-go" id="sdSignIn">Sign in</button></div>');
+    on('sdSignIn', function () { dialog.close(); c.signIn(); });
+    return;
+  }
+  openDialog(SD_TITLE, '<div id="sdMenu"><p class="zl-muted" style="margin-top:0;">Looking for Showdowns…</p></div>');
+  c.api('/collab/list', {}).then(function (d) {
+    var list = (d.collabs || []).filter(function (x) { return isSdTitle(x.title); }), h = '';
+    if (me.teacher) {
+      h += '<h4>Host a new Showdown</h4><p class="zl-muted" style="margin-top:0;">Pick a class, up to four pupils and a contest. They each choose one of their saved Critters, then everyone watches the race.</p>';
+      h += me.classes.length ? '<div class="zl-sd-classes">' + me.classes.map(function (cl) { return '<button type="button" class="zl-tool" data-class="' + esc(cl.code) + '" data-name="' + esc(cl.name) + '">' + esc(cl.name) + ' <span class="zl-muted">' + esc(cl.code) + '</span></button>'; }).join('') + '</div>'
+        : '<p class="zl-muted">Make a class first: Cloud → Teacher.</p>';
+    }
+    h += '<h4 style="margin-top:14px;">' + (me.teacher ? 'Your open Showdowns' : 'Showdowns you’re in') + '</h4>';
+    if (!list.length) h += '<p class="zl-muted">' + (me.teacher ? 'None open.' : 'None yet. When your teacher picks you for a Showdown, it shows up here.') + '</p>';
+    h += list.map(function (x) {
+      var mine = x.role === 'owner', name = x.title.slice(SD_TITLE.length).replace(/^\s*·\s*/, '') || SD_TITLE;
+      return '<div class="zl-sd-item"><div class="who"><strong>' + esc(name) + '</strong><span>' + (mine ? 'You’re hosting' : 'Hosted by ' + esc(x.owner)) + '</span></div>' +
+        '<button type="button" class="zl-go small" data-room="' + esc(x.roomId) + '">' + (mine ? 'Open' : 'Join') + '</button>' +
+        (mine ? '<button type="button" class="zl-tool" data-end="' + esc(x.roomId) + '">End</button>' : '') + '</div>';
+    }).join('');
+    var box = $('sdMenu'); if (!box) return;
+    box.innerHTML = h;
+    box.querySelectorAll('[data-class]').forEach(function (b) { b.addEventListener('click', function () { sdSetup(b.dataset.class, b.dataset.name); }); });
+    box.querySelectorAll('[data-room]').forEach(function (b) { b.addEventListener('click', function () { dialog.close(); sdOpen(b.dataset.room, null); }); });
+    box.querySelectorAll('[data-end]').forEach(function (b) {
+      b.addEventListener('click', function () { c.api('/collab/remove', { roomId: b.dataset.end }).then(function () { toast('Showdown ended'); showdownMenu(); }).catch(function (e) { toast(e.message); }); });
+    });
+  }).catch(function (e) { var box = $('sdMenu'); if (box) box.innerHTML = '<p>' + esc(e.message || 'Couldn’t reach CodeJump Cloud.') + '</p>'; });
+}
+
+// Teacher: choose who races and the contest, then open the room.
+function sdSetup(code, className) {
+  var c = cloud();
+  openDialog('New Showdown · ' + className, '<p class="zl-muted" style="margin-top:0;">Loading the class…</p>');
+  c.api('/class/roster', { code: code }).then(function (d) {
+    var pupils = d.pupils || [], pick = [], contest = 'sprint', body = dialog.querySelector('.body');
+    function draw() {
+      body.innerHTML = '<h4>1. Who’s racing? <span class="zl-muted">Pick up to ' + Z.SHOWDOWN_MAX + '</span></h4>' +
+        (pupils.length ? '<div class="zl-sd-pupils">' + pupils.map(function (p) {
+          var onp = pick.indexOf(p.uid) >= 0;
+          return '<button type="button" class="zl-sd-pupil' + (onp ? ' on' : '') + '" data-uid="' + esc(p.uid) + '"' + (!onp && pick.length >= Z.SHOWDOWN_MAX ? ' disabled' : '') + ' aria-pressed="' + onp + '"><strong>' + esc(p.realName || p.displayName) + '</strong><span>@' + esc(p.displayName) + '</span></button>';
+        }).join('') + '</div>' : '<p class="zl-muted">No pupils in this class yet.</p>') +
+        '<h4 style="margin-top:14px;">2. Which contest? <span class="zl-muted">You can change it later</span></h4><div class="zl-contests">' + Z.SHOWDOWN.map(function (k) { return contestChip(k, contest); }).join('') + '</div>' +
+        '<div class="zl-sd-actions"><button type="button" class="zl-go" id="sdCreate"' + (pick.length ? '' : ' disabled') + '>' + ic('play') + ' Open the Showdown</button></div>';
+      body.querySelectorAll('[data-uid]').forEach(function (b) {
+        b.addEventListener('click', function () { var i = pick.indexOf(b.dataset.uid); if (i >= 0) pick.splice(i, 1); else if (pick.length < Z.SHOWDOWN_MAX) pick.push(b.dataset.uid); draw(); });
+      });
+      body.querySelectorAll('[data-c]').forEach(function (b) { b.addEventListener('click', function () { contest = b.dataset.c; draw(); }); });
+      on('sdCreate', function () {
+        this.disabled = true;
+        var chosen = pick.map(function (uid) { return pupils.filter(function (p) { return p.uid === uid; })[0]; }).filter(Boolean);
+        sdCreate(className, chosen, contest).catch(function (e) { toast(e.message || 'Couldn’t open the Showdown'); draw(); });
+      });
+    }
+    draw();
+  }).catch(function (e) { dialog.querySelector('.body').innerHTML = '<p>' + esc(e.message) + '</p>'; });
+}
+
+function sdCreate(className, pupils, contest) {
+  var c = cloud(), me = c.me(), roomId;
+  return c.api('/collab/start', { title: SD_TITLE + ' · ' + className }).then(function (r) {
+    roomId = r.roomId;
+    return c.api('/collab/invite', { roomId: roomId, uids: pupils.map(function (p) { return p.uid; }) });
+  }).then(function () {
+    dialog.close();
+    sdOpen(roomId, { kind: 'critter-showdown', v: 1, host: me.uid, hostName: me.realName || me.name, title: className, contest: contest,
+      slots: pupils.map(function (p) { return { uid: p.uid, name: p.realName || p.displayName }; }), entries: {}, bots: false, phase: 'lobby', round: 0, race: null, results: null });
+  });
+}
+
+/* ---- the room connection */
+function sdOpen(roomId, newDoc) {
+  if (sd) sdClose(true);
+  sd = { roomId: roomId, newDoc: newDoc, doc: null, me: null, isHost: !!newDoc, online: {}, ws: null, tries: 0, connected: false,
+    pending: null, sentAt: 0, saves: null, choosing: false, sim: null, race: null, running: false, acc: 0, raceRound: 0, shown: null, thumbs: {} };
+  sd.timer = setInterval(sdTick, 3000);
+  $('zSdTab').hidden = false;
+  setMode('showdown');
+  sdConnect();
+}
+
+function sdConnect() {
+  if (!sd) return;
+  var me = sd, ws;
+  try { ws = new WebSocket(cloud().wsUrl(sd.roomId)); } catch (e) { sdLost(); return; }
+  sd.ws = ws;
+  ws.onmessage = function (ev) { var m; try { m = JSON.parse(ev.data); } catch (e) { return; } if (sd === me && sd.ws === ws) sdMessage(m); };
+  ws.onclose = function () { if (sd === me && sd.ws === ws) { sd.ws = null; sdLost(); } };
+}
+
+function sdLost() {
+  if (!sd) return;
+  sd.connected = false; renderSd();
+  clearTimeout(sd.retry);
+  if (sd.tries++ < 30) sd.retry = setTimeout(sdConnect, Math.min(10000, 1000 * sd.tries));
+}
+
+function sdSend(o) { if (sd && sd.ws && sd.ws.readyState === 1) { try { sd.ws.send(JSON.stringify(o)); return true; } catch (e) { /* closed */ } } return false; }
+function sdPublish() { if (sd && sd.isHost && sd.doc) sdSend({ type: 'snapshot', doc: sd.doc }); }
+
+function sdMessage(m) {
+  if (m.type === 'init') {
+    sd.connected = true; sd.tries = 0; sd.me = m.you && m.you.uid;
+    sd.online = {}; (m.members || []).forEach(function (x) { sd.online[x.uid] = true; });
+    if (sd.newDoc) { sd.doc = sd.newDoc; sd.newDoc = null; }
+    else if (isSdDoc(m.doc) && (!sd.doc || m.doc.host !== sd.me)) sd.doc = m.doc; // the host keeps its own copy over a stale one
+    sd.isHost = !!(sd.doc && sd.doc.host === sd.me);
+    if (sd.isHost) sdPublish();
+    sdAfterDoc();
+    sdResend();
+  } else if (m.type === 'join') {
+    sd.online[m.member.uid] = true;
+    if (sd.isHost) sdPublish(); // whatever the newcomer was handed, give them the real thing
+    else if (sd.doc && m.member.uid === sd.doc.host) sdResend(true);
+    renderSd();
+  } else if (m.type === 'leave') {
+    delete sd.online[m.uid]; renderSd();
+  } else if (m.type === 'snapshot') {
+    if (sd.isHost) { if (!isSdDoc(m.doc) || m.doc.host !== sd.me) sdPublish(); return; } // someone else overwrote the room: put it back
+    if (isSdDoc(m.doc) && m.doc.host === m.from) { sd.doc = m.doc; sdAfterDoc(); }
+  } else if (m.type === 'op') {
+    if (sd.isHost) sdHostOp(m.op, m.from);
+  } else if (m.type === 'full') {
+    toast('That Showdown is full.');
+  }
+}
+
+function sdHostOp(op, from) {
+  var doc = sd.doc;
+  if (!op || !doc || doc.phase === 'ended') return;
+  var slot = doc.slots.filter(function (s) { return s.uid === from; })[0];
+  if (!slot) return;
+  if (op.k === 'sd_enter') {
+    var z = sdCritter(op.critter);
+    if (!z) return;
+    var was = doc.entries[from];
+    doc.entries[from] = { critter: z, cname: z.name || 'My Critter', n: String(op.n || '').slice(0, 40) };
+    if (!was || was.n !== doc.entries[from].n) toast(slot.name + ' sent in ' + z.name + '!');
+  } else if (op.k === 'sd_withdraw') {
+    delete doc.entries[from];
+  } else return;
+  sdPublish(); sdAfterDoc();
+}
+
+// A pupil's entry goes again until the teacher's screen has it (it might have been away when it was sent).
+function sdConfirmed() { var e = sd && sd.doc && sd.me && sd.doc.entries[sd.me]; return !!(e && sd.pending && e.n === sd.pending.n); }
+function sdResend(now) {
+  if (!sd || sd.isHost || !sd.pending || sdConfirmed() || !sd.doc) return;
+  if (!now && Date.now() - sd.sentAt < 2500) return;
+  if (sdSend({ type: 'op', op: { k: 'sd_enter', critter: sd.pending.critter, n: sd.pending.n } })) sd.sentAt = Date.now();
+}
+function sdTick() { if (!sd) return; sdResend(); if (!sd.connected && !sd.ws && !sd.retry) sdConnect(); }
+
+function sdEnter(critter) {
+  var z = sdCritter(critter);
+  if (!z) { toast('That Critter can’t race. Does it have a body?'); return; }
+  sd.pending = { critter: z, n: Z.uid('e') }; sd.choosing = false; sd.sentAt = 0;
+  sdResend(true); renderSd();
+}
+function sdWithdraw() { sd.withdrawn = sd.pending && sd.pending.n; sd.pending = null; sd.choosing = false; sdSend({ type: 'op', op: { k: 'sd_withdraw' } }); renderSd(); }
+
+/* ---- what happens when the document changes */
+function sdLanes() {
+  var doc = sd.doc, lanes = [];
+  doc.slots.forEach(function (s) { var e = doc.entries[s.uid]; if (e) lanes.push({ uid: s.uid, name: s.name, cname: e.cname, critter: e.critter }); });
+  if (doc.bots && lanes.length) {
+    var keys = Object.keys(Z.STARTERS);
+    for (var k = 0; lanes.length < Z.SHOWDOWN_MAX && k < keys.length; k++) lanes.push({ bot: keys[k], name: Z.STARTERS[keys[k]].label, cname: 'Starter Critter' });
+  }
+  return lanes;
+}
+function laneCritters(lanes) { return lanes.map(function (l) { return l.bot ? Z.STARTERS[l.bot].make() : l.critter; }); }
+
+function sdAfterDoc() {
+  var doc = sd.doc;
+  if (!doc) { renderSd(); return; }
+  if (doc.phase === 'ended') {
+    var who = sd.isHost; sdClose(true);
+    if (!who) toast('Your teacher has ended the Showdown.');
+    return;
+  }
+  if (!sd.isHost) {
+    var mine = doc.entries[sd.me];
+    if (sd.pending) {
+      if (mine && mine.n === sd.pending.n) sd.pending.seen = true;
+      else if (!mine && sd.pending.seen) sd.pending = null; // the teacher took it out
+    } else if (mine && mine.n !== sd.withdrawn) sd.pending = { critter: mine.critter, n: mine.n, seen: true }; // back after a reload
+  }
+  if (doc.phase === 'racing' && doc.race && doc.race.round !== sd.raceRound) { sd.raceRound = doc.race.round; sdRun(doc.race); }
+  else if (doc.phase === 'done' && doc.race && doc.results && !sd.running) sdResults();
+  else if (doc.phase === 'lobby' && !sd.running) sdPreview();
+  renderSd();
+}
+
+/* ---- the race */
+function sdShow() {
+  state.running = false;
+  if (!sdArena) sdArena = makeArena($('sdCanvas'));
+  renderSd();
+  if (sd && !sd.running && !sd.sim) sdPreview();
+}
+
+function sdTags(lanes) { return lanes.map(function (l, i) { return { text: l.name, colour: SD_COLOURS[i % 4] }; }); }
+
+function sdPreview() {
+  if (!sd || sd.running || !sd.doc || state.mode !== 'showdown') return;
+  var lanes = sdLanes(), msg = $('sdMsg');
+  $('sdResult').hidden = true; $('sdHud').hidden = true; $('sdBoard').hidden = true;
+  if (!R) { msg.hidden = false; msg.textContent = 'Getting the physics ready…'; loadPhysics().then(function () { sdPreview(); }); return; }
+  var key = sd.doc.contest + '|' + lanes.map(function (l) { return (l.uid || l.bot) + ':' + (l.uid && sd.doc.entries[l.uid].n); }).join(',');
+  if (sd.sim && sd.previewKey === key) return;
+  if (sd.sim) { sd.sim.free(); sd.sim = null; }
+  sd.previewKey = key; sd.race = null;
+  if (!lanes.length) { msg.hidden = false; msg.textContent = sd.isHost ? 'Waiting for Critters… They appear here as pupils send them in.' : 'Waiting for Critters…'; return; }
+  msg.hidden = true;
+  sd.sim = Z.createSim(R, sd.doc.contest, laneCritters(lanes), { showdown: true });
+  sdArena.load(sd.sim, { tags: sdTags(lanes) });
+}
+
+function sdRun(race) {
+  if (!R) { loadPhysics().then(function () { if (sd && sd.raceRound === race.round) sdRun(race); }); return; }
+  if (sd.sim) sd.sim.free();
+  sd.previewKey = null;
+  sd.race = race; sd.shown = null;
+  sd.sim = Z.createSim(R, race.contest, laneCritters(race.lanes), { showdown: true });
+  sd.running = true; sd.acc = 0;
+  $('sdResult').hidden = true; $('sdMsg').hidden = true; $('sdHud').hidden = false; $('sdBoard').hidden = false;
+  if (state.mode === 'showdown') sdArena.load(sd.sim, { tags: sdTags(race.lanes) });
+  else sd.needLoad = true;
+  sdBoard(true);
+}
+
+function sdStart() {
+  var doc = sd.doc, lanes = sdLanes();
+  if (!lanes.length || sd.running) return;
+  doc.round = (doc.round || 0) + 1; doc.phase = 'racing'; doc.results = null;
+  doc.race = { round: doc.round, contest: doc.contest, lanes: lanes.map(function (l) { return l.bot ? { bot: l.bot, name: l.name, cname: l.cname } : l; }) };
+  sdPublish();
+  sd.raceRound = doc.round; sdRun(doc.race); renderSd();
+}
+
+function sdFrame(dt) {
+  if (!sdArena) return;
+  if (sd && sd.sim) {
+    if (sd.needLoad) { sd.needLoad = false; sdArena.load(sd.sim, { tags: sdTags(sd.race ? sd.race.lanes : sdLanes()) }); }
+    if (sd.running) {
+      sd.acc += dt * ($('sdTurbo') && $('sdTurbo').checked ? 3 : 1);
+      var n = 0;
+      while (sd.acc >= Z.STEP && n < 12 && !sd.sim.done()) { sd.sim.step(); sd.acc -= Z.STEP; n++; }
+      if (sd.acc > Z.STEP * 12) sd.acc = 0;
+      sdBoard();
+      if (sd.sim.done()) sdFinish();
+    }
+    sdArena.draw(sd.sim);
+  }
+  sdArena.render();
+}
+
+function sdBoard(force) {
+  var sim = sd.sim, race = sd.race;
+  if (!sim || !race) return;
+  var now = performance.now();
+  if (!force && now - (sd.boardAt || 0) < 250) return;
+  sd.boardAt = now;
+  var C = Z.CONTESTS[race.contest];
+  $('sdHudLabel').textContent = (race.contest === 'sumo' ? 'Super Sumo' : C.label) + ' · Showdown';
+  $('sdHudTime').textContent = Math.max(0, sim.seconds - sim.t).toFixed(1) + ' s left';
+  $('sdHudBar').style.width = Math.min(100, sim.t / sim.seconds * 100) + '%';
+  var rows = sim.standings().slice().sort(function (a, b) { return a.place - b.place; });
+  $('sdBoard').innerHTML = rows.map(function (r) {
+    var l = race.lanes[r.i];
+    return '<li><b>' + r.place + '</b><i style="background:' + SD_COLOURS[r.i % 4] + '"></i><span>' + esc(l.name) + (l.uid === sd.me ? ' (you)' : '') + '</span><em>' + esc(r.text) + '</em></li>';
+  }).join('');
+}
+
+function sdFinish() {
+  sd.running = false;
+  sdBoard(true);
+  if (sd.isHost && sd.doc && sd.doc.race && sd.doc.race.round === sd.raceRound) {
+    sd.doc.phase = 'done';
+    sd.doc.results = sd.sim.standings().map(function (r) { return { lane: r.i, place: r.place, text: r.text }; });
+    sdPublish();
+  }
+  sdResults();
+  renderSd();
+}
+
+// The podium. Everyone's screen ran the same race, but the teacher's results are the official ones.
+function sdResults() {
+  var doc = sd.doc, race = (doc && doc.race && doc.race.round === sd.raceRound && sd.race) ? sd.race : doc && doc.race;
+  if (!race) return;
+  var rows = doc.results && doc.race && doc.race.round === race.round ? doc.results
+    : sd.sim && sd.race === race ? sd.sim.standings().map(function (r) { return { lane: r.i, place: r.place, text: r.text }; }) : null;
+  if (!rows) return;
+  var key = race.round + ':' + (doc.results ? 'final' : 'local');
+  if (sd.shown === key && !$('sdResult').hidden) return;
+  sd.shown = key;
+  $('sdMsg').hidden = true; $('sdHud').hidden = true;
+  var sorted = rows.slice().sort(function (a, b) { return a.place - b.place; }), mine = rows.filter(function (r) { var l = race.lanes[r.lane]; return l && l.uid && l.uid === sd.me; })[0];
+  var C = Z.CONTESTS[race.contest], winners = sorted.filter(function (r) { return r.place === 1; }).map(function (r) { return race.lanes[r.lane].name; });
+  var big = mine ? (mine.place === 1 ? 'You won!' : 'You came ' + placeWord(mine.place)) : winners.length > 1 ? 'A draw!' : esc(winners[0] || '') + ' wins!';
+  var box = $('sdResult');
+  box.innerHTML = '<div class="zl-card zl-sd-card"><div class="zl-badge win">' + esc((race.contest === 'sumo' ? 'Super Sumo' : C.label) + ' · Showdown') + '</div>' +
+    '<div class="big">' + (mine ? esc(big) : big) + '</div><ol class="zl-podium">' + sorted.map(function (r) {
+      var l = race.lanes[r.lane];
+      return '<li class="p' + Math.min(r.place, 4) + (l.uid && l.uid === sd.me ? ' me' : '') + '"><b>' + placeWord(r.place) + '</b><i style="background:' + SD_COLOURS[r.lane % 4] + '"></i><span><strong>' + esc(l.name) + '</strong><small>' + esc(l.cname) + '</small></span><em>' + esc(r.text) + '</em></li>';
+    }).join('') + '</ol><div class="actions">' +
+    (sd.isHost ? '<button type="button" class="zl-go" id="sdAgain">' + ic('rotate-ccw') + ' Race again</button><button type="button" class="zl-tool" id="sdLobby">' + ic('users') + ' Back to the line-up</button>'
+      : '<button type="button" class="zl-tool" id="sdLobby">' + ic('x') + ' Close</button>') + '</div></div>';
+  box.hidden = false;
+  on('sdAgain', function () { sdStart(); });
+  on('sdLobby', function () {
+    box.hidden = true;
+    if (sd.isHost) { sd.doc.phase = 'lobby'; sdPublish(); }
+    if (sd.sim) { sd.sim.free(); sd.sim = null; } sd.previewKey = null;
+    sdPreview(); renderSd();
+  });
+}
+
+/* ---- the side panel */
+function slotStatus(s, i) {
+  var doc = sd.doc, e = doc.entries[s.uid], here = sd.online[s.uid];
+  var dot = '<i class="dot" style="background:' + SD_COLOURS[i % 4] + '"></i>';
+  var thumb = '';
+  if (e) { var tk = s.uid + ':' + e.n; if (!(tk in sd.thumbs)) sd.thumbs[tk] = thumbs(Z.normalise(e.critter)); thumb = sd.thumbs[tk] ? '<img alt="" src="' + sd.thumbs[tk] + '">' : ''; }
+  var words = e ? 'Ready with <b>' + esc(e.cname) + '</b>' : here ? 'Choosing a Critter…' : 'Not here yet';
+  return '<li class="zl-sd-slot' + (e ? ' ready' : '') + (s.uid === sd.me ? ' me' : '') + '">' + dot + '<div class="who"><strong>' + esc(s.name) + (s.uid === sd.me ? ' (you)' : '') + '</strong><span>' + words + '</span></div>' + thumb +
+    (sd.isHost && e && !sd.running ? '<button type="button" class="zl-icon" data-out="' + esc(s.uid) + '" title="Take this Critter out" aria-label="Take ' + esc(s.name) + '’s Critter out">' + ic('x') + '</button>' : '') + '</li>';
+}
+
+function renderSd() {
+  var side = $('sdSide');
+  if (!side || !sd) return;
+  var doc = sd.doc, h = '<h2>' + ic('users') + ' ' + SD_TITLE + '</h2>';
+  if (!doc) {
+    side.innerHTML = h + '<p class="zl-muted">' + (sd.connected ? 'Waiting for your teacher to open this Showdown…' : sd.tries > 1 ? 'Can’t reach the Showdown. Trying again…' : 'Joining…') + '</p>' +
+      '<div class="zl-sd-actions"><button type="button" class="zl-tool" id="sdLeave">Leave</button></div>';
+    on('sdLeave', function () { sdClose(); });
+    return;
+  }
+  var C = Z.CONTESTS[doc.contest], racing = sd.running || doc.phase === 'racing';
+  h += '<p class="zl-muted">' + esc(doc.title) + (sd.isHost ? '' : ' · hosted by ' + esc(doc.hostName || 'your teacher')) +
+    ' · <span class="zl-sd-live' + (sd.connected ? '' : ' off') + '">' + (sd.connected ? 'Live' : 'Reconnecting…') + '</span></p>';
+  if (sd.isHost) {
+    h += '<h4>Contest</h4><div class="zl-contests sd">' + Z.SHOWDOWN.map(function (k) { return contestChip(k, doc.contest, racing); }).join('') + '</div>';
+  } else {
+    h += '<p class="zl-sd-contest">' + ic(C.icon) + ' <b>' + (doc.contest === 'sumo' ? 'Super Sumo' : C.label) + '</b> <span class="zl-muted">' + esc(C.about) + '</span></p>';
+  }
+  h += '<h4>Racers</h4><ul class="zl-sd-slots">' + doc.slots.map(slotStatus).join('') + '</ul>';
+  if (sd.isHost) {
+    var lanes = sdLanes(), entered = Object.keys(doc.entries).length;
+    h += '<label class="zl-check"><input type="checkbox" id="sdBots"' + (doc.bots ? ' checked' : '') + (racing ? ' disabled' : '') + '> Fill empty lanes with Starter Critters</label>' +
+      '<div class="zl-sd-actions"><button type="button" class="zl-go" id="sdGo"' + (lanes.length && !racing ? '' : ' disabled') + '>' + ic('play') + ' ' +
+      (racing ? 'Racing…' : !entered ? 'Waiting for Critters' : doc.round ? 'Race again' : 'Start the race!') + '</button>' +
+      '<label class="zl-check"><input type="checkbox" id="sdTurbo"> Turbo</label></div>' +
+      '<p class="zl-hint">Pupils open Critter Lab and press <b>Showdown</b> to join and pick one of their saved Critters.</p>' +
+      '<div class="zl-sd-actions"><button type="button" class="zl-tool" id="sdEnd">' + ic('x') + ' End Showdown</button><button type="button" class="zl-tool" id="sdBack">' + ic('wrench') + ' Back to building</button></div>';
+  } else {
+    h += '<h4>Your Critter</h4>' + pupilPick() +
+      '<div class="zl-sd-actions"><label class="zl-check"><input type="checkbox" id="sdTurbo"> Turbo</label><button type="button" class="zl-tool" id="sdLeave">Leave</button><button type="button" class="zl-tool" id="sdBack">' + ic('wrench') + ' Back to building</button></div>';
+  }
+  var turbo = $('sdTurbo') && $('sdTurbo').checked;
+  side.innerHTML = h;
+  if (turbo && $('sdTurbo')) $('sdTurbo').checked = true;
+  side.querySelectorAll('[data-c]').forEach(function (b) { b.addEventListener('click', function () { if (sd.running) return; doc.contest = b.dataset.c; if (doc.phase === 'done') doc.phase = 'lobby'; sdPublish(); sdPreview(); renderSd(); }); });
+  side.querySelectorAll('[data-out]').forEach(function (b) { b.addEventListener('click', function () { delete doc.entries[b.dataset.out]; sdPublish(); sdPreview(); renderSd(); }); });
+  side.querySelectorAll('[data-save]').forEach(function (b) { b.addEventListener('click', function () { var sv = sd.saves.list[+b.dataset.save]; if (sv) sdEnter(sv.critter); }); });
+  var bots = $('sdBots'); if (bots) bots.addEventListener('change', function () { doc.bots = this.checked; sdPublish(); sdPreview(); renderSd(); });
+  on('sdGo', sdStart);
+  on('sdEnd', sdEnd);
+  on('sdLeave', function () { sdClose(); });
+  on('sdBack', function () { setMode('build'); });
+  on('sdCurrent', function () { sdEnter(state.critter); });
+  on('sdChange', function () { sd.choosing = true; renderSd(); });
+  on('sdOut', sdWithdraw);
+  on('sdKeep', function () { sd.choosing = false; renderSd(); });
+}
+
+// A pupil chooses which saved Critter to send in.
+function pupilPick() {
+  if (sd.pending && !sd.choosing) {
+    var ok = sdConfirmed(), z = sd.pending.critter, tk = 'me:' + sd.pending.n;
+    if (!(tk in sd.thumbs)) sd.thumbs[tk] = thumbs(Z.normalise(z));
+    return '<div class="zl-sd-mine' + (ok ? ' ok' : '') + '">' + (sd.thumbs[tk] ? '<img alt="" src="' + sd.thumbs[tk] + '">' : '') +
+      '<div><strong>' + esc(z.name) + '</strong><span>' + (ok ? 'You’re in! Watch the big screen.' : 'Sending it to your teacher’s screen…') + '</span></div></div>' +
+      (sd.running || (sd.doc && sd.doc.phase === 'racing') ? '' : '<div class="zl-btnrow"><button type="button" id="sdChange">Pick a different one</button><button type="button" id="sdOut">Take it out</button></div>');
+  }
+  if (!sd.saves) sdLoadSaves();
+  var list = sd.saves.list, h = '<p class="zl-hint">Send in one of your saved Critters. You can change your mind until the race starts.</p><div class="zl-sd-saves">';
+  h += '<button type="button" class="zl-sd-save" id="sdCurrent">' + (function () { var t = thumbs(state.critter); return t ? '<img alt="" src="' + t + '">' : ''; })() + '<span><strong>' + esc(state.critter.name) + '</strong><small>The one on my screen now</small></span></button>';
+  h += list.map(function (sv, i) { return '<button type="button" class="zl-sd-save" data-save="' + i + '">' + (sv.thumb ? '<img alt="" src="' + sv.thumb + '">' : '') + '<span><strong>' + esc(sv.title) + '</strong><small>' + esc(sv.where) + ' · ' + esc(sv.critter.name) + '</small></span></button>'; }).join('');
+  h += '</div>';
+  if (sd.saves.loading) h += '<p class="zl-hint">Looking through your saves… (' + sd.saves.checked + ' of ' + sd.saves.total + ')</p>';
+  else if (!list.length) h += '<p class="zl-hint">No saved Critters found. Save one first (Save, or Cloud), or send the one on your screen.</p>';
+  if (sd.choosing) h += '<div class="zl-btnrow"><button type="button" id="sdKeep">Keep ' + esc(sd.pending ? sd.pending.critter.name : 'it') + '</button></div>';
+  return h;
+}
+
+function sdLoadSaves() {
+  var c = cloud(), box = { list: [], loading: true, checked: 0, total: 0 }, me = sd;
+  sd.saves = box;
+  Promise.resolve(c.saves()).then(function (items) {
+    box.total = items.length;
+    var i = 0;
+    function next() {
+      if (sd !== me) return;
+      if (i >= items.length) { box.loading = false; renderSd(); return; }
+      var it = items[i++];
+      Promise.resolve(c.loadSave(it.key)).then(function (pl) {
+        var z = pl && pl.projectType === 'critter' && pl.critter ? sdCritter(pl.critter) : null;
+        if (z) box.list.push({ title: it.title || z.name, where: it.where, critter: z, thumb: thumbs(z) });
+      }).catch(function () { /* skip it */ }).then(function () { box.checked++; if (sd === me && state.mode === 'showdown') renderSd(); next(); });
+    }
+    next();
+  }).catch(function () { box.loading = false; renderSd(); });
+}
+
+function sdEnd() {
+  var c = cloud(), roomId = sd.roomId, ask = host.confirm || function (q) { return Promise.resolve(window.confirm(q)); };
+  ask('End this Showdown for everyone? Pupils’ Critters stay safe in their own saves.').then(function (yes) { if (yes && sd && sd.roomId === roomId) endIt(); });
+  function endIt() {
+  if (sd.doc) { sd.doc.phase = 'ended'; sdPublish(); }
+  c.api('/collab/remove', { roomId: roomId }).catch(function () { /* already gone */ });
+  setTimeout(function () { sdClose(); toast('Showdown ended'); }, 150);
+  }
+}
+
+function sdClose(keepMode) {
+  if (!sd) return;
+  var old = sd; sd = null;
+  clearInterval(old.timer); clearTimeout(old.retry);
+  if (old.ws) { try { old.ws.close(); } catch (e) { /* closed */ } }
+  if (old.sim) old.sim.free();
+  $('zSdTab').hidden = true;
+  $('sdResult').hidden = true;
+  if (!keepMode || state.mode === 'showdown') setMode('build');
+}
+
 /* ------------------------------------------------------------------ start up */
 
 function boot() {
@@ -1514,6 +2018,7 @@ function boot() {
   $('zRedo').addEventListener('click', redo);
   $('zStarters').addEventListener('click', showStarters);
   $('zKeys').addEventListener('click', showKeys);
+  $('zShowdown').addEventListener('click', showdownMenu);
   $('zGo').addEventListener('click', go);
   $('zOpp').addEventListener('change', function () { state.opponent = this.value; resetRun(); });
   $('zPreview').addEventListener('change', drawBeats);
@@ -1557,6 +2062,7 @@ function onKey(e) {
   var slider = tag === 'input' && t.type === 'range', k = e.key, lk = k.length === 1 ? k.toLowerCase() : k, z = state.critter;
   var cmd = e.ctrlKey || e.metaKey;
   function done() { e.preventDefault(); e.stopPropagation(); }
+  if (state.mode === 'showdown') return; // the Showdown screen has no shortcuts
 
   if (cmd && lk === 'z') { done(); if (e.shiftKey) redo(); else undo(); return; }
   if (cmd && lk === 'y') { done(); redo(); return; }
@@ -1623,6 +2129,10 @@ return {
   // CodeJump is leaving Critter mode
   pause: function () { state.running = false; if (state.mode === 'test') setMode('build'); },
   newCritter: function () { return Z.newCritter('My Critter'); },
-  destroy: function () { destroyed = true; document.removeEventListener('keydown', onKey); if (state.sim) state.sim.free(); root.innerHTML = ''; }
+  // Showdown: open the menu, open a room by id (from CodeJump's Collaborations list), or start hosting for a class
+  showdownMenu: function () { showdownMenu(); },
+  openShowdown: function (roomId) { sdOpen(roomId, null); },
+  hostShowdown: function (code, name) { sdSetup(code, name); },
+  destroy: function () { destroyed = true; if (sd) sdClose(true); document.removeEventListener('keydown', onKey); if (state.sim) state.sim.free(); root.innerHTML = ''; }
 };
 }

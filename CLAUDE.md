@@ -485,6 +485,22 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   dropped) / `pastePart` (new ids; makes a mirrored pair when the target is a twin or the spot is off the middle line) /
   `freeSpot` (next free spot along the part's side). UI: buttons under the part name (`editRow`) + Ctrl+C/X/V/D; the
   clipboard is localStorage `cj-critter-clipboard`, so it carries between Critters. Each action is one undo step.
+- **Showdown** (teacher races up to 4 pupils' saved Critters live; 2 Oct 2026). Core: `createSim(R, contest, critters,
+  {showdown:true})` for `SHOWDOWN` = sprint/hurdles/highjump/lap/sumo, up to `SHOWDOWN_MAX`=4. Races (everything but sumo)
+  are `showdownSim`: one solo `createSim` per Critter (so its score == its Test it! score whatever the lane; lanes are only
+  drawn, `offsets` shift `transforms`); sumo is one shared world (bigger platform for 3+, everyone collides, last on wins).
+  `sim.standings()` → [{i, score, text, place}]. App (critter-app.js "Showdown" section): `makeArena` factory (Test arena +
+  `sdArena`, name tags), mode 'showdown' (`#sdStage`, tab `#zSdTab`), `showdownMenu`/`sdSetup`/`sdCreate`/`sdOpen`.
+  **No worker change:** it rides the live-collab rooms — `/collab/start` (title starts "Critter Showdown · <class>") +
+  `/collab/invite` uids + the `/room` WebSocket. The teacher's screen owns the doc
+  `{kind:'critter-showdown', host, slots, entries:{uid:{critter,cname,n}}, contest, bots, phase lobby|racing|done|ended,
+  round, race:{round, contest, lanes}, results}` and re-sends it as a `snapshot` on every change/join (and puts it back if
+  an old client overwrites it); pupils send `op {k:'sd_enter', critter, n}` / `{k:'sd_withdraw'}` (the room stamps
+  `from`, so nobody can enter for someone else) and resend until the doc shows their `n`. On `racing` every screen runs
+  the same race locally; the teacher's results are published. Host glue in build-and-play.html: `critterCloud` (passed as
+  mount option `cloud`: me/api/wsUrl/saves/loadSave/signIn), `withCritterLab(fn)`, roster button `#cr-showdown`, and
+  `cloudCollabList` routes Showdown rooms to `critterApp.openShowdown`. Tested end to end against a local `wrangler dev`
+  of codejump-cloud (scratch copy with CLOUD_URL pointed at it).
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 

@@ -157,3 +157,69 @@
 .zk .zl-edit button { flex: 1; font-size: 12px; font-weight: 800; border: 2px solid var(--zk-line); background: var(--zk-sunk); color: #eee; border-radius: 8px; padding: 6px 2px; cursor: pointer; }
 .zk .zl-edit button:hover { border-color: var(--zk-gold); }
 .zk .zl-edit button:disabled { opacity: 0.35; cursor: default; border-color: var(--zk-line); }
+
+/* ---------- Showdown ---------- */
+.zk .zl-sd { display: grid; grid-template-columns: 330px 1fr; gap: 10px; align-items: start; }
+.zk .zl-sd-side { background: var(--zk-panel); border: 2px solid var(--zk-line); border-radius: 12px; padding: 12px 14px; max-height: 640px; overflow: auto; }
+.zk .zl-sd-side h2 { margin: 0 0 2px; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+.zk .zl-sd-side h4, .zk .zl-dialog h4 { margin: 12px 0 7px; font-size: 13px; color: var(--zk-gold); text-transform: uppercase; letter-spacing: 0.05em; }
+.zk .zl-sd-side h4 .zl-muted, .zk .zl-dialog h4 .zl-muted { text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; }
+.zk .zl-sd-live { font-weight: 800; color: var(--zk-green); }
+.zk .zl-sd-live.off { color: var(--zk-orange); }
+.zk .zl-contests.sd { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+.zk .zl-contests.sd .zl-contest { min-height: 50px; padding: 6px 8px; }
+.zk .zl-contest:disabled { opacity: 0.45; cursor: default; }
+.zk .zl-sd-contest { font-size: 13.5px; line-height: 1.45; margin: 10px 0 0; display: block; }
+.zk .zl-sd-slots { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.zk .zl-sd-slot { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border: 2px solid var(--zk-line); border-radius: 10px; background: var(--zk-sunk); }
+.zk .zl-sd-slot.ready { border-color: #2f6b40; }
+.zk .zl-sd-slot.me { box-shadow: 0 0 0 2px var(--zk-gold); }
+.zk .zl-sd-slot .dot, .zk .zl-sd-board i, .zk .zl-podium i { width: 14px; height: 14px; border-radius: 50%; flex: none; display: inline-block; }
+.zk .zl-sd-slot .who, .zk .zl-sd-item .who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.zk .zl-sd-slot strong, .zk .zl-sd-item strong { font-size: 14px; }
+.zk .zl-sd-slot span, .zk .zl-sd-item span { font-size: 12px; color: var(--zk-muted); }
+.zk .zl-sd-slot span b { color: #fff; }
+.zk .zl-sd-slot img { width: 54px; height: 36px; object-fit: contain; background: #eaf6ff; border-radius: 6px; }
+.zk .zl-sd-slot .zl-icon { min-height: 30px; padding: 3px 6px; }
+.zk .zl-sd-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.zk .zl-sd-saves { display: flex; flex-direction: column; gap: 6px; }
+.zk .zl-sd-save { display: flex; align-items: center; gap: 10px; text-align: left; padding: 6px 8px; border: 2px solid var(--zk-line); border-radius: 10px; background: var(--zk-sunk); color: #fff; cursor: pointer; font: inherit; }
+.zk .zl-sd-save:hover { border-color: var(--zk-green); }
+.zk .zl-sd-save img, .zk .zl-sd-mine img { width: 72px; height: 48px; object-fit: contain; background: #eaf6ff; border-radius: 7px; flex: none; }
+.zk .zl-sd-save span, .zk .zl-sd-mine div { display: flex; flex-direction: column; min-width: 0; }
+.zk .zl-sd-save strong { font-size: 14px; }
+.zk .zl-sd-save small, .zk .zl-sd-mine span { font-size: 12px; color: var(--zk-muted); }
+.zk .zl-sd-mine { display: flex; align-items: center; gap: 10px; padding: 8px; border: 2px dashed var(--zk-line); border-radius: 10px; margin-bottom: 8px; }
+.zk .zl-sd-mine.ok { border: 2px solid var(--zk-green); background: #18301f; }
+.zk .zl-sd-mine strong { font-size: 15px; }
+.zk .zl-sd-classes { display: flex; flex-wrap: wrap; gap: 8px; }
+.zk .zl-sd-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 2px solid var(--zk-line); border-radius: 10px; background: var(--zk-sunk); margin-bottom: 6px; }
+.zk .zl-sd-pupils { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.zk .zl-sd-pupil { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 2px solid var(--zk-line); border-radius: 10px; background: var(--zk-sunk); color: #fff; cursor: pointer; font: inherit; }
+.zk .zl-sd-pupil span { font-size: 12px; color: var(--zk-muted); }
+.zk .zl-sd-pupil.on { border-color: var(--zk-green); background: #18301f; }
+.zk .zl-sd-pupil:disabled { opacity: 0.4; cursor: default; }
+.zk .zl-go.small { font-size: 14px; padding: 7px 14px; min-height: 38px; }
+.zk .zl-go:disabled { opacity: 0.45; cursor: default; }
+.zk #sdCanvas { height: 600px; cursor: grab; }
+.zk .zl-sd-board { position: absolute; right: 10px; top: 10px; margin: 0; padding: 8px 10px; list-style: none; background: rgba(0,0,0,0.72); color: #fff; border-radius: 11px; min-width: 230px; pointer-events: none; }
+.zk .zl-sd-board li { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; padding: 3px 0; }
+.zk .zl-sd-board b { width: 16px; color: var(--zk-gold); }
+.zk .zl-sd-board span { flex: 1; }
+.zk .zl-sd-board em { font-style: normal; color: #ccc; font-size: 13px; }
+.zk .zl-sd-card { max-width: 520px; width: calc(100% - 32px); }
+.zk .zl-sd-card .big { font-size: 2.4rem; }
+.zk .zl-podium { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.zk .zl-podium li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: var(--zk-sunk); border: 2px solid var(--zk-line); }
+.zk .zl-podium li.p1 { border-color: #d9b44a; background: #3a2f1c; }
+.zk .zl-podium li.me { box-shadow: 0 0 0 2px var(--zk-green); }
+.zk .zl-podium b { width: 40px; font-size: 16px; font-weight: 900; color: var(--zk-gold); }
+.zk .zl-podium span { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.zk .zl-podium small { font-size: 12px; color: var(--zk-muted); }
+.zk .zl-podium em { font-style: normal; font-weight: 800; font-size: 14px; }
+@media (max-width: 900px) {
+  .zk .zl-sd { grid-template-columns: 1fr; }
+  .zk .zl-sd-side { max-height: none; }
+  .zk #sdCanvas { height: 420px; }
+  .zk .zl-sd-board { min-width: 0; font-size: 12px; }
+}

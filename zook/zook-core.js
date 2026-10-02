@@ -283,6 +283,54 @@ export function syncTwin(z, b) {
   if (j && tj) { tj.motion.amplitude = j.motion.amplitude; tj.minAngle = j.minAngle; tj.maxAngle = j.maxAngle; tj.aim = { on: j.aim.on, angle: j.aim.angle }; }
 }
 
+// The ids of a block and everything hanging off it.
+export function subtree(z, id) {
+  var out = {}; out[id] = true;
+  var grew = true;
+  while (grew) {
+    grew = false;
+    z.blocks.forEach(function (c) { if (!out[c.id] && c.mount && out[c.mount.parent]) { out[c.id] = true; grew = true; } });
+  }
+  return out;
+}
+
+/* Move a part (and everything hanging off it) to a new spot: `parentId`, `face`, `at`. Its twin moves to the
+ * mirror-image spot. Moving a part onto the middle line (where its twin would land on top of it) removes the
+ * twin. Returns false if the spot isn't allowed (on the part itself, or on anything hanging off it or its twin). */
+export function move(z, id, parentId, face, at) {
+  var b = block(z, id), parent = block(z, parentId);
+  if (!b || !b.mount || !parent || !FACES[face]) return false;
+  var mine = subtree(z, id), twin = b.twin && block(z, b.twin), theirs = twin ? subtree(z, twin.id) : {};
+  if (mine[parentId] || theirs[parentId]) return false;
+  at = [clamp(num(at[0], 0), -0.5, 0.5), clamp(num(at[1], 0), -0.5, 0.5)];
+  var wasSide = b.mount.face === '+z' || b.mount.face === '-z', isSide = face === '+z' || face === '-z';
+  b.mount.parent = parentId; b.mount.face = face; b.mount.at = at;
+  jointFor(z, id).blockA = parentId;
+  if (twin) {
+    if (!parent.twin && onCentreline(face, at)) { delete b.twin; delete twin.twin; remove(z, twin.id); }
+    else {
+      var tp = parent.twin || parentId;
+      twin.mount.parent = tp; twin.mount.face = mirrorFace(face); twin.mount.at = mirrorAt(face, at);
+      jointFor(z, twin.id).blockA = tp;
+    }
+  }
+  // A walking leg moved between underneath and a side takes that spot's posture (like a fresh one would)
+  if (wasSide !== isSide) [b].concat(b.twin ? [block(z, b.twin)] : []).forEach(function (top) { limbPosture(z, top, isSide); });
+  return true;
+}
+
+// Posture for a limb that walks on a stepping loop: sprawled out and down on a side (hip sweeps forwards and
+// back, knee lifts), or hanging straight down underneath. Its loops are redrawn to fit.
+function limbPosture(z, top, side) {
+  var tips = z.blocks.filter(function (t) { return t.path && Z_chainTop(z, t.id) === top.id; });
+  if (!tips.length) return;
+  top.mount.hinge = side ? 'sweep' : 'swing'; top.mount.lean = side ? -15 : 0;
+  var knee = children(z, top.id).filter(function (c) { return tips.some(function (t) { return chainOf(z, t.id).blocks.indexOf(c.id) >= 0; }); })[0];
+  if (knee) { knee.mount.hinge = 'swing'; knee.mount.lean = side ? -70 : -30; }
+  tips.forEach(function (t) { defaultPath(z, t.id, t.path.phase); });
+}
+function Z_chainTop(z, tipId) { return chainOf(z, tipId).blocks[0]; }
+
 // Remove a block, its twin, everything hanging off them, and their joints. The root block stays.
 export function remove(z, id) {
   var b = block(z, id);

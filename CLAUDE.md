@@ -468,6 +468,11 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as "Zoo
   hand-in and playable .html all work through the normal payload (the worker stores payloads verbatim — no worker
   change); **live collaborate is hidden for Zook** (`openShareModal` filter). Help: `ZOOK_HELP` via `helpTabs()`;
   Teacher Guide has a Zook section; home save thumbnails show an orange "Zook" badge.
+- **Moving parts:** press on a placed part and drag (orbit only starts on the background/body). The builder snaps to the
+  surface under the pointer (skipping the part's own subtree and its twin's) and calls `Z.move(z,id,parent,face,at)`,
+  which mirrors the twin, removes the twin if the part lands on the middle line, refuses spots on its own subtree,
+  and gives a walking leg the posture for its new spot (side = sprawled/sweep, underneath = hanging/swing) with
+  fresh stepping loops (`limbPosture`). One undo step per drag.
 - **Starters** (in zook-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 

@@ -46,7 +46,7 @@ var TEMPLATE = `
     <div class="zl-canvas-wrap">
       <canvas id="buildCanvas" aria-label="Your Zook in 3D. Drag to look around, tap a part to choose it."></canvas>
       <div class="zl-canvas-msg" id="buildMsg" hidden></div>
-      <div class="zl-canvas-tip" id="buildTip">Drag to look around · pinch or scroll to zoom · tap a part to change it</div>
+      <div class="zl-canvas-tip" id="buildTip">Drag a part to move it · drag the background to look around · pinch or scroll to zoom</div>
     </div>
     <aside class="zl-inspector" id="zInspector" aria-live="polite"></aside>
   </div>
@@ -431,12 +431,12 @@ var builder = (function () {
   function inside(e) { var r = canvas.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; }
 
   // Where would a part dropped at this pointer position stick? (uses the built pose)
-  function snapAt(e) {
+  function snapAt(e, skip) {
     if (!inside(e)) return null;
     apply(Z.pose(state.zook));
     zookGroup.updateMatrixWorld(true);
     ray(e);
-    var hit = raycaster.intersectObjects(list(meshes), false)[0];
+    var hit = raycaster.intersectObjects(Object.keys(meshes).filter(function (k) { return !(skip && skip[k]); }).map(function (k) { return meshes[k]; }), false)[0];
     if (!hit) return null;
     var b = Z.block(state.zook, hit.object.userData.id), q = Z.pose(state.zook).blocks[b.id];
     var local = Z.qRot(Z.qConj(q.q), [hit.point.x / M - q.p[0], hit.point.y / M - q.p[1], hit.point.z / M - q.p[2]]);
@@ -460,17 +460,45 @@ var builder = (function () {
     });
   }
 
-  // Pointer: drag a path point (on its plane), tap a "+" to add a point, tap a part to select it,
-  // drag anything else to orbit.
+  // Pointer: drag a path point (on its plane), tap a "+" to add a point, press on a part to select it
+  // and drag it somewhere else on the Zook, drag the background (or the body) to orbit.
   var down = null;
   canvas.addEventListener('pointerdown', function (e) {
     down = { x: e.clientX, y: e.clientY, path: pickPath(e) };
     if (down.path && down.path.point != null) {
       controls.enabled = false; canvas.setPointerCapture(e.pointerId);
       state.pathPoint = down.path.point; down.remembered = false; renderInspector(); drawPath();
+      return;
+    }
+    if (down.path) return;
+    var id = pick(e), b = id && Z.block(state.zook, id);
+    if (b && b.mount) {
+      controls.enabled = false; canvas.setPointerCapture(e.pointerId);
+      down.part = id; down.remembered = false; down.key = ''; down.hadTwin = !!b.twin;
+      if (id !== state.selected) { state.selected = id; state.pathPoint = null; sync(); renderInspector(); drawBeats(); }
     }
   });
   canvas.addEventListener('pointermove', function (e) {
+    if (down && down.part) {
+      if (!state.moving && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6) return;
+      state.moving = true; canvas.style.cursor = 'grabbing';
+      var z = state.zook, b = Z.block(z, down.part);
+      if (!b) return;
+      var skip = Z.subtree(z, b.id);
+      if (b.twin) Object.assign(skip, Z.subtree(z, b.twin));
+      var snap = snapAt(e, skip);
+      $('buildMsg').hidden = !!snap; $('buildMsg').textContent = 'Slide it onto another part of your Zook';
+      if (!snap) return;
+      var key = snap.parent + snap.face + snap.at.join(',');
+      if (key === down.key) return;
+      var before = JSON.stringify(z);
+      if (Z.move(z, b.id, snap.parent, snap.face, snap.at)) {
+        down.key = key;
+        if (!down.remembered) { state.history.push(before); state.future = []; updateUndo(); down.remembered = true; }
+        live(); apply(Z.pose(z));
+      }
+      return;
+    }
     if (down && down.path && down.path.point != null && pathInfo) {
       ray(e);
       var hit = new THREE.Vector3();
@@ -487,9 +515,15 @@ var builder = (function () {
     if (e.buttons || state.drag) return;
     canvas.style.cursor = pickPath(e) ? 'move' : pick(e) ? 'pointer' : 'grab';
   });
+  canvas.addEventListener('pointercancel', function () { if (down && down.part) { state.moving = false; $('buildMsg').hidden = true; if (down.remembered) changed({ inspector: true }); } down = null; controls.enabled = true; });
   canvas.addEventListener('pointerup', function (e) {
     var d = down; down = null; controls.enabled = true;
     if (!d || state.drag) return;
+    if (d.part) {
+      var moved = state.moving; state.moving = false; $('buildMsg').hidden = true; canvas.style.cursor = '';
+      if (d.remembered) { changed({ inspector: true }); if (moved && Z.block(state.zook, d.part) && !Z.block(state.zook, d.part).twin && d.hadTwin) toast('It\u2019s in the middle now, so its twin was taken off.'); }
+      return;
+    }
     if (d.path && d.path.point != null) { if (d.remembered) changed(); return; }
     if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) return;
     if (d.path && d.path.insert != null && pathInfo) { insertPoint(pathInfo.tip, d.path.insert); return; }
@@ -1253,9 +1287,9 @@ function frame(now) {
   var dt = Math.min(0.1, (now - (state.lastFrame || now)) / 1000);
   state.lastFrame = now;
   if (state.mode === 'build') {
-    var wiggle = $('zPreview').checked && !state.drag;
+    var wiggle = $('zPreview').checked && !state.drag && !state.moving;
     if (wiggle) state.t += dt;
-    if (!state.drag) builder.apply(Z.pose(state.zook, wiggle && state.ctrl ? state.ctrl.angles(state.t, null) : null));
+    if (!state.drag && !state.moving) builder.apply(Z.pose(state.zook, wiggle && state.ctrl ? state.ctrl.angles(state.t, null) : null));
     builder.render();
     if (wiggle) drawBeats();
   } else if (state.sim) {

@@ -441,7 +441,7 @@ platformer & stage untouched.
 - **TODO / not yet built:** a turtle thumbnail for saved-project tiles (currently blank); more examples/guided missions;
   possibly `pr`/print output.
 
-## Critter Lab project type — `projectType==='critter'` — NEW (2026-10-02, branch `claude/zook-project-type`, not on main yet)
+## Critter Lab project type — `projectType==='critter'` — LIVE on main since 3 Oct 2026 (CJ_VERSION 2026.10.03; built on branch `claude/zook-project-type`)
 A 3D creature lab inspired by the BBC's Bamzooki creature builder. **Named "Critter Lab" (the creatures are "Critters")
 — Charlie, 2 Oct 2026**: it was first called "Zook", but Zook / Zook Kit / Bamzooki are BBC names, so never use them
 anywhere pupils or teachers can see (UI, help, guides, What's New, file or code names). Pupils build a creature from superellipsoid **blobs** (Length/Height/Width/Squareness/Pointiness)
@@ -502,7 +502,7 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   `cloudCollabList` routes Showdown rooms to `critterApp.openShowdown`. Tested end to end against a local `wrangler dev`
   of codejump-cloud (scratch copy with CLOUD_URL pointed at it).
 - **Video guides** (2 Oct 2026): `critter/guides/g1-build-your-first-critter`, `g2-fix-the-wobble-with-beats`,
-  `g3-lift-higher-for-hurdles` (.mp4 1280×800 25 fps, captions + British voice-over, + .jpg posters), played from the
+  `g3-lift-higher-for-hurdles` (.mp4 1280×800 25 fps, captions only, no audio (a Kokoro bf_emma voice-over was tried on 2 Oct 2026 and stripped before release as too robotic), + .jpg posters), played from the
   **Guides** button (`showGuides`, list in `GUIDES`). Recorded from the real app frame by frame: a virtual clock drives
   requestAnimationFrame/performance.now, one screenshot per 1/25 s (screen recording under software WebGL was ~4 fps). Voice-over: Kokoro-82M (Apache-2.0, npm kokoro-js + kokoro-q8-shards; tokenizer from expo-kokoro), voice bf_emma at 0.95 speed, run locally; each caption is spoken and the video waits for the line.
   The recipe (2 Walking leg pairs = 1.0 m Sprint; back pair Opposite beat = 2.8 m; Lift higher on front + back feet =

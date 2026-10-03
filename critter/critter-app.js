@@ -1525,7 +1525,7 @@ var GUIDES = [
 ];
 function guideUrl(f) { return new URL('./guides/' + f, import.meta.url).href; }
 function showGuides() {
-  openDialog('Video guides: make a Critter that walks', '<p class="zl-muted" style="margin-top:0;">Three short videos (about a minute and a half each, with a voice-over and captions). Watch one, then try it yourself.</p><div class="zl-videos">' +
+  openDialog('Video guides: make a Critter that walks', '<p class="zl-muted" style="margin-top:0;">Three short videos (about a minute and a half each, with captions, no sound needed). Watch one, then try it yourself.</p><div class="zl-videos">' +
     GUIDES.map(function (g) {
       return '<figure><video controls preload="none" playsinline poster="' + guideUrl(g.file + '.jpg') + '" src="' + guideUrl(g.file + '.mp4') + '"></video>' +
         '<figcaption><strong>' + esc(g.title) + '</strong><span>' + esc(g.about) + '</span></figcaption></figure>';

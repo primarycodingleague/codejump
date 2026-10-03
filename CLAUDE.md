@@ -21,6 +21,19 @@
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Home page — redesigned Oct 2026 (direction "B · ink arcade", branch `claude/home-redesign`)
+Mockups (3 directions) on the claude.ai canvas "CodeJump home page redesign"; B was chosen. Uses the Primary Coding
+League design system's colours/type (gold #ae853e on ink, Lazydog display + Montserrat; Lazydog shipped as
+`home/Lazydog.otf`, falling back to the cdnfonts "Lazy Dog"). Pupils first, teachers below:
+header (crest + wordmark, `#h-teacher` For teachers, `#h-a11y`, `#home-account` chip) → hero ("Let's get coding!",
+`#h-new` Start building, `#h-myprojects` scrolls to `#home-projects`, Critter Lab spotlight) → "What do you want to make?"
+tiles (`[data-start=<projectType>]`: set `_pendingPt`, open the KS modal, then the KS handler clicks that type in
+`#pt-modal`; a type that KS1 doesn't get falls back to the chooser with a toast; the 3D tile `#h-tile-3d` hides while
+`THREED_ON` is false) → My projects (`#home-saves`, `#h-cloud`, `#h-open`) + demos (`[data-demo]`) → light
+teacher band (`#h-setup-class` = For teachers, `#h-guide` = Teacher Guide) → footer (`#pol-*`). Pictures are real
+screenshots in `home/*.jpg`, loaded via `homeAsset()` (live-site URL when CodeJump runs from a downloaded file).
+All home CSS is the `.hm-*` block under "HOME SCREEN"; the old `.hcard`/`.quickstart` rules are now unused.
+
 ## Project types — `projectType` ('platformer' | 'stage' | 'turtle' | '3d' | 'critter') — NEW, in progress
 The app is becoming a multi-engine "one-stop shop". A `let projectType` global (declared by
 `keyStage`) is the seam every engine plugs into. It's written/read in `buildPayload`/`applyPayload`

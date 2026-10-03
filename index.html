@@ -18,6 +18,7 @@
 <script src="https://unpkg.com/blockly@10.4.3/msg/en.js"></script>
 <style>
 @import url('https://fonts.cdnfonts.com/css/lazy-dog');
+@font-face{font-family:'Lazydog';src:url('home/Lazydog.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
 
 :root {
   --black:  #000000;
@@ -26,7 +27,7 @@
   --white:  #ffffff;
   --dark:   #393939;
   --font:   'Montserrat', sans-serif;
-  --display:'Lazy Dog', 'Montserrat', sans-serif;
+  --display:'Lazydog', 'Lazy Dog', 'Montserrat', sans-serif;
 }
 /* ── Reset & Base ──────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -36,15 +37,99 @@ body{background:var(--black);font-family:var(--font);overflow:hidden;height:100v
 button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulation;}
 
 /* ── HOME SCREEN ───────────────────────────────────────────────────── */
-#home{
-  position:fixed;inset:0;z-index:500;overflow-y:auto;
-  background:var(--black);
-  background-image:radial-gradient(var(--gold) 1px, transparent 1px);
-  background-size:28px 28px;
-  background-position:0 0;
-  display:flex;flex-direction:column;align-items:center;padding:40px 16px 60px;
-}
+#home{position:fixed;inset:0;z-index:500;overflow-y:auto;background:var(--black);color:var(--white);user-select:text;-webkit-user-select:text;}
 #home.hide{display:none;}
+/* Home page (redesigned Oct 2026, "ink arcade": PCL design system colours/type; pupils first, teachers below) */
+#home .ic{width:1.15em;height:1.15em;vertical-align:-.2em;}
+.hm-dots{background-image:radial-gradient(rgba(174,133,62,.32) 1px,transparent 1px);background-size:22px 22px;}
+.hm-wrap{max-width:1200px;margin:0 auto;}
+.hm-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:16px clamp(16px,4vw,48px);}
+.hm-brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;}
+.hm-brand .pcl-mark{width:52px;height:52px;display:block;}
+.hm-word{display:flex;flex-direction:column;align-items:center;line-height:1;}
+.hm-word-code{background:#fff;color:#000;font-weight:900;font-size:11px;letter-spacing:.3em;padding:3px 8px 3px 11px;}
+.hm-word-jump{font-weight:900;font-size:30px;letter-spacing:-.02em;}
+.hm-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;}
+.hm-pill{font-family:var(--font);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);background:transparent;border:2px solid var(--gold);border-radius:999px;padding:0 16px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;}
+.hm-pill:hover{background:var(--gold);color:#000;}
+.hm-round{width:44px;height:44px;border-radius:999px;border:2px solid #444;background:#1a1a1a;color:#38b6ff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
+.hm-round:hover{border-color:#38b6ff;}
+#home-account{position:static;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:none;}
+#home-account .acc-chip{min-height:44px;background:#1a1a1a;}
+#home-account #ha-in{background:var(--gold);color:#000;border-color:var(--gold);font-weight:800;}
+#home-account #ha-in:hover{filter:brightness(1.06);}
+.hm-hero{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:48px;padding:clamp(20px,4vw,56px) clamp(16px,4vw,48px) clamp(48px,6vw,80px);}
+.hm-hero-text{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px;}
+.hm-h1{font-family:var(--display);font-weight:400;font-size:clamp(54px,8vw,104px);line-height:.95;margin:0;text-transform:uppercase;}
+.hm-lead{font-size:20px;line-height:1.55;color:rgba(255,255,255,.85);max-width:520px;}
+.hm-actions{display:flex;flex-wrap:wrap;gap:12px;}
+.hm-btn{font-family:var(--font);font-weight:800;font-size:15px;border-radius:10px;border:2px solid transparent;padding:0 20px;min-height:46px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:transform .12s cubic-bezier(.34,1.56,.64,1),filter .2s;}
+.hm-btn:active{transform:scale(.96);}
+.hm-btn.lg{font-size:17px;min-height:54px;padding:0 26px;border-radius:12px;}
+.hm-btn.sm{font-size:13px;min-height:40px;padding:0 14px;}
+.hm-btn.gold{background:var(--gold);color:#000;box-shadow:0 8px 24px rgba(174,133,62,.35);}
+.hm-btn.gold:hover{filter:brightness(1.08);}
+.hm-btn.outline{background:transparent;color:#fff;border-color:#fff;}
+.hm-btn.outline:hover{border-color:var(--gold);color:var(--gold);}
+.hm-btn.ghost{background:#262626;color:#fff;border-color:#393939;}
+.hm-btn.ghost:hover{border-color:var(--gold);}
+.hm-btn.ink{background:#000;color:#fff;}
+.hm-btn.ink:hover{filter:brightness(1.4);}
+.hm-btn.outline-ink{background:transparent;color:#000;border-color:#000;}
+.hm-btn.outline-ink:hover{background:#000;color:#fff;}
+.hm-spot{flex:1 1 440px;min-width:0;border:2px solid var(--gold);border-radius:24px;overflow:hidden;background:#1a1a1a;box-shadow:0 8px 24px rgba(174,133,62,.35);}
+.hm-spot img{display:block;width:100%;height:300px;object-fit:cover;background:#eaf6ff;}
+.hm-spot-body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+.hm-spot-title{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;}
+.hm-spot-body p{font-size:15px;line-height:1.55;color:rgba(255,255,255,.82);}
+.hm-badge{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:#e10000;color:#fff;border-radius:999px;padding:3px 9px;vertical-align:2px;}
+.hm-modes{background:#111;padding:clamp(40px,6vw,72px) clamp(16px,4vw,48px);}
+.hm-eyebrow{font-weight:800;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.hm-eyebrow.dark{color:#8a6a2e;}
+.hm-h2{font-weight:900;font-size:clamp(26px,3vw,34px);margin:0 0 24px;}
+.hm-h2.display{font-family:var(--display);font-weight:400;font-size:clamp(36px,4.5vw,56px);line-height:1.05;text-transform:uppercase;color:#000;margin:0;}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.hm-tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;border:2px solid #393939;border-radius:16px;overflow:hidden;background:#1a1a1a;color:#fff;transition:transform .2s,border-color .2s;}
+.hm-tile:hover{transform:translateY(-4px);border-color:var(--gold);}
+.hm-tile:focus-visible{outline:3px solid #38b6ff;outline-offset:2px;}
+.hm-tile.hot{border-color:var(--gold);}
+.hm-tile img,.hm-tile-ph{display:block;width:100%;height:150px;object-fit:cover;background:#262626;}
+.hm-tile-ph{display:flex;align-items:center;justify-content:center;font-size:56px;color:#38b6ff;}
+.hm-tile-b{padding:14px 16px 18px;display:flex;flex-direction:column;gap:6px;font-family:var(--font);}
+.hm-tile-b b{font-size:18px;font-weight:900;}
+.hm-tile-b>span{font-size:14px;line-height:1.5;color:rgba(255,255,255,.78);}
+.hm-row{display:flex;flex-wrap:wrap;gap:20px;margin-top:28px;}
+.hm-panel{flex:1 1 300px;min-width:0;border:2px solid #393939;border-radius:16px;padding:22px;background:#1a1a1a;display:flex;flex-direction:column;gap:12px;}
+.hm-panel.hm-grow{flex:999 1 520px;}
+.hm-panel h3{font-size:20px;font-weight:900;margin:0;}
+.hm-sub{font-size:14px;line-height:1.5;color:rgba(255,255,255,.72);}
+.hm-sub.small{font-size:12px;}
+.hm-sub b{color:#fff;}
+.hm-links{display:flex;flex-wrap:wrap;gap:10px;}
+.hm-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.hm-chip{font-family:var(--font);font-weight:800;font-size:13px;color:#fff;background:transparent;border:2px solid #585555;border-radius:999px;padding:0 14px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+.hm-chip:hover{border-color:var(--gold);color:var(--gold);}
+#home-saves{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:10px;}
+#home-saves .save-item{margin:0;}
+#home-saves .save-empty{grid-column:1/-1;text-align:left;padding:8px 0;}
+.hm-teach{background:#f7f5f1;color:#393939;padding:clamp(48px,7vw,88px) clamp(16px,4vw,48px);}
+.hm-teach-in{display:flex;flex-wrap:wrap;align-items:center;gap:48px;}
+.hm-teach-text{flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:18px;}
+.hm-ticks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;font-size:16px;line-height:1.5;}
+.hm-ticks li{display:flex;gap:10px;align-items:flex-start;}
+.hm-ticks .ic{color:#008a47;flex:none;width:22px;height:22px;margin-top:1px;}
+.hm-ticks b{color:#000;}
+.hm-teach-fig{flex:1 1 460px;min-width:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+.hm-teach-fig img{display:block;width:100%;height:auto;border-radius:16px;border:2px solid #000;box-shadow:0 12px 34px rgba(20,14,0,.14);}
+.hm-teach-fig figcaption{font-size:14px;color:#585555;}
+.hm-foot{background:#000;padding:28px clamp(16px,4vw,48px) 36px;}
+.hm-foot-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;}
+.hm-foot-brand{display:flex;align-items:center;gap:14px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.85);}
+.hm-foot-brand .pcl-mark,.hm-foot-brand .pcc-mark{width:56px;height:56px;display:block;}
+.hm-foot-brand b{color:#fff;}
+.hm-foot .pcl-policies{font-size:14px;color:rgba(255,255,255,.6);}
+.hm-foot .pcl-policies a{color:#38b6ff;cursor:pointer;text-decoration:underline;}
+@media (max-width:640px){.hm-word-jump{font-size:24px;}.hm-brand .pcl-mark{width:42px;height:42px;}.hm-spot img{height:220px;}.hm-pill{padding:0 12px;}}
 .home-logo{text-align:center;margin:0 0 48px;}
 .home-logo .home-logomark{
   width:clamp(240px,40vw,380px);height:auto;display:block;margin:0 auto;
@@ -830,7 +915,6 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
   .home-cards{flex-direction:column;gap:14px;align-items:stretch;max-width:420px;}
   .hcard{padding:18px 16px;width:100%;}
   .pcl-corner .pcl-mark,.pcl-corner .pcc-mark{width:46px;height:46px;}
-  body #home-account{top:68px;left:12px;}
   .cp-run{font-size:13px;padding:11px;letter-spacing:.8px;}
   .cp-clear{padding:0 10px;font-size:11px;}
   #design-box{padding:16px;}
@@ -951,7 +1035,7 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
 .ks1-cblock{outline:2px dashed rgba(255,255,255,.7);outline-offset:-5px;}
 #ks1-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.9;transform:translate(-50%,-50%);}
 /* Home account bar (top-left) + toolbar chip */
-#home-account{position:absolute;top:100px;left:16px;z-index:6;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:230px;}
+#home-account{display:flex;gap:8px;align-items:center;flex-wrap:wrap;} /* sits in the home header nav */
 #home-account .acc-chip{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.35);border:1px solid var(--gold);color:#fff;border-radius:22px;padding:7px 14px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer;}
 #home-account .acc-chip:hover{background:var(--gold);color:#000;}
 #home-account .acc-chip.plain{border-color:var(--gray);}
@@ -1289,101 +1373,109 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <symbol id="i-key2" viewBox="0 0 24 24"><circle cx="8" cy="9" r="4.5" fill="none" stroke="#ffd24a" stroke-width="2.4"/><path d="M11 12l8 8M16.5 17.5l2-2M19.5 20.5l1.5-1.5" stroke="#ffd24a" stroke-width="2.4" stroke-linecap="round"/></symbol>
 </svg>
 <div id="home">
-  <div class="pcl-corner">
-    <a href="https://www.primarycodingleague.co.uk" target="_blank" rel="noopener" title="Primary Coding League"><span class="pcl-mark" role="img" aria-label="Primary Coding League"></span></a>
-    <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
-  </div>
- <div class="teacher-link"><button id="h-a11y" title="Accessibility options"><svg class="ic"><use href="#i-access"></use></svg></button><button id="h-teacher"><svg class="ic"><use href="#i-teacher"></use></svg> &nbsp;For Teachers </button></div>
-  <div id="home-account"></div>
-  <div class="home-logo">
-    <svg class="home-logomark" viewBox="0 0 200 152" role="img" aria-label="CodeJump by Primary Coding League">
-      <rect x="66" y="8"  width="68" height="10" rx="2" fill="#ffffff"/>
-      <rect x="54" y="19" width="92" height="10" fill="#ffffff"/>
-      <rect x="46" y="30" width="108" height="8" fill="#ffffff"/>
-      <text x="100" y="27" font-family="Montserrat,sans-serif" font-weight="900" font-size="11" fill="#111111" text-anchor="middle" letter-spacing="3">CODE</text>
-      <text x="100" y="88" font-family="Montserrat,sans-serif" font-weight="900" font-size="56" fill="#ffffff" text-anchor="middle" letter-spacing="-2">JUMP</text>
-      <rect x="8" y="98" width="12" height="7" fill="#ffffff"/><rect x="24" y="98" width="12" height="7" fill="#ffffff"/><rect x="40" y="98" width="12" height="7" fill="#ffffff"/><rect x="56" y="98" width="12" height="7" fill="#ffffff"/><rect x="72" y="98" width="12" height="7" fill="#ffffff"/><rect x="88" y="98" width="12" height="7" fill="#ffffff"/><rect x="104" y="98" width="12" height="7" fill="#ffffff"/><rect x="120" y="98" width="12" height="7" fill="#ffffff"/><rect x="136" y="98" width="12" height="7" fill="#ffffff"/><rect x="152" y="98" width="12" height="7" fill="#ffffff"/><rect x="168" y="98" width="12" height="7" fill="#ffffff"/><rect x="184" y="98" width="12" height="7" fill="#ffffff"/>
-      <text x="100" y="120" font-family="Montserrat,sans-serif" font-weight="700" font-size="8" fill="#ffffff" text-anchor="middle" letter-spacing="1.5" opacity="0.65">BY PRIMARY CODING LEAGUE</text>
-      <text x="100" y="136" font-family="Montserrat,sans-serif" font-weight="400" font-size="7" fill="#888888" text-anchor="middle" letter-spacing="0.4">in partnership with Primary Coding Clubs</text>
-    </svg>
-    <p>Design &nbsp;·&nbsp; Code &nbsp;·&nbsp; Play &nbsp;·&nbsp; Share</p>
-  </div>
-
-  <div class="home-cards">
-    <!-- New Level -->
-    <div class="hcard">
-      <div class="hcard-icon"><svg class="ic"><use href="#i-spark"></use></svg></div>
-      <div class="hcard-title">New Level</div>
-      <div class="hcard-desc">Start from a blank canvas and build something amazing from scratch.</div>
-      <button class="hbtn hbtn-gold" id="h-new">Start Building</button>
-    </div>
-
-    <!-- Demos -->
-    <div class="hcard">
-      <div class="hcard-icon"><svg class="ic"><use href="#i-play"></use></svg></div>
-      <div class="hcard-title">Try a Demo</div>
-      <div class="hcard-desc">Load a ready-made level to explore, play, or remix.</div>
-      <button class="hbtn" data-demo="forest"><svg class="ic"><use href="#i-tree"></use></svg> &nbsp;Forest Adventure</button>
-      <button class="hbtn" data-demo="space"><svg class="ic"><use href="#i-rocket"></use></svg> &nbsp;Space Jump</button>
-      <button class="hbtn" data-demo="ocean"><svg class="ic"><use href="#i-fish"></use></svg> &nbsp;Ocean Quest</button>
-      <button class="hbtn" data-demo="gizmos"><svg class="ic"><use href="#i-crate"></use></svg> &nbsp;Gadget Playground</button>
-    </div>
-
-    <!-- My Levels -->
-    <div class="hcard" style="max-width:360px;">
-      <div class="hcard-icon"><svg class="ic"><use href="#i-layers"></use></svg></div>
-      <div class="hcard-title">My Levels</div>
-      <div class="hcard-desc">Pick up where you left off — all your saved levels are here.</div>
-      <div id="home-saves"></div>
-      <button class="hbtn" id="h-cloud" style="margin-top:10px;display:none;"><svg class="ic"><use href="#i-cloud"></use></svg> &nbsp;Open from a code</button>
-      <button class="hbtn" id="h-open" style="margin-top:10px;"><svg class="ic"><use href="#i-folder"></use></svg> &nbsp;Open a File…</button>
-      <div class="hcard-desc" style="margin-top:8px;font-size:11px;opacity:.6;">Open a <b>.codejump</b> level or a shared <b>.html</b> game.</div>
-    </div>
-  </div>
-
-  <!-- ══ QUICK START ══════════════════════════════════════════════════ -->
-  <div class="quickstart">
-    <div class="qs-head">How it works</div>
-    <div class="qs-steps">
-      <div class="qs-step">
-        <div class="qs-num">1</div>
-        <div class="qs-ico"><svg class="ic"><use href="#i-build"></use></svg></div>
-        <div class="qs-title">Build</div>
-        <div class="qs-desc">Tap a block, then paint it onto the grid to make your world — platforms, gems, enemies and a goal.</div>
-      </div>
-      <div class="qs-step">
-        <div class="qs-num">2</div>
-        <div class="qs-ico"><svg class="ic"><use href="#i-code"></use></svg></div>
-        <div class="qs-title">Code</div>
-        <div class="qs-desc">Snap together blocks to set the rules — how the player moves, how enemies behave, and how to win.</div>
-      </div>
-      <div class="qs-step">
-        <div class="qs-num">3</div>
-        <div class="qs-ico"><svg class="ic"><use href="#i-gamepad"></use></svg></div>
-        <div class="qs-title">Play</div>
-        <div class="qs-desc">Hit Play and jump in! Use the arrow keys, or the on-screen buttons on a tablet.</div>
-      </div>
-      <div class="qs-step">
-        <div class="qs-num">4</div>
-        <div class="qs-ico"><svg class="ic"><use href="#i-share"></use></svg></div>
-        <div class="qs-title">Share</div>
-        <div class="qs-desc">Send your game to a friend with a link, a level file, or a playable file they just open and play.</div>
-      </div>
-    </div>
-    <div class="qs-tip"><svg class="ic"><use href="#i-spark"></use></svg> New here? Tap <b>Start Building</b> or try a <b>Demo</b> above to jump straight in.</div>
-  </div>
-
-  <div class="pcl-footer">
-    <div class="pf-logos">
-      <a href="https://www.primarycodingleague.co.uk" target="_blank" rel="noopener" title="Visit Primary Coding League">
+  <div class="hm-dots">
+    <header class="hm-top">
+      <a class="hm-brand" href="https://www.primarycodingleague.co.uk" target="_blank" rel="noopener" title="Primary Coding League">
         <span class="pcl-mark" role="img" aria-label="Primary Coding League"></span>
+        <span class="hm-word" aria-label="CodeJump"><span class="hm-word-code">CODE</span><span class="hm-word-jump">JUMP</span></span>
       </a>
-      <span class="pf-amp">×</span>
-      <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Visit Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
-    </div>
-    <div class="by">By Primary Coding League CIC<span class="partner">in partnership with Primary Coding Clubs</span></div>
-    <div class="pcl-policies"><a id="pol-privacy">Privacy Policy</a> · <a id="pol-data">Data Protection</a> · <a id="pol-safe">Safeguarding</a></div>
+      <nav class="hm-nav" aria-label="CodeJump">
+        <button id="h-teacher" class="hm-pill"><svg class="ic"><use href="#i-teacher"></use></svg> For teachers</button>
+        <button id="h-a11y" class="hm-round" title="Accessibility options" aria-label="Accessibility options"><svg class="ic"><use href="#i-access"></use></svg></button>
+        <div id="home-account"></div>
+      </nav>
+    </header>
+
+    <section class="hm-hero">
+      <div class="hm-hero-text">
+        <h1 class="hm-h1">Let’s get coding!</h1>
+        <p class="hm-lead">Design it. Code it. Play it. Share it. Make games, stories, drawings and creatures, all in your browser.</p>
+        <div class="hm-actions">
+          <button class="hm-btn gold lg" id="h-new"><svg class="ic"><use href="#i-spark"></use></svg> Start building</button>
+          <button class="hm-btn outline lg" id="h-myprojects"><svg class="ic"><use href="#i-layers"></use></svg> My projects</button>
+        </div>
+      </div>
+      <div class="hm-spot">
+        <img data-home="critter-build.jpg" alt="A four-legged Critter in the Critter Lab builder, with the path its foot follows">
+        <div class="hm-spot-body">
+          <div class="hm-spot-title"><span class="hm-badge">New</span> Critter Lab</div>
+          <p>Build a creature from blobs and joints. Real physics decides how it moves, then race it in eight contests.</p>
+          <button class="hm-btn gold" data-start="critter"><svg class="ic"><use href="#i-critter"></use></svg> Try Critter Lab</button>
+        </div>
+      </div>
+    </section>
   </div>
+
+  <section class="hm-modes">
+    <div class="hm-wrap">
+      <div class="hm-eyebrow">Choose your game mode</div>
+      <h2 class="hm-h2">What do you want to make?</h2>
+      <div class="hm-grid">
+        <button class="hm-tile" data-start="platformer"><img data-home="platformer.jpg" alt=""><span class="hm-tile-b"><b>Platformer</b><span>Paint a level, code the rules, then jump in and play.</span></span></button>
+        <button class="hm-tile" data-start="stage"><img data-home="stage.jpg" alt=""><span class="hm-tile-b"><b>Stage</b><span>Make sprites move, talk and react with snap-together blocks.</span></span></button>
+        <button class="hm-tile" data-start="turtle"><img data-home="turtle.jpg" alt=""><span class="hm-tile-b"><b>Turtle</b><span>Type Logo commands and watch the turtle draw. KS2 and KS3.</span></span></button>
+        <button class="hm-tile" data-start="3d" id="h-tile-3d"><span class="hm-tile-ph"><svg class="ic"><use href="#i-cube"></use></svg></span><span class="hm-tile-b"><b>3D World</b><span>Build a 3D scene with blocks and bring it to life.</span></span></button>
+        <button class="hm-tile hot" data-start="critter"><img data-home="critter.jpg" alt=""><span class="hm-tile-b"><b>Critter Lab <span class="hm-badge">New</span></b><span>3D creatures and real physics. KS2 and KS3.</span></span></button>
+      </div>
+
+      <div class="hm-row" id="home-projects">
+        <div class="hm-panel hm-grow">
+          <h3>My projects</h3>
+          <p class="hm-sub">Saved on this device. Signed in? Your Cloud projects are under Open from a code.</p>
+          <div id="home-saves"></div>
+          <div class="hm-links">
+            <button class="hm-btn ghost sm" id="h-cloud" style="display:none;"><svg class="ic"><use href="#i-cloud"></use></svg> Open from a code</button>
+            <button class="hm-btn ghost sm" id="h-open"><svg class="ic"><use href="#i-folder"></use></svg> Open a file…</button>
+          </div>
+          <p class="hm-sub small">Open a <b>.codejump</b> level or a shared <b>.html</b> game.</p>
+        </div>
+        <div class="hm-panel">
+          <h3>Play a demo</h3>
+          <p class="hm-sub">Ready-made levels to explore, play or remix.</p>
+          <div class="hm-chips">
+            <button class="hm-chip" data-demo="forest"><svg class="ic"><use href="#i-tree"></use></svg> Forest Adventure</button>
+            <button class="hm-chip" data-demo="space"><svg class="ic"><use href="#i-rocket"></use></svg> Space Jump</button>
+            <button class="hm-chip" data-demo="ocean"><svg class="ic"><use href="#i-fish"></use></svg> Ocean Quest</button>
+            <button class="hm-chip" data-demo="gizmos"><svg class="ic"><use href="#i-crate"></use></svg> Gadget Playground</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hm-teach" id="home-teachers">
+    <div class="hm-wrap hm-teach-in">
+      <div class="hm-teach-text">
+        <div class="hm-eyebrow dark">For teachers</div>
+        <h2 class="hm-h2 display">Bring the whole class</h2>
+        <ul class="hm-ticks">
+          <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Classes in minutes:</b> add pupils from a list and print login cards.</span></li>
+          <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Hand-outs and hand-ins:</b> give a game to everyone, then open each pupil’s work.</span></li>
+          <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Critter Showdown:</b> race up to four pupils’ Critters live on the board.</span></li>
+          <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Teacher Guide and video guides</b> for every project type.</span></li>
+        </ul>
+        <div class="hm-actions">
+          <button class="hm-btn ink lg" id="h-setup-class"><svg class="ic"><use href="#i-school"></use></svg> Set up a class</button>
+          <button class="hm-btn outline-ink lg" id="h-guide"><svg class="ic"><use href="#i-book"></use></svg> Teacher Guide</button>
+        </div>
+      </div>
+      <figure class="hm-teach-fig">
+        <img data-home="showdown.jpg" alt="A Critter Showdown podium: Amara wins Super Sumo, Leo 2nd, Isla 3rd, Ravi 4th">
+        <figcaption>A Critter Showdown on the board: four pupils, one Super Sumo platform.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <footer class="hm-foot">
+    <div class="hm-wrap hm-foot-in">
+      <div class="hm-foot-brand">
+        <a href="https://www.primarycodingleague.co.uk" target="_blank" rel="noopener" title="Visit Primary Coding League"><span class="pcl-mark" role="img" aria-label="Primary Coding League"></span></a>
+        <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Visit Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
+        <span><b>By Primary Coding League CIC</b><br>in partnership with Primary Coding Clubs</span>
+      </div>
+      <nav class="pcl-policies" aria-label="Policies"><a id="pol-privacy" href="#" role="button">Privacy Policy</a> · <a id="pol-data" href="#" role="button">Data Protection</a> · <a id="pol-safe" href="#" role="button">Safeguarding</a></nav>
+    </div>
+  </footer>
 
   <input type="file" id="file-input" accept=".codejump,.json,.html,text/html,application/json" style="display:none;">
 </div>
@@ -2374,17 +2466,30 @@ const DEMOS={
   },
 };
 
-document.getElementById('h-new').onclick=()=>document.getElementById('ks-modal').classList.remove('hide');
-document.getElementById('ks-cancel').onclick=()=>document.getElementById('ks-modal').classList.add('hide');
-let _pendingKs='ks2',_pendingSize='standard';
+let _pendingKs='ks2',_pendingSize='standard',_pendingPt=null; // _pendingPt: a home-page tile already chose the project type
+document.getElementById('h-new').onclick=()=>{_pendingPt=null;document.getElementById('ks-modal').classList.remove('hide');};
+document.getElementById('ks-cancel').onclick=()=>{_pendingPt=null;document.getElementById('ks-modal').classList.add('hide');};
 document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   _pendingKs=b.dataset.ks;const szEl=document.getElementById('ks-size');_pendingSize=(_pendingKs==='ks1')?'standard':(szEl?szEl.value:'standard');
   document.getElementById('ks-modal').classList.add('hide');
   const ttOpt=document.querySelector('#pt-modal .ks-opt[data-pt="turtle"]');if(ttOpt)ttOpt.style.display=(_pendingKs==='ks1')?'none':''; // Turtle (typed Logo) is KS2+ only
   const zkOpt=document.querySelector('#pt-modal .ks-opt[data-pt="critter"]');if(zkOpt)zkOpt.style.display=(_pendingKs==='ks1')?'none':''; // Critter (3D creatures + physics) is KS2+ only
   const tdOpt=document.querySelector('#pt-modal .ks-opt[data-pt="3d"]');if(tdOpt)tdOpt.style.display=(_pendingKs==='ks1'||!THREED_ON)?'none':''; // 3D is KS2+ only, behind the THREED_ON flag
+  // came from a home-page tile: go straight into that project if it suits this key stage, else let them pick
+  const want=_pendingPt;_pendingPt=null;
+  const wantOpt=want&&document.querySelector('#pt-modal .ks-opt[data-pt="'+want+'"]');
+  if(wantOpt&&wantOpt.style.display!=='none'){wantOpt.click();return;}
+  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
   document.getElementById('pt-modal').classList.remove('hide');
 });
+// Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
+function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https://codejump.primarycodingleague.co.uk/home/')+f;}
+document.querySelectorAll('#home img[data-home]').forEach(im=>{im.src=homeAsset(im.dataset.home);im.loading='lazy';im.decoding='async';});
+document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendingPt=b.dataset.start;document.getElementById('ks-modal').classList.remove('hide');});
+{const t3=document.getElementById('h-tile-3d');if(t3&&!THREED_ON)t3.style.display='none';}
+document.getElementById('h-myprojects').onclick=()=>{const el=document.getElementById('home-projects');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+document.getElementById('h-setup-class').onclick=()=>document.getElementById('h-teacher').click();
+document.getElementById('h-guide').onclick=()=>{showTeacher();openTeacherGuide();};
 document.getElementById('pt-cancel').onclick=()=>{document.getElementById('pt-modal').classList.add('hide');document.getElementById('ks-modal').classList.remove('hide');};
 document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   if(dirty){autoSaveDraft();if(!await cjConfirm('Start a new project? Your current game is saved as a draft you can resume from the home screen.',{title:'Start fresh?',okLabel:'Start new',cancelLabel:'Stay'}))return;}
@@ -4649,7 +4754,7 @@ function closeTut(){document.getElementById('tutorial').classList.add('hide');tr
 document.getElementById('tut-next').onclick=()=>{if(tutStep<TUTORIAL.length-1){tutStep++;renderTut();}else closeTut();};
 document.getElementById('tut-skip').onclick=closeTut;
 document.querySelectorAll('[data-demo]').forEach(btn=>{
-  btn.onclick=()=>{setGridSize('standard');DEMOS[btn.dataset.demo]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();clearDirty();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');toast('Example games use the Key Stage 2 blocks','#3b82a6');};
+  btn.onclick=()=>{projectType='platformer';if(typeof curSaveId!=='undefined')curSaveId=null;setGridSize('standard');/* demos are platformer levels, whatever was open before */DEMOS[btn.dataset.demo]();waterGrid=mkGrid();customBg={top:null,bottom:null,art:null};setKeyStage('ks2');resetSingleLevel();clearDirty();document.getElementById('theme-sel').value=theme;hideHome();switchMode('build');toast('Example games use the Key Stage 2 blocks','#3b82a6');};
 });
 document.getElementById('home-btn').onclick=async()=>{if(dirty){autoSaveDraft();if(!await cjConfirm('Your game is auto-saved as a draft you can resume — but unsaved changes won’t be in your saved games.',{title:'Go back to home?',okLabel:'Go home',cancelLabel:'Stay'}))return;}showHome();};
 
@@ -6465,9 +6570,9 @@ function openPolicy(which){let m=document.getElementById('policy-modal');if(!m){
   const body=document.createElement('div');body.className='policy-body';body.innerHTML=p.html;
   const foot=document.createElement('div');foot.className='policy-foot';const close=document.createElement('button');close.textContent='Close';close.onclick=()=>m.classList.add('hide');foot.appendChild(close);
   box.appendChild(head);box.appendChild(body);box.appendChild(foot);m.appendChild(box);m.classList.remove('hide');}
-{const pp=document.getElementById('pol-privacy');if(pp)pp.onclick=()=>openPolicy('privacy');
- const pd=document.getElementById('pol-data');if(pd)pd.onclick=()=>openPolicy('data');
- const ps=document.getElementById('pol-safe');if(ps)ps.onclick=()=>openPolicy('safeguarding');}
+{const pp=document.getElementById('pol-privacy');if(pp)pp.onclick=e=>{e.preventDefault();openPolicy('privacy');};
+ const pd=document.getElementById('pol-data');if(pd)pd.onclick=e=>{e.preventDefault();openPolicy('data');};
+ const ps=document.getElementById('pol-safe');if(ps)ps.onclick=e=>{e.preventDefault();openPolicy('safeguarding');};}
 document.getElementById('btn-help').onclick=openHelp;
 document.getElementById('help-close').onclick=()=>document.getElementById('help-modal').classList.add('hide');
 

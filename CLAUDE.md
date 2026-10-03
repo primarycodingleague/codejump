@@ -21,7 +21,7 @@
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## Home page — redesigned Oct 2026 (direction "B · ink arcade", branch `claude/home-redesign`)
+## Home page — redesigned Oct 2026 (direction "B · ink arcade"), LIVE on main since 3 Oct 2026 (CJ_VERSION 2026.10.03.2)
 Mockups (3 directions) on the claude.ai canvas "CodeJump home page redesign"; B was chosen. Uses the Primary Coding
 League design system's colours/type (gold #ae853e on ink, Lazydog display + Montserrat; Lazydog shipped as
 `home/Lazydog.otf`, falling back to the cdnfonts "Lazy Dog"). Pupils first, teachers below:

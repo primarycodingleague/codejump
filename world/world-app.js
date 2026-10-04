@@ -15,6 +15,16 @@ import * as WB from './world-blocks.js';
 
 const CSS_URL = new URL('./world-app.css', import.meta.url).href;
 const GEN_URL = new URL('./vendor/blockly-javascript-10.4.3.min.js', import.meta.url).href;
+const ASSETS = new URL('./assets/', import.meta.url).href;
+const DRACO = new URL('./vendor/draco/', import.meta.url).href;
+
+// The models are Draco-compressed: decode with our own copy of the decoder, not Babylon's CDN
+if (B.DracoDecoder) B.DracoDecoder.DefaultConfiguration = { wasmUrl: DRACO + 'draco_wasm_wrapper_gltf.js', wasmBinaryUrl: DRACO + 'draco_decoder_gltf.wasm', fallbackUrl: DRACO + 'draco_decoder_gltf.js' };
+async function loadAsset(path) {
+  const res = await fetch(ASSETS + path);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.arrayBuffer();
+}
 
 function ic(id) { return '<svg class="ic"><use href="#' + id + '"></use></svg>'; }
 
@@ -176,7 +186,8 @@ export function mount(root, host) {
     let havok = null;
     try { havok = await B.HavokPhysics(); } catch (e) { toast('Physics couldn’t start, so things won’t fall or bump.'); }
     if (!alive) return;
-    world = createWorld(B, { canvas: $('w3Canvas'), havok, onError: m => status(m, 'bad'), onPad: setPad });
+    world = createWorld(B, { canvas: $('w3Canvas'), havok, loadAsset, onError: m => status(m, 'bad'), onPad: setPad,
+      onLoading: n => { const s = $('w3Status'); if (n > 0) status('Loading models…'); else if (s.textContent === 'Loading models…') status(world && world.running() ? 'Running' : '', 'ok'); } });
     $('w3Loading').hidden = true;
     world.start(); world.resize();
     run();

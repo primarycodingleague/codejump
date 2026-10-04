@@ -12,7 +12,14 @@
  *
  * Positions are where an object's BOTTOM-CENTRE sits, so y = 0 stands it on the ground. Angles are
  * degrees. Time is scene time: a hidden or paused world doesn't count down waits.
+ *
+ * Characters and objects (world-assets.js) are glTF files fetched with opts.loadAsset(path) -> ArrayBuffer,
+ * loaded once into an AssetContainer and copied for each object. Each one sits inside an invisible box
+ * "collider" mesh, which is what moves, collides and gets picked, so every command treats it like a shape.
+ * All characters share one skeleton, so an animation file is retargeted onto any character by bone name.
  */
+
+import * as LIB from './world-assets.js';
 
 export const MAX_OBJECTS = 1500;
 const DEG = Math.PI / 180;
@@ -50,6 +57,13 @@ export function createWorld(B, opts) {
   const onError = opts.onError || (() => {});
   const onPad = opts.onPad || (() => {});
   const fixedStep = !!opts.fixedStep || headless;
+  const loadAsset = opts.loadAsset || null;
+  // animations blend smoothly into each other (stand still -> walk -> run)
+  if (B.AnimationPropertiesOverride) {
+    scene.animationPropertiesOverride = new B.AnimationPropertiesOverride();
+    scene.animationPropertiesOverride.enableBlending = true;
+    scene.animationPropertiesOverride.blendingSpeed = 0.08;
+  }
 
   // ── camera, light, sky, ground ──
   const camera = new B.ArcRotateCamera('cam', -Math.PI / 2, 1.1, 22, new B.Vector3(0, 1, 0), scene);
@@ -63,7 +77,8 @@ export function createWorld(B, opts) {
   sun.position = new B.Vector3(20, 40, 14); sun.intensity = 0.75;
   let shadows = null;
   if (!headless) {
-    try { shadows = new B.ShadowGenerator(2048, sun); shadows.useBlurExponentialShadowMap = true; shadows.blurKernel = 16; shadows.darkness = 0.35; } catch (e) { shadows = null; }
+    // cheap soft shadows (a blurred 2048 map was 6x slower once a few models were in the scene)
+    try { shadows = new B.ShadowGenerator(1024, sun); shadows.usePoissonSampling = true; shadows.darkness = 0.35; shadows.bias = 0.0008; } catch (e) { shadows = null; }
   }
 
   let ground = null, groundAgg = null, groundMat = null;
@@ -119,15 +134,23 @@ export function createWorld(B, opts) {
   }
 
   function disposeObj(o) {
+    o.gone = true;
+    if (!o.mesh) return; // still loading: createModel throws it away when it arrives
     if (o.agg) { try { o.agg.dispose(); } catch (e) { /* already gone */ } o.agg = null; }
     if (shadows) { try { shadows.removeShadowCaster(o.mesh, true); } catch (e) { /* not a caster */ } }
+    if (o.inst) {
+      for (const k in o.anims) o.anims[k].dispose();
+      o.inst.animationGroups.forEach(g => g.dispose());
+      o.inst.skeletons.forEach(sk => sk.dispose());
+      const mats = new Set(); o.mesh.getChildMeshes(false).forEach(m => { if (m.material) mats.add(m.material); });
+      mats.forEach(m => m.dispose()); // the copy's own materials (cloned per object); textures are shared
+    }
     try { if (o.mesh.material) o.mesh.material.dispose(); } catch (e) { /* shared */ }
     o.mesh.dispose();
-    o.gone = true;
   }
 
   // ── helpers the commands share ──
-  function get(id) { const o = objs.get(String(id)); return o && !o.gone ? o : null; }
+  function get(id) { const o = objs.get(String(id)); return o && !o.gone && o.mesh ? o : null; }
   function reserve(name) {
     const base = safeName(name);
     if (!objs.has(base)) return base;
@@ -152,7 +175,7 @@ export function createWorld(B, opts) {
   }
   function physShape(o) {
     const T = B.PhysicsShapeType;
-    return o.kind === 'sphere' ? T.SPHERE : o.kind === 'capsule' ? T.CAPSULE : o.kind === 'cylinder' ? T.CYLINDER :
+    return o.kind === 'sphere' ? T.SPHERE : o.kind === 'capsule' || o.kind === 'character' ? T.CAPSULE : o.kind === 'cylinder' ? T.CYLINDER :
       o.kind === 'cone' ? T.CONVEX_HULL : T.BOX;
   }
   function applyPhysics(o) {
@@ -160,7 +183,7 @@ export function createWorld(B, opts) {
     if (!physicsOn || o.phys === 'none' || !o.mesh.isEnabled()) return;
     const mass = o.phys === 'dynamic' ? 1 : 0;
     o.agg = new B.PhysicsAggregate(o.mesh, physShape(o), { mass, friction: 0.6, restitution: o.bounce }, scene);
-    if (o === control) uprightBody(o);
+    if (o === control || o.kind === 'character') uprightBody(o); // characters never topple over
   }
   function uprightBody(o) {
     if (!o.agg) return;
@@ -205,6 +228,113 @@ export function createWorld(B, opts) {
     objs.set(id, o);
     created++;
     return id;
+  }
+
+  // ── characters and objects ──
+  const containers = new Map(); // file -> Promise<AssetContainer>, kept for the whole session
+  let pending = 0;
+  function loading(d) { pending += d; if (opts.onLoading) opts.onLoading(pending); }
+  function container(file) {
+    if (!containers.has(file)) {
+      const pr = (async () => {
+        if (!loadAsset) throw new Error('no asset loader');
+        loading(1);
+        try {
+          const buf = await loadAsset(file);
+          return await B.LoadAssetContainerAsync(new Uint8Array(buf), scene, { pluginExtension: '.glb', pluginOptions: { gltf: { animationStartMode: 0 } } });
+        } finally { loading(-1); }
+      })();
+      pr.catch(() => containers.delete(file)); // try again next time (e.g. back online)
+      containers.set(file, pr);
+    }
+    return containers.get(file);
+  }
+
+  async function createModel(r, kind, model, name, p) {
+    const lib = kind === 'character' ? LIB.CHARACTERS : LIB.OBJECTS;
+    if (!lib.some(c => c[0] === model)) model = lib[0][0];
+    if (objs.size >= MAX_OBJECTS) return create('box', name, p);
+    const id = reserve(name);
+    const o = { id, name: safeName(name), mesh: null, kind, model, size: null, color: null, phys: 'none', agg: null, bounce: 0.2, anims: {}, nodes: null };
+    objs.set(id, o); // holds the name while the file loads; get() ignores it until o.mesh is set
+    let cont;
+    try { cont = await container(kind === 'character' ? LIB.characterFile(model) : LIB.objectFile(model)); } catch (e) {
+      objs.delete(id);
+      if (r.stopped || r !== run) throw STOP;
+      onError('Couldn’t load the ' + model + ' model (are you online?), so it’s a box for now.');
+      return create('box', name, p);
+    }
+    if (r.stopped || r !== run || o.gone) { objs.delete(id); throw STOP; }
+    const inst = cont.instantiateModelsToScene(n => n, true, { doNotInstantiate: true });
+    inst.skeletons.forEach(sk => { sk.useTextureToStoreBoneMatrices = true; }); // 155 bones: too many for vertex uniforms on some tablets
+    const root = inst.rootNodes[0];
+    const holder = new B.TransformNode(id + '_model', scene);
+    for (const n of inst.rootNodes) n.parent = holder;
+    const sc = clampN(p.scale, 0.05, 20, 1);
+    holder.scaling.set(sc, sc, sc);
+    holder.computeWorldMatrix(true);
+    const bb = holder.getHierarchyBoundingVectors(true);
+    const h = Math.max(0.05, bb.max.y - bb.min.y);
+    // characters are measured in their T-pose, so give them a body-sized box instead of the arm span
+    const w = kind === 'character' ? h * 0.32 : Math.max(0.05, bb.max.x - bb.min.x);
+    const d = kind === 'character' ? h * 0.32 : Math.max(0.05, bb.max.z - bb.min.z);
+    const mesh = B.MeshBuilder.CreateBox(id, { width: w, height: h, depth: d }, scene);
+    mesh.bakeTransformIntoVertices(B.Matrix.Translation(0, h / 2, 0));
+    mesh.isVisible = false;
+    mesh.rotationQuaternion = B.Quaternion.Identity();
+    mesh.metadata = { w3id: id };
+    holder.parent = mesh;
+    holder.position.set(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
+    if (kind === 'character') holder.position.x = holder.position.z = 0; // keep the feet on the box's centre
+    mesh.position.set(num(p.x, 0), num(p.y, 0), num(p.z, 0));
+    holder.getChildMeshes(false).forEach(m => { m.isPickable = true; m.receiveShadows = true; });
+    if (shadows) holder.getChildMeshes(false).forEach(m => shadows.addShadowCaster(m, false)); // meshes only: a TransformNode breaks the shadow pass
+    Object.assign(o, { mesh, inst, root, holder, size: { w, h, d } });
+    if (kind === 'character') {
+      o.nodes = {}; for (const n of holder.getDescendants(false)) if (!o.nodes[n.name]) o.nodes[n.name] = n;
+      if (p.colors) for (const part in p.colors) setPart(o, part, p.colors[part]);
+      playAnim(o, 'Idle', 'loop').catch(() => {});
+    }
+    created++;
+    return id;
+  }
+
+  function materials(o, part) {
+    const mats = new Set();
+    o.holder.getChildMeshes(false).forEach(m => { if (m.material && (!part || LIB.partOfMaterial(m.material.name) === part)) mats.add(m.material); });
+    return mats;
+  }
+  function paint(mat, c) {
+    const [x, y, z] = hexToRgb(c), col = new B.Color3(x, y, z);
+    if ('albedoColor' in mat) { mat.albedoColor = col; mat.albedoTexture = null; } else { mat.diffuseColor = col; mat.diffuseTexture = null; }
+  }
+  function setPart(o, part, c) { if (o.holder && c) materials(o, part).forEach(m => paint(m, c)); }
+
+  async function playAnim(o, name, mode) {
+    if (!o.nodes || !LIB.isAnimation(name)) return;
+    let g = o.anims[name];
+    if (!g) {
+      const cont = await container(LIB.animationFile(name));
+      if (o.gone) return;
+      g = o.anims[name];
+      if (!g) {
+        const src = cont.animationGroups[0];
+        g = new B.AnimationGroup(o.id + '.' + name, scene);
+        if (src) for (const ta of src.targetedAnimations) {
+          const t = o.nodes[ta.target && ta.target.name];
+          if (t && ta.animation.targetProperty !== 'scaling') g.addTargetedAnimation(ta.animation, t);
+        }
+        o.anims[name] = g;
+      }
+    }
+    if (o.gone) return;
+    if (o.cur && o.cur !== g) o.cur.stop();
+    o.cur = g; o.curName = name;
+    g.stop(); g.start(mode === 'loop', 1);
+    if (mode === 'loop') return;
+    // a one-off animation goes back to standing still when it finishes (unless something else has started)
+    await new Promise(res => g.onAnimationGroupEndObservable.addOnce(() => res()));
+    if (!o.gone && o.cur === g && name !== 'Idle') { o.autoName = 'Idle'; playAnim(o, 'Idle', 'loop').catch(() => {}); }
   }
 
   // ── frame clock ──
@@ -259,6 +389,21 @@ export function createWorld(B, opts) {
     A.createCylinder = (name, p) => create('cylinder', name, p || {});
     A.createCone = (name, p) => create('cone', name, p || {});
     A.createCapsule = (name, p) => create('capsule', name, p || {});
+    A.createCharacter = async (name, p) => { alive(r); const id = await createModel(r, 'character', p && p.model, name, p || {}); alive(r); return id; };
+    A.createObject = async (name, p) => { alive(r); const id = await createModel(r, 'object', p && p.model, name, p || {}); alive(r); return id; };
+    A.playAnimation = async (id, name, mode) => {
+      const o = obj(id); if (!o || o.kind !== 'character') return;
+      o.userAnim = true; o.autoName = null;
+      const m = mode === 'wait' ? 'wait' : mode === 'once' ? 'once' : 'loop';
+      try {
+        const done = playAnim(o, String(name), m);
+        if (m === 'once') { done.catch(() => {}); return; } // starts it without waiting for the end
+        await done;
+      } catch (e) { onError('Couldn’t load the ' + name + ' animation (are you online?)'); }
+      alive(r);
+    };
+    A.stopAnimation = id => { const o = obj(id); if (o && o.cur) { o.cur.stop(); o.cur = null; o.curName = null; o.userAnim = true; } };
+    A.setPartColor = (id, part, c) => { const o = obj(id); if (o && o.kind === 'character') setPart(o, String(part), c); };
     A.destroy = id => { const o = obj(id); if (!o) return; if (control === o) { control = null; onPad(false); } if (follow === o) follow = null; disposeObj(o); objs.delete(o.id); };
 
     // moving
@@ -304,7 +449,13 @@ export function createWorld(B, opts) {
     };
 
     // looks
-    A.setColor = (id, c) => { const o = obj(id); if (!o) return; const [x, y, z] = hexToRgb(c); o.mesh.material.diffuseColor = new B.Color3(x, y, z); o.color = c; };
+    A.setColor = (id, c) => {
+      const o = obj(id); if (!o) return;
+      o.color = c;
+      if (o.kind === 'character') return setPart(o, 'tshirt', c);
+      if (o.holder) return materials(o).forEach(m => paint(m, c));
+      const [x, y, z] = hexToRgb(c); o.mesh.material.diffuseColor = new B.Color3(x, y, z);
+    };
     A.show = id => { const o = obj(id); if (!o || o.mesh.isEnabled()) return; o.mesh.setEnabled(true); if (o.phys !== 'none') applyPhysics(o); };
     A.hide = id => { const o = obj(id); if (!o) return; o.mesh.setEnabled(false); if (o.agg) { o.agg.dispose(); o.agg = null; } };
 
@@ -445,6 +596,7 @@ export function createWorld(B, opts) {
       let vx = (fwd.x * iz + right.x * ix) * sp, vz = (fwd.z * iz + right.z * ix) * sp;
       if (ix && iz) { vx *= Math.SQRT1_2; vz *= Math.SQRT1_2; }
       if (ix || iz) o.mesh.rotationQuaternion = B.Quaternion.FromEulerAngles(0, Math.atan2(vx, vz), 0);
+      if (o.kind === 'character') autoAnimate(o, ix || iz, sp);
       if (o.agg && o.phys === 'dynamic') {
         const v = o.agg.body.getLinearVelocity();
         let vy = v.y;
@@ -461,6 +613,15 @@ export function createWorld(B, opts) {
       camera.setTarget(new B.Vector3(t.x + (p.x - t.x) * 0.12, t.y + (p.y + 1 - t.y) * 0.12, t.z + (p.z - t.z) * 0.12));
     }
   }
+  // a controlled character walks, runs, stands and floats by itself, until the program plays its own animation
+  function autoAnimate(o, moving, speed) {
+    if (moving) o.userAnim = false;
+    if (o.userAnim) return;
+    let air = false;
+    if (o.agg && o.phys === 'dynamic') air = Math.abs(o.agg.body.getLinearVelocity().y) > 1.2 && !grounded(o);
+    const want = air ? 'JumpIdle' : moving ? (speed >= 7 ? 'Run' : 'Walk') : 'Idle';
+    if (want !== o.autoName) { o.autoName = want; playAnim(o, want, 'loop').catch(() => {}); }
+  }
   function afterFrame() {
     for (const o of objs.values()) if (o._resync && o.agg) { o._resync = false; o.agg.body.disablePreStep = true; }
   }
@@ -468,7 +629,7 @@ export function createWorld(B, opts) {
     const b = bounds(o);
     if (b.min.y <= 0.08) return true;
     const ray = new B.Ray(new B.Vector3(o.mesh.position.x, b.min.y + 0.05, o.mesh.position.z), new B.Vector3(0, -1, 0), 0.2);
-    const hit = scene.pickWithRay(ray, m => m !== o.mesh && m.isEnabled() && m.isPickable);
+    const hit = scene.pickWithRay(ray, m => m !== o.mesh && m.isEnabled() && m.isPickable && !(o.holder && m.isDescendantOf(o.holder)));
     return !!(hit && hit.hit);
   }
 
@@ -528,7 +689,7 @@ export function createWorld(B, opts) {
     start: startLoop, pause: pauseLoop,
     resize: () => { try { engine.resize(); } catch (e) { /* hidden */ } },
     running: () => !!run,
-    objects: () => [...objs.values()].map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled() })),
+    objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled() })),
     dispose: () => { stop(); pauseLoop(); scene.dispose(); engine.dispose(); }
   };
 }

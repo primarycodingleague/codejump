@@ -10,11 +10,16 @@
  * generator, so the code can only call the runtime's commands.
  */
 import { KEYS } from './world-runtime.js';
+import * as LIB from './world-assets.js';
+
+const THUMB = name => new URL('./assets/thumbs/' + name + '.png', import.meta.url).href;
+// picture dropdowns for the model library (text for the few models without a picture)
+const pics = list => () => list.map(([id, label]) => LIB.THUMBLESS.includes(id) ? [label, id] : [{ src: THUMB(id), width: 44, height: 44, alt: label }, id]);
 
 export const HATS = ['w3_when_run', 'w3_when_clicked', 'w3_when_key', 'w3_when_touch', 'w3_when_touch_ground', 'w3_when_receive'];
 
 const C = {
-  scene: '#2f9e8f', shapes: '#d1477a', events: '#e6a700', motion: '#4c7fe0', looks: '#8a5fd6',
+  scene: '#2f9e8f', shapes: '#d1477a', characters: '#b5487f', models: '#7a8f2f', events: '#e6a700', motion: '#4c7fe0', looks: '#8a5fd6',
   physics: '#d0603a', game: '#1597b8', control: '#e08a1e', sensing: '#3aa0c9', ops: '#4caf50'
 };
 
@@ -32,6 +37,7 @@ const DEF = {
   w3_set_colour: { COLOR: '#2dc653' },
   w3_bounce: { AMOUNT: 50 }, w3_push: { X: 0, Y: 5, Z: 0 }, w3_velocity: { X: 0, Y: 0, Z: 3 },
   w3_control: { SPEED: 5 },
+  w3_character: { SCALE: 1, X: 0, Y: 0, Z: 0 }, w3_object: { SCALE: 1, X: 3, Y: 0, Z: 0 }, w3_char_colour: { COLOR: '#2dc653' },
   w3_wait: { SECS: 1 }, controls_repeat_ext: { TIMES: 10 },
   w3_random: { A: 1, B: 10 }
 };
@@ -75,6 +81,17 @@ function blockDefs() {
       S({ tooltip: 'Make a cone' }, stmt)),
     def('w3_capsule', C.shapes, [['make capsule %1 colour %2', [OBJ('VAR', 'player'), NUMIN('COLOR')]], ['width %1 height %2', [NUMIN('W'), NUMIN('H')]], ['at x %1 y %2 z %3', [NUMIN('X'), NUMIN('Y'), NUMIN('Z')]]],
       S({ tooltip: 'Make a capsule: a good shape for a player' }, stmt)),
+
+    // ── Characters + models (glTF files from world-assets.js) ──
+    def('w3_character', C.characters, [['make character %1 %2', [OBJ('VAR', 'player'), { type: 'field_dropdown', name: 'MODEL', options: 'CHARACTERS' }]], ['size %1 at x %2 y %3 z %4', [NUMIN('SCALE'), NUMIN('X'), NUMIN('Y'), NUMIN('Z')]]],
+      S({ tooltip: 'Make a character that can walk, run, dance and wave' }, stmt)),
+    def('w3_animate', C.characters, [['%1 %2 %3', [OBJ('VAR', 'player'), { type: 'field_dropdown', name: 'ANIM', options: 'ANIMATIONS' },
+      { type: 'field_dropdown', name: 'MODE', options: [['over and over', 'loop'], ['once', 'once'], ['once and wait', 'wait']] }]]],
+      S({ tooltip: 'Play an animation on a character' }, stmt)),
+    def('w3_stop_anim', C.characters, [['%1 stops animating', [OBJ('VAR', 'player')]]], stmt),
+    def('w3_char_colour', C.characters, [['set %1 colour of %2 to %3', [{ type: 'field_dropdown', name: 'PART', options: LIB.CHARACTER_PARTS }, OBJ('VAR', 'player'), NUMIN('COLOR')]]], stmt),
+    def('w3_object', C.models, [['make %1 %2', [OBJ('VAR', 'tree1'), { type: 'field_dropdown', name: 'MODEL', options: 'OBJECTS' }]], ['size %1 at x %2 y %3 z %4', [NUMIN('SCALE'), NUMIN('X'), NUMIN('Y'), NUMIN('Z')]]],
+      S({ tooltip: 'Add a ready-made model: trees, rocks, huts, gems and more' }, stmt)),
 
     // ── Events ──
     def('w3_when_run', C.events, [['when Run is clicked', []], ['%1', [{ type: 'input_statement', name: 'DO' }]]], hat(), { tooltip: 'The blocks inside run when you click Run' }),
@@ -134,8 +151,11 @@ function blockDefs() {
 
 export function defineBlocks(Blockly, gen, Order) {
   if (Blockly.Blocks.w3_when_run) return;
+  const DYN = { CHARACTERS: pics(LIB.CHARACTERS), OBJECTS: pics(LIB.OBJECTS), ANIMATIONS: () => LIB.ANIMATIONS.map(([id, label]) => [label, id]) };
   for (const j of blockDefs()) {
     const isHat = j.hat; delete j.hat;
+    // dropdowns named by a string are built here, so the picture URLs are worked out once Blockly is ready
+    for (let i = 0; j['args' + i]; i++) for (const a of j['args' + i]) if (a.type === 'field_dropdown' && typeof a.options === 'string') a.options = DYN[a.options]();
     Blockly.Blocks[j.type] = { init() { this.jsonInit(j); if (isHat) this.hat = 'cap'; } };
   }
   defineGenerators(Blockly, gen, Order);
@@ -170,6 +190,14 @@ function defineGenerators(Blockly, gen, Order) {
   };
   F.w3_box = shape('createBox'); F.w3_sphere = shape('createSphere'); F.w3_cylinder = shape('createCylinder');
   F.w3_cone = shape('createCone'); F.w3_capsule = shape('createCapsule');
+
+  const model = b => gen.quote_(b.getFieldValue('MODEL'));
+  const pos = b => `scale: ${val(b, 'SCALE')}, x: ${val(b, 'X')}, y: ${val(b, 'Y')}, z: ${val(b, 'Z')}`;
+  F.w3_character = b => `${v(b)} = await createCharacter(${label(b)}, { model: ${model(b)}, ${pos(b)} });\n`;
+  F.w3_object = b => `${v(b)} = await createObject(${label(b)}, { model: ${model(b)}, ${pos(b)} });\n`;
+  F.w3_animate = b => `await playAnimation(${v(b)}, ${gen.quote_(b.getFieldValue('ANIM'))}, ${gen.quote_(b.getFieldValue('MODE'))});\n`;
+  F.w3_stop_anim = b => `stopAnimation(${v(b)});\n`;
+  F.w3_char_colour = b => `setPartColor(${v(b)}, ${gen.quote_(b.getFieldValue('PART'))}, ${val(b, 'COLOR')});\n`;
 
   F.w3_when_run = b => `__start(async () => {\n${body(b)}});\n`;
   F.w3_when_clicked = b => `__onClick(() => ${v(b)}, async () => {\n${body(b)}});\n`;
@@ -245,6 +273,11 @@ export function toolbox() {
     contents: [
       cat('Scene', C.scene, [tb('w3_sky'), tb('w3_ground'), tb('w3_fog'), tb('w3_brightness'), tb('w3_gravity')]),
       cat('Shapes', C.shapes, [tb('w3_box'), tb('w3_sphere'), tb('w3_cylinder'), tb('w3_cone'), tb('w3_capsule')]),
+      cat('Characters', C.characters, [tb('w3_character'),
+        tb('w3_animate', null, { fields: { ANIM: 'Wave', MODE: 'wait' } }), tb('w3_animate', null, { fields: { ANIM: 'Dance1', MODE: 'loop' } }),
+        tb('w3_stop_anim'), tb('w3_char_colour'), tb('w3_char_colour', { COLOR: '#f2b61d' }, { fields: { PART: 'hair' } })]),
+      cat('Models', C.models, [tb('w3_object', null, { fields: { MODEL: 'tree' } }), tb('w3_object', { X: -3 }, { fields: { MODEL: 'hut' } }),
+        tb('w3_object', { Y: 1 }, { fields: { MODEL: 'Star' } }), tb('w3_object', { Y: 1 }, { fields: { MODEL: 'Gem2' } })]),
       cat('Events', C.events, [tb('w3_when_run'), tb('w3_when_clicked'), tb('w3_when_key'), tb('w3_when_touch'), tb('w3_when_touch_ground'),
         tb('w3_when_receive'), tb('w3_broadcast'), tb('w3_broadcast_wait')]),
       cat('Motion', C.motion, [tb('w3_move_by'), tb('w3_move_to'), tb('w3_glide_to'), tb('w3_turn_by'), tb('w3_turn_to'), tb('w3_face'), tb('w3_resize')]),
@@ -282,21 +315,23 @@ function chain(list) {
 
 export function starterProgram() {
   const run = pb('w3_when_run', null, null, { x: 20, y: 20 });
-  delete run.inputs;
+  const sel = (type, vars, model, over) => pb(type, Object.assign({}, vars, { MODEL: { value: model } }), over);
   run.inputs = {
     DO: {
       block: chain([
         pb('w3_sky', null, { COLOR: '#8fd0f7' }),
-        pb('w3_capsule', { VAR: 'player' }, { COLOR: '#8a5fd6', X: 0, Y: 0, Z: 0 }),
+        sel('w3_character', { VAR: 'player' }, 'Block5', { SCALE: 1, X: 0, Y: 0, Z: 0 }),
         pb('w3_physics', { VAR: 'player', KIND: { value: 'dynamic' } }),
         pb('w3_control', { VAR: 'player' }, { SPEED: 5 }),
         pb('w3_follow', { VAR: 'player' }),
-        pb('w3_box', { VAR: 'wall' }, { COLOR: '#d1477a', W: 6, H: 2, D: 1, X: 0, Y: 0, Z: 6 }),
+        sel('w3_object', { VAR: 'tree1' }, 'tree4', { SCALE: 1, X: -7, Y: 0, Z: 8 }),
+        sel('w3_object', { VAR: 'tree2' }, 'tree', { SCALE: 1, X: 7, Y: 0, Z: 9 }),
+        pb('w3_box', { VAR: 'wall' }, { COLOR: '#d1477a', W: 6, H: 1, D: 1, X: 0, Y: 0, Z: 7 }),
         pb('w3_physics', { VAR: 'wall', KIND: { value: 'static' } }),
-        pb('w3_sphere', { VAR: 'ball' }, { COLOR: '#f2b61d', W: 1, X: 3, Y: 6, Z: 2 }),
+        pb('w3_sphere', { VAR: 'ball' }, { COLOR: '#f2b61d', W: 1, X: 3, Y: 6, Z: 3 }),
         pb('w3_physics', { VAR: 'ball', KIND: { value: 'dynamic' } }),
         pb('w3_bounce', { VAR: 'ball' }, { AMOUNT: 70 }),
-        pb('w3_cone', { VAR: 'prize' }, { COLOR: '#ff7b1f', W: 1, H: 1.5, X: -4, Y: 0, Z: 3 }),
+        sel('w3_object', { VAR: 'prize' }, 'Star', { SCALE: 1, X: -4, Y: 1, Z: 4 }),
         (() => {
           const f = pb('w3_forever');
           f.inputs = { DO: { block: pb('w3_turn_by', { VAR: 'prize' }, { X: 0, Y: 3, Z: 0 }) } };
@@ -305,10 +340,11 @@ export function starterProgram() {
       ])
     }
   };
+  const wave = pb('w3_animate', { VAR: 'player', ANIM: { value: 'Wave' }, MODE: { value: 'wait' } });
   const touch = { type: 'w3_when_touch', x: 470, y: 20, fields: { A: { id: 'v_player' }, B: { id: 'v_prize' } },
-    inputs: { DO: { block: chain([pb('w3_set_colour', { VAR: 'prize' }, { COLOR: '#2dc653' }), pb('w3_push', { VAR: 'ball' }, { X: 0, Y: 6, Z: 0 })]) } } };
+    inputs: { DO: { block: chain([pb('w3_set_colour', { VAR: 'prize' }, { COLOR: '#2dc653' }), pb('w3_push', { VAR: 'ball' }, { X: 0, Y: 6, Z: 0 }), wave]) } } };
   return {
     blocks: { languageVersion: 0, blocks: [run, touch] },
-    variables: ['player', 'wall', 'ball', 'prize'].map(n => ({ name: n, id: 'v_' + n }))
+    variables: ['player', 'tree1', 'tree2', 'wall', 'ball', 'prize'].map(n => ({ name: n, id: 'v_' + n }))
   };
 }

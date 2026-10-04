@@ -538,8 +538,7 @@ module (like Critter Lab), modelled on **Flock XR** (`flipcomputing/flock`, MIT 
 registered trademarks — never use them in the UI). The old inline `td3*`/`td_*` prototype (CDN Babylon, hand-rolled AABB
 physics, shared code panel) was **deleted** in Wave 1; it never shipped, so old `blocklyXml`-only 3D payloads just open the
 starter program. Planned waves: **1** engine + blocks→async-JS + text-ID objects (DONE) · **2** characters (recolourable) +
-shared animation clips, reusing Flock's MIT `models/*.glb` + `animations/*.glb` with attribution (email Flip Computing as a
-courtesy first) · **3** two-way block↔scene sync (gizmo drag writes block fields; Flock's `ui/blockmesh.js`/`ui/gizmos.js`
+shared animation clips + a model library, reusing Flock's MIT assets (DONE, see below) · **3** two-way block↔scene sync (gizmo drag writes block fields; Flock's `ui/blockmesh.js`/`ui/gizmos.js`
 are the reference) · **4** more physics/camera/sound + `HELP`/Teacher Guide/What's New, then flip `THREED_ON`.
 - **Files (NOT in the single HTML file):** `world/world-runtime.js` (scene, Havok physics, the pupil-callable API, runner;
   no DOM, runs in Node on a `NullEngine`), `world/world-blocks.js` (block defs, toolbox, `starterProgram()`, `compile()`),
@@ -574,10 +573,41 @@ are the reference) · **4** more physics/camera/sound + `HELP`/Teacher Guide/Wha
 - **Physics:** Havok via `PhysicsAggregate` (shape by kind; ground is a static box). Moving/turning a physics object by hand
   sets `disablePreStep=false` for one step (`syncBody`); the controlled player has zero inertia so it stays upright. Glide
   switches a dynamic body to ANIMATED while it moves. Touch hats use a padded AABB check each frame, edge-triggered.
+- **Wave 2 — characters, models, animations (DONE & verified):** `world/world-assets.js` = the library (`CHARACTERS` 12,
+  `OBJECTS` 46, `ANIMATIONS` 37, `CHARACTER_PARTS`, `partOfMaterial`), files in `world/assets/{characters,objects,animations,
+  thumbs}` copied from Flock (MIT; `assets/README.md` has the licence + attribution; the Flock bird mascot is deliberately
+  left out). **OPEN QUESTION before launch:** Flock's docs say its rigs came from Mixamo's auto-rigger; if the animation
+  clips are Mixamo library motions, Adobe's terms forbid redistributing them as files — ask Flip Computing where they came
+  from (and for a courtesy OK) before flipping `THREED_ON`. Runtime: `opts.loadAsset(path)` (app = `fetch` from
+  `world/assets/`) → `LoadAssetContainerAsync` cached per file (`container()`), `instantiateModelsToScene(n=>n, true)` per
+  object (materials cloned, so recolouring one doesn't touch others). Each model sits under an invisible box **collider**
+  mesh (`o.mesh`; bottom-centre pivot; characters get a body-width box, physics CAPSULE, zero inertia so they never topple)
+  so every command, pick, touch and physics path treats it like a shape. A placeholder entry holds the name while loading
+  (`get()` ignores entries without a mesh); a run stopped mid-load disposes the copy. Offline → a box + friendly message.
+  **Animations:** all characters share one 154-bone Mixamo-style skeleton, so `playAnim` retargets the clip file's
+  `animationGroups[0]` onto the copy's nodes by name (scaling tracks skipped, like Flock). `scene.animationPropertiesOverride`
+  blends between clips. Characters start in `Idle`; a "once" clip returns to Idle when it ends; a controlled character
+  auto-switches Idle/Walk/Run(speed ≥ 7)/JumpIdle (`autoAnimate`) until the program plays its own animation. **Blocks
+  (Characters + Models categories):** `w3_character` (picture dropdown, size, xyz), `w3_animate` (clip × over and over /
+  once / once and wait), `w3_stop_anim`, `w3_char_colour` (hair/skin/eyes/T-shirt/shorts/sleeves), `w3_object` (picture
+  dropdown). Both "make" blocks compile to `await createCharacter/createObject(...)`, so later blocks always see a loaded
+  model. "set colour of" recolours a character's T-shirt or every material of an object. Status line shows "Loading
+  models…" (`opts.onLoading`). Starter program: a Blocky character player, two trees, a spinning star prize (touching it
+  recolours it, bounces the ball and the player waves).
+- **Wave 2 performance (measured in software WebGL; real devices are much faster):** Ponytail (Liz3, 222k vertices; its hair
+  alone is 201k) and Spiky hair (Liz4, 128k) are heavy, so the Blocky characters (~5k) come first and are the defaults.
+  Shadows: a blurred 2048 map cost 6× once models were in the scene; now a 1024 Poisson map (5 → 18 fps in swiftshader).
+  `shadows.addShadowCaster` takes MESHES only — passing the model's TransformNode threw in the render loop every frame
+  (blank view, nothing moved). Skeletons use bone textures (`useTextureToStoreBoneMatrices`) for low uniform limits.
+  Draco decoder is self-hosted in `world/vendor/draco/`. Known limit: an object's collider is its whole bounding box,
+  so you can't walk into a hut yet.
 - **Gotchas:** Blockly 10 has NO `Blockly.Themes.Dark` (only Classic/Zelos) — the main app's `base:Blockly.Themes.Dark`
   silently falls back to Classic; the 3D editor sets `componentStyles` instead. `eval` can't be a parameter name in strict
   mode. Headless Havok needs `new HavokPlugin(false, hk)` + `setTimeStep(1/60)` (the runtime does this when there's no canvas).
-- **Testing:** headless — load `blockly@10.4.3` + `blockly/javascript` in Node, `defineBlocks`, load `starterProgram()` into a
+- **Testing:** headless — load `blockly@10.4.3` + `blockly/javascript` in Node (for models: set up Draco with
+  `DracoDecoder.DefaultConfiguration={wasmBinary, jsModule, numWorkers:0}` where `jsModule` comes from evaluating
+  `vendor/draco/draco_wasm_wrapper_gltf.js` in a `new Function('require','__dirname',…)` wrapper; pass `loadAsset` reading files;
+  Babylon animations run on the REAL clock, so wait real time before checking a clip has ended), `defineBlocks`, load `starterProgram()` into a
   `Blockly.Workspace`, `compile`, then `createWorld(B,{havok})` and `w.tick()` (await a macrotask between ticks so pupil
   awaits resume). Browser — Playwright + `/opt/pw-browsers/chromium` with `--use-gl=swiftshader`; unpkg is blocked in the
   sandbox, so `page.route` the `blockly@10.4.3` files to a local `node_modules/blockly`; hide `#whatsnew`

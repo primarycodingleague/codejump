@@ -532,106 +532,58 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 
-## 3D World project type — `projectType==='3d'` — PROTOTYPE (Babylon.js), behind `THREED_ON`
-**PARKED (2026-06-16): `THREED_ON=false`** so the 🧊 option is hidden from `#pt-modal` and none of the 3D work ships —
-the user wants it kept out of production for now (like the Ohbot stuff). All the 3D code (Waves 1–5, the modern-render
-pass, and the half-built **edit-mode move gizmo + live `td3Preview`** — `td3Gizmo`/`td3GizmoMoved`/`td3Preview`/
-`td3PreviewSoon`, NOT yet verified in-browser) stays in the file but is inert while the flag is off. Flip to `true` to
-resume. Don't re-enable for deploy without finishing/verifying the gizmo+preview pass.
-A 4th project type alongside platformer/stage/turtle: a **block-based 3D scene builder** (Flock-style). Chosen via the
-🧊 button in `#pt-modal` → `startNew3D(ks)`. Gated entirely behind `projectType==='3d'` + the `THREED_ON` flag (KS2+ only).
-- **Babylon.js is LAZY-LOADED from a CDN** (`load3DEngine()` injects `https://cdn.jsdelivr.net/npm/babylonjs@7/babylon.js`,
-  global `BABYLON`) **only when a 3D project opens** — so the rest of the app stays offline-capable. 3D mode needs internet
-  the first time. This is the one architectural deviation from the single-file/offline model (Babylon is ~5MB).
-- **Reuses the existing Blockly editor** (not a separate canvas like Turtle): `enter3DUI` shows `#code-panel` (Blockly) on
-  the left + a new `#threed-right` dock with `#threed-canvas` (Babylon) on the right (`body.threed-mode`, mirrors stage CSS).
-  `getToolbox()`/`getDefaultXml()` return `threeDToolbox()`/`threeDDefaultXml()` when `projectType==='3d'`; `define3DBlocks()`
-  is called in `initBlockly`. Toolbar swaps in 🟢 `btn-3drun`/⏹️ `btn-3dstop` (`.threed-only`).
-- **Blocks (`td_*`, ~11):** When (`td_on_start`,`td_when_click`), Shapes (`td_add` box/sphere/cylinder/cone/ground with
-  name+colour+xyz), Move (`td_move`,`td_rotate`,`td_scale`), Looks (`td_color`,`td_sky`), Control (`td_wait`,`td_repeat`,
-  `td_forever`). Names are plain text fields; move/rotate/colour reference a mesh by name (no dynamic dropdowns).
-- **Interpreter:** generator fibers like Stage/Turtle — `td3RunSeq`/`td3RunOne` walk the Blockly block chain directly
-  (`getNextBlock`/`getInputTargetBlock`/`getFieldValue`), `yield` = one frame. `td_on_start` → a fiber at Run; `td_when_click`
-  → Babylon pointer-pick (`scene.onPointerDown`) fires `td3FireClick(meshName)`. `td3Frame()` (called from `loop()` when
-  `projectType==='3d'`) pumps fibers + `scene.render()`. Meshes kept in `td3Meshes` (name→mesh); `td3Run` rebuilds the scene.
-- **Persistence:** uses the SHARED `blocklyXml` payload field (no new field needed) — `buildPayload` already captures it,
-  `applyPayload` 3d-branch calls `enter3DUI` then the existing blocklyXml loader populates the workspace. Device save/cloud/
-  short-link share all work; **live collaborate is hidden for 3D** (no granular ops yet — `openShareModal` filter).
-- **Scene (Flock-like polish):** ArcRotateCamera (orbit/zoom), hemispheric + directional light with a **ShadowGenerator**
-  (blur exp shadow map; every added shape is a caster, ground receives). **Gradient sky dome** (`td3Sky`, a big BACKSIDE
-  sphere with an emissive DynamicTexture gradient repainted by `td3SetSky`/`td3PaintSky`; `td_sky` block recolours it).
-  Ground gets a **grid DynamicTexture** (`td3GroundTex`).
-- **Model library (clean-room low-poly):** `td_add`'s shape dropdown includes `person`/`tree`/`car` (in `TD3_MODELS`),
-  built from grouped primitives under a `TransformNode` by `td3BuildModel` (person = head+body+arms+legs, tree = trunk+
-  foliage, car = body+roof+4 wheels). **Each mesh entry is now `{root,parts,kind}`** (root = mesh or TransformNode): move/
-  rotate/scale act on `root`; `td_color` recolours all `parts`; click-pick maps `mesh.metadata.cjName`→model name. Adding
-  more models = one `td3BuildModel` branch + a SHAPES entry. Starter program: sky + grass ground + tree + person + crate +
-  forever-spin the person.
-- **Verified in-browser:** chooser shows 🧊 (KS2+, hidden KS1); Babylon loads from CDN; starter scene renders (ground/cube/
-  sphere) with the cube spinning; save→platformer→load round-trips (projectType + blocklyXml). 
-- **Researched Flock XR (flipcomputing/flock on GitHub) in depth** — its blocks live in `blocks/*.js` (scene, shapes,
-  models, transform, materials, animate, physics, events, control, sensing, sound, camera, effects, xr, combine…). Key
-  Flock paradigms: **variable-per-object** (each created mesh → a Blockly variable), a **glTF model/character library**
-  (grid-dropdown pickers, customisable hair/skin/clothes), **Havok physics**, rigged-character **animations**
-  (play/switch named animations), follow-camera, on-screen + micro:bit controls, TTS speak, ABC-notation tunes, VR/AR.
-- **WAVE 1 "make it playable" DONE & verified (user chose this + hand-built models, not glTF):** added a **Game** toolbox
-  category + key/touch events. New blocks: `td_gravity` (object falls), `td_solid` (others land on / can't pass it; ground
-  auto-solid), `td_control` (arrow-keys/WASD drive a mesh + Space to jump; also shows the on-screen d-pad), `td_camera_follow`
-  (third-person follow), `td_on_key` (hat), `td_on_touch` (hat, A touches B). **Lightweight offline physics** (no engine
-  loaded): `td3Physics()` each frame does AABB gravity + resting on ground/solid tops (`td3RestY`) + wall blocking
-  (`td3TryMove`) using `root.getHierarchyBoundingVectors` (works for both primitive meshes AND TransformNode models).
-  Per-entry flags `dynamic/solid/control/vy/grounded` (reset in `td3Add`). Keyboard via window keydown/keyup → `td3Keys`
-  (+ `td3FireKey` for `td_on_key`); **on-screen d-pad** `#threed-pad` (4 arrows + Jump, shown when a `td_control` runs).
-  Camera follow lerps `td3Cam.setTarget` to the followed mesh. Default program is now a playable scene: ground + tree +
-  solid block + driveable hero (camera follows) + a crate that falls. **Verified:** crate falls 5→0.58 & rests; hero moves
-  with arrows + jumps; pad appears; touch/key/click hats fire.
-- **WAVE 2 "animations + more models" DONE & verified:** `TD3_MODELS` now has person/tree/car + **cat/dog/duck/house/
-  rocket/robot/flower** (all hand-built low-poly in `td3BuildModel`; added to the `td_add` SHAPES dropdown). New **Animate**
-  toolbox category: `td_animate` ("play [spin/bob/bounce/wobble/pulse] on NAME" → sets `entry.anim`) + `td_stop_anim`.
-  `td3Animate()` (called each frame in `td3Frame`) applies the looped motion: spin=rotation.y, wobble=rotation.z,
-  pulse=scaling, bob/bounce=position.y (skipped for dynamic/controlled meshes so it doesn't fight gravity). `entry.anim`
-  reset in `td3Add`. Default scene gained a bouncing duck + a flower. **Verified:** all 7 new models build; duck bounces.
-- **WAVE 3 "sound + sensing/looks" DONE & verified:** new toolbox categories **Sound** + **Sensing**, plus glide/glow.
-  Sound (reuses the Stage Web-Audio synth — `stPlaySound`/`ST_SOUNDS`/`stTone`/`stAudioCtx`): `td_play_sound` (built-in
-  sounds), `td_play_note` (note dropdown C..high-C → freq, N secs), `td_speak` (TTS via `SpeechSynthesisUtterance`).
-  Move: `td_glide` (eased smooth move to x/y/z over N secs — fiber that yields per frame, easeInOut-quad). Looks: `td_glow`
-  (sets parts' `emissiveColor`). Sensing **reporters** (output blocks): `td_distance` (A↔B), `td_get` (x/y/z of a mesh),
-  `td_touching` (AABB overlap bool). Control gained `td_if` (value COND + DO) and the STANDARD Blockly blocks
-  `logic_compare`/`math_number`/`math_arithmetic`/`logic_operation`/`logic_boolean`. **`td3Eval(block)`** evaluates
-  reporters + those standard value blocks (the 3D workspace already relaxes Blockly type-checking, so reporters plug into
-  any value input). **Verified:** glide moved a box to target (distance reporter read 1 to its neighbour), glow set emissive,
-  sound/speak wired. Also fixed a d-pad hide bug (`#threed-pad.hide{display:none!important}`).
-- **WAVE 4 "scene + more sensing + more models" DONE & verified:** new **Scene** category: `td_fog` ("add fog colour C
-  thickness 0-100" → `scene.fogMode=FOGMODE_EXP2`, fogColor, `fogDensity=amt/600`; 0 = off) + `td_light` ("set brightness
-  0-2" → `td3Hemi.intensity`, the hemispheric light captured in `td3Init`). More **Sensing** reporters: `td_timer` (secs
-  since Run — `td3StartTime` set in `td3Run`), `td_key_pressed` (bool from `td3Keys`), `td_random` (min/max field reporter).
-  All three added to `td3Eval`. 5 more models in `td3BuildModel`+SHAPES+TD3_MODELS: **star/coin/rock/fish/bird** (now 15
-  shape/model types). `td3Run` resets fog/light. **Verified:** new models build (star=2 parts, fish=3, bird=5), fog mode
-  active, light=1, timer/random/key-pressed reporters correct; showcase screenshot of all models with fog.
-- **WAVE 5 "variable-per-object + glTF library + rigged animations" DONE & verified (both big Flock items):**
-  - **Object dropdowns (variable-per-object):** every block that REFERENCES a shape now uses a dynamic dropdown
-    (`MN()`=`new Blockly.FieldDropdown(td3MeshOptions)`) instead of a typed name. `td3MeshNames()` scans the workspace's
-    `td_add` blocks; `td3MeshOptions()` (called with `this`=field) maps them to options AND **prepends the field's current
-    value if missing**, so saved programs never hit Blockly's "reset-to-first-option" bug. `td_add`'s NAME (you type it on
-    create) and `td_speak`'s TEXT stay text inputs. Runtime unchanged (`getFieldValue` still returns the name string).
-    **Verified:** default scene's dropdowns loaded as hero/block1/crate/duck1; menu lists all created shapes; program runs.
-  - **glTF model library + rigged animations:** `load3DEngine()` now also injects **`babylonjs-loaders`** (the glTF plugin).
-    `TD3_GLTF` library (CORS-friendly jsDelivr CDN): **robot** = three.js RobotExpressive (14 anims: Idle/Walking/Running/
-    Dance/Jump/Wave/Punch/…), **fox** = KhronosGroup Fox (Survey/Walk/Run). `td3LoadGLTF(name,url,scale,x,y,z)` →
-    `BABYLON.SceneLoader.ImportMeshAsync`, parents meshes under a TransformNode, registers an entry `{root,parts,kind:'gltf',
-    anims:animationGroups}` (+ shadow casters); **graceful fallback to a grey box** if the fetch fails so the program still
-    runs. Blocks (new **Models** toolbox category): `td_load` ("load [robot/fox] called NAME size/x/y/z" — a fiber that
-    YIELDS until the async load resolves, guard-capped) + `td_play_anim` ("play animation [idle/walk/run/jump/dance/wave/
-    punch/survey/sit] on NAME" — stops all groups, **substring-matches** the wanted name to the model's real anim, starts it
-    looped). `td3Dispose` now disposes `anims`. **Verified in-browser:** loaders fetch, robot loads with 14 named animation
-    groups, Dance plays (isPlaying), fox loads with 3 anims and walks; both render rigged + shadowed (screenshot).
-  - **Note:** glTF needs internet (3D already loads Babylon from CDN). Models are permissive/CC0-ish samples (Khronos Fox =
-    royalty-free sample; RobotExpressive by Tomás Laulhé, CC0 mods by Don McCurdy) — for a branded public launch, host your
-    own vetted CC0 models on GitHub Pages and point `TD3_GLTF` at them.
-- **TODO / not yet done (it's a prototype):** a curated/hosted CC0 model set (replace the demo CDN URLs), a model-picker
-  grid (Flock-style) + per-model animation dropdowns, a 3D-specific Help tab (btn-help hidden in 3d-mode), performance
-  testing on school Chromebooks/iPads, and deciding whether to vendor Babylon vs CDN. No CJ_VERSION bump / What's New yet —
-  it's experimental behind `THREED_ON`.
+## 3D World project type — `projectType==='3d'` — REBUILD IN PROGRESS (Flock XR-style), behind `THREED_ON`
+**Still hidden: `THREED_ON=false`.** Oct 2026 the user chose "option 2": rebuild 3D World CodeJump's way as a lazy-loaded
+module (like Critter Lab), modelled on **Flock XR** (`flipcomputing/flock`, MIT code; "Flock XR" + the purple bird are
+registered trademarks — never use them in the UI). The old inline `td3*`/`td_*` prototype (CDN Babylon, hand-rolled AABB
+physics, shared code panel) was **deleted** in Wave 1; it never shipped, so old `blocklyXml`-only 3D payloads just open the
+starter program. Planned waves: **1** engine + blocks→async-JS + text-ID objects (DONE) · **2** characters (recolourable) +
+shared animation clips, reusing Flock's MIT `models/*.glb` + `animations/*.glb` with attribution (email Flip Computing as a
+courtesy first) · **3** two-way block↔scene sync (gizmo drag writes block fields; Flock's `ui/blockmesh.js`/`ui/gizmos.js`
+are the reference) · **4** more physics/camera/sound + `HELP`/Teacher Guide/What's New, then flip `THREED_ON`.
+- **Files (NOT in the single HTML file):** `world/world-runtime.js` (scene, Havok physics, the pupil-callable API, runner;
+  no DOM, runs in Node on a `NullEngine`), `world/world-blocks.js` (block defs, toolbox, `starterProgram()`, `compile()`),
+  `world/world-app.js` (`mount(root,{project,onChange,toast})` → `{getProject,setProject,resume,pause,destroy}`; its OWN
+  `Blockly.inject` workspace with a dark `codejump3d` theme, Run/Stop, touch pad), `world/world-app.css` (scoped `.w3`),
+  `world/vendor/` (Babylon 9.19.1 + Havok esbuild ESM bundle 2.9 MB/690 KB gz, `HavokPhysics.wasm` 2 MB, Blockly 10.4.3
+  JS generator; rebuild steps + licences in `world/vendor/README.md`).
+- **Host glue in build-and-play.html** (mirrors Critter): `worldBase()`/`loadWorldEngine()` (`import(world/world-app.js)`;
+  live-site URL when running from a downloaded file), `worldData`/`worldApp`/`worldCurrent()`, `startNew3D(ks)`,
+  `enter3DUI()` (mounts into `#world-ui`; reloads the project only when `_worldLoad` is set or coming from another mode,
+  else `resume()`), `exit3DUI()` (saves `worldData`, pauses). CSS `body.threed-mode` hides all other chrome incl. `#btn-help`
+  (no 3D help yet) and `#rotate-hint`. Payload field **`world: {blocks: <Blockly JSON>}`**. `loop()` returns early for 3d.
+- **How a program runs (Flock's model):** each HAT block compiles to a registration call (`__start`, `__onClick(()=>v,…)`,
+  `__onKey`, `__onTouch`, `__onMessage`); loose non-hat blocks are ignored. Statements become `await`-able API calls.
+  Blockly's `INFINITE_LOOP_TRAP` = `await __yield()` so every loop does one pass per frame (Scratch-like, never freezes).
+  `forever` = `await __forever(fn)`. Code runs via `AsyncFunction` with the API as parameters, strict mode, page globals
+  (`window`, `document`, `fetch`, `localStorage`, …) shadowed as `undefined`. Generators `quote_` every text field, so the
+  code can only call the API. (Flock goes further with an SES Compartment in an iframe — consider it if pupils ever type
+  JS.) Stop = mark the run stopped and drop pending frame/time waiters (their awaits never resume). Errors in one script
+  are reported in the status line (max 3) and don't stop the others.
+- **Objects are TEXT IDS** (variable-per-object): `box1 = createBox("box1",{...})` stores `"box1"` (or `"box1_2"` if taken);
+  every command looks the id up and quietly no-ops if it's gone. **Positions are the bottom-centre** (geometry baked so y=0
+  stands on the ground); angles in degrees; waits use scene time.
+- **Blocks (`w3_*`, 11 categories):** Scene (sky, ground, fog, brightness, gravity) · Shapes (box/ball/cylinder/cone/capsule,
+  each with colour/size/xyz value sockets; multi-line via `input_end_row`) · Events (when Run, clicked, key, touches, lands
+  on ground, receive, broadcast [and wait]) · Motion (move by/to, glide, turn by/to, face, resize) · Looks (colour, show,
+  hide, delete) · Physics (fall and bump / solid but still / ghost, bounciness, push, set speed) · Game (control with arrow
+  keys: camera-relative walk + Space jump when grounded; camera follows) · Control (wait, repeat, forever, if, if-else,
+  while/until, stop everything) · Sensing (x/y/z, distance, touching, on the ground, key pressed, timer) · Operators
+  (Blockly math/logic + `w3_random`, colours) · Variables (Blockly's dynamic category). Type checks relaxed like the
+  other editors. `DEF` holds every socket default (shared by toolbox + starter).
+- **Physics:** Havok via `PhysicsAggregate` (shape by kind; ground is a static box). Moving/turning a physics object by hand
+  sets `disablePreStep=false` for one step (`syncBody`); the controlled player has zero inertia so it stays upright. Glide
+  switches a dynamic body to ANIMATED while it moves. Touch hats use a padded AABB check each frame, edge-triggered.
+- **Gotchas:** Blockly 10 has NO `Blockly.Themes.Dark` (only Classic/Zelos) — the main app's `base:Blockly.Themes.Dark`
+  silently falls back to Classic; the 3D editor sets `componentStyles` instead. `eval` can't be a parameter name in strict
+  mode. Headless Havok needs `new HavokPlugin(false, hk)` + `setTimeStep(1/60)` (the runtime does this when there's no canvas).
+- **Testing:** headless — load `blockly@10.4.3` + `blockly/javascript` in Node, `defineBlocks`, load `starterProgram()` into a
+  `Blockly.Workspace`, `compile`, then `createWorld(B,{havok})` and `w.tick()` (await a macrotask between ticks so pupil
+  awaits resume). Browser — Playwright + `/opt/pw-browsers/chromium` with `--use-gl=swiftshader`; unpkg is blocked in the
+  sandbox, so `page.route` the `blockly@10.4.3` files to a local `node_modules/blockly`; hide `#whatsnew`
+  (`localStorage bap_seen_version=CJ_VERSION`). Verified Wave 1: starter scene renders with shadows; walk/jump; ball falls
+  and bounces; touch hat recolours; click/key/broadcast/glide/wait/repeat/stop; save → platformer → reload; Stop/Run; home
+  pauses; iPad portrait stacks with the touch pad working.
 
 ## Designed icon set (replacing emoji-as-icons) — DONE & verified (app-wide)
 **COMPLETE as of CJ_VERSION 2026.08.08.** Every displayed emoji across the whole app is now a hand-designed SVG icon

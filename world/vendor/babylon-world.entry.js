@@ -36,3 +36,4 @@ import '@babylonjs/loaders/glTF/2.0/Extensions/KHR_draco_mesh_compression.js';
 import '@babylonjs/loaders/glTF/2.0/Extensions/KHR_texture_transform.js';
 import '@babylonjs/loaders/glTF/2.0/Extensions/KHR_materials_emissive_strength.js';
 export { DracoDecoder } from '@babylonjs/core/Meshes/Compression/dracoDecoder.js';
+export { GizmoManager } from '@babylonjs/core/Gizmos/gizmoManager.js';

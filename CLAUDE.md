@@ -538,8 +538,8 @@ module (like Critter Lab), modelled on **Flock XR** (`flipcomputing/flock`, MIT 
 registered trademarks — never use them in the UI). The old inline `td3*`/`td_*` prototype (CDN Babylon, hand-rolled AABB
 physics, shared code panel) was **deleted** in Wave 1; it never shipped, so old `blocklyXml`-only 3D payloads just open the
 starter program. Planned waves: **1** engine + blocks→async-JS + text-ID objects (DONE) · **2** characters (recolourable) +
-shared animation clips + a model library, reusing Flock's MIT assets (DONE, see below) · **3** two-way block↔scene sync (gizmo drag writes block fields; Flock's `ui/blockmesh.js`/`ui/gizmos.js`
-are the reference) · **4** more physics/camera/sound + `HELP`/Teacher Guide/What's New, then flip `THREED_ON`.
+shared animation clips + a model library, reusing Flock's MIT assets (DONE, see below) · **3** two-way block↔scene sync
+(DONE, see below) · **4** more physics/camera/sound + `HELP`/Teacher Guide/What's New, then flip `THREED_ON`.
 - **Files (NOT in the single HTML file):** `world/world-runtime.js` (scene, Havok physics, the pupil-callable API, runner;
   no DOM, runs in Node on a `NullEngine`), `world/world-blocks.js` (block defs, toolbox, `starterProgram()`, `compile()`),
   `world/world-app.js` (`mount(root,{project,onChange,toast})` → `{getProject,setProject,resume,pause,destroy}`; its OWN
@@ -601,6 +601,22 @@ are the reference) · **4** more physics/camera/sound + `HELP`/Teacher Guide/Wha
   (blank view, nothing moved). Skeletons use bone textures (`useTextureToStoreBoneMatrices`) for low uniform limits.
   Draco decoder is self-hosted in `world/vendor/draco/`. Known limit: an object's collider is its whole bounding box,
   so you can't walk into a hut yet.
+- **Wave 3 — edit view + two-way block↔scene sync (DONE & verified):** the world now OPENS in an **edit view** (not
+  playing): `world.run(code, {layout:true})` builds the starting layout — setup runs at once (`skipWait`: frame/time waits
+  resolve immediately against a `LAYOUT_BUDGET` of 20000; when it runs out that script just ends via `STOP`), while
+  `__forever`, glide, control, follow, physics (`scene.physicsEnabled=false`), timers and all event hats stay off; start
+  hats are awaited so the layout is complete when `run` returns. **Stop returns to the edit view** (Scratch-like reset);
+  Run plays. `world.running()` = playing only; `world.editing()` = edit view. Every make block passes `__b: <block id>`
+  (`WB.MAKERS` lists them), so each object knows its block (`blockOf`, `objectsOfBlock`). **Scene → blocks:** in the
+  edit view a tap/click (`POINTERTAP` + `scene.pick`) calls `opts.onPick(id)`; the app selects + centres that make block
+  and `world.select(id)` attaches a Babylon `GizmoManager` (position or scale gizmo, `setTool('move'|'resize')`, the
+  Move/Resize toggle `#w3Tools`; bigger on touch, `gizmoScale`). Drag end → `opts.onEdit({blockId, kind, delta|factor})`;
+  the app writes the block's `math_number` X/Y/Z (old + delta, rounded to 0.1, Y never below 0) or W/H/D / SCALE (box per
+  axis, round shapes evenly, models by SCALE) inside a `Blockly.Events` group starting `w3gizmo`, which the change
+  listener ignores for rebuilding (a move needs no rebuild; a resize rebuilds via `editSoon`). If the socket holds
+  another block (a variable/sum), it says so and snaps back. A make block inside a loop (made >1 object) can't be dragged
+  (status explains). **Blocks → scene:** selecting a make block selects its object; any other block edit in the edit
+  view rebuilds the layout live (`editSoon`, 300 ms debounce, selection restored); edits while playing show "press Run".
 - **Gotchas:** Blockly 10 has NO `Blockly.Themes.Dark` (only Classic/Zelos) — the main app's `base:Blockly.Themes.Dark`
   silently falls back to Classic; the 3D editor sets `componentStyles` instead. `eval` can't be a parameter name in strict
   mode. Headless Havok needs `new HavokPlugin(false, hk)` + `setTimeStep(1/60)` (the runtime does this when there's no canvas).
@@ -611,7 +627,9 @@ are the reference) · **4** more physics/camera/sound + `HELP`/Teacher Guide/Wha
   `Blockly.Workspace`, `compile`, then `createWorld(B,{havok})` and `w.tick()` (await a macrotask between ticks so pupil
   awaits resume). Browser — Playwright + `/opt/pw-browsers/chromium` with `--use-gl=swiftshader`; unpkg is blocked in the
   sandbox, so `page.route` the `blockly@10.4.3` files to a local `node_modules/blockly`; hide `#whatsnew`
-  (`localStorage bap_seen_version=CJ_VERSION`). Verified Wave 1: starter scene renders with shadows; walk/jump; ball falls
+  (`localStorage bap_seen_version=CJ_VERSION`; it can re-show on a timer, so hide it on an interval in `addInitScript`).
+  Since Wave 3 the world opens in the edit view: wait for `worldApp._world().editing()` and click `#w3Run` before testing
+  play; `world._gizmo()` exposes the GizmoManager so tests can fire drag observables. Verified Wave 1: starter scene renders with shadows; walk/jump; ball falls
   and bounces; touch hat recolours; click/key/broadcast/glide/wait/repeat/stop; save → platformer → reload; Stop/Run; home
   pauses; iPad portrait stacks with the touch pad working.
 

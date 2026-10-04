@@ -34,11 +34,15 @@ const TEMPLATE = `
   <div class="w3-view">
     <div class="w3-bar">
       <button type="button" class="w3-run" id="w3Run" title="Run your program from the start">${ic('i-play')} Run</button>
-      <button type="button" class="w3-stop" id="w3Stop" title="Stop everything">${ic('i-stop')} Stop</button>
+      <button type="button" class="w3-stop" id="w3Stop" title="Stop, and go back to how your world starts">${ic('i-stop')} Stop</button>
+      <div class="w3-tools" id="w3Tools" role="radiogroup" aria-label="What dragging does">
+        <button type="button" class="w3-tool on" data-tool="move" role="radio" aria-checked="true" title="Drag the arrows to move the thing you clicked">Move</button>
+        <button type="button" class="w3-tool" data-tool="resize" role="radio" aria-checked="false" title="Drag the handles to make the thing you clicked bigger or smaller">Resize</button>
+      </div>
       <span class="w3-status" id="w3Status" role="status" aria-live="polite"></span>
     </div>
     <div class="w3-canvas-wrap" id="w3Wrap">
-      <canvas id="w3Canvas" tabindex="0" aria-label="Your 3D world. Drag to look around, scroll or pinch to zoom, click an object to fire its when-clicked blocks."></canvas>
+      <canvas id="w3Canvas" tabindex="0" aria-label="Your 3D world. Drag to look around, scroll or pinch to zoom. Before you press Run, click a thing to move or resize it; while it runs, clicking fires its when-clicked blocks."></canvas>
       <div class="w3-loading" id="w3Loading">Getting the 3D world ready…</div>
       <div class="w3-tip" id="w3Tip">Drag to look around · scroll to zoom</div>
       <div class="w3-pad" id="w3Pad" hidden>
@@ -94,7 +98,9 @@ export function mount(root, host) {
   const touchy = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
   let ws = null, world = null, gen = null, alive = true, quiet = false, pendingProject = host.project || null, padWanted = false;
-  let changeTimer = 0;
+  let changeTimer = 0, editTimer = 0, selBlock = null, tool = 'move', staleWarned = false;
+  const GIZMO = 'w3gizmo';
+  const EDIT_TIP = 'Click a thing to move it, or its block to find it. Press Run to play.';
 
   function status(msg, kind) { const s = $('w3Status'); s.textContent = msg || ''; s.className = 'w3-status' + (kind ? ' ' + kind : ''); }
   function toast(msg) { if (host.toast) host.toast(msg); }
@@ -116,18 +122,96 @@ export function mount(root, host) {
   }
   function getProject() { return ws ? { blocks: Blockly.serialization.workspaces.save(ws) } : pendingProject; }
 
-  // ── running ──
+  // ── running, and the edit view (the world as it starts, before you press Run) ──
+  function compile() {
+    try { return WB.compile(Blockly, gen, ws); } catch (e) { status('Your blocks couldn’t be turned into a program: ' + e.message, 'bad'); return null; }
+  }
+  function setMode(playing) {
+    $('w3Run').classList.toggle('on', playing);
+    $('w3Tools').hidden = playing;
+    $('w3Tip').textContent = playing ? 'Drag to look around · scroll to zoom' : 'Click a thing to move it · drag empty space to look around';
+  }
   async function run() {
     if (!world || !ws) return;
-    let code;
-    try { code = WB.compile(Blockly, gen, ws); } catch (e) { status('Your blocks couldn’t be turned into a program: ' + e.message, 'bad'); return; }
-    status('');
-    $('w3Run').classList.add('on');
+    clearTimeout(editTimer);
+    const code = compile(); if (code == null) return;
+    status(''); setMode(true); staleWarned = false;
     const ok = await world.run(code);
-    if (ok) status('Running', 'ok');
+    if (ok && world.running()) status('Running', 'ok');
     $('w3Canvas').focus({ preventScroll: true });
   }
-  function stop() { if (world) world.stop(); $('w3Run').classList.remove('on'); status('Stopped'); }
+  async function edit() {
+    if (!world || !ws) return;
+    clearTimeout(editTimer);
+    const code = compile(); if (code == null) return;
+    setMode(false); status(EDIT_TIP);
+    await world.run(code, { layout: true });
+    world.setTool(tool);
+    if (selBlock) pickBlock(selBlock, true);
+  }
+  function editSoon() { clearTimeout(editTimer); editTimer = setTimeout(() => { if (alive && world && world.editing()) edit(); }, 300); }
+  function stop() { if (world) edit(); }
+
+  // ── linking objects and blocks ──
+  function deselectBlock() { try { const b = Blockly.common.getSelected(); if (b) b.unselect(); } catch (e) { /* none */ } }
+  // a block was chosen in the editor (or its object was clicked): show its object with the gizmo
+  function pickBlock(id, quietly) {
+    const block = id && ws.getBlockById(id);
+    if (!block || !WB.MAKERS.includes(block.type)) { selBlock = null; world.select(null); return; }
+    selBlock = id;
+    const made = world.objectsOfBlock(id);
+    if (made.length === 1) { world.select(made[0]); if (!quietly) status(tool === 'move' ? 'Drag the arrows to move it.' : 'Drag the handles to resize it.'); return; }
+    world.select(null);
+    if (quietly) return;
+    if (made.length > 1) status('This block makes ' + made.length + ' things (it’s inside a loop), so change its numbers instead.');
+    else status('This block hasn’t made anything yet. Is it inside “when Run is clicked”?');
+  }
+  function onPick(objId) {
+    if (!objId) { selBlock = null; world.select(null); deselectBlock(); status(EDIT_TIP); return; }
+    const blockId = world.blockOf(objId), block = blockId && ws.getBlockById(blockId);
+    if (!block) return;
+    pickBlock(blockId);
+    block.select();
+    try { ws.centerOnBlock(blockId); } catch (e) { /* hidden */ }
+  }
+  // the gizmo moved or resized an object: write the new numbers into the block that made it
+  const r1 = v => Math.round(v * 10) / 10;
+  function numberIn(block, name) {
+    const t = block.getInputTargetBlock(name);
+    return t && t.type === 'math_number' ? t : null;
+  }
+  function onEdit(e) {
+    const block = e.blockId && ws.getBlockById(e.blockId);
+    if (!block) { edit(); return; }
+    const set = changes => {
+      Blockly.Events.setGroup(GIZMO + Date.now());
+      try { for (const [nb, v] of changes) nb.setFieldValue(String(v), 'NUM'); } finally { Blockly.Events.setGroup(false); }
+    };
+    if (e.kind === 'move') {
+      const axes = ['X', 'Y', 'Z'].map(a => [a, numberIn(block, a)]);
+      if (axes.some(([, nb]) => !nb)) { status('Its position comes from other blocks, so change those instead.', 'bad'); edit(); return; }
+      set(axes.map(([a, nb]) => {
+        let v = r1(Number(nb.getFieldValue('NUM')) + e.delta[a.toLowerCase()]);
+        if (a === 'Y') v = Math.max(0, v);
+        return [nb, v];
+      }));
+      status('Moved. Press Run to play.', 'ok');
+      return;
+    }
+    // resize: boxes stretch on each axis, round shapes keep their shape, models scale evenly
+    const f = e.factor, even = (f.x + f.y + f.z) / 3, flat = (f.x + f.z) / 2;
+    const plan = { w3_box: { W: f.x, H: f.y, D: f.z }, w3_sphere: { W: even }, w3_cylinder: { W: flat, H: f.y }, w3_cone: { W: flat, H: f.y },
+      w3_capsule: { W: flat, H: f.y }, w3_character: { SCALE: even }, w3_object: { SCALE: even } }[block.type] || {};
+    const changes = [];
+    for (const k in plan) {
+      const nb = numberIn(block, k);
+      if (!nb) { status('Its size comes from other blocks, so change those instead.', 'bad'); edit(); return; }
+      changes.push([nb, Math.max(0.1, r1(Number(nb.getFieldValue('NUM')) * plan[k]))]);
+    }
+    set(changes);
+    status('Resized. Press Run to play.', 'ok');
+    editSoon(); // rebuild it at its new size
+  }
 
   // ── keyboard: only when you're not typing in a box or a Blockly field ──
   function keyTarget(e) {
@@ -161,6 +245,12 @@ export function mount(root, host) {
   });
   $('w3Run').onclick = run;
   $('w3Stop').onclick = stop;
+  root.querySelectorAll('.w3-tool').forEach(b => b.addEventListener('click', () => {
+    tool = b.getAttribute('data-tool');
+    root.querySelectorAll('.w3-tool').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', String(on)); });
+    if (world) world.setTool(tool);
+    if (selBlock) pickBlock(selBlock);
+  }));
 
   const ro = new ResizeObserver(() => { if (world) world.resize(); if (ws) Blockly.svgResize(ws); });
   ro.observe($('w3Wrap')); ro.observe($('w3Blocks'));
@@ -179,18 +269,28 @@ export function mount(root, host) {
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
     loadProject(pendingProject);
     ws.addChangeListener(e => {
-      if (quiet || e.isUiEvent) return;
+      if (quiet) return;
+      if (e.isUiEvent) {
+        if (e.type === Blockly.Events.SELECTED && world && world.editing() && e.newElementId !== selBlock) pickBlock(e.newElementId);
+        return;
+      }
       clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 250);
+      if (!world || String(e.group || '').startsWith(GIZMO)) return; // the gizmo already moved it
+      if (world.editing()) editSoon(); // the starting layout follows your blocks as you change them
+      else if (world.running() && !staleWarned) { staleWarned = true; status('You changed your blocks: press Run to try them.'); }
     });
 
     let havok = null;
     try { havok = await B.HavokPhysics(); } catch (e) { toast('Physics couldn’t start, so things won’t fall or bump.'); }
     if (!alive) return;
-    world = createWorld(B, { canvas: $('w3Canvas'), havok, loadAsset, onError: m => status(m, 'bad'), onPad: setPad,
-      onLoading: n => { const s = $('w3Status'); if (n > 0) status('Loading models…'); else if (s.textContent === 'Loading models…') status(world && world.running() ? 'Running' : '', 'ok'); } });
+    world = createWorld(B, { canvas: $('w3Canvas'), havok, loadAsset, onError: m => status(m, 'bad'), onPad: setPad, onPick, onEdit, gizmoScale: touchy ? 1.9 : 1.3,
+      onLoading: n => {
+        if (n > 0) { status('Loading models…'); return; }
+        if ($('w3Status').textContent === 'Loading models…') { if (world && world.running()) status('Running', 'ok'); else status(EDIT_TIP); }
+      } });
     $('w3Loading').hidden = true;
     world.start(); world.resize();
-    run();
+    edit();
   })().catch(e => {
     $('w3Loading').textContent = 'The 3D world needs the internet the first time it opens. Check your connection and try again.';
     console.error(e);
@@ -203,10 +303,15 @@ export function mount(root, host) {
       pendingProject = p || null;
       if (!ws) return;
       loadProject(pendingProject);
-      if (world) { world.start(); world.resize(); Blockly.svgResize(ws); run(); }
+      selBlock = null;
+      if (world) { world.start(); world.resize(); Blockly.svgResize(ws); edit(); }
     },
-    resume() { if (world) { world.start(); world.resize(); } if (ws) Blockly.svgResize(ws); setPad(padWanted); },
-    pause() { if (world) { world.stop(); world.pause(); } $('w3Run').classList.remove('on'); status(''); },
+    resume() {
+      if (world) { world.start(); world.resize(); if (!world.running() && !world.editing()) edit(); }
+      if (ws) Blockly.svgResize(ws);
+      setPad(padWanted);
+    },
+    pause() { if (world) { world.stop(); world.pause(); } setMode(false); status(''); },
     destroy() {
       alive = false; ro.disconnect();
       document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);

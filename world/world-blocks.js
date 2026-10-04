@@ -16,6 +16,9 @@ const THUMB = name => new URL('./assets/thumbs/' + name + '.png', import.meta.ur
 // picture dropdowns for the model library (text for the few models without a picture)
 const pics = list => () => list.map(([id, label]) => LIB.THUMBLESS.includes(id) ? [label, id] : [{ src: THUMB(id), width: 44, height: 44, alt: label }, id]);
 
+// blocks that make an object: the edit view links each object back to one of these
+export const MAKERS = ['w3_box', 'w3_sphere', 'w3_cylinder', 'w3_cone', 'w3_capsule', 'w3_character', 'w3_object'];
+
 export const HATS = ['w3_when_run', 'w3_when_clicked', 'w3_when_key', 'w3_when_touch', 'w3_when_touch_ground', 'w3_when_receive'];
 
 const C = {
@@ -186,13 +189,13 @@ function defineGenerators(Blockly, gen, Order) {
   const shape = fn => b => {
     const hasD = !!b.getInput('D'), hasH = !!b.getInput('H');
     const w = val(b, 'W'), h = hasH ? val(b, 'H') : w, d = hasD ? val(b, 'D') : w;
-    return `${v(b)} = ${fn}(${label(b)}, { color: ${val(b, 'COLOR')}, w: ${w}, h: ${h}, d: ${d}, x: ${val(b, 'X')}, y: ${val(b, 'Y')}, z: ${val(b, 'Z')} });\n`;
+    return `${v(b)} = ${fn}(${label(b)}, { color: ${val(b, 'COLOR')}, w: ${w}, h: ${h}, d: ${d}, x: ${val(b, 'X')}, y: ${val(b, 'Y')}, z: ${val(b, 'Z')}, __b: ${gen.quote_(b.id)} });\n`;
   };
   F.w3_box = shape('createBox'); F.w3_sphere = shape('createSphere'); F.w3_cylinder = shape('createCylinder');
   F.w3_cone = shape('createCone'); F.w3_capsule = shape('createCapsule');
 
   const model = b => gen.quote_(b.getFieldValue('MODEL'));
-  const pos = b => `scale: ${val(b, 'SCALE')}, x: ${val(b, 'X')}, y: ${val(b, 'Y')}, z: ${val(b, 'Z')}`;
+  const pos = b => `scale: ${val(b, 'SCALE')}, x: ${val(b, 'X')}, y: ${val(b, 'Y')}, z: ${val(b, 'Z')}, __b: ${gen.quote_(b.id)}`;
   F.w3_character = b => `${v(b)} = await createCharacter(${label(b)}, { model: ${model(b)}, ${pos(b)} });\n`;
   F.w3_object = b => `${v(b)} = await createObject(${label(b)}, { model: ${model(b)}, ${pos(b)} });\n`;
   F.w3_animate = b => `await playAnimation(${v(b)}, ${gen.quote_(b.getFieldValue('ANIM'))}, ${gen.quote_(b.getFieldValue('MODE'))});\n`;

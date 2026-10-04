@@ -17,6 +17,10 @@
 .w3 .w3-stop { background: var(--w3-panel); color: #fff; border: 2px solid var(--w3-line); }
 .w3 .w3-run:hover, .w3 .w3-stop:hover { filter: brightness(1.12); }
 .w3 .w3-run:focus-visible, .w3 .w3-stop:focus-visible, .w3 canvas:focus-visible { outline: 3px solid var(--w3-gold); outline-offset: 2px; }
+.w3 .w3-tools { display: inline-flex; background: #151515; border-radius: 10px; padding: 3px; gap: 2px; }
+.w3 .w3-tool { font-weight: 800; font-size: 13px; border: 0; background: transparent; color: #bbb; border-radius: 8px; padding: 6px 12px; min-height: 36px; cursor: pointer; }
+.w3 .w3-tool.on { background: var(--w3-gold); color: #000; }
+.w3 .w3-tool:focus-visible { outline: 3px solid var(--w3-gold); outline-offset: 2px; }
 .w3 .w3-status { font-size: 13px; font-weight: 700; color: #bbb; flex: 1 1 160px; min-width: 0; }
 .w3 .w3-status.ok { color: #7bd88f; }
 .w3 .w3-status.bad { color: #ffb0b0; }

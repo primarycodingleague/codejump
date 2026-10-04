@@ -17,6 +17,11 @@
  * loaded once into an AssetContainer and copied for each object. Each one sits inside an invisible box
  * "collider" mesh, which is what moves, collides and gets picked, so every command treats it like a shape.
  * All characters share one skeleton, so an animation file is retargeted onto any character by bone name.
+ *
+ * Edit view: world.run(code, { layout: true }) builds the starting layout without playing. Setup runs at once (waits
+ * and loop passes don't wait for frames, up to a budget), but forever loops, glides, events, the player controls and
+ * physics stay off, so the scene is still. Every object remembers the block that made it (p.__b), and a gizmo can move
+ * or resize the selected one; opts.onEdit reports the change so the app can write it back into that block.
  */
 
 import * as LIB from './world-assets.js';
@@ -224,7 +229,7 @@ export function createWorld(B, opts) {
     mesh.metadata = { w3id: id };
     if (shadows) shadows.addShadowCaster(mesh);
     mesh.receiveShadows = true;
-    const o = { id, name: safeName(name), mesh, kind, size: { w, h, d }, color: p.color, phys: 'none', agg: null, bounce: 0.2 };
+    const o = { id, name: safeName(name), mesh, kind, size: { w, h, d }, color: p.color, phys: 'none', agg: null, bounce: 0.2, blockId: p.__b || null };
     objs.set(id, o);
     created++;
     return id;
@@ -255,7 +260,7 @@ export function createWorld(B, opts) {
     if (!lib.some(c => c[0] === model)) model = lib[0][0];
     if (objs.size >= MAX_OBJECTS) return create('box', name, p);
     const id = reserve(name);
-    const o = { id, name: safeName(name), mesh: null, kind, model, size: null, color: null, phys: 'none', agg: null, bounce: 0.2, anims: {}, nodes: null };
+    const o = { id, name: safeName(name), mesh: null, kind, model, size: null, color: null, phys: 'none', agg: null, bounce: 0.2, anims: {}, nodes: null, blockId: p.__b || null };
     objs.set(id, o); // holds the name while the file loads; get() ignores it until o.mesh is set
     let cont;
     try { cont = await container(kind === 'character' ? LIB.characterFile(model) : LIB.objectFile(model)); } catch (e) {
@@ -338,14 +343,21 @@ export function createWorld(B, opts) {
   }
 
   // ── frame clock ──
+  // in the edit view, setup doesn't wait for frames or time: it carries on at once until a budget runs out
+  // (then that script ends, so a loop that never ends can't hang the page or the edit view)
+  const LAYOUT_BUDGET = 20000;
+  function skipWait(r) {
+    if (!r || !r.layout) return null;
+    return r.budget-- > 0 ? Promise.resolve() : Promise.reject(STOP); // out of budget: that script just ends
+  }
   function nextFrame() {
     const r = run;
-    return new Promise(res => { if (r && !r.stopped) r.frameWaiters.push(res); });
+    return skipWait(r) || new Promise(res => { if (r && !r.stopped) r.frameWaiters.push(res); });
   }
   function after(secs) {
     const r = run;
     const at = time + Math.max(0, num(secs, 0));
-    return new Promise(res => { if (r && !r.stopped) r.timeWaiters.push({ at, res }); });
+    return skipWait(r) || new Promise(res => { if (r && !r.stopped) r.timeWaiters.push({ at, res }); });
   }
   function alive(r) { if (!r || r.stopped || r !== run) throw STOP; }
 
@@ -397,7 +409,7 @@ export function createWorld(B, opts) {
       const m = mode === 'wait' ? 'wait' : mode === 'once' ? 'once' : 'loop';
       try {
         const done = playAnim(o, String(name), m);
-        if (m === 'once') { done.catch(() => {}); return; } // starts it without waiting for the end
+        if (m === 'once' || r.layout) { done.catch(() => {}); return; } // starts it without waiting for the end
         await done;
       } catch (e) { onError('Couldn’t load the ' + name + ' animation (are you online?)'); }
       alive(r);
@@ -415,7 +427,7 @@ export function createWorld(B, opts) {
       syncBody(o);
     };
     A.glideTo = async (id, x, y, z, secs) => {
-      const o = obj(id); if (!o) return;
+      const o = obj(id); if (!o || r.layout) return; // gliding is part of playing, not the starting layout
       const from = o.mesh.position.clone(), to = new B.Vector3(num(x, 0), num(y, 0), num(z, 0));
       const dur = clampN(secs, 0, 600, 1), t0 = time;
       if (o.agg && o.phys === 'dynamic') o.agg.body.setMotionType(B.PhysicsMotionType.ANIMATED);
@@ -475,13 +487,14 @@ export function createWorld(B, opts) {
     // game controls + camera
     A.control = (id, speed) => {
       const o = obj(id); if (!o) return;
+      if (r.layout) return;
       control = o; o.speed = clampN(speed, 0, 50, 5); uprightBody(o); onPad(true);
     };
-    A.follow = id => { const o = obj(id); if (o) follow = o; };
+    A.follow = id => { const o = obj(id); if (o && !r.layout) follow = o; };
 
     // events (hats) — handlers are kept for this run only
     A.__start = fn => r.hats.start.push(fn);
-    A.__forever = async fn => { while (true) { alive(r); await fn(); alive(r); await nextFrame(); } };
+    A.__forever = async fn => { if (r.layout) return; while (true) { alive(r); await fn(); alive(r); await nextFrame(); } };
     A.__onClick = (getId, fn) => r.hats.click.push({ getId, fn, busy: false });
     A.__onKey = (key, fn) => r.hats.key.push({ key: String(key), fn, busy: false });
     A.__onTouch = (getA, getB, fn) => r.hats.touch.push({ getA, getB, fn, busy: false, was: false });
@@ -528,10 +541,12 @@ export function createWorld(B, opts) {
     'fetch', 'XMLHttpRequest', 'WebSocket', 'localStorage', 'sessionStorage', 'indexedDB', 'Function',
     'importScripts', 'Worker', 'setTimeout', 'setInterval'];
 
-  async function runCode(code) {
+  async function runCode(code, ro) {
+    const layout = !!(ro && ro.layout);
     stop();
     reset();
-    const r = run = { token: ++token, stopped: false, errors: 0, hats: { start: [], click: [], key: [], touch: [], msg: [] }, frameWaiters: [], timeWaiters: [] };
+    const r = run = { token: ++token, stopped: false, errors: 0, layout, budget: LAYOUT_BUDGET, hats: { start: [], click: [], key: [], touch: [], msg: [] }, frameWaiters: [], timeWaiters: [] };
+    if (physicsOn) scene.physicsEnabled = !layout;
     const api = makeApi(r);
     const names = Object.keys(api);
     let fn;
@@ -544,11 +559,13 @@ export function createWorld(B, opts) {
     }
     await guarded(r, () => fn(...names.map(n => api[n])));
     if (r.stopped) return false;
-    for (const h of r.hats.start) guarded(r, h);
+    const starts = r.hats.start.map(h => guarded(r, h));
+    if (layout) await Promise.all(starts); // the edit view's setup always finishes (forever is skipped, loops have a budget)
     return true;
   }
 
   function stop() {
+    select(null);
     if (!run) return;
     run.stopped = true;
     run.frameWaiters.length = 0; run.timeWaiters.length = 0; // their awaits never resume; the closures are let go
@@ -562,7 +579,7 @@ export function createWorld(B, opts) {
   function beforeFrame(dt) {
     time += dt;
     const r = run;
-    if (r && !r.stopped) {
+    if (r && !r.stopped && !r.layout) {
       // timers then frame waits
       if (r.timeWaiters.length) {
         const due = r.timeWaiters.filter(w => w.at <= time + 1e-9);
@@ -645,25 +662,72 @@ export function createWorld(B, opts) {
     if (down) {
       if (keysDown.has(name)) return;
       keysDown.add(name);
-      const r = run; if (!r) return;
+      const r = run; if (!r || r.layout) return;
       for (const h of r.hats.key) if ((h.key === name || h.key === 'any') && !h.busy) { h.busy = true; guarded(r, h.fn).then(() => { h.busy = false; }); }
     } else keysDown.delete(name);
   }
   function pad(name, down) { if (down) { padKeys.add(name); key(name, true); keysDown.delete(name); } else padKeys.delete(name); }
   function click(id) {
-    const r = run; if (!r || id == null) return;
+    const r = run; if (!r || r.layout || id == null) return;
     for (const h of r.hats.click) {
       let target; try { target = h.getId(); } catch (e) { target = null; }
       if (target === id && !h.busy) { h.busy = true; guarded(r, h.fn).then(() => { h.busy = false; }); }
     }
   }
+  function ownerId(m) {
+    while (m && !(m.metadata && m.metadata.w3id) && m.parent) m = m.parent;
+    return m && m.metadata && m.metadata.w3id || null;
+  }
   if (!headless) {
     scene.onPointerObservable.add(pi => {
-      if (pi.type !== B.PointerEventTypes.POINTERPICK) return;
-      let m = pi.pickInfo && pi.pickInfo.pickedMesh;
-      while (m && !(m.metadata && m.metadata.w3id) && m.parent) m = m.parent;
-      if (m && m.metadata && m.metadata.w3id) click(m.metadata.w3id);
+      const editing = run && run.layout;
+      if (!editing && pi.type === B.PointerEventTypes.POINTERPICK) { const id = ownerId(pi.pickInfo && pi.pickInfo.pickedMesh); if (id) click(id); }
+      if (editing && pi.type === B.PointerEventTypes.POINTERTAP) {
+        const hit = scene.pick(scene.pointerX, scene.pointerY, m => m.isPickable && m.isEnabled() && m.isVisible);
+        if (opts.onPick) opts.onPick(hit && hit.hit ? ownerId(hit.pickedMesh) : null);
+      }
     });
+  }
+
+  // ── edit view: a gizmo moves or resizes the selected object; onEdit tells the app what changed ──
+  let gm = null, selected = null, tool = 'move', dragFrom = null;
+  function gizmos() {
+    if (gm || headless || !B.GizmoManager) return gm;
+    gm = new B.GizmoManager(scene);
+    gm.usePointerToAttachGizmos = false; gm.clearGizmoOnEmptyPointerEvent = false;
+    gm.positionGizmoEnabled = true; gm.scaleGizmoEnabled = true;
+    const pg = gm.gizmos.positionGizmo, sg = gm.gizmos.scaleGizmo;
+    const big = opts.gizmoScale || 1.3; // bigger on touch screens
+    pg.scaleRatio = big; sg.scaleRatio = big; sg.sensitivity = 2;
+    pg.onDragStartObservable.add(() => { if (selected) dragFrom = selected.mesh.position.clone(); });
+    pg.onDragEndObservable.add(() => {
+      const o = selected; if (!o || !dragFrom) return;
+      if (o.mesh.position.y < 0) o.mesh.position.y = 0; // never below the ground
+      const d = o.mesh.position.subtract(dragFrom); dragFrom = null;
+      if (opts.onEdit) opts.onEdit({ id: o.id, blockId: o.blockId, kind: 'move', delta: { x: round(d.x), y: round(d.y), z: round(d.z) } });
+    });
+    sg.onDragStartObservable.add(() => { if (selected) dragFrom = selected.mesh.scaling.clone(); });
+    sg.onDragEndObservable.add(() => {
+      const o = selected; if (!o || !dragFrom) return;
+      const f = o.mesh.scaling, from = dragFrom; dragFrom = null;
+      const k = v => Math.max(0.05, v);
+      if (opts.onEdit) opts.onEdit({ id: o.id, blockId: o.blockId, kind: 'resize', factor: { x: k(f.x / from.x), y: k(f.y / from.y), z: k(f.z / from.z) } });
+    });
+    setTool(tool);
+    return gm;
+  }
+  function setTool(t) {
+    tool = t === 'resize' ? 'resize' : 'move';
+    if (!gm) return;
+    gm.positionGizmoEnabled = tool === 'move'; gm.scaleGizmoEnabled = tool === 'resize';
+    if (selected) gm.attachToMesh(selected.mesh);
+  }
+  function select(id) {
+    const o = id != null && run && run.layout ? get(id) : null;
+    selected = o;
+    const g = o ? gizmos() : gm;
+    if (g) g.attachToMesh(o ? o.mesh : null);
+    return !!o;
   }
 
   // ── render loop (browser) ──
@@ -685,11 +749,16 @@ export function createWorld(B, opts) {
   return {
     scene, engine, camera, B,
     run: runCode, stop, reset, key, pad, click,
+    select, setTool, selected: () => (selected ? selected.id : null),
+    editing: () => !!(run && run.layout),
+    blockOf: id => { const o = get(id); return o ? o.blockId : null; },
+    objectsOfBlock: blockId => [...objs.values()].filter(o => o.mesh && !o.gone && o.blockId === blockId).map(o => o.id),
     tick: (dt) => frame(dt == null ? 1 / 60 : dt),
     start: startLoop, pause: pauseLoop,
     resize: () => { try { engine.resize(); } catch (e) { /* hidden */ } },
-    running: () => !!run,
-    objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled() })),
+    running: () => !!(run && !run.layout),
+    objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled(), blockId: o.blockId })),
+    _gizmo: () => gm, // for tests
     dispose: () => { stop(); pauseLoop(); scene.dispose(); engine.dispose(); }
   };
 }

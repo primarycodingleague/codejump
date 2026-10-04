@@ -9,11 +9,12 @@
  */
 import * as THREE from './vendor/three-0.186.1-critter.min.js';
 import * as Z from './critter-core.js';
+import * as P3 from './critter-print.js';
 
 // lucide-style names used below -> CodeJump's own SVG icon symbols (#i-…)
 var ICONS = { wrench: 'i-build', flag: 'i-flag', 'undo-2': 'i-undo', 'redo-2': 'i-redo', sparkles: 'i-spark', 'trash-2': 'i-trash',
   x: 'i-x', play: 'i-play', square: 'i-stop', 'rotate-ccw': 'i-reset', zap: 'i-dash', mountain: 'i-jump2', box: 'i-crate',
-  'arrow-up-from-line': 'i-arr-u', keyboard: 'i-key', users: 'i-people', swords: 'i-bump', crosshair: 'i-target' };
+  'arrow-up-from-line': 'i-arr-u', keyboard: 'i-key', users: 'i-people', swords: 'i-bump', crosshair: 'i-target', printer: 'i-cube', download: 'i-save' };
 function ic(name) { return '<svg class="ic"><use href="#' + (ICONS[name] || 'i-spark') + '"></use></svg>'; }
 
 var CSS_URL = new URL('./critter-app.css', import.meta.url).href;
@@ -33,6 +34,7 @@ var TEMPLATE = `
       <button type="button" class="zl-tool" id="zKeys" title="Keyboard shortcuts (?)">${ic('keyboard')} Keys</button>
       <button type="button" class="zl-tool" id="zGuides" title="Short videos: build a Critter that walks">${ic('play')} Guides</button>
       <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Critters</button>
+      <button type="button" class="zl-tool" id="zPrint" title="Download your Critter for a 3D printer">${ic('printer')} 3D print</button>
       <button type="button" class="zl-tool" id="zShowdown" title="Race your Critters against each other with your class">${ic('users')} Showdown</button>
     </div>
   </div>
@@ -1517,6 +1519,76 @@ var thumbs = (function () {
   };
 })();
 
+// 3D printing (critter-print.js makes the meshes): a picture of exactly what will print, a size, a base
+// plate, and STL (any slicer, one colour) or 3MF (one part per colour).
+var printPic = (function () {
+  var r = null, scene, camera, group;
+  return function (parts) {
+    try {
+      if (!r) {
+        var c = document.createElement('canvas'); c.width = 520; c.height = 320;
+        r = makeRenderer(c, { preserveDrawingBuffer: true, alpha: true }); r.setPixelRatio(1); r.setSize(520, 320, false);
+        scene = new THREE.Scene(); lights(scene, 2); camera = new THREE.PerspectiveCamera(30, 520 / 320, 1, 5000);
+        group = new THREE.Group(); group.rotation.x = -Math.PI / 2; scene.add(group); // print z-up -> three y-up
+      }
+      disposeTree(group);
+      var box = new THREE.Box3();
+      parts.forEach(function (p) {
+        var g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(p.positions, 3));
+        g.setIndex(new THREE.BufferAttribute(p.indices, 1)); g.computeVertexNormals();
+        group.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: p.colour, roughness: 0.6, flatShading: false })));
+      });
+      group.updateMatrixWorld(true); box.setFromObject(group);
+      var c2 = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
+      camera.position.copy(c2).addScaledVector(new THREE.Vector3(0.6, 0.5, 0.75).normalize(), size * 1.55); camera.lookAt(c2);
+      r.render(scene, camera);
+      return r.domElement.toDataURL('image/png');
+    } catch (e) { return ''; }
+  };
+})();
+var printOpts = { size: 'medium', base: true };
+function fileName(z) { return (String(z.name || 'Critter').replace(/[^A-Za-z0-9 _-]+/g, '').trim().replace(/\s+/g, '-') || 'Critter'); }
+function download(name, data, type) {
+  var url = URL.createObjectURL(new Blob([data], { type: type })), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+}
+function showPrint() {
+  var z = state.critter, built = null;
+  if (!z || !z.blocks.length) { toast('Build a Critter first.'); return; }
+  openDialog('Print ' + (z.name || 'your Critter') + ' on a 3D printer',
+    '<div class="zl-print"><img id="prPic" alt="Your Critter as it will print"><div class="zl-print-side">' +
+    '<h4>Size <span class="zl-muted">(nose to tail, or side to side if wider)</span></h4><div class="zl-seg" role="radiogroup" aria-label="Size" id="prSize">' +
+    P3.SIZES.map(function (s) { return '<button type="button" role="radio" data-s="' + s[0] + '">' + s[1] + '<br><span class="zl-muted">' + s[2] / 10 + ' cm</span></button>'; }).join('') + '</div>' +
+    '<label class="zl-check"><input type="checkbox" id="prBase"> Stand it on a base plate (stops it falling over)</label>' +
+    '<p class="zl-muted" id="prInfo" aria-live="polite"></p><div id="prWarn" aria-live="polite"></div>' +
+    '<div class="zl-print-go"><button type="button" class="zl-go small" id="prStl">' + ic('download') + ' Download STL</button>' +
+    '<button type="button" class="zl-go small alt" id="prMf">' + ic('download') + ' Download 3MF (colours)</button></div></div></div>' +
+    '<details class="zl-print-tips"><summary>Printing tips for grown-ups</summary><ul>' +
+    '<li><strong>STL</strong> works in every slicer (Cura, PrusaSlicer, Bambu Studio…) and prints in one colour.</li>' +
+    '<li><strong>3MF</strong> keeps each colour as its own part, so a multi-colour printer can give every colour a filament. Slicers show the colours differently; you may need to pick the filament for each part.</li>' +
+    '<li>Turn on <strong>supports</strong> (tree supports work well) for legs and arms that stick out, and a <strong>brim</strong> if you print without the base plate.</li>' +
+    '<li>PLA at 0.2 mm layers is fine. Medium takes roughly 1–3 hours, depending on the Critter.</li>' +
+    '<li>Each joint has a small ball so the parts join into one solid piece. The Critter will not move once printed.</li></ul></details>');
+  var pic = $('prPic'), base = $('prBase');
+  base.checked = printOpts.base;
+  function rebuild() {
+    var mm = P3.SIZES.filter(function (s) { return s[0] === printOpts.size; })[0][2];
+    dialog.querySelectorAll('#prSize button').forEach(function (b) { var on = b.dataset.s === printOpts.size; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
+    built = P3.buildPrint(z, { lengthMM: mm, base: printOpts.base, names: partNames(z) });
+    pic.src = printPic(built.parts);
+    var colours = built.parts.length;
+    $('prInfo').textContent = 'About ' + built.size.map(function (v) { return Math.round(v); }).join(' × ') + ' mm (long × wide × tall) · ' + colours + ' colour' + (colours === 1 ? '' : 's');
+    $('prWarn').innerHTML = built.warnings.length ? '<p class="zl-print-warn">' + ic('sparkles') + ' Thin parts may snap or not print: ' + esc(built.warnings.join('; ')) + '. Try a bigger size, or make those parts thicker.</p>' : '';
+  }
+  dialog.querySelectorAll('#prSize button').forEach(function (b) { b.addEventListener('click', function () { printOpts.size = b.dataset.s; rebuild(); }); });
+  base.addEventListener('change', function () { printOpts.base = base.checked; rebuild(); });
+  $('prStl').addEventListener('click', function () { download(fileName(z) + '-' + printOpts.size + '.stl', P3.toSTL(built.parts), 'model/stl'); toast('STL downloaded. Open it in your 3D printer’s slicer.'); });
+  $('prMf').addEventListener('click', function () { download(fileName(z) + '-' + printOpts.size + '.3mf', P3.to3MF(built.parts, z.name || 'Critter'), 'model/3mf'); toast('3MF downloaded. Open it in your 3D printer’s slicer.'); });
+  rebuild();
+}
+
 // Video guides (critter/guides/*.mp4, recorded from the real app; see CLAUDE.md "Video guides").
 var GUIDES = [
   { file: 'g1-build-your-first-critter', title: '1 · Build your first walking Critter', about: 'Give a body two pairs of walking legs, then test it in the Sprint.' },
@@ -2040,6 +2112,7 @@ function boot() {
   $('zKeys').addEventListener('click', showKeys);
   $('zShowdown').addEventListener('click', showdownMenu);
   $('zGuides').addEventListener('click', showGuides);
+  $('zPrint').addEventListener('click', showPrint);
   $('zGo').addEventListener('click', go);
   $('zOpp').addEventListener('change', function () { state.opponent = this.value; resetRun(); });
   $('zPreview').addEventListener('change', drawBeats);

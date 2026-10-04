@@ -521,6 +521,14 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   The recipe (2 Walking leg pairs = 1.0 m Sprint; back pair Opposite beat = 2.8 m; Lift higher on front + back feet =
   Hurdles 2.3 → 2.9 m) depends on the Walking leg defaults and the physics, so **re-record if those change**. The
   recorder (rec2.js + g1/g2/g3.js, Playwright) lives in the session scratchpad, not the repo; ask for it to be rebuilt.
+- **3D print** (4 Oct 2026, branch claude/critter-3d-print): `critter/critter-print.js` (no DOM; Node-testable) turns the
+  built pose into closed meshes in mm, Z up: one blob mesh per block (Z.blobGrid, collapsed poles), eye/pupil spheres, a
+  ball "knuckle" at every joint so the print is one fused solid, scaled so the longest horizontal side = 80/120/160 mm
+  (`SIZES`), optional 2.4 mm rounded base plate with the feet sunk 1.2 mm into it. Parts are grouped by colour.
+  `toSTL` = binary STL; `to3MF` = a stored zip with basematerials + one object per colour + an assembly object. Parts
+  thinner than `MIN_MM` (2 mm) after scaling are warned by name. UI: toolbar **3D print** (`showPrint`, preview rendered
+  from the print meshes by `printPic`, size/base remembered in `printOpts`). Tested: every shell is edge-manifold with
+  positive volume for all four Starters at every size, bbox = chosen length, trimesh loads the 3MF (all watertight).
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 

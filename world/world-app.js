@@ -12,6 +12,7 @@
 import * as B from './vendor/babylon-world.min.js';
 import { createWorld, keyName } from './world-runtime.js';
 import * as WB from './world-blocks.js';
+import { createSound } from './world-sound.js';
 
 const CSS_URL = new URL('./world-app.css', import.meta.url).href;
 const GEN_URL = new URL('./vendor/blockly-javascript-10.4.3.min.js', import.meta.url).href;
@@ -45,6 +46,7 @@ const TEMPLATE = `
       <canvas id="w3Canvas" tabindex="0" aria-label="Your 3D world. Drag to look around, scroll or pinch to zoom. Before you press Run, click a thing to move or resize it; while it runs, clicking fires its when-clicked blocks."></canvas>
       <div class="w3-loading" id="w3Loading">Getting the 3D world ready…</div>
       <div class="w3-tip" id="w3Tip">Drag to look around · scroll to zoom</div>
+      <div class="w3-banner" id="w3Banner" role="status" aria-live="polite" hidden></div>
       <div class="w3-pad" id="w3Pad" hidden>
         <div class="w3-dpad">
           <button type="button" data-k="up" aria-label="Forward">▲</button>
@@ -284,6 +286,7 @@ export function mount(root, host) {
     try { havok = await B.HavokPhysics(); } catch (e) { toast('Physics couldn’t start, so things won’t fall or bump.'); }
     if (!alive) return;
     world = createWorld(B, { canvas: $('w3Canvas'), havok, loadAsset, onError: m => status(m, 'bad'), onPad: setPad, onPick, onEdit, gizmoScale: touchy ? 1.9 : 1.3,
+      sound: createSound(), onBanner: t => { const el = $('w3Banner'); el.textContent = t; el.hidden = !t; },
       onLoading: n => {
         if (n > 0) { status('Loading models…'); return; }
         if ($('w3Status').textContent === 'Loading models…') { if (world && world.running()) status('Running', 'ok'); else status(EDIT_TIP); }

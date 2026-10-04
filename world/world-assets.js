@@ -35,6 +35,55 @@ export const ANIMATIONS = [
   ['Run_Hold', 'run holding'], ['Idle_Attack', 'reach'], ['Walk_Attack', 'walk reaching'], ['Run_Attack', 'run reaching']
 ];
 
+// Flock's default colours for each object, applied to its materials in order (root mesh first, then the meshes below it
+// sorted by name; one colour per material, repeating). Objects not listed keep the colours in their file.
+export const OBJECT_COLOURS = {
+  Star: ["#FFD700", "#FFD700", "#FFD700"],
+  Heart: ["#FF69B4", "#FF69B4", "#FF69B4"],
+  Coin: ["#A47E1B", "#C9A227", "#76520E"],
+  Gem1: ["#00BFFF", "#00BFFF", "#00BFFF"],
+  Gem2: ["#8A2BE2", "#8A2BE2", "#8A2BE2"],
+  Gem3: ["#FF4500", "#FF4500", "#FF4500"],
+  Key: ["#A47E1B", "#C9A227", "#76520E"],
+  Wand: ["#FF4500", "#8A2BE2", "#92614A"],
+  Hat: ["#9D3F72", "#B5FDFD", "#3D0073"],
+  egg: ["#fffcec", "#fffcec", "#fffcec"],
+  apple: ["#3FAF45", "#A9323F", "#624A20"],
+  pumpkin: ["#E78632", "#75430F"],
+  donut: ["#f9cb9c", "#fba0c3"],
+  starboppers: ["#FFD700", "#FFD700", "#FFD700", "#f9f9f9"],
+  headphones: ["#53E0E7", "#3291E7", "#7D7D7D"],
+  tree: ["#66CDAA", "#CD853F"],
+  tree2: ["#7F9F7F", "#A1623B"],
+  tree3: ["#403C3C", "#312616"],
+  tree4: ["#0D5B28", "#6D6C51"],
+  flower: ["#E73F9F", "#4AB700", "#E7D535"],
+  flower2: ["#7C38E7", "#4AB700", "#E7D535"],
+  mushroom: ["#ffffff", "#E73A49", "#8F7A61"],
+  mushroom_2: ["#ffffff", "#E73A49", "#8F7A61"],
+  rocks: ["#898D86", "#99a83d"],
+  rocks2: ["#898D86", "#99a83d"],
+  rocks3: ["#898D86", "#99a83d"],
+  rocks4: ["#898D86", "#99a83d", "#6BC6EF", "#f9f9f9"],
+  pond: ["#00E704", "#5A91E7", "#9A9A9A"],
+  hut: ["#B66946", "#5F2524", "#C25A5C", "#E1B46E", "#3BACBA", "#878787"],
+  hut2: ["#814C22", "#231E1D", "#FFF6A6", "#E7AF3A", "#E73627", "#878787"],
+  hut3: ["#F6DAB6", "#6CC3C1", "#9DC45C", "#EEB975", "#F3B4BE", "#878787"],
+  hut4: ["#F2E8CF", "#BC4749", "#EEB975", "#AF1B3F", "#6A994E", "#878787"],
+  window_window: ["#E7A988", "#E74E5F", "#E7E7E7"],
+  window_only: ["#E7A988", "#E74E5F", "#E7E7E7"],
+  window_door: ["#E7A988", "#E74E5F", "#E7E7E7"],
+  window_door_reversed: ["#E7A988", "#E74E5F", "#E7E7E7"],
+  window_stairs: ["#E7A988", "#E74E5F", "#E7E7E7"],
+  humped: ["#FFA869", "#E76F31", "#7E5024"],
+  jetty: ["#FFA869", "#7E5024", "#E76F31"],
+  boardwalk_straight: ["#7E5024", "#7E5024", "#7E5024"],
+  boat: ["#4F8A46", "#E7D48E", "#E76635", "#E76C69", "#5E64E7", "#4A4A4A", "#AAAAAA", "#E711CD"],
+  airplane: ["#E75D43", "#6A6A6A", "#E7C777", "#979797", "#A033E7"],
+  airplane2: ["#E75D43", "#6A6A6A", "#E7C777", "#979797", "#A033E7"],
+  skateboard: ["#E769D3", "#484848", "#251BE7"]
+};
+
 // colours a character can be given (glTF material names -> part)
 export const CHARACTER_PARTS = [['hair', 'hair'], ['skin', 'skin'], ['eyes', 'eyes'], ['tshirt', 'T-shirt'], ['shorts', 'shorts'], ['sleeves', 'sleeves and shoes']];
 

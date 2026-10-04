@@ -532,14 +532,15 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 
-## 3D World project type — `projectType==='3d'` — REBUILD IN PROGRESS (Flock XR-style), behind `THREED_ON`
-**Still hidden: `THREED_ON=false`.** Oct 2026 the user chose "option 2": rebuild 3D World CodeJump's way as a lazy-loaded
+## 3D World project type — `projectType==='3d'` — Waves 1–4 DONE on branch `claude/vibrant-cori-tho25y` (Flock XR-style)
+**`THREED_ON=true` on the branch (CJ_VERSION 2026.10.04.2 + What's New written) but NOT merged to `main`/live yet: waiting on
+Flip Computing about the animation clips' source (see Wave 2 note).** Merging the branch = launching 3D World. Oct 2026 the user chose "option 2": rebuild 3D World CodeJump's way as a lazy-loaded
 module (like Critter Lab), modelled on **Flock XR** (`flipcomputing/flock`, MIT code; "Flock XR" + the purple bird are
 registered trademarks — never use them in the UI). The old inline `td3*`/`td_*` prototype (CDN Babylon, hand-rolled AABB
 physics, shared code panel) was **deleted** in Wave 1; it never shipped, so old `blocklyXml`-only 3D payloads just open the
 starter program. Planned waves: **1** engine + blocks→async-JS + text-ID objects (DONE) · **2** characters (recolourable) +
 shared animation clips + a model library, reusing Flock's MIT assets (DONE, see below) · **3** two-way block↔scene sync
-(DONE, see below) · **4** more physics/camera/sound + `HELP`/Teacher Guide/What's New, then flip `THREED_ON`.
+(DONE, see below) · **4** more physics/camera/sound + `HELP`/Teacher Guide/What's New + `THREED_ON` (DONE, see below).
 - **Files (NOT in the single HTML file):** `world/world-runtime.js` (scene, Havok physics, the pupil-callable API, runner;
   no DOM, runs in Node on a `NullEngine`), `world/world-blocks.js` (block defs, toolbox, `starterProgram()`, `compile()`),
   `world/world-app.js` (`mount(root,{project,onChange,toast})` → `{getProject,setProject,resume,pause,destroy}`; its OWN
@@ -549,8 +550,8 @@ shared animation clips + a model library, reusing Flock's MIT assets (DONE, see 
 - **Host glue in build-and-play.html** (mirrors Critter): `worldBase()`/`loadWorldEngine()` (`import(world/world-app.js)`;
   live-site URL when running from a downloaded file), `worldData`/`worldApp`/`worldCurrent()`, `startNew3D(ks)`,
   `enter3DUI()` (mounts into `#world-ui`; reloads the project only when `_worldLoad` is set or coming from another mode,
-  else `resume()`), `exit3DUI()` (saves `worldData`, pauses). CSS `body.threed-mode` hides all other chrome incl. `#btn-help`
-  (no 3D help yet) and `#rotate-hint`. Payload field **`world: {blocks: <Blockly JSON>}`**. `loop()` returns early for 3d.
+  else `resume()`), `exit3DUI()` (saves `worldData`, pauses). CSS `body.threed-mode` hides all other chrome (Help stays: `WORLD_HELP`)
+  and `#rotate-hint`. Payload field **`world: {blocks: <Blockly JSON>}`**. `loop()` returns early for 3d.
 - **How a program runs (Flock's model):** each HAT block compiles to a registration call (`__start`, `__onClick(()=>v,…)`,
   `__onKey`, `__onTouch`, `__onMessage`); loose non-hat blocks are ignored. Statements become `await`-able API calls.
   Blockly's `INFINITE_LOOP_TRAP` = `await __yield()` so every loop does one pass per frame (Scratch-like, never freezes).
@@ -617,6 +618,25 @@ shared animation clips + a model library, reusing Flock's MIT assets (DONE, see 
   another block (a variable/sum), it says so and snaps back. A make block inside a loop (made >1 object) can't be dragged
   (status explains). **Blocks → scene:** selecting a make block selects its object; any other block edit in the edit
   view rebuilds the layout live (`editSoon`, 300 ms debounce, selection restored); edits while playing show "press Run".
+- **Wave 4 — camera, sound, bubbles, docs, launch-ready (DONE & verified):** `world/world-sound.js` = a Web Audio synth
+  (`SOUNDS` 12 recipes of tone/noise bursts, `NOTES` C4–C6, `volume`, `speak` via `speechSynthesis`, `stop`); the app passes
+  `createSound()` as `opts.sound`, so the runtime stays DOM-free (headless = silent). Sound is **silent in the edit view**
+  (rebuilds never beep). New blocks: **Camera** category (`w3_follow` moved here, `w3_camera_view` behind/above/side: each
+  frame eases `alpha`/`beta` towards the object's facing, `w3_camera_zoom`, `w3_camera_look`, `w3_camera_free`); **Sound**
+  (`w3_play_sound`, `…_wait`, `w3_play_note`, `w3_speak`, `w3_set_volume`, `w3_stop_sounds`); **Looks** `w3_say` /
+  `w3_say_for` (speech bubble = DynamicTexture card, billboard, `renderingGroupId=1`, NOT parented — `placeBubbles()` puts it
+  above the object's bounds each frame) and `w3_show_text` (`opts.onBanner` → `#w3Banner` overlay; the toolbox has a ready
+  "Score: " + join version); **Physics** `w3_grip` (friction, kept in `o.grip`), `w3_weight` (`setMassProperties`, keeps zero
+  inertia for upright bodies), `w3_speed_of` reporter; Operators gained `text` + `text_join`. `DEF` values that are
+  `{text}` objects become `text` shadows (plain strings stay colours). Objects now get **Flock's default colours**
+  (`OBJECT_COLOURS` in world-assets.js, applied by `colourInOrder`: root then descendants sorted by name, one colour per
+  material, repeating) — the files' own textures looked grey (e.g. the Star). Docs: `WORLD_HELP` (Start/Blocks/Characters/
+  Make a game/Save & Share/Cloud) via `helpTabs()`; Teacher Guide section "3D World (Key Stage 2 & 3)" (no Flock name in
+  pupil/teacher text); home tile `#h-tile-3d` now `home/world3d.jpg` (a real screenshot) + New badge.
+  **GOTCHAS found:** `ArcRotateCamera.setTarget(v)` recomputes alpha/beta/RADIUS from the camera's position, so following
+  undid zoom and drifted — always `setTarget(v, false, false, true)`. A ground with `opacity < 1` is alpha-blended and
+  depth-sorted against other transparent meshes, so it covered speech bubbles once a player walked past its centre —
+  keep the ground opaque and draw bubbles in rendering group 1.
 - **Gotchas:** Blockly 10 has NO `Blockly.Themes.Dark` (only Classic/Zelos) — the main app's `base:Blockly.Themes.Dark`
   silently falls back to Classic; the 3D editor sets `componentStyles` instead. `eval` can't be a parameter name in strict
   mode. Headless Havok needs `new HavokPlugin(false, hk)` + `setTimeStep(1/60)` (the runtime does this when there's no canvas).

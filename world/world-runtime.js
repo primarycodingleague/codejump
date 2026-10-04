@@ -63,6 +63,8 @@ export function createWorld(B, opts) {
   const onPad = opts.onPad || (() => {});
   const fixedStep = !!opts.fixedStep || headless;
   const loadAsset = opts.loadAsset || null;
+  const sound = opts.sound || null;              // world-sound.js in the browser; none headlessly
+  const onBanner = opts.onBanner || (() => {});  // the "show text on the screen" line
   // animations blend smoothly into each other (stand still -> walk -> run)
   if (B.AnimationPropertiesOverride) {
     scene.animationPropertiesOverride = new B.AnimationPropertiesOverride();
@@ -92,7 +94,7 @@ export function createWorld(B, opts) {
     ground.metadata = { w3id: null };
     if (B.GridMaterial && !headless) {
       groundMat = new B.GridMaterial('groundMat', scene);
-      groundMat.majorUnitFrequency = 5; groundMat.gridRatio = 1; groundMat.opacity = 0.99;
+      groundMat.majorUnitFrequency = 5; groundMat.gridRatio = 1; groundMat.opacity = 1; // solid: a see-through ground is depth-sorted with bubbles and can cover them
       groundMat.mainColor = new B.Color3(0.45, 0.72, 0.38); groundMat.lineColor = new B.Color3(0.37, 0.62, 0.31);
     } else {
       groundMat = new B.StandardMaterial('groundMat', scene); groundMat.diffuseColor = new B.Color3(0.45, 0.72, 0.38);
@@ -119,7 +121,7 @@ export function createWorld(B, opts) {
   let token = 0, time = 0, timerBase = 0, created = 0, tooMany = false;
   const keysDown = new Set();
   const padKeys = new Set();       // on-screen pad presses
-  let follow = null, control = null;
+  let follow = null, followView = 'orbit', control = null;
 
   function isDown(k) { return keysDown.has(k) || padKeys.has(k); }
 
@@ -134,12 +136,15 @@ export function createWorld(B, opts) {
     ground.setEnabled(true);
     if (physicsOn) scene.getPhysicsEngine().setGravity(new B.Vector3(0, -9.81, 0));
     camera.setTarget(new B.Vector3(0, 1, 0)); camera.alpha = -Math.PI / 2; camera.beta = 1.1; camera.radius = 22;
-    follow = null; control = null; onPad(false);
+    follow = null; followView = 'orbit'; control = null; onPad(false); onBanner('');
+    camera.radius = 22; camera.lowerRadiusLimit = 3;
+    if (sound) sound.stop();
     time = 0; timerBase = 0; created = 0; tooMany = false;
   }
 
   function disposeObj(o) {
     o.gone = true;
+    clearBubble(o);
     if (!o.mesh) return; // still loading: createModel throws it away when it arrives
     if (o.agg) { try { o.agg.dispose(); } catch (e) { /* already gone */ } o.agg = null; }
     if (shadows) { try { shadows.removeShadowCaster(o.mesh, true); } catch (e) { /* not a caster */ } }
@@ -186,10 +191,11 @@ export function createWorld(B, opts) {
   function applyPhysics(o) {
     if (o.agg) { try { o.agg.dispose(); } catch (e) { /* gone */ } o.agg = null; }
     if (!physicsOn || o.phys === 'none' || !o.mesh.isEnabled()) return;
-    const mass = o.phys === 'dynamic' ? 1 : 0;
-    o.agg = new B.PhysicsAggregate(o.mesh, physShape(o), { mass, friction: 0.6, restitution: o.bounce }, scene);
+    const mass = o.phys === 'dynamic' ? (o.mass || 1) : 0;
+    o.agg = new B.PhysicsAggregate(o.mesh, physShape(o), { mass, friction: grip(o), restitution: o.bounce }, scene);
     if (o === control || o.kind === 'character') uprightBody(o); // characters never topple over
   }
+  function grip(o) { return o.grip == null ? 0.6 : o.grip; }
   function uprightBody(o) {
     if (!o.agg) return;
     try { o.agg.body.setMassProperties({ inertia: new B.Vector3(0, 0, 0) }); } catch (e) { /* older plugin */ }
@@ -295,6 +301,7 @@ export function createWorld(B, opts) {
     holder.getChildMeshes(false).forEach(m => { m.isPickable = true; m.receiveShadows = true; });
     if (shadows) holder.getChildMeshes(false).forEach(m => shadows.addShadowCaster(m, false)); // meshes only: a TransformNode breaks the shadow pass
     Object.assign(o, { mesh, inst, root, holder, size: { w, h, d } });
+    if (kind === 'object' && LIB.OBJECT_COLOURS[model]) colourInOrder(o, LIB.OBJECT_COLOURS[model]);
     if (kind === 'character') {
       o.nodes = {}; for (const n of holder.getDescendants(false)) if (!o.nodes[n.name]) o.nodes[n.name] = n;
       if (p.colors) for (const part in p.colors) setPart(o, part, p.colors[part]);
@@ -312,6 +319,15 @@ export function createWorld(B, opts) {
   function paint(mat, c) {
     const [x, y, z] = hexToRgb(c), col = new B.Color3(x, y, z);
     if ('albedoColor' in mat) { mat.albedoColor = col; mat.albedoTexture = null; } else { mat.diffuseColor = col; mat.diffuseTexture = null; }
+  }
+  function colourInOrder(o, colours) {
+    const meshes = [o.root, ...o.root.getChildMeshes(false).sort((a, b) => a.name.localeCompare(b.name))];
+    const seen = new Map();
+    for (const m of meshes) {
+      if (!m || !m.material || seen.has(m.material)) continue;
+      paint(m.material, colours[seen.size % colours.length]);
+      seen.set(m.material, true);
+    }
   }
   function setPart(o, part, c) { if (o.holder && c) materials(o, part).forEach(m => paint(m, c)); }
 
@@ -477,7 +493,47 @@ export function createWorld(B, opts) {
       o.phys = kind === 'dynamic' || kind === 'static' ? kind : 'none';
       applyPhysics(o);
     };
-    A.setBounce = (id, amount) => { const o = obj(id); if (!o) return; o.bounce = clampN(amount, 0, 100, 20) / 100; if (o.agg) o.agg.shape.material = { friction: 0.6, restitution: o.bounce }; };
+    A.setBounce = (id, amount) => { const o = obj(id); if (!o) return; o.bounce = clampN(amount, 0, 100, 20) / 100; if (o.agg) o.agg.shape.material = { friction: grip(o), restitution: o.bounce }; };
+    A.setGrip = (id, amount) => { const o = obj(id); if (!o) return; o.grip = clampN(amount, 0, 100, 60) / 100; if (o.agg) o.agg.shape.material = { friction: grip(o), restitution: o.bounce }; };
+    A.setWeight = (id, kg) => {
+      const o = obj(id); if (!o) return;
+      o.mass = clampN(kg, 0.1, 1000, 1);
+      if (o.agg && o.phys === 'dynamic') {
+        const upright = o === control || o.kind === 'character';
+        o.agg.body.setMassProperties(upright ? { mass: o.mass, inertia: new B.Vector3(0, 0, 0) } : { mass: o.mass });
+      }
+    };
+    A.getSpeed = (id, axis) => {
+      const o = obj(id); if (!o || !o.agg || o.phys !== 'dynamic') return 0;
+      const v = o.agg.body.getLinearVelocity();
+      return round(axis === 'X' ? v.x : axis === 'Y' ? v.y : axis === 'Z' ? v.z : v.length());
+    };
+
+    // looks: speech bubbles and a line of text on the screen
+    A.say = (id, text) => { const o = obj(id); if (o) bubble(o, text); };
+    A.sayFor = async (id, text, secs) => {
+      const o = obj(id); if (!o) return;
+      const mine = bubble(o, text);
+      if (r.layout) return;
+      await after(clampN(secs, 0, 600, 2)); alive(r);
+      if (o.bubbleId === mine) clearBubble(o);
+    };
+    A.showText = text => onBanner(text == null ? '' : String(text).slice(0, 120));
+
+    // sound (silent in the edit view, so rebuilding the layout never beeps)
+    A.playSound = name => { if (sound && !r.layout) sound.play(String(name)); };
+    A.playSoundWait = async name => { if (!sound || r.layout) return; const secs = sound.play(String(name)); await after(secs); alive(r); };
+    A.playNote = async (note, secs) => { const d = clampN(secs, 0.05, 10, 0.5); if (!sound || r.layout) return; sound.note(String(note), d); await after(d); alive(r); };
+    A.setVolume = v => { if (sound) sound.volume(clampN(v, 0, 100, 80)); };
+    A.stopSounds = () => { if (sound) sound.stop(); };
+    A.speak = text => { if (sound && !r.layout) sound.speak(String(text)); };
+
+    // camera
+    A.cameraView = (id, view) => { const o = obj(id); if (!o || r.layout) return; follow = o; followView = ['behind', 'above', 'side'].includes(view) ? view : 'orbit'; };
+    A.cameraZoom = d => { camera.radius = clampN(d, 3, 80, 22); };
+    A.cameraLookAt = (x, y, z) => { follow = null; camera.setTarget(new B.Vector3(num(x, 0), num(y, 0), num(z, 0)), false, false, true); };
+    A.cameraFree = () => { follow = null; followView = 'orbit'; };
+
     A.push = (id, x, y, z) => {
       const o = obj(id); if (!o || !o.agg || o.phys !== 'dynamic') return;
       o.agg.body.applyImpulse(new B.Vector3(num(x, 0), num(y, 0), num(z, 0)), o.mesh.getAbsolutePosition());
@@ -490,7 +546,7 @@ export function createWorld(B, opts) {
       if (r.layout) return;
       control = o; o.speed = clampN(speed, 0, 50, 5); uprightBody(o); onPad(true);
     };
-    A.follow = id => { const o = obj(id); if (o && !r.layout) follow = o; };
+    A.follow = id => { const o = obj(id); if (o && !r.layout) { follow = o; followView = 'orbit'; } };
 
     // events (hats) — handlers are kept for this run only
     A.__start = fn => r.hats.start.push(fn);
@@ -572,6 +628,7 @@ export function createWorld(B, opts) {
     run = null;
     control = null; onPad(false);
     keysDown.clear(); padKeys.clear();
+    if (sound) sound.stop();
   }
 
   // ── each frame ──
@@ -627,7 +684,16 @@ export function createWorld(B, opts) {
     }
     if (follow && !follow.gone) {
       const p = follow.mesh.position, t = camera.target;
-      camera.setTarget(new B.Vector3(t.x + (p.x - t.x) * 0.12, t.y + (p.y + 1 - t.y) * 0.12, t.z + (p.z - t.z) * 0.12));
+      camera.setTarget(new B.Vector3(t.x + (p.x - t.x) * 0.12, t.y + (p.y + 1 - t.y) * 0.12, t.z + (p.z - t.z) * 0.12), false, false, true); // keep angle + distance
+      if (followView !== 'orbit') {
+        // swing round to sit behind / above / beside the object, following the way it faces
+        const yaw = follow.mesh.rotationQuaternion ? follow.mesh.rotationQuaternion.toEulerAngles().y : follow.mesh.rotation.y;
+        let wantA = Math.atan2(-Math.cos(yaw), -Math.sin(yaw)), wantB = 1.15;
+        if (followView === 'above') { wantB = 0.12; }
+        if (followView === 'side') wantA += Math.PI / 2;
+        let da = wantA - camera.alpha; da = Math.atan2(Math.sin(da), Math.cos(da));
+        camera.alpha += da * 0.08; camera.beta += (wantB - camera.beta) * 0.08;
+      }
     }
   }
   // a controlled character walks, runs, stands and floats by itself, until the program plays its own animation
@@ -639,6 +705,51 @@ export function createWorld(B, opts) {
     const want = air ? 'JumpIdle' : moving ? (speed >= 7 ? 'Run' : 'Walk') : 'Idle';
     if (want !== o.autoName) { o.autoName = want; playAnim(o, want, 'loop').catch(() => {}); }
   }
+  // speech bubbles: a picture of the words on a little card above the object that always faces the camera
+  let bubbleN = 0;
+  function clearBubble(o) {
+    if (o.bubble) { try { o.bubble.material.diffuseTexture.dispose(); o.bubble.material.dispose(); o.bubble.dispose(); } catch (e) { /* gone */ } }
+    o.bubble = null; o.bubbleText = '';
+  }
+  function bubble(o, text) {
+    clearBubble(o);
+    text = text == null ? '' : String(text).slice(0, 120);
+    o.bubbleText = text; o.bubbleId = ++bubbleN;
+    if (!text || headless || !B.DynamicTexture) return o.bubbleId;
+    const words = text.split(/\s+/), lines = [];
+    for (const w of words) { const last = lines[lines.length - 1]; if (last && (last + ' ' + w).length <= 22) lines[lines.length - 1] = last + ' ' + w; else lines.push(w.slice(0, 22)); }
+    lines.length = Math.min(lines.length, 5);
+    const W = 512, lineH = 64, H = lineH * lines.length + 48;
+    const tex = new B.DynamicTexture('bubble', { width: W, height: H }, scene, true);
+    tex.hasAlpha = true;
+    const c = tex.getContext();
+    c.clearRect(0, 0, W, H);
+    c.fillStyle = '#ffffff'; c.strokeStyle = '#222'; c.lineWidth = 6;
+    c.beginPath(); c.roundRect ? c.roundRect(4, 4, W - 8, H - 8, 34) : c.rect(4, 4, W - 8, H - 8); c.fill(); c.stroke();
+    c.fillStyle = '#111'; c.font = 'bold 46px Montserrat, Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    lines.forEach((l, i) => c.fillText(l, W / 2, 24 + lineH * (i + 0.5)));
+    tex.update();
+    const mat = new B.StandardMaterial('bubbleMat', scene);
+    mat.diffuseTexture = tex; mat.emissiveColor = new B.Color3(1, 1, 1); mat.disableLighting = true; mat.useAlphaFromDiffuseTexture = true; mat.backFaceCulling = false;
+    const pw = 2.4, ph = pw * H / W;
+    const plane = B.MeshBuilder.CreatePlane('bubble', { width: pw, height: ph }, scene);
+    plane.material = mat; plane.isPickable = false; plane.billboardMode = 7; // face the camera
+    plane.renderingGroupId = 1; // drawn after the world, so a bubble is never hidden
+    // not parented: a parent that keeps turning (a walking player) throws the billboard edge-on,
+    // so placeBubbles() puts it above its object every frame instead
+    o.bubble = plane; o.bubbleH = ph;
+    placeBubble(o);
+    return o.bubbleId;
+  }
+
+  function placeBubble(o) {
+    const b = o.bubble; if (!b) return;
+    const top = bounds(o).max.y;
+    b.position.set(o.mesh.position.x, top + 0.25 + o.bubbleH / 2, o.mesh.position.z);
+    b.setEnabled(o.mesh.isEnabled());
+  }
+  function placeBubbles() { for (const o of objs.values()) if (o.bubble && !o.gone) placeBubble(o); }
+
   function afterFrame() {
     for (const o of objs.values()) if (o._resync && o.agg) { o._resync = false; o.agg.body.disablePreStep = true; }
   }
@@ -652,6 +763,7 @@ export function createWorld(B, opts) {
 
   function frame(dt) {
     beforeFrame(dt);
+    placeBubbles();
     scene.render();
     afterFrame();
   }
@@ -757,6 +869,8 @@ export function createWorld(B, opts) {
     start: startLoop, pause: pauseLoop,
     resize: () => { try { engine.resize(); } catch (e) { /* hidden */ } },
     running: () => !!(run && !run.layout),
+    bubbleOf: id => { const o = get(id); return o ? o.bubbleText || '' : ''; },
+    camera_: () => ({ follow: follow ? follow.id : null, view: followView, radius: camera.radius }),
     objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled(), blockId: o.blockId })),
     _gizmo: () => gm, // for tests
     dispose: () => { stop(); pauseLoop(); scene.dispose(); engine.dispose(); }

@@ -521,7 +521,7 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   The recipe (2 Walking leg pairs = 1.0 m Sprint; back pair Opposite beat = 2.8 m; Lift higher on front + back feet =
   Hurdles 2.3 → 2.9 m) depends on the Walking leg defaults and the physics, so **re-record if those change**. The
   recorder (rec2.js + g1/g2/g3.js, Playwright) lives in the session scratchpad, not the repo; ask for it to be rebuilt.
-- **3D print** (4 Oct 2026, branch claude/critter-3d-print): `critter/critter-print.js` (no DOM; Node-testable) turns the
+- **3D print** (LIVE on main 4 Oct 2026, CJ_VERSION 2026.10.04): `critter/critter-print.js` (no DOM; Node-testable) turns the
   built pose into closed meshes in mm, Z up: one blob mesh per block (Z.blobGrid, collapsed poles), eye/pupil spheres, a
   ball "knuckle" at every joint so the print is one fused solid, scaled so the longest horizontal side = 80/120/160 mm
   (`SIZES`), optional 2.4 mm rounded base plate with the feet sunk 1.2 mm into it. Parts are grouped by colour.

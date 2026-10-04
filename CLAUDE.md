@@ -1,6 +1,8 @@
 # CodeJump — working notes for Claude
 
-**This repo IS the live site** (GitHub Pages → codejump.primarycodingleague.co.uk). Pushing `main`
+**This repo IS the live site** (GitHub Pages → codejump.co.uk, moving from codejump.primarycodingleague.co.uk in Oct 2026:
+the old address is served by repo primarycodingleague/codejump-old-address, a forwarding page that keeps path/query/hash and
+offers to carry device saves across via the "Moving house" ?cjmove=1 postMessage hand-over at the top of build-and-play.html). Pushing `main`
 = publishing to kids/schools, so only push finished, verified work. Never delete `CNAME`.
 
 ## Repo layout & workflow (machine-independent)

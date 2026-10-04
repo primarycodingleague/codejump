@@ -8,6 +8,39 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CodeJump">
 <title>CodeJump</title>
+<script>
+// Moving house (Oct 2026): CodeJump lives at codejump.co.uk. The old address (codejump.primarycodingleague.co.uk) is a
+// small forwarding page (repo primarycodingleague/codejump-old-address). When someone there presses "Bring my projects",
+// it opens this page with ?cjmove=1 and posts its localStorage across; we add anything we don't already have (device
+// saves are merged by id), then reload without the flag. Only that origin is trusted, and only when asked.
+(function(){
+  var OLD='https://codejump.primarycodingleague.co.uk', q=new URLSearchParams(location.search);
+  if(!q.has('cjmove'))return;
+  function clean(n){q.delete('cjmove');if(n!=null)q.set('cjmoved',n);var u=location.pathname+(q.toString()?'?'+q:'')+location.hash;location.replace(u);}
+  if(!window.opener){clean();return;}
+  var t=setTimeout(function(){clean();},10000);
+  window.addEventListener('message',function(e){
+    if(e.origin!==OLD||e.source!==window.opener||!e.data||e.data.t!=='cj-move'||typeof e.data.items!=='object')return;
+    clearTimeout(t);var items=e.data.items,n=0;
+    try{
+      Object.keys(items).forEach(function(k){
+        var v=items[k];if(typeof v!=='string')return;
+        if(k==='bap_saves'){
+          var mine=[],theirs=[];try{mine=JSON.parse(localStorage.getItem(k)||'[]');}catch(x){}try{theirs=JSON.parse(v);}catch(x){}
+          if(!Array.isArray(mine))mine=[];if(!Array.isArray(theirs))return;
+          var have={};mine.forEach(function(s){if(s&&s.id!=null)have[String(s.id)]=1;});
+          theirs.forEach(function(s){if(s&&s.id!=null&&!have[String(s.id)]){mine.push(s);n++;}});
+          mine.sort(function(a,b){return Number(b.id)-Number(a.id);});
+          localStorage.setItem(k,JSON.stringify(mine));
+        }else if(localStorage.getItem(k)===null){localStorage.setItem(k,v);}
+      });
+    }catch(x){}
+    try{window.opener.postMessage({t:'cj-move-done',saves:n},OLD);}catch(x){}
+    clean(n);
+  });
+  try{window.opener.postMessage({t:'cj-move-ready'},OLD);}catch(x){}
+})();
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTUyIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwNCIgcm9sZT0iaW1nIj4KICA8dGl0bGU+Q29kZUp1bXAgYnkgUHJpbWFyeSBDb2RpbmcgTGVhZ3VlPC90aXRsZT4KICA8ZGVzYz5SZXRybyBiYWRnZSBsb2dvIGZvciBDb2RlSnVtcCwgYSBnYW1lLWJhc2VkIGNvZGluZyB0b29sIGJ5IFByaW1hcnkgQ29kaW5nIExlYWd1ZTwvZGVzYz4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgQGltcG9ydCB1cmwoJ2h0dHBzOi8vZm9udHMuZ29vZ2xlYXBpcy5jb20vY3NzMj9mYW1pbHk9TW9udHNlcnJhdDp3Z2h0QDQwMDs3MDA7OTAwJmFtcDtkaXNwbGF5PXN3YXAnKTsKICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDwhLS0gQmFkZ2UgdG9wIC0tPgogIDxyZWN0IHg9IjY2IiB5PSI4IiAgd2lkdGg9IjY4IiBoZWlnaHQ9IjEwIiByeD0iMiIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjU0IiB5PSIxOSIgd2lkdGg9IjkyIiBoZWlnaHQ9IjEwIiAgICAgICAgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjQ2IiB5PSIzMCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSI4IiAgICAgICAgZmlsbD0iI2FlODUzZSIvPgogIDwhLS0gQ09ERSBsYWJlbCAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjI3IiBmb250LWZhbWlseT0iTW9udHNlcnJhdCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjExIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMyI+Q09ERTwvdGV4dD4KICA8IS0tIEpVTVAgLS0+CiAgPHRleHQgeD0iMTAwIiB5PSI4OCIgZm9udC1mYW1pbHk9Ik1vbnRzZXJyYXQsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1NiIgZmlsbD0iI2FlODUzZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgbGV0dGVyLXNwYWNpbmc9Ii0yIj5KVU1QPC90ZXh0PgogIDwhLS0gUGl4ZWwgcm93IC0tPgogIDxyZWN0IHg9IjgiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjI0IiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSI0MCIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPHJlY3QgeD0iNTYiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjcyIiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSI4OCIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPHJlY3QgeD0iMTA0IiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSIxMjAiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjEzNiIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPHJlY3QgeD0iMTUyIiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSIxNjgiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjE4NCIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPCEtLSBCeSBsaW5lIC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTIwIiBmb250LWZhbWlseT0iTW9udHNlcnJhdCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iNzAwIiBmb250LXNpemU9IjgiIGZpbGw9IiNhZTg1M2UiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGxldHRlci1zcGFjaW5nPSIxLjUiIG9wYWNpdHk9IjAuNjUiPkJZIFBSSU1BUlkgQ09ESU5HIExFQUdVRTwvdGV4dD4KICA8IS0tIFVSTCAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjEzNiIgZm9udC1mYW1pbHk9Ik1vbnRzZXJyYXQsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjQwMCIgZm9udC1zaXplPSI3LjUiIGZpbGw9IiNhZTg1M2UiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGxldHRlci1zcGFjaW5nPSIwLjUiIG9wYWNpdHk9IjAuNDUiPnByaW1hcnljb2RpbmdsZWFndWUuY28udWs8L3RleHQ+Cjwvc3ZnPg==">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2287,7 +2320,7 @@ function paintSky(tx){
 // Set this to the public address where CodeJump lives, so that "Copy Link"
 // always produces a branded link even when the app is embedded (e.g. inside
 // a Wix iframe). Leave as '' to use the page's own address automatically.
-const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
+const CANONICAL_URL='https://codejump.co.uk/';
 // Marker the self-contained export injects so a baked file knows its level.
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
@@ -2496,7 +2529,7 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   document.getElementById('pt-modal').classList.remove('hide');
 });
 // Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
-function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https://codejump.primarycodingleague.co.uk/home/')+f;}
+function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https://codejump.co.uk/home/')+f;}
 document.querySelectorAll('#home img[data-home]').forEach(im=>{im.src=homeAsset(im.dataset.home);im.loading='lazy';im.decoding='async';});
 document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendingPt=b.dataset.start;document.getElementById('ks-modal').classList.remove('hide');});
 {const t3=document.getElementById('h-tile-3d');if(t3&&!THREED_ON)t3.style.display='none';}
@@ -2718,7 +2751,7 @@ function exitTurtleUI(){
 // ═══════════════════════════════════════════════════════════════════════
 let critterData=null,critterApp=null,_critterLoading=null,_critterQuiet=false;
 // Where the engine lives: next to this page, or the live site when running from a downloaded .html file.
-function critterBase(){return /^https?:/.test(location.protocol)?new URL('critter/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.primarycodingleague.co.uk/critter/';}
+function critterBase(){return /^https?:/.test(location.protocol)?new URL('critter/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/critter/';}
 function loadCritterEngine(){
   if(!_critterLoading)_critterLoading=import(critterBase()+'critter-app.js').catch(e=>{_critterLoading=null;throw e;});
   return _critterLoading;}
@@ -8561,6 +8594,10 @@ if(_shareCode&&typeof CLOUD_URL!=='undefined'&&CLOUD_URL){
     showHome();
   }
 }
+// Arrived from the old address with projects carried across (see "Moving house" at the top).
+(function(){const q=new URLSearchParams(location.search);if(!q.has('cjmoved'))return;const n=Number(q.get('cjmoved'))||0;q.delete('cjmoved');
+  try{history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);}catch(e){}
+  setTimeout(()=>toast('Welcome to codejump.co.uk! '+(n?n+' saved project'+(n===1?'':'s')+' came with you.':'Your settings came with you.'),'#10b981'),1200);})();
 resize();
 loop();
 

@@ -514,7 +514,7 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   mount option `cloud`: me/api/wsUrl/saves/loadSave/signIn), `withCritterLab(fn)`, roster button `#cr-showdown`, and
   `cloudCollabList` routes Showdown rooms to `critterApp.openShowdown`. Tested end to end against a local `wrangler dev`
   of codejump-cloud (scratch copy with CLOUD_URL pointed at it).
-- **Showdown invite pop-up (5 Oct 2026, on branch `claude/vibrant-cori-tho25y`; needs cloud worker v14):** each signed-in PUPIL
+- **Showdown invite pop-up (LIVE 5 Oct 2026; needs cloud worker v14):** each signed-in PUPIL
   keeps a small WebSocket to their own **inbox** (`inboxSync` from `updateAccountChips` → `wss …/inbox?token=`, 45 s `ping`,
   reconnects with back-off; teachers don't open one). Worker v14: `/inbox` routes to the `Room` DO `idFromName('inbox:'+uid)`
   in inbox mode (hibernating sockets — idle pupils cost nothing; `ping`/`pong` auto-response); `/collab/invite` on a room titled
@@ -547,9 +547,9 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
 - **Starters** (in critter-core.js STARTERS, tuned headlessly): Scuttler (sprawling IK-path walker, completes a full Lap),
   Crab (fast on the flat, can't steer), Wriggler, Hopper (~1.3 m High Jump).
 
-## 3D World project type — `projectType==='3d'` — Waves 1–4 DONE on branch `claude/vibrant-cori-tho25y` (Flock XR-style)
-**`THREED_ON=true` on the branch (CJ_VERSION 2026.10.04.2 + What's New written) but NOT merged to `main`/live yet: waiting on
-Flip Computing about the animation clips' source (see Wave 2 note).** Merging the branch = launching 3D World. Oct 2026 the user chose "option 2": rebuild 3D World CodeJump's way as a lazy-loaded
+## 3D World project type — `projectType==='3d'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.05; built on branch `claude/vibrant-cori-tho25y`, Flock XR-style)
+**Charlie launched it on 5 Oct 2026 before Flip Computing had answered about the animation clips' source (see Wave 2 note) — if
+they turn out to be Mixamo library motions, swap them for clips we may redistribute.** Oct 2026 the user chose "option 2": rebuild 3D World CodeJump's way as a lazy-loaded
 module (like Critter Lab), modelled on **Flock XR** (`flipcomputing/flock`, MIT code; "Flock XR" + the purple bird are
 registered trademarks — never use them in the UI). The old inline `td3*`/`td_*` prototype (CDN Babylon, hand-rolled AABB
 physics, shared code panel) was **deleted** in Wave 1; it never shipped, so old `blocklyXml`-only 3D payloads just open the

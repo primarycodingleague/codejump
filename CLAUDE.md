@@ -1066,7 +1066,7 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
 - After changes, run a quick JS syntax check (extract `<script>` blocks, `node --check`).
 - Always sync the deploy copy at the end.
 
-## New address: codejump.co.uk (Oct 2026)
+## New address: codejump.co.uk (LIVE since 5 Oct 2026, CJ_VERSION 2026.10.05.2; worker v15; Charlie confirmed both addresses work)
 - Domain bought at GoDaddy; DNS there points the apex at GitHub Pages (A 185.199.108–111.153, AAAA 2606:50c0:8000–8003::153) and
   `www` CNAME → primarycodingleague.github.io. `CNAME` = `codejump.co.uk`.
 - `CANONICAL_URL` (share links) = `https://codejump.co.uk/`; the downloaded-file fallbacks in `homeAsset`/`critterBase`/`worldBase`

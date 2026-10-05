@@ -104,6 +104,7 @@ export function mount(root, host) {
   const Blockly = window.Blockly;
   const touchy = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
+  const sound = createSound();
   let ws = null, world = null, gen = null, alive = true, quiet = false, pendingProject = host.project || null, padWanted = false;
   let changeTimer = 0, editTimer = 0, selBlock = null, tool = 'move', staleWarned = false;
   const GIZMO = 'w3gizmo', LOAD = 'w3load', REMOTE = 'w3remote';
@@ -209,6 +210,7 @@ export function mount(root, host) {
     $('w3Tip').textContent = playing ? 'Drag to look around · scroll to zoom' : 'Click a thing to move it · drag empty space to look around';
   }
   async function run() {
+    sound.unlock(); // iPads only allow speech and sound that start from a tap, so unlock them inside the tap on Run
     if (!world || !ws) return;
     clearTimeout(editTimer);
     const code = compile(); if (code == null) return;
@@ -364,7 +366,7 @@ export function mount(root, host) {
     try { havok = await B.HavokPhysics(); } catch (e) { toast('Physics couldn’t start, so things won’t fall or bump.'); }
     if (!alive) return;
     world = createWorld(B, { canvas: $('w3Canvas'), havok, loadAsset, onError: m => status(m, 'bad'), onPad: setPad, onPick, onEdit, gizmoScale: touchy ? 1.9 : 1.3,
-      sound: createSound(), onBanner: t => { const el = $('w3Banner'); el.textContent = t; el.hidden = !t; },
+      sound: sound, onBanner: t => { const el = $('w3Banner'); el.textContent = t; el.hidden = !t; },
       onLoading: n => {
         if (n > 0) { status('Loading models…'); return; }
         if ($('w3Status').textContent === 'Loading models…') { if (world && world.running()) status('Running', 'ok'); else status(EDIT_TIP); }

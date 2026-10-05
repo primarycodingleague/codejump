@@ -60,16 +60,25 @@ function rbTheme(Blockly) {
 }
 let defined = false;
 
-// the browser's own speech (no account, nothing sent anywhere by us); null when there is none
+// the browser's own speech (no account, nothing sent anywhere by us); null when there is none.
+// iPads/iPhones only let a page speak after speech has been started straight from a tap, so unlockSpeech() is called
+// from the Run button and from taps on the robot; and they can drop a sentence that is spoken in the same moment as
+// cancel(), so a new sentence waits a moment after cancelling the old one.
+let speechUnlocked = false;
+export function unlockSpeech() {
+  const S = window.speechSynthesis; if (speechUnlocked || !S || typeof SpeechSynthesisUtterance === 'undefined') return;
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; S.resume(); S.speak(u); speechUnlocked = true; } catch (e) { /* no speech */ }
+}
 function speak(text, v, onEnd) {
   const S = window.speechSynthesis; if (!S || typeof SpeechSynthesisUtterance === 'undefined') return null;
   try {
-    S.cancel();
     const u = new SpeechSynthesisUtterance(text);
     const vs = S.getVoices(); const en = vs.find(x => /en-GB/i.test(x.lang)) || vs.find(x => /^en/i.test(x.lang)); if (en) u.voice = en;
-    u.pitch = v.pitch; u.rate = v.rate; u.onend = u.onerror = () => onEnd();
-    S.speak(u);
-    return { cancel() { u.onend = u.onerror = null; S.cancel(); } };
+    u.lang = en ? en.lang : 'en-GB'; u.pitch = v.pitch; u.rate = v.rate; u.onend = u.onerror = () => onEnd();
+    let gone = false, timer = 0;
+    const go = () => { timer = 0; if (!gone) { try { S.resume(); S.speak(u); } catch (e) { onEnd(); } } };
+    if (S.speaking || S.pending) { S.cancel(); timer = setTimeout(go, 120); } else go();
+    return { cancel() { gone = true; clearTimeout(timer); u.onend = u.onerror = null; if (S.speaking || S.pending) S.cancel(); } };
   } catch (e) { return null; }
 }
 const KEYNAME = { ' ': 'space', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
@@ -116,7 +125,7 @@ export function mount(root, host) {
   function bubble(text) { const b = $('rbBubble'); b.textContent = text || ''; b.hidden = !text; }
   function ask(q, cb) { askCb = cb; $('rbAskQ').textContent = q; $('rbAnswer').value = ''; $('rbAsk').hidden = false; setTimeout(() => $('rbAnswer').focus(), 30); }
   function cancelAsk() { if (askCb) { const cb = askCb; askCb = null; cb(''); } $('rbAsk').hidden = true; }
-  $('rbAsk').addEventListener('submit', e => { e.preventDefault(); const cb = askCb; askCb = null; $('rbAsk').hidden = true; if (cb) cb($('rbAnswer').value); $('rbCanvas').focus(); });
+  $('rbAsk').addEventListener('submit', e => { e.preventDefault(); unlockSpeech(); const cb = askCb; askCb = null; $('rbAsk').hidden = true; if (cb) cb($('rbAnswer').value); $('rbCanvas').focus(); });
 
   function tick(now) {
     raf = requestAnimationFrame(tick);
@@ -126,6 +135,7 @@ export function mount(root, host) {
     $('rbRun').classList.toggle('on', !!on);
   }
   function run() {
+    unlockSpeech(); // must happen inside the tap on Run (iPad)
     if (!ws || !view) return;
     cancelAsk(); view.reset(true); restyle();
     runner.start(ws);
@@ -169,7 +179,7 @@ export function mount(root, host) {
       if (runner && runner.running()) status('You changed your blocks: press Run to try them.');
     });
     const OrbitControls = THREE.OrbitControls || null;
-    view = createRobotView(THREE, $('rbCanvas'), { controls: OrbitControls, name: proj.name || DEF.name, onPick: part => { if (runner) runner.tap(part); } });
+    view = createRobotView(THREE, $('rbCanvas'), { controls: OrbitControls, name: proj.name || DEF.name, onPick: part => { unlockSpeech(); if (runner) runner.tap(part); } });
     runner = createRunner(view, {
       speak, bubble, ask, cancelAsk, restyle,
       keyDown: k => keys.has(k), mouse: () => mouse,

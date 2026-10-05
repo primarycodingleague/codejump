@@ -38,7 +38,7 @@ export function soundLength(name) {
 }
 
 export function createSound() {
-  let ctx = null, master = null, vol = 0.8, noiseBuf = null;
+  let ctx = null, master = null, vol = 0.8, noiseBuf = null, unlocked = false;
   const live = new Set();
   function audio() {
     if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return ctx; }
@@ -79,7 +79,15 @@ export function createSound() {
       try {
         if (typeof speechSynthesis === 'undefined' || !text) return;
         const u = new SpeechSynthesisUtterance(String(text).slice(0, 200)); u.volume = vol; u.lang = 'en-GB';
-        speechSynthesis.speak(u);
+        speechSynthesis.resume(); speechSynthesis.speak(u);
+      } catch (e) { /* no speech on this device */ }
+    },
+    // iPads/iPhones only let a page speak after speech has been started straight from a tap: call this from Run
+    unlock() {
+      try { audio(); } catch (e) { /* no Web Audio */ }
+      try {
+        if (unlocked || typeof speechSynthesis === 'undefined') return;
+        const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.resume(); speechSynthesis.speak(u); unlocked = true;
       } catch (e) { /* no speech on this device */ }
     },
     stop() {

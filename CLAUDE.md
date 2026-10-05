@@ -201,6 +201,39 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
+## AI Lab project type — `projectType==='ai'` — built 5–6 Oct 2026 on branch `claude/vibrant-cori-tho25y` (CJ_VERSION 2026.10.06), NOT yet on main
+Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate
+safeguarding choice; nothing leaves the device except inside their saved/shared project), train it, test it, then code with it.
+- **Brain (`ai/ai-model.js`, no DOM, Node-testable):** a drawing = list of strokes, each a flat `[x,y,…]` in a 256 box (ints). `rasterize`
+  fits the drawing's bounding box into a 20×20 grid (`G`), thick anti-aliased lines + light blur. Neural network 400 → 32 ReLU → K softmax,
+  Adam, seeded RNG (`rng`, mulberry32) so **the same examples always give the same brain** — projects save only the examples (+ `trained`
+  flag) and the app retrains on open. Practice copies: each example + 5 turned/stretched/wobbled copies, 14 rounds. `trainer(labels)` is a
+  generator (yields `{phase,done,acc}` per round so the UI shows a progress bar + chart): if every label has ≥4 drawings it first trains a
+  "check" brain on 3 in 4 and tests it on the held-out 1 in 4 (`brain.check={total,right,wrong:[{li,ei,guess}]}`), then the final brain on
+  all. `guess(brain,d)` → `{label,index,conf,probs}` (0–100); `similar(brain,d,n)` = nearest examples by hidden-layer cosine ("looks most
+  like"). `dataKey(labels)` = fingerprint to know when the brain is stale (names excluded: renaming needs no retrain). Limits: 2–6 labels,
+  ≥3 (`MIN_EXAMPLES`) to train, ≤30 each. `cleanLabels`/`cleanDrawing` sanitise saved data; `simplifyStroke` (RDP — **handles strokes that end
+  where they began**, which once collapsed closed shapes to 2 points). `sampleLabels('shapes'|'faces')` = code-drawn ready-made sets.
+  Measured: ~0.4 s to train Shapes ×10; 100% on unseen shapes, ~94% happy/sad.
+- **Blocks (`ai/ai-blocks.js`, `ai_*`):** Events (when Run, when the AI makes a guess, when the AI thinks it's [label], messages) · AI (AI's
+  guess, how sure (%), AI thinks it's [label]?, how sure it's [label], a random label, wait for a drawing, clear the drawing) · Screen (show,
+  show for secs, say out loud (waits), pad colour) · Sound (world-sound.js SOUNDS) · Score · Control · Operators · Variables. Label
+  dropdowns are DYNAMIC (`setLabelNames`/`labelOptions`); the app adds every name the saved blocks use so Blockly never resets one.
+  **GOTCHA:** `FieldDropdown.setValue` validates against CACHED options — call `getOptions(false)` first (done when a rename updates blocks).
+  `starterProgram()` = "Guess my drawing".
+- **Runner (`ai/ai-runner.js`):** generator fibers like Robot Lab; io = say/speak/sound/colour/score/clear/guess/labels; `guessed()` fires
+  guess + matching "thinks" hats and wakes "wait for a drawing".
+- **App (`ai/ai-app.js` + `ai-app.css`, scoped `.ailab`, ids `al*`):** tabs 1 Teach (label cards with thumbnails, rename, delete, + New
+  label, Ready-made examples, drawing pad + Add) · 2 Train & test (Train, progress, chart "check"/"final", fair-check result + the drawings it
+  got wrong; test pad with a bar per label + "looks most like") · 3 Code it (Blockly + Run/Stop, bubble, pad (colour, score), Clear/Done; a
+  drawing also counts as finished 1.3 s after the last stroke). Project `{labels:[{name,color,ex}], blocks, trained}`. A trained project
+  reopens on Code it and silently retrains. Test hooks: `_brain/_labels/_ws/_runner/_training/_pads/_testGuess/_playGuess`.
+- **Host glue (mirrors Robot Lab):** `aiBase/loadAiLab/aiCurrent/startNewAI/enterAIUI/exitAIUI`, `body.ai-mode`, `#ai-ui`, payload `ai`,
+  `#pt-modal` tile `data-pt="ai"` (KS1 hidden; the chooser is now a 4-column grid), home tile `data-start="ai"` (`home/ai.jpg`; the tiles
+  grid is 4 per row ≥1180px), icon `#i-ai`, `AI_HELP`, Teacher Guide "AI Lab" section, thumbnail badge, `LS_TYPE.ai`. **No live
+  collaboration** (Share hides Collaborate). Test: `tests/ai.test.mjs` (brain in Node + the app end to end).
+- **Ideas not done yet:** an AI lesson + slides (bias talk is in AI_HELP Ideas), sounds as a second input type (needs mic consent).
+
 ## Robot Lab project type — `projectType==='robot'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.05.4; cloud worker v16 live, deployed automatically by codejump-cloud's GitHub Actions)
 **Replaces the old Stage "Ohbot" extension, which was REMOVED (5 Oct 2026, Charlie: it looked too much like Ohbot; robot coding
 should be its own thing).** The Ohbot costume/blocks/`paintOhbot`/`OHBOT_*`/`ohbot/` folder are all gone; old Stage saves with an

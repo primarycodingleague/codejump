@@ -91,6 +91,7 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .hm-h2.display{font-family:var(--display);font-weight:400;font-size:clamp(36px,4.5vw,56px);line-height:1.05;text-transform:uppercase;color:#000;margin:0;}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
 .hm-grid.hm-tiles6{grid-template-columns:repeat(3,1fr);}
+@media (min-width:1180px){.hm-grid.hm-tiles6{grid-template-columns:repeat(4,1fr);}}
 @media (max-width:980px){.hm-grid.hm-tiles6{grid-template-columns:repeat(2,1fr);}}
 @media (max-width:520px){.hm-grid.hm-tiles6{grid-template-columns:1fr;}}
 .hm-tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;border:2px solid #393939;border-radius:16px;overflow:hidden;background:#1a1a1a;color:#fff;transition:transform .2s,border-color .2s;}
@@ -318,7 +319,7 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 body.ks1-mode #lesson-guide .lg-d{font-size:17px;}
 /* where the card starts (pupils can drag it anywhere): over empty space, not the controls a lesson asks them to use */
 body.stage-mode:not(.ks1-mode) #lesson-guide{right:auto;left:136px;}
-body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode):not(.robot-mode) #lesson-guide{bottom:auto;top:104px;}
+body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode):not(.robot-mode):not(.ai-mode) #lesson-guide{bottom:auto;top:104px;}
 @media (max-width:820px){body.stage-mode:not(.ks1-mode) #lesson-guide{left:16px;}}
 /* ── Lesson slides: the presenter (#ls-present). Slides are 16:9 and sized in cqw (1cqw = 1% of the slide's width),
    so the same markup fits the board, the Presenter view window and a printed/PDF page. ── */
@@ -729,6 +730,20 @@ body.robot-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-sta
 body.robot-mode #robot-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #robot-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
 @media(max-width:820px){body.robot-mode #cwrap{overflow:auto;}body.robot-mode #robot-ui{min-height:700px;}}
+/* ── AI Lab (ai/ai-app.js + ai-app.css, lazy-loaded) ── */
+#ai-ui{display:none;}
+body.ai-mode #btn-build,body.ai-mode #btn-play,body.ai-mode #btn-code,
+body.ai-mode #t-paint,body.ai-mode #t-fill,body.ai-mode #t-erase,body.ai-mode #t-undo,
+body.ai-mode #t-redo,body.ai-mode #t-clear,body.ai-mode #t-testpage,body.ai-mode #theme-sel,
+body.ai-mode #btn-design,body.ai-mode #btn-read,body.ai-mode #palette,body.ai-mode #pages,
+body.ai-mode #play-mute,body.ai-mode #play-sfx,body.ai-mode #hint,body.ai-mode #touch-controls,
+body.ai-mode .cp-run-bar,body.ai-mode #ks3-editor,body.ai-mode #code-panel,body.ai-mode #turtle-ui,body.ai-mode #critter-ui,
+body.ai-mode #world-ui,body.ai-mode #robot-ui,body.ai-mode #stage-right,body.ai-mode #gc,body.ai-mode .stage-only,
+body.ai-mode #t-cave,body.ai-mode #t-mute,body.ai-mode #t-hand,body.ai-mode #rotate-hint{display:none !important;}
+body.ai-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
+body.ai-mode #ai-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
+#ai-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
+@media(max-width:820px){body.ai-mode #cwrap{overflow:auto;}body.ai-mode #ai-ui{min-height:900px;}}
 body.threed-mode #btn-build,body.threed-mode #btn-play,body.threed-mode #btn-code,
 body.threed-mode #t-paint,body.threed-mode #t-fill,body.threed-mode #t-erase,body.threed-mode #t-undo,
 body.threed-mode #t-redo,body.threed-mode #t-clear,body.threed-mode #t-testpage,body.threed-mode #theme-sel,
@@ -967,6 +982,9 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .ks-opt .ks-emoji{font-size:46px;line-height:1;}
 .ks-opt b{font-family:var(--font);font-size:18px;font-weight:800;letter-spacing:.5px;}
 .ks-opt small{font-size:12px;opacity:.7;line-height:1.4;}
+#pt-modal .ks-box{max-width:860px;max-height:94vh;overflow:auto;}
+#pt-modal .ks-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+#pt-modal .ks-opt{min-width:0;padding:18px 12px;}
 .ks-cancel{margin-top:18px;background:transparent;border:1px solid var(--gray);color:var(--white);border-radius:6px;padding:8px 18px;cursor:pointer;font-family:var(--font);font-size:13px;}
 .ks-cancel:hover{border-color:var(--white);}
 #design-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;display:flex;align-items:center;justify-content:center;}
@@ -1548,6 +1566,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <symbol id="i-flower" viewBox="0 0 24 24"><g fill="#ec5fa0"><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/></g><circle cx="12" cy="12" r="3" fill="#ffd24a"/></symbol>
   <symbol id="i-bush" viewBox="0 0 24 24"><circle cx="8" cy="14" r="5" fill="#3b6d11"/><circle cx="16" cy="13" r="5.5" fill="#4e8a1a"/><circle cx="12" cy="16" r="5" fill="#639922"/></symbol>
   <symbol id="i-player" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2" fill="#f0b97a"/><rect x="8" y="11" width="8" height="9" rx="3" fill="#3b8eea"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24"><rect x="2.5" y="4" width="15" height="15" rx="3" fill="#fff" stroke="#0fa3a3" stroke-width="1.6"/><path d="M5.5 14.5c1.5-4 3-5 4.5-2s3 1.5 4.5-3" fill="none" stroke="#1b1b1f" stroke-width="1.6" stroke-linecap="round"/><path d="M19 1.5l1.1 2.9L23 5.5l-2.9 1.1L19 9.5l-1.1-2.9L15 5.5l2.9-1.1z" fill="#f2b705"/><circle cx="19.5" cy="17.5" r="3.5" fill="#0fa3a3"/><path d="M18 17.6l1.1 1.1 2-2.2" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-robot" viewBox="0 0 24 24"><circle cx="12" cy="2.6" r="1.3" fill="#ff5a3c"/><rect x="11.4" y="3.4" width="1.2" height="2.4" fill="#5d636e"/><rect x="4.5" y="5.6" width="15" height="10.4" rx="5.2" fill="#eef2f6" stroke="#2b6fd8" stroke-width="1.2"/><rect x="6.6" y="8" width="10.8" height="4" rx="2" fill="#141821"/><circle cx="9.4" cy="10" r="1.2" fill="#35d0ff"/><circle cx="14.6" cy="10" r="1.2" fill="#35d0ff"/><rect x="10.2" y="13.2" width="3.6" height="0.9" rx=".45" fill="#35d0ff"/><path d="M5 22c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6z" fill="#2b6fd8"/><circle cx="12" cy="19.6" r="1.1" fill="#35d0ff"/></symbol>
   <symbol id="i-critter" viewBox="0 0 24 24"><path d="M6.5 15.5l-2.5 5M10 16l-1 5M14 16l1 5M17.5 15.5l2.5 5" stroke="#f59f18" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="9.5" ry="6" fill="#38b6ff"/><circle cx="15.5" cy="10" r="2.3" fill="#fff"/><circle cx="19" cy="10.3" r="1.9" fill="#fff"/><circle cx="16.2" cy="10.2" r="1.1" fill="#111"/><circle cx="19.5" cy="10.4" r=".9" fill="#111"/></symbol>
   <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5 3.5 16.7V7.3z" fill="#7f77dd"/><path d="M3.7 7.2L12 12l8.3-4.8M12 12v9.3" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M12 2.5L3.5 7.3 12 12l8.5-4.7z" fill="#a59bf0"/></symbol>
@@ -1607,6 +1626,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         <button class="hm-tile" data-start="stage"><img data-home="stage.jpg" alt=""><span class="hm-tile-b"><b>Stage</b><span>Make sprites move, talk and react with snap-together blocks.</span></span></button>
         <button class="hm-tile" data-start="turtle"><img data-home="turtle.jpg" alt=""><span class="hm-tile-b"><b>Turtle</b><span>Type Logo commands and watch the turtle draw. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="3d" id="h-tile-3d"><img data-home="world3d.jpg" alt=""><span class="hm-tile-b"><b>3D World <span class="hm-badge">New</span></b><span>Build a 3D world with characters, then play it. KS2 and KS3.</span></span></button>
+        <button class="hm-tile hot" data-start="ai"><img data-home="ai.jpg" alt=""><span class="hm-tile-b"><b>AI Lab <span class="hm-badge">New</span></b><span>Teach a computer to recognise your drawings, then code a game with it. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="robot"><img data-home="robot.jpg" alt=""><span class="hm-tile-b"><b>Robot Lab <span class="hm-badge">New</span></b><span>Code a talking 3D robot: faces, moves, lights and voice. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="critter"><img data-home="critter.jpg" alt=""><span class="hm-tile-b"><b>Critter Lab <span class="hm-badge">New</span></b><span>3D creatures and real physics. KS2 and KS3.</span></span></button>
       </div>
@@ -2002,6 +2022,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle</b><small>Type Logo code to<br>draw pictures</small></button>
       <button class="ks-opt" data-pt="critter"><span class="ks-emoji"><svg class="ic"><use href="#i-critter"></use></svg></span><b>Critter Lab</b><small>Build a 3D creature<br>and race it — NEW!</small></button>
       <button class="ks-opt" data-pt="3d"><span class="ks-emoji"><svg class="ic"><use href="#i-cube"></use></svg></span><b>3D World</b><small>Build a 3D world<br>and play it — NEW!</small></button>
+      <button class="ks-opt" data-pt="ai"><span class="ks-emoji"><svg class="ic"><use href="#i-ai"></use></svg></span><b>AI Lab</b><small>Teach a computer to<br>recognise drawings — NEW!</small></button>
       <button class="ks-opt" data-pt="robot"><span class="ks-emoji"><svg class="ic"><use href="#i-robot"></use></svg></span><b>Robot Lab</b><small>Code a talking robot<br>with blocks — NEW!</small></button>
     </div>
     <button class="ks-cancel" id="pt-cancel">Back</button>
@@ -2168,6 +2189,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       </div>
       <div id="world-ui"></div>
       <div id="robot-ui"></div>
+      <div id="ai-ui"></div>
  <button id="play-mute" title="Music on / off" aria-label="Toggle music"></button>
  <button id="play-sfx" title="Sound effects on / off" aria-label="Toggle sound effects"></button>
  <div id="hint" class="hide"> Move &nbsp;|&nbsp; Space Jump &nbsp;|&nbsp; Climb</div>
@@ -2628,7 +2650,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 function showHome(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.getElementById('home').classList.remove('hide');
@@ -2659,7 +2681,7 @@ function renderHomeSaves(){
     const item=document.createElement('div');item.className='save-item';
     const thumbCanvas=document.createElement('canvas');
     thumbCanvas.className='save-thumb';thumbCanvas.width=80;thumbCanvas.height=48;
-    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
+    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot'],ai:['#0fa3a3','AI Lab']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
     else drawMiniThumb(thumbCanvas,save.grid,save.theme);
     const info=document.createElement('div');info.className='save-info';
     const nm=document.createElement('div');nm.className='save-name';nm.textContent=save.name||'';
@@ -2738,12 +2760,13 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   const ttOpt=document.querySelector('#pt-modal .ks-opt[data-pt="turtle"]');if(ttOpt)ttOpt.style.display=(_pendingKs==='ks1')?'none':''; // Turtle (typed Logo) is KS2+ only
   const zkOpt=document.querySelector('#pt-modal .ks-opt[data-pt="critter"]');if(zkOpt)zkOpt.style.display=(_pendingKs==='ks1')?'none':''; // Critter (3D creatures + physics) is KS2+ only
   const rbOpt=document.querySelector('#pt-modal .ks-opt[data-pt="robot"]');if(rbOpt)rbOpt.style.display=(_pendingKs==='ks1')?'none':''; // Robot Lab is KS2+ only
+  const aiOpt=document.querySelector('#pt-modal .ks-opt[data-pt="ai"]');if(aiOpt)aiOpt.style.display=(_pendingKs==='ks1')?'none':''; // AI Lab is KS2+ only
   const tdOpt=document.querySelector('#pt-modal .ks-opt[data-pt="3d"]');if(tdOpt)tdOpt.style.display=(_pendingKs==='ks1'||!THREED_ON)?'none':''; // 3D is KS2+ only, behind the THREED_ON flag
   // came from a home-page tile: go straight into that project if it suits this key stage, else let them pick
   const want=_pendingPt;_pendingPt=null;
   const wantOpt=want&&document.querySelector('#pt-modal .ks-opt[data-pt="'+want+'"]');
   if(wantOpt&&wantOpt.style.display!=='none'){wantOpt.click();return;}
-  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='robot'?'Robot Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
+  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='robot'?'Robot Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='ai'?'AI Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
   document.getElementById('pt-modal').classList.remove('hide');
 });
 // Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
@@ -2776,6 +2799,7 @@ document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   else if(b.dataset.pt==='3d')startNew3D(_pendingKs);
   else if(b.dataset.pt==='critter')startNewCritter(_pendingKs);
   else if(b.dataset.pt==='robot')startNewRobot(_pendingKs);
+  else if(b.dataset.pt==='ai')startNewAI(_pendingKs);
   else startNewProject(_pendingKs);
 });
 function startNewProject(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='platformer';
@@ -2854,7 +2878,7 @@ function startNewStage(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
 function enterStageUI(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
   document.body.classList.remove('ks1-mode'); // coming from KS1? drop its mode + hide its UI
@@ -2954,7 +2978,7 @@ function turtleClearDrawing(){if(turtleDrawCtx)turtleDrawCtx.clearRect(0,0,TW,TH
 function enterTurtleUI(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');
   document.getElementById('app').classList.remove('hide');
@@ -2998,7 +3022,7 @@ function startNewCritter(ks){clearDirty();leaveLiveRoom();lessonActive=null;proj
 function enterCritterUI(){
   leaveLiveRoom(); // the Critter Lab has no live collaboration (Showdowns use their own connection)
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
@@ -3104,7 +3128,7 @@ async function withCritterLab(fn){
 let lessonsMod=null,_lessonsLoading=null,lessonActive=null,_lsFilter='all',_lsCurrent=null;
 function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lessons/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/lessons/';}
 function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
-const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab'};
+const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab'};
 function lsEsc(x){return cesc(x==null?'':x);}
 async function openLessons(){
   const m=document.getElementById('lessons-modal');m.classList.remove('hide');
@@ -3380,7 +3404,7 @@ function startNew3D(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectTy
   worldData=null;_worldLoad=true;hideHome();enter3DUI(); // null = the starter program
 }
 function enter3DUI(){
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
@@ -3420,6 +3444,7 @@ function startNewRobot(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
   robotData=null;_robotLoad=true;hideHome();enterRobotUI(); // null = the starter program
 }
 function enterRobotUI(){
+  if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
@@ -3443,6 +3468,49 @@ function exitRobotUI(){
   if(!document.body.classList.contains('robot-mode'))return;
   if(robotApp){robotData=robotApp.getProject();robotApp.pause();}
   document.body.classList.remove('robot-mode');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AI LAB — teach a computer to recognise drawings, train it, test it, then code with it (projectType==='ai').
+// ai/ai-model.js is the brain (a small neural network trained on the pupil's own drawings, in the browser — no camera,
+// nothing sent anywhere), ai-app.js the three steps (Teach / Train & test / Code it). Lazy-loaded like the Robot Lab.
+// Payload field ai = {labels:[{name,color,ex:[drawing]}], blocks, trained}. No live collaboration (Share hides it).
+// ═══════════════════════════════════════════════════════════════════════
+let aiData=null,aiApp=null,_aiLoading=null,_aiQuiet=false,_aiLoad=false;
+function aiBase(){return /^https?:/.test(location.protocol)?new URL('ai/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/ai/';}
+function loadAiLab(){if(!_aiLoading)_aiLoading=import(aiBase()+'ai-app.js').catch(e=>{_aiLoading=null;throw e;});return _aiLoading;}
+function aiCurrent(){return aiApp?aiApp.getProject():aiData;}
+function startNewAI(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='ai';setKeyStage(ks);
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
+  document.getElementById('pt-modal').classList.add('hide');
+  aiData=null;_aiLoad=true;hideHome();enterAIUI(); // null = two empty labels and the starter program
+}
+function enterAIUI(){
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
+  document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
+  document.getElementById('app').classList.remove('hide');document.getElementById('home').classList.add('hide');
+  const already=document.body.classList.contains('ai-mode');
+  mode='code';document.body.classList.add('ai-mode');
+  const _tut=document.getElementById('tutorial');if(_tut)_tut.classList.add('hide');
+  const holder=document.getElementById('ai-ui'),load=_aiLoad||!already;_aiLoad=false;
+  if(aiApp){if(load){_aiQuiet=true;try{aiApp.setProject(aiData);}finally{_aiQuiet=false;}}else aiApp.resume();return;}
+  if(_aiLoading&&holder.firstChild)return;
+  holder.innerHTML='<div id="ai-loading">Getting the AI Lab ready…</div>';
+  loadAiLab().then(mod=>{
+    if(aiApp){_aiQuiet=true;try{aiApp.setProject(aiData);}finally{_aiQuiet=false;}return;}
+    _aiQuiet=true;
+    try{aiApp=mod.mount(holder,{project:aiData,onChange:()=>{if(!_aiQuiet&&projectType==='ai')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'})});}finally{_aiQuiet=false;}
+  }).catch(()=>{holder.innerHTML='<div id="ai-loading">The AI Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+}
+function exitAIUI(){
+  if(!document.body.classList.contains('ai-mode'))return;
+  if(aiApp){aiData=aiApp.getProject();aiApp.pause();}
+  document.body.classList.remove('ai-mode');
 }
 
 function turtleBindOnce(){
@@ -6763,7 +6831,16 @@ const ROBOT_HELP=[
  ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Robot Lab needs the internet the first time it opens. The robot's voice is your browser's own speech, so it sounds a little different on different computers.</p><h3>Build together</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to five classmates. Everyone sees the same blocks, name and colours as you change them, and you can see each other's pointers. <b>Run</b> only plays on your own screen, so each of you can try the program.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
-function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
+const AI_HELP=[
+ ['start',' Start',`<h3>Welcome to the AI Lab!</h3><p>You are going to <b>teach a computer</b> to recognise drawings, then use it in a game. There are three steps along the top:</p><ol><li><b>Teach</b> — make <b>labels</b> (the things it should recognise, like <i>cat</i> and <i>fish</i>) and draw examples of each one.</li><li><b>Train &amp; test</b> — press <b>Train</b> and the computer practises on your drawings. Then draw something new and see what it guesses.</li><li><b>Code it</b> — use blocks like <b>when the AI thinks it’s a cat</b> to make a game.</li></ol><p>In a hurry? In step 1 choose <b>Ready-made examples → Shapes</b>, then press <b>Train</b>.</p>`],
+ ['teach',' Teach',`<ul><li>Each <b>label</b> is one thing your AI will learn. You need at least 2 (up to 6). Click a label’s name to rename it.</li><li>Click a label to choose it, draw on the pad, then press <b>Add to …</b>. Draw at least <b>3</b> of each — <b>10 or more</b> is much better.</li><li>Make your examples <b>different</b>: big, small, neat, messy, in different places. An AI only knows what you show it!</li><li>Click a little drawing to remove it.</li></ul>`],
+ ['train',' Train & test',`<ul><li><b>Train</b> makes the computer practise on every drawing many times, each time slightly turned and stretched. The green line shows how often it was right while it practised.</li><li>If every label has 4 or more drawings, the AI is also <b>checked</b> on 1 in 4 of your drawings that it didn’t practise with — that’s the fair way to see how good it really is. It shows you the ones it got wrong.</li><li>Draw on the test pad: the bars show <b>how sure</b> it is about each label, and you can see which of your drawings it thinks yours looks most like.</li><li>Changed your examples? Press <b>Train</b> again.</li></ul>`],
+ ['code',' Code it',`<ul><li><b>when the AI makes a guess</b> runs each time someone finishes a drawing (press <b>Done</b>, or just stop drawing for a moment).</li><li><b>when the AI thinks it’s …</b> only runs for that label.</li><li><b>AI’s guess</b>, <b>how sure the AI is</b>, <b>AI thinks it’s … ?</b> and <b>how sure it’s …</b> tell your program what the AI thinks.</li><li><b>a random label</b> and <b>wait for a drawing</b> are great for “Draw a …!” games. <b>clear the drawing</b> wipes the pad.</li><li><b>show</b>, <b>say … out loud</b>, <b>play sound</b>, <b>set the pad colour</b> and <b>Score</b> make it a game.</li></ul>`],
+ ['ideas',' Ideas',`<ul><li><b>Draw it!</b> <i>when Run is clicked: forever: set word to a random label, say join(“Draw a ”, word) out loud, wait for a drawing, if AI thinks it’s word… change score by 1</i>.</li><li><b>Magic spells:</b> labels like <i>star</i>, <i>lightning</i> and <i>heart</i>, each with its own sound and colour.</li><li><b>Mood reader:</b> use the <i>Happy or sad faces</i> examples and make the pad turn yellow or blue.</li><li><b>Trick it!</b> Try to find drawings that fool your AI. Why does it get them wrong? What examples would fix it?</li></ul><p><b>Talk about it:</b> if everyone in your class only ever drew cats facing left, what would happen with a cat facing right? That’s how real AI can be unfair — it only learns from the examples people give it.</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your labels, drawings and blocks are saved; the AI trains itself again when the project opens. The AI Lab works in your browser — it never uses a camera and doesn’t send your drawings anywhere.</p>`],
+ ['cloud',' Cloud',_cloudHelp]
+];
+function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='ai')return AI_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
 let helpTab='start';
 function openHelp(){const T=helpTabs();buildHelpTabs();selHelpTab(T[0][0]);document.getElementById('help-modal').classList.remove('hide');}
 function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';helpTabs().forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
@@ -6852,6 +6929,9 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <h3> 3D World (Key Stage 2 &amp; 3)</h3>
  <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
  <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. On slower Chromebooks, the Blocky characters are the lightest.</p>
+ <h3> AI Lab (Key Stage 2 &amp; 3)</h3>
+ <p>The <b>AI Lab</b> lets pupils <b>teach a computer</b> to recognise their own drawings (machine learning), then use it in a block-coded game. Three steps: <b>Teach</b> (make 2–6 labels and draw examples of each; ready-made <i>Shapes</i> and <i>Happy or sad faces</i> sets are there for a quick start or a demo), <b>Train &amp; test</b> (a small neural network practises on the drawings, slightly turned and stretched each time; if each label has 4+ drawings it is also checked on 1 in 4 drawings it never practised with, and shows the ones it got wrong; pupils then draw to test it, with a confidence bar for every label and the examples it thinks are most alike) and <b>Code it</b> (Blockly: <i>when the AI makes a guess</i>, <i>when the AI thinks it’s …</i>, <i>AI’s guess</i>, <i>how sure the AI is</i>, <i>a random label</i>, <i>wait for a drawing</i>, plus show/say out loud, sounds, pad colour, score, loops, if, variables and operators).</p>
+ <p><b>Big ideas to draw out:</b> the computer isn’t told rules — it finds patterns in examples; more and more varied examples make it better; testing on data it hasn’t seen is the fair test; it gives a <i>confidence</i>, not a certainty; and an AI trained on narrow or unbalanced examples is unfair to the things it wasn’t shown (bias). <b>Safeguarding:</b> drawings only — no camera, no microphone — and training happens in the browser; nothing is sent anywhere except inside the pupil’s own saved or shared project. Live collaboration isn’t available for the AI Lab.</p>
  <h3> Robot Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>Robot Lab</b> is a robot to code with blocks: a 3D robot head and shoulders on a plinth, with eight motors from 0 to 10 (head turn, nod and tilt, eyes left/right and up/down, eyelids, eyebrows and mouth), lights in its eyes, ears, chest and antenna, and a voice (the browser's own speech, so no recordings are made or sent). Pupils name it and choose its colours. Blocks cover events (Run, tapping the robot, keys, messages), moves (move and wait, start moving, change by, move over time, speed, look), faces (happy, sad, surprised, angry, sleepy, thinking), lights, speech (say, say until done, voices, ask and answer), sensing (motor positions, keys, mouse position, timer), loops, if, maths, text and variables. It covers sequence, repetition, selection, variables and input/output, and works well for conversations, quizzes and short robot plays. Saving, sharing and handing in work as usual, and pupils can build a robot together live (Share → Collaborate): blocks, name and colours stay in step on every screen, while Run plays on each pupil's own screen.</p>
  <h3> Turtle (Logo)</h3>
@@ -7192,11 +7272,12 @@ function switchMode(m){
   // Turtle & Stage projects use their own unified views, not Build/Play/Code modes.
   if(projectType==='critter'){enterCritterUI();return;}
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
+  if(projectType==='ai'){enterAIUI();return;}
   if(projectType==='robot'){enterRobotUI();return;}
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(projectType==='3d'){enter3DUI();return;}
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
   if(projectType==='turtle'){enterTurtleUI();return;}
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(projectType==='stage'){enterStageUI();return;}
@@ -7255,7 +7336,7 @@ function buildPayload(){
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},hazardCfg:L.hazardCfg||{},trapCfg:L.trapCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
-  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),robot:(projectType==='robot'?robotCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
+  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),robot:(projectType==='robot'?robotCurrent():null),ai:(projectType==='ai'?aiCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -7308,11 +7389,15 @@ function applyPayload(d){leaveLiveRoom(); // opening a different project leaves 
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
-  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':(d.projectType==='robot')?'robot':'platformer'; // legacy payloads (no field) are always platformer
+  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':(d.projectType==='robot')?'robot':(d.projectType==='ai')?'ai':'platformer'; // legacy payloads (no field) are always platformer
   if(projectType!=='critter'&&typeof exitCritterUI==='function')exitCritterUI();
   if(projectType!=='3d'&&typeof exit3DUI==='function')exit3DUI();
   if(projectType!=='robot'&&typeof exitRobotUI==='function')exitRobotUI();
-  if(projectType==='robot'){
+  if(projectType!=='ai'&&typeof exitAIUI==='function')exitAIUI();
+  if(projectType==='ai'){
+    aiData=(d.ai&&typeof d.ai==='object')?d.ai:null; // ai-app.js checks the labels/drawings/blocks when it loads them
+    _aiLoad=true;if(typeof enterAIUI==='function')enterAIUI();
+  }else if(projectType==='robot'){
     robotData=(d.robot&&typeof d.robot==='object')?d.robot:null; // robot-app.js checks the blocks/colours when it loads them
     _robotLoad=true;if(typeof enterRobotUI==='function')enterRobotUI();
   }else if(projectType==='critter'){
@@ -7435,7 +7520,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&projectType!=='ai'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -8794,6 +8879,7 @@ function loop(){
   if(projectType==='critter')return; // the Critter app runs its own render + physics loop
   if(projectType==='3d')return; // the 3D World app runs its own render + physics loop
   if(projectType==='robot')return; // the Robot Lab runs its own render loop
+  if(projectType==='ai')return; // the AI Lab runs its own loop
   if(projectType==='turtle'){turtleFrame();return;} // turtle playground renders + steps its own interpreter
  if(projectType==='stage'){if(stagePlaying){stageFrame();drawStage();}else if(stageNeedsDraw||(tick&3)===0){drawStage();stageNeedsDraw=false;}return;} // play = 60fps; idle = ~15fps (or on demand) to save battery on Chromebooks
   if(mode==='build'){drawBuild();return;}
@@ -8864,10 +8950,10 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.05.4';
+const CJ_VERSION='2026.10.06';
 const CJ_WHATSNEW=[
- "NEW: Robot Lab! Code a talking 3D robot with blocks. Give it a name and colours, make faces, move its head and eyes, light it up and make it talk. (Key Stage 2 and 3.)",
- "Teachers: a new-look Teacher Hub, with every lesson as a picture, your classes, Critter Showdowns and the Teacher Guide in one place.",
+ "NEW: AI Lab! Teach a computer to recognise your drawings, watch it learn, test it, then code a game that uses it. (Key Stage 2 and 3.)",
+ "The AI Lab only uses drawings: no camera, and your drawings are never sent anywhere.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

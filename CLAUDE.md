@@ -514,7 +514,7 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   mount option `cloud`: me/api/wsUrl/saves/loadSave/signIn), `withCritterLab(fn)`, roster button `#cr-showdown`, and
   `cloudCollabList` routes Showdown rooms to `critterApp.openShowdown`. Tested end to end against a local `wrangler dev`
   of codejump-cloud (scratch copy with CLOUD_URL pointed at it).
-- **Showdown invite pop-up (LIVE 5 Oct 2026; needs cloud worker v14):** each signed-in PUPIL
+- **Showdown invite pop-up (LIVE 5 Oct 2026; cloud worker v14 deployed by Charlie 5 Oct 2026 and tested end to end):** each signed-in PUPIL
   keeps a small WebSocket to their own **inbox** (`inboxSync` from `updateAccountChips` → `wss …/inbox?token=`, 45 s `ping`,
   reconnects with back-off; teachers don't open one). Worker v14: `/inbox` routes to the `Room` DO `idFromName('inbox:'+uid)`
   in inbox mode (hibernating sockets — idle pupils cost nothing; `ping`/`pong` auto-response); `/collab/invite` on a room titled
@@ -665,8 +665,7 @@ shared animation clips + a model library, reusing Flock's MIT assets (DONE, see 
   `applyRemote` (no editor reload); on `join` every 3D member sends `collabSnapshotSoon()` so newcomers are current even on
   a pre-v13 server; whole-editor pointers (`collabStageCursor`/`renderCollabStageCursors`) now also run in `threed-mode`.
   Run plays only on your own screen. **Cloud worker v13** (codejump-cloud `applyOp`: `w3_doc` → `doc.world`, `w3_ev`
-  relayed only) — pushed to a branch, NEEDS DEPLOY (`npx wrangler deploy`); 3D collab already works on v12, but late joiners
-  then rely on the join snapshot. **Also fixed** (found by this testing): a layout rebuild that started while an earlier
+  relayed only) — deployed 5 Oct 2026 (as part of v14). **Also fixed** (found by this testing): a layout rebuild that started while an earlier
   one was still loading a character let the old run delete the new run's character from `objs` by name (drawn but unknown
   to the program); `createModel` now only deletes its own entry (`objs.get(id) === o`). Tests (scratchpad): `room.mjs`
   (a stand-in Room using the REAL `Room.prototype.applyOp` from worker.js; `old` arg = v12 behaviour) + `collab.mjs`

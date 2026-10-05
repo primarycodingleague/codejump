@@ -1165,7 +1165,7 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
 - Downloaded playable files made before the move load engine files from the old address, which now only redirects, so a
   downloaded Critter Lab / 3D World file from before Oct 2026 needs downloading again.
 
-## Curriculum by country (CJ_VERSION 2026.10.07, branch `claude/vibrant-cori-tho25y`, NOT on main yet)
+## Curriculum by country — LIVE on main since 6 Oct 2026 (CJ_VERSION 2026.10.07; Charlie chose to launch before the PDF check)
 - Teachers pick a country (`Curriculum` select in the lessons library + lesson detail + Teacher Hub, `cjCountrySelect`/`setCountry`;
   localStorage `cj_country`, first guess `cjGuessCountry()` from language/time zone). Countries: England, Scotland, Wales, Northern
   Ireland, Ireland, Cyprus, USA, Australia, New Zealand, Other. `CJ_COUNTRIES` (build-and-play.html) = names for age bands (`cjBand`)

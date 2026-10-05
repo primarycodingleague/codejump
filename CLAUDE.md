@@ -10,6 +10,13 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 - Then: quick JS syntax check (extract <script> blocks, `node --check`), verify in a browser,
   bump `CJ_VERSION` + `CJ_WHATSNEW` for user-facing changes, commit, push `main`, and confirm the
   live site serves the new CJ_VERSION (Pages rebuild ~1–2 min). Never change `CNAME` (codejump.co.uk).
+- **Automatic tests (`tests/`, since 5 Oct 2026):** `cd tests && npm ci && npm test` (locally: `npx playwright install chromium` once,
+  or use a preinstalled Chromium at /opt/pw-browsers). `files.test.mjs` (index.html == master, CNAME, scripts/modules parse,
+  share links on codejump.co.uk), `world.test.mjs` (3D engine headless), `critter.test.mjs` (Critter engine headless),
+  `app.test.mjs` (Playwright: every project type opens, payload round-trips, device save, share link, ?cjmove import — the
+  cloud is a stand-in inside the test). GitHub Actions (`.github/workflows/tests.yml`) runs them on every push/PR and puts
+  a **preview link** (raw.githack.com pinned to the commit) in the run summary. **Workflow: work on a branch → CI green →
+  try the preview → only then push `main`.** Add a test when you fix a bug or add a feature.
 - (Historical note: on the original Mac the master lived at `~/build-and-play.html` — the notes
   below sometimes reference that path. The repo copy is now the source of truth.)
 - The backend (accounts/classes/collab) is the separate repo `primarycodingleague/codejump-cloud`,

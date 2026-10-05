@@ -1,0 +1,13 @@
+{
+  "name": "codejump-tests",
+  "private": true,
+  "type": "module",
+  "description": "Automatic checks for CodeJump. Run `npm test` in this folder; GitHub runs them on every push.",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "blockly": "10.4.3",
+    "playwright": "1.63.0"
+  }
+}

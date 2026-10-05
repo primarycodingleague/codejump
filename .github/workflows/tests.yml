@@ -1,0 +1,31 @@
+# Runs CodeJump's automatic checks (tests/) on every push and pull request, and puts a preview link for that exact
+# version in the run's summary, so a change can be tried before it goes to main (= the live site).
+name: Tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - name: Preview link
+        if: always()
+        run: |
+          echo "### Try this version" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://raw.githack.com/${{ github.repository }}/${{ github.sha }}/build-and-play.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "It uses the real CodeJump cloud, so sign-ins and saves are real." >> "$GITHUB_STEP_SUMMARY"

@@ -201,7 +201,7 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
-## AI Lab project type — `projectType==='ai'` — built 5–6 Oct 2026 on branch `claude/vibrant-cori-tho25y` (CJ_VERSION 2026.10.06), NOT yet on main
+## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate
 safeguarding choice; nothing leaves the device except inside their saved/shared project), train it, test it, then code with it.
 - **Brain (`ai/ai-model.js`, no DOM, Node-testable):** a drawing = list of strokes, each a flat `[x,y,…]` in a 256 box (ints). `rasterize`

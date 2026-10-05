@@ -200,41 +200,44 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
-## Extensions — Ohbot emulator (first extension; clean-room) — DONE & verified
-The Stage now has a 🤖 **Ohbot** category + an on-screen Ohbot head. **Clean-room:** our own art (`paintOhbot`)
-and our own interpreter cases; only the *documented functional behaviour* (motor names, value ranges, say+lip-sync)
-is reimplemented. Branding: user opted to use the "Ohbot" name (flagged: get their blessing before public launch).
-- **Emulator:** an `ohbot` entry in `STAGE_COSTUMES`; a sprite wearing it renders via `paintOhbot(c,ob,color)`
-  from a per-sprite `s._ob` motor state (`ohbotState(s)`, reset at `stageStart`). 7 motors 0–10 (`OHBOT_MOTORS`):
-  HeadTurn, HeadNod, EyeTurn, EyeTilt, TopLip, BottomLip, Lid + `color`. `_obv(ob,k)` defaults (Lid→0 else 5).
-- **Blocks:** `ob_move` (motor→value, quick tween), `ob_move_time` (over N secs), `ob_say` (TTS via
-  `speechSynthesis` + lip-sync by animating Top/BottomLip + sets `_speaking`), `ob_eyecolor`, `ob_reset` (tween
-  all motors to default + clear colour), `ob_speaking` (reporter). Toolbox category at the bottom (extensions).
-- **Fidelity pass (done):** `paintOhbot` now draws a detailed mechanical head (cream skull w/ brow+jaw curves,
-  eyebrows, ping-pong eyes w/ iris+pupil+glint, eyelids, two independent lips + mouth interior/teeth, neck/spine
-  + base). Block wording matches Ohbot's documented blocks (exact motor names HeadNod/HeadTurn/EyeTurn/EyeTilt/
-  BottomLip/TopLip/Lid; "move [motor] to [v]", "...in [n] seconds", "say", "set eye colour to", "reset Ohbot",
-  "Ohbot is speaking?"). **Lip-sync:** `visemeFor(char)` grapheme→viseme map drives Top/BottomLip per sound in
-  `ob_say` (browsers don't expose true phonemes, so it's the standard viseme approximation; stops on the
-  utterance `onend`). **IP note:** art is ORIGINAL (not a copy of Ohbot's graphics); a pixel-exact replica of
-  their design + the Ohbot name in a PUBLIC product is trade-dress/trademark territory → get Ohbot's blessing.
-- **Future:** real-hardware bridge (Web Serial/Bluetooth) for clubs that own a physical Ohbot — separate from
-  the emulator.
-- **3D Ohbot (5 Oct 2026, on the branch; the extension is still HIDDEN — `OHBOT_ON` is true only with `?ohbot=1` in the URL, for
-  previews):** `ohbot/ohbot-3d.js` = OUR OWN procedural Three.js model (reuses `critter/vendor/three…`), styled after the real
-  robot: laser-cut acrylic plates (sprite colour = plate colour), ping-pong eyes with iris/pupil and swinging lid shells,
-  a bent strip nose, two-loop wire lips on pivoting arms, neck servo, oval base + frame. `createOhbotRenderer().draw(ctx, ob,
-  colour, x,y,w,h)` poses it from the sprite's motor state and caches each pose (one shared WebGL context). Host:
-  `loadOhbot3D()`/`ohbotBase()` lazy-load it the first time `paintOhbot` runs; until then (or offline) the old flat
-  drawing shows. Drawn at 220 px (`-110,-116,220,220`), `costumeHalf` = 68×88. Motors gained **HeadRoll**; new block
-  `ob_change` ("change [motor] by [n]", like Ohbot's own). Tests: `tests/ohbot.test.mjs`.
-- **Research (5 Oct 2026):** Ohbot's Scratch (scratch.ohbot.co.uk = github ohbot/scratch-gui + scratch-vm, BSD for MIT's
-  Scratch code) drives a separate **Unity WebGL simulator** (`static/Build`, 36 MB, Ohbot's own model) via
-  `unityInstance.SendMessage(Robot,'JSONCommand',{type:'setMotor'|'changeMotor',motor,value})`, `SetColByName`, `SetR/G/B`,
-  `ResetController`, `CameraHolder.ShowRobot('Ohbot'|'Picoh')`. We do NOT ship or copy that build or its model (their IP).
-  Their block set: set/change [motor] (HeadTurn HeadNod HeadRoll EyeTurn EyeTilt TopLip BottomLip LidBlink) to/by, set
-  motor speed, set eyeshape (Picoh), set colour (named / RGB), reset, speak [/until done/and wait], set voice, set
-  language, lip, mouse x/y (0–10).
+## Robot Lab project type — `projectType==='robot'` (5 Oct 2026, on branch `claude/vibrant-cori-tho25y`, CJ_VERSION 2026.10.05.4)
+**Replaces the old Stage "Ohbot" extension, which was REMOVED (5 Oct 2026, Charlie: it looked too much like Ohbot; robot coding
+should be its own thing).** The Ohbot costume/blocks/`paintOhbot`/`OHBOT_*`/`ohbot/` folder are all gone; old Stage saves with an
+`ohbot` costume fall back via `sanitizeCostume`. Never bring back Ohbot's name, look (open laser-cut plate frame, wire lips) or
+their Unity simulator model. (Research notes, for reference only: Ohbot's Scratch = github ohbot/scratch-gui + scratch-vm, which
+drive a separate Unity WebGL simulator via `unityInstance.SendMessage(...)`; that build/model is their IP.)
+- **The robot (`robot/robot-model.js`, our own design):** a 3D robot BUST on a plinth — smooth rounded shell (body colour, clearcoat),
+  dark glossy visor with glowing eyes (iris/pupil/glint) + shell-coloured eyelids + capsule eyebrows (trim colour), a glowing
+  mouth on a dark panel that opens from a line to an oval, ear light rings, antenna light, chest light, shoulder pads + collar
+  (trim colour), neck rings, a gold-rimmed plinth with a NAMEPLATE (CanvasTexture). `createRobotView(THREE, canvas, {controls,
+  onPick, name})` → motors `setTarget/jump/at/arrived/target/setSpeed`, `setLight(part|'all', col)`/`lightsOff`, `setBody`/`setAccent`/
+  `setName`, `setBrowTilt(-1..1)`, `blink`, `setTalk(0–10|null)`, `reset(instant)`, `state()`, `start/stop/renderOnce/resize/dispose`.
+  8 MOTORS 0–10: HeadTurn, HeadNod (10 = up), HeadTilt, EyesSide, EyesUp, Eyelids (0 open), Brows, Mouth (0 closed); each moves
+  towards its target at its own speed (1–10 → 3–30 steps/s). Tap (not drag) → raycast → `onPick(part)` ('head'|'body'|'chest'|
+  'plinth'). Uses the Critter Lab's Three.js bundle (`critter/vendor/three…`, incl. OrbitControls).
+- **Blocks (`robot/robot-blocks.js`, `rb_*`, Blockly JSON defs):** Events (when Run clicked, when [robot/head/body/chest light/plinth]
+  tapped, when key pressed, when I receive / send message) · Moves (move … to [waits], start moving … to [doesn't wait], change by,
+  move … in N seconds, set speed, look ahead/left/right/up/down, reset) · Face & lights (make a [happy/sad/surprised/angry/sleepy/
+  thinking/normal] face = `FACES` presets, blink, set … light to colour, light off, set body/trim colour) · Speech (say, say until
+  done, set voice = `VOICES` pitch/rate presets, speaking?) · Sensing (ask and wait + answer, motor position, key pressed?, mouse x/y
+  0–10 over the view, timer) · Control (wait, repeat, forever, if/else, wait until, while/until, stop everything) · Operators
+  (Blockly math/logic/text + `rb_random`) · Variables. `toolbox()`, `starterProgram(name)` (returns a full workspace STATE
+  `{blocks:{languageVersion,blocks}}`).
+- **Runner (`robot/robot-runner.js`, no DOM, Node-testable):** generator fibers like the Stage (one step per frame; every loop pass,
+  wait and motor move yields). `createRunner(view, io)` → `start(ws)`, `tick(dt)`, `tap(part)`, `key(name)`, `stop()`, `running()`,
+  `busy()`. Speech through `io.speak` (the app uses the browser's `speechSynthesis`, en-GB voice when there is one); the mouth
+  follows the letters (`mouthFor`); talking lasts at least `me.min` even if the device has no voice (so the bubble/mouth still work).
+- **App (`robot/robot-app.js` + `robot-app.css`, scoped `.rb`):** `mount(root,{project,onChange,toast})` → `{getProject,setProject,
+  resume,pause,destroy,run,stop,reset,_view,_runner,_ws}`. Own Blockly workspace (zelos, dark theme, media from unpkg so the zoom/bin
+  icons load), Run (resets the robot then starts) / Stop / Reset, speech bubble, an "ask" answer box, name + body + trim settings.
+  Project = `{blocks, name, body, trim}`.
+- **Host glue (build-and-play.html, mirrors 3D World):** `robotBase()`/`loadRobotLab()`, `robotData`/`robotApp`/`robotCurrent()`,
+  `startNewRobot(ks)`, `enterRobotUI()`/`exitRobotUI()` (`body.robot-mode`, mounts into `#robot-ui`; every other enter*UI, showHome,
+  switchMode, applyPayload exit it), payload field `robot`, `loop()` returns early, `#pt-modal` tile `data-pt="robot"` (icon `#i-robot`,
+  hidden for KS1), home tile `data-start="robot"` (`home/robot.jpg`, a rendered close-up; the tiles grid is `.hm-tiles6` = 3 per row),
+  live Collaborate hidden, save thumbnail badge "Robot", `ROBOT_HELP` via `helpTabs()`, Teacher Guide section "Robot Lab".
+- **Tests:** `tests/robot.test.mjs` (chooser KS1/KS2, starter runs, every block family incl. ask/answer, message, tap, key, colours,
+  save/reopen, and that the Stage has no Ohbot left).
 
 ## Real micro:bit over USB (WebUSB flashing) — IN PROGRESS / experimental
 A 🔌 micro:bit toolbar button (`btn-mbsend`, stage-only, shown in KS2/KS3 when `MB_FLASH_ON`) opens `mbSendOpen()`:

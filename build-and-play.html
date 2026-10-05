@@ -90,6 +90,9 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .hm-h2{font-weight:900;font-size:clamp(26px,3vw,34px);margin:0 0 24px;}
 .hm-h2.display{font-family:var(--display);font-weight:400;font-size:clamp(36px,4.5vw,56px);line-height:1.05;text-transform:uppercase;color:#000;margin:0;}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.hm-grid.hm-tiles6{grid-template-columns:repeat(3,1fr);}
+@media (max-width:980px){.hm-grid.hm-tiles6{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:520px){.hm-grid.hm-tiles6{grid-template-columns:1fr;}}
 .hm-tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;border:2px solid #393939;border-radius:16px;overflow:hidden;background:#1a1a1a;color:#fff;transition:transform .2s,border-color .2s;}
 .hm-tile:hover{transform:translateY(-4px);border-color:var(--gold);}
 .hm-tile:focus-visible{outline:3px solid #38b6ff;outline-offset:2px;}
@@ -315,7 +318,7 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 body.ks1-mode #lesson-guide .lg-d{font-size:17px;}
 /* where the card starts (pupils can drag it anywhere): over empty space, not the controls a lesson asks them to use */
 body.stage-mode:not(.ks1-mode) #lesson-guide{right:auto;left:136px;}
-body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode) #lesson-guide{bottom:auto;top:104px;}
+body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode):not(.robot-mode) #lesson-guide{bottom:auto;top:104px;}
 @media (max-width:820px){body.stage-mode:not(.ks1-mode) #lesson-guide{left:16px;}}
 /* ── Lesson slides: the presenter (#ls-present). Slides are 16:9 and sized in cqw (1cqw = 1% of the slide's width),
    so the same markup fits the board, the Presenter view window and a printed/PDF page. ── */
@@ -712,6 +715,20 @@ body.ks1-mode #code-panel,body.ks1-mode #stage-right,body.ks1-mode #cwrap{displa
 /* ── 3D (Babylon) build space — Blockly on the left, a 3D viewport on the right ── */
 /* ── 3D World (world/world-app.js + world/world-app.css, lazy-loaded) ── */
 #world-ui{display:none;}
+/* ── Robot Lab (robot/robot-app.js + robot-app.css, lazy-loaded) ── */
+#robot-ui{display:none;}
+body.robot-mode #btn-build,body.robot-mode #btn-play,body.robot-mode #btn-code,
+body.robot-mode #t-paint,body.robot-mode #t-fill,body.robot-mode #t-erase,body.robot-mode #t-undo,
+body.robot-mode #t-redo,body.robot-mode #t-clear,body.robot-mode #t-testpage,body.robot-mode #theme-sel,
+body.robot-mode #btn-design,body.robot-mode #btn-read,body.robot-mode #palette,body.robot-mode #pages,
+body.robot-mode #play-mute,body.robot-mode #play-sfx,body.robot-mode #hint,body.robot-mode #touch-controls,
+body.robot-mode .cp-run-bar,body.robot-mode #ks3-editor,body.robot-mode #code-panel,body.robot-mode #turtle-ui,body.robot-mode #critter-ui,
+body.robot-mode #world-ui,body.robot-mode #stage-right,body.robot-mode #gc,body.robot-mode .stage-only,
+body.robot-mode #t-cave,body.robot-mode #t-mute,body.robot-mode #t-hand,body.robot-mode #rotate-hint{display:none !important;}
+body.robot-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
+body.robot-mode #robot-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
+#robot-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
+@media(max-width:820px){body.robot-mode #cwrap{overflow:auto;}body.robot-mode #robot-ui{min-height:700px;}}
 body.threed-mode #btn-build,body.threed-mode #btn-play,body.threed-mode #btn-code,
 body.threed-mode #t-paint,body.threed-mode #t-fill,body.threed-mode #t-erase,body.threed-mode #t-undo,
 body.threed-mode #t-redo,body.threed-mode #t-clear,body.threed-mode #t-testpage,body.threed-mode #theme-sel,
@@ -1531,6 +1548,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <symbol id="i-flower" viewBox="0 0 24 24"><g fill="#ec5fa0"><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/></g><circle cx="12" cy="12" r="3" fill="#ffd24a"/></symbol>
   <symbol id="i-bush" viewBox="0 0 24 24"><circle cx="8" cy="14" r="5" fill="#3b6d11"/><circle cx="16" cy="13" r="5.5" fill="#4e8a1a"/><circle cx="12" cy="16" r="5" fill="#639922"/></symbol>
   <symbol id="i-player" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2" fill="#f0b97a"/><rect x="8" y="11" width="8" height="9" rx="3" fill="#3b8eea"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24"><circle cx="12" cy="2.6" r="1.3" fill="#ff5a3c"/><rect x="11.4" y="3.4" width="1.2" height="2.4" fill="#5d636e"/><rect x="4.5" y="5.6" width="15" height="10.4" rx="5.2" fill="#eef2f6" stroke="#2b6fd8" stroke-width="1.2"/><rect x="6.6" y="8" width="10.8" height="4" rx="2" fill="#141821"/><circle cx="9.4" cy="10" r="1.2" fill="#35d0ff"/><circle cx="14.6" cy="10" r="1.2" fill="#35d0ff"/><rect x="10.2" y="13.2" width="3.6" height="0.9" rx=".45" fill="#35d0ff"/><path d="M5 22c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6z" fill="#2b6fd8"/><circle cx="12" cy="19.6" r="1.1" fill="#35d0ff"/></symbol>
   <symbol id="i-critter" viewBox="0 0 24 24"><path d="M6.5 15.5l-2.5 5M10 16l-1 5M14 16l1 5M17.5 15.5l2.5 5" stroke="#f59f18" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="9.5" ry="6" fill="#38b6ff"/><circle cx="15.5" cy="10" r="2.3" fill="#fff"/><circle cx="19" cy="10.3" r="1.9" fill="#fff"/><circle cx="16.2" cy="10.2" r="1.1" fill="#111"/><circle cx="19.5" cy="10.4" r=".9" fill="#111"/></symbol>
   <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5 3.5 16.7V7.3z" fill="#7f77dd"/><path d="M3.7 7.2L12 12l8.3-4.8M12 12v9.3" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M12 2.5L3.5 7.3 12 12l8.5-4.7z" fill="#a59bf0"/></symbol>
   <symbol id="i-key2" viewBox="0 0 24 24"><circle cx="8" cy="9" r="4.5" fill="none" stroke="#ffd24a" stroke-width="2.4"/><path d="M11 12l8 8M16.5 17.5l2-2M19.5 20.5l1.5-1.5" stroke="#ffd24a" stroke-width="2.4" stroke-linecap="round"/></symbol>
@@ -1584,11 +1602,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
     <div class="hm-wrap">
       <div class="hm-eyebrow">Choose your game mode</div>
       <h2 class="hm-h2">What do you want to make?</h2>
-      <div class="hm-grid">
+      <div class="hm-grid hm-tiles6">
         <button class="hm-tile" data-start="platformer"><img data-home="platformer.jpg" alt=""><span class="hm-tile-b"><b>Platformer</b><span>Paint a level, code the rules, then jump in and play.</span></span></button>
         <button class="hm-tile" data-start="stage"><img data-home="stage.jpg" alt=""><span class="hm-tile-b"><b>Stage</b><span>Make sprites move, talk and react with snap-together blocks.</span></span></button>
         <button class="hm-tile" data-start="turtle"><img data-home="turtle.jpg" alt=""><span class="hm-tile-b"><b>Turtle</b><span>Type Logo commands and watch the turtle draw. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="3d" id="h-tile-3d"><img data-home="world3d.jpg" alt=""><span class="hm-tile-b"><b>3D World <span class="hm-badge">New</span></b><span>Build a 3D world with characters, then play it. KS2 and KS3.</span></span></button>
+        <button class="hm-tile hot" data-start="robot"><img data-home="robot.jpg" alt=""><span class="hm-tile-b"><b>Robot Lab <span class="hm-badge">New</span></b><span>Code a talking 3D robot: faces, moves, lights and voice. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="critter"><img data-home="critter.jpg" alt=""><span class="hm-tile-b"><b>Critter Lab <span class="hm-badge">New</span></b><span>3D creatures and real physics. KS2 and KS3.</span></span></button>
       </div>
 
@@ -1983,6 +2002,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle</b><small>Type Logo code to<br>draw pictures</small></button>
       <button class="ks-opt" data-pt="critter"><span class="ks-emoji"><svg class="ic"><use href="#i-critter"></use></svg></span><b>Critter Lab</b><small>Build a 3D creature<br>and race it — NEW!</small></button>
       <button class="ks-opt" data-pt="3d"><span class="ks-emoji"><svg class="ic"><use href="#i-cube"></use></svg></span><b>3D World</b><small>Build a 3D world<br>and play it — NEW!</small></button>
+      <button class="ks-opt" data-pt="robot"><span class="ks-emoji"><svg class="ic"><use href="#i-robot"></use></svg></span><b>Robot Lab</b><small>Code a talking robot<br>with blocks — NEW!</small></button>
     </div>
     <button class="ks-cancel" id="pt-cancel">Back</button>
   </div>
@@ -2147,6 +2167,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         </div>
       </div>
       <div id="world-ui"></div>
+      <div id="robot-ui"></div>
  <button id="play-mute" title="Music on / off" aria-label="Toggle music"></button>
  <button id="play-sfx" title="Sound effects on / off" aria-label="Toggle sound effects"></button>
  <div id="hint" class="hide"> Move &nbsp;|&nbsp; Space Jump &nbsp;|&nbsp; Climb</div>
@@ -2520,7 +2541,6 @@ window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
 let projectType='platformer'; // 'platformer' = the grid game (default, all existing work) · 'stage' = sprite/stage projects (Scratch-style). The seam every future engine plugs into.
-let OHBOT_ON=/[?&]ohbot=1\b/.test(location.search); // Ohbot extension HIDDEN in public builds (pending Ohbot's blessing/assets). Flip to true to re-enable the Ohbot category + costume. All Ohbot code stays in place.
 let MICROBIT_ON=true; // micro:bit emulator extension (native, clean-room). Flip to false to hide the micro:bit category + costume. Clean-room reimplementation of documented behaviour only.
 let THREED_ON=true;  // 3D World project type (world/: Babylon.js + Havok, lazy-loaded). false hides the 3D option on the home page and in the chooser.
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
@@ -2608,6 +2628,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 function showHome(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.getElementById('home').classList.remove('hide');
@@ -2638,7 +2659,7 @@ function renderHomeSaves(){
     const item=document.createElement('div');item.className='save-item';
     const thumbCanvas=document.createElement('canvas');
     thumbCanvas.className='save-thumb';thumbCanvas.width=80;thumbCanvas.height=48;
-    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
+    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
     else drawMiniThumb(thumbCanvas,save.grid,save.theme);
     const info=document.createElement('div');info.className='save-info';
     const nm=document.createElement('div');nm.className='save-name';nm.textContent=save.name||'';
@@ -2716,12 +2737,13 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   document.getElementById('ks-modal').classList.add('hide');
   const ttOpt=document.querySelector('#pt-modal .ks-opt[data-pt="turtle"]');if(ttOpt)ttOpt.style.display=(_pendingKs==='ks1')?'none':''; // Turtle (typed Logo) is KS2+ only
   const zkOpt=document.querySelector('#pt-modal .ks-opt[data-pt="critter"]');if(zkOpt)zkOpt.style.display=(_pendingKs==='ks1')?'none':''; // Critter (3D creatures + physics) is KS2+ only
+  const rbOpt=document.querySelector('#pt-modal .ks-opt[data-pt="robot"]');if(rbOpt)rbOpt.style.display=(_pendingKs==='ks1')?'none':''; // Robot Lab is KS2+ only
   const tdOpt=document.querySelector('#pt-modal .ks-opt[data-pt="3d"]');if(tdOpt)tdOpt.style.display=(_pendingKs==='ks1'||!THREED_ON)?'none':''; // 3D is KS2+ only, behind the THREED_ON flag
   // came from a home-page tile: go straight into that project if it suits this key stage, else let them pick
   const want=_pendingPt;_pendingPt=null;
   const wantOpt=want&&document.querySelector('#pt-modal .ks-opt[data-pt="'+want+'"]');
   if(wantOpt&&wantOpt.style.display!=='none'){wantOpt.click();return;}
-  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
+  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='robot'?'Robot Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
   document.getElementById('pt-modal').classList.remove('hide');
 });
 // Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
@@ -2753,6 +2775,7 @@ document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   else if(b.dataset.pt==='turtle')startNewTurtle(_pendingKs);
   else if(b.dataset.pt==='3d')startNew3D(_pendingKs);
   else if(b.dataset.pt==='critter')startNewCritter(_pendingKs);
+  else if(b.dataset.pt==='robot')startNewRobot(_pendingKs);
   else startNewProject(_pendingKs);
 });
 function startNewProject(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='platformer';
@@ -2831,6 +2854,7 @@ function startNewStage(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
 function enterStageUI(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
   document.body.classList.remove('ks1-mode'); // coming from KS1? drop its mode + hide its UI
@@ -2930,6 +2954,7 @@ function turtleClearDrawing(){if(turtleDrawCtx)turtleDrawCtx.clearRect(0,0,TW,TH
 function enterTurtleUI(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');
   document.getElementById('app').classList.remove('hide');
@@ -2973,6 +2998,7 @@ function startNewCritter(ks){clearDirty();leaveLiveRoom();lessonActive=null;proj
 function enterCritterUI(){
   leaveLiveRoom(); // the Critter Lab has no live collaboration (Showdowns use their own connection)
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
@@ -3078,7 +3104,7 @@ async function withCritterLab(fn){
 let lessonsMod=null,_lessonsLoading=null,lessonActive=null,_lsFilter='all',_lsCurrent=null;
 function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lessons/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/lessons/';}
 function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
-const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World'};
+const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab'};
 function lsEsc(x){return cesc(x==null?'':x);}
 async function openLessons(){
   const m=document.getElementById('lessons-modal');m.classList.remove('hide');
@@ -3354,6 +3380,7 @@ function startNew3D(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectTy
   worldData=null;_worldLoad=true;hideHome();enter3DUI(); // null = the starter program
 }
 function enter3DUI(){
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
@@ -3376,6 +3403,46 @@ function exit3DUI(){
   if(!document.body.classList.contains('threed-mode'))return;
   if(worldApp){worldData=worldApp.getProject();worldApp.pause();}
   document.body.classList.remove('threed-mode');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ROBOT LAB — code a 3D robot bust with blocks (projectType==='robot'). Our own robot design (robot/robot-model.js:
+// Three.js, the same bundle as the Critter Lab), its own Blockly workspace and a generator runner (robot-runner.js).
+// Lazy-loaded like the Critter Lab / 3D World. Payload field robot = {blocks, name, body, trim}.
+// ═══════════════════════════════════════════════════════════════════════
+let robotData=null,robotApp=null,_robotLoading=null,_robotQuiet=false,_robotLoad=false;
+function robotBase(){return /^https?:/.test(location.protocol)?new URL('robot/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/robot/';}
+function loadRobotLab(){if(!_robotLoading)_robotLoading=import(robotBase()+'robot-app.js').catch(e=>{_robotLoading=null;throw e;});return _robotLoading;}
+function robotCurrent(){return robotApp?robotApp.getProject():robotData;}
+function startNewRobot(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='robot';setKeyStage(ks);
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
+  document.getElementById('pt-modal').classList.add('hide');
+  robotData=null;_robotLoad=true;hideHome();enterRobotUI(); // null = the starter program
+}
+function enterRobotUI(){
+  leaveLiveRoom(); // Robot Lab has no live collaboration yet
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
+  document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
+  document.getElementById('app').classList.remove('hide');document.getElementById('home').classList.add('hide');
+  const already=document.body.classList.contains('robot-mode');
+  mode='code';document.body.classList.add('robot-mode');
+  const _tut=document.getElementById('tutorial');if(_tut)_tut.classList.add('hide');
+  const holder=document.getElementById('robot-ui'),load=_robotLoad||!already;_robotLoad=false;
+  if(robotApp){if(load){_robotQuiet=true;try{robotApp.setProject(robotData);}finally{_robotQuiet=false;}}else robotApp.resume();return;}
+  if(_robotLoading&&holder.firstChild)return;
+  holder.innerHTML='<div id="robot-loading">Getting the Robot Lab ready…</div>';
+  loadRobotLab().then(mod=>{
+    if(robotApp){_robotQuiet=true;try{robotApp.setProject(robotData);}finally{_robotQuiet=false;}return;}
+    robotApp=mod.mount(holder,{project:robotData,onChange:()=>{if(!_robotQuiet&&projectType==='robot')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e')});
+  }).catch(()=>{holder.innerHTML='<div id="robot-loading">The Robot Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+}
+function exitRobotUI(){
+  if(!document.body.classList.contains('robot-mode'))return;
+  if(robotApp){robotData=robotApp.getProject();robotApp.pause();}
+  document.body.classList.remove('robot-mode');
 }
 
 function turtleBindOnce(){
@@ -3820,7 +3887,6 @@ function cmEmitCostumes(){if(stageState&&stageState.sprites[stageSel]&&typeof co
 function costumeImgEl(co){if(!co||!co.img)return null;if(co._el&&co._elSrc===co.img)return co._el;const im=new Image();im.src=co.img;co._el=im;co._elSrc=co.img;return im;}
 // Paint a sprite's CURRENT costume centred at the origin (built-in vector or a painted bitmap).
 function paintSpriteCostume(c,s,box){const co=curCostume(s);if(co.img){const im=costumeImgEl(co);if(im&&im.complete&&im.naturalWidth){const b=box||110,k=b/Math.max(im.naturalWidth,im.naturalHeight);c.drawImage(im,-im.naturalWidth*k/2,-im.naturalHeight*k/2,im.naturalWidth*k,im.naturalHeight*k);return;}}
-  if(co.builtin==='ohbot'){paintOhbot(c,(s&&s._ob)||OHBOT_DEFAULT,co.color);return;} // Ohbot draws from its live part state
   if(co.builtin==='microbit'){paintMicrobit(c,(s&&s._mb)||MB_DEFAULT,co.color);return;} // micro:bit draws its live LED matrix
   paintCostume(c,co.builtin||'cat',co.color||'#ff922b');}
 // ── Costume manager (the Costume modal) ──
@@ -4043,16 +4109,6 @@ function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{co
     case'st_repeat_until':{const body=b.getInputTargetBlock('DO');while(stagePlaying&&!stTruthy(stEval(b.getInputTargetBlock('COND'),s))){yield* stRunSeq(body,s,depth+1);yield 0;}break;}
     case'st_stop':{if(b.getFieldValue('WHAT')==='all'){stageStopRun();}else{throw{__stopThis:true};}break;}
     case'st_reset_timer':stTimerBase=performance.now();break;
-    case'ob_move':{const o=ohbotState(s),mk=b.getFieldValue('M'),t=Math.max(0,Math.min(10,num('N'))),f0=_obv(o,mk);for(let i=1;i<=8&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/8;yield 0;}o[mk]=t;break;}
-    case'ob_change':{const o=ohbotState(s),mk=b.getFieldValue('M'),f0=_obv(o,mk),t=Math.max(0,Math.min(10,f0+num('N')));for(let i=1;i<=8&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/8;yield 0;}o[mk]=t;break;}
-    case'ob_move_time':{const o=ohbotState(s),mk=b.getFieldValue('M'),t=Math.max(0,Math.min(10,num('N'))),fr=Math.max(1,Math.round(num('SECS')*60)),f0=_obv(o,mk);for(let i=1;i<=fr&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/fr;yield 0;}o[mk]=t;break;}
-    case'ob_eyecolor':ohbotState(s).color=b.getFieldValue('COLOR')||'#39c0ed';break;
-    case'ob_reset':{const o=ohbotState(s),st0={};OHBOT_MOTORS.forEach(k=>st0[k]=_obv(o,k));o.color=null;for(let i=1;i<=10&&stagePlaying;i++){OHBOT_MOTORS.forEach(k=>{const d=(k==='Lid'?0:5);o[k]=st0[k]+(d-st0[k])*i/10;});yield 0;}OHBOT_MOTORS.forEach(k=>o[k]=(k==='Lid'?0:5));break;}
-    case'ob_say':{const o=ohbotState(s),txt=String(b.getFieldValue('TXT')||'');o._speaking=true;let ended=false;
-      try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(txt);u.rate=1;u.onend=()=>{ended=true;};u.onerror=()=>{ended=true;};speechSynthesis.cancel();speechSynthesis.speak(u);}}catch(e){}
-      const vs=txt.replace(/\s+/g,' ').split('').map(visemeFor),per=3,total=Math.max(vs.length*per,20); // step through mouth shapes (visemes), one per sound
-      for(let f=0;f<total&&stagePlaying;f++){const v=vs[Math.min(vs.length-1,Math.floor(f/per))]||{t:5,b:5};o.TopLip=v.t;o.BottomLip=v.b;yield 0;if(ended&&f>4)break;}
-      o.TopLip=5;o.BottomLip=5;o._speaking=false;break;}
     case'mb_show_icon':{const o=mbState(s),pat=MB_ICONS[b.getFieldValue('ICON')]||MB_ICONS.heart;o.leds=pat.padEnd(25,'.').split('').slice(0,25).map(ch=>ch==='#'?9:0);break;}
     case'mb_clear':mbState(s).leds=Array(25).fill(0);break;
     case'mb_plot':{const o=mbState(s),x=MB_CLAMP(num('X')),y=MB_CLAMP(num('Y'));o.leds[y*5+x]=9;break;}
@@ -4155,7 +4211,6 @@ function stEval(b,s){if(!b)return 0;const t=b.type;const inp=n=>stEval(b.getInpu
     case'st_mouse_down':return !!stageMouse.down;
     case'st_timer':return Math.round((performance.now()-stTimerBase)/100)/10;
     case'st_answer':return stAnswer;
-    case'ob_speaking':return !!(s&&s._ob&&s._ob._speaking);
     case'mb_button':return mbBtnDown(b.getFieldValue('BTN'),s);
     case'mb_point':{const o=mbState(s),x=MB_CLAMP(Number(b.getFieldValue('X'))),y=MB_CLAMP(Number(b.getFieldValue('Y')));return (o.leds[y*5+x]||0)>0;}
     case'mb_brightness':return (s&&s._mb&&s._mb.bright!=null)?s._mb.bright:255;
@@ -4312,7 +4367,7 @@ function stageStart(){if(!stageState)return;
   defineStageBlocks();
   // First pass: build each sprite's headless workspace and collect ALL hats (so broadcasts/clones see every sprite).
   stPenClear();
-  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s._scostume=s.costumeIdx;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._ob=Object.assign({},OHBOT_DEFAULT);s._mb={leds:Array(25).fill(0),bright:255,group:0,rxNum:0,rxStr:''};s._ks1speed=2;
+  stageState.sprites.forEach(s=>{s._sx=s.x;s._sy=s.y;s._sdir=s.dir;s._svis=s.visible;s._ssize=s.size;s._scostume=s.costumeIdx;s.say='';s.sayT=0;s._deleted=false;s.penDown=false;s.penColor=s.penColor||'#ff0000';s.penSize=s.penSize||4;s._plx=s.x;s._ply=s.y;s.fx={};s._z=0;s.draggable=false;s._mb={leds:Array(25).fill(0),bright:255,group:0,rxNum:0,rxStr:''};s._ks1speed=2;
     if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}
     if(keyStage==='ks1'){ks1CollectHats(s);return;} // KS1 runs ScratchJr-style scripts, not Blockly
     if(s.xml){try{const ws=new Blockly.Workspace();Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(s.xml),ws);s._ws=ws; // headless copy so every sprite's scripts run, not just the selected one
@@ -4411,7 +4466,6 @@ function paintBird(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2
   c.beginPath();c.ellipse(0,2,15,14,0,0,Math.PI*2);c.fill();c.stroke();
   c.fillStyle='#ffb300';c.beginPath();c.moveTo(13,0);c.lineTo(22,3);c.lineTo(13,6);c.closePath();c.fill();c.stroke();
   c.fillStyle='#fff';c.beginPath();c.arc(5,-3,4,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#000';c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
-// ── Ohbot emulator head — 7 motors (0–10, 5 = middle), eye colour + lip-sync ──
 // ── micro:bit emulator (native, clean-room reimplementation of documented behaviour only) ──
 // A sprite wearing the 'microbit' costume shows a 5×5 red LED board. State lives on s._mb.
 const MB_DEFAULT={leds:Array(25).fill(0)};
@@ -4802,75 +4856,11 @@ function paintMicrobit(c,mb,color){mb=mb||MB_DEFAULT;const leds=(mb&&mb.leds)||M
     c.fillStyle='#1b1b1d';c.beginPath();c.arc(px,by+BH-15,5,0,Math.PI*2);c.fill();
     c.fillStyle='#1b1b1d';c.font='bold 9px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,px,by+BH-5);});
   c.restore();}
-const OHBOT_MOTORS=['HeadTurn','HeadNod','HeadRoll','EyeTurn','EyeTilt','TopLip','BottomLip','Lid'];
-const OHBOT_DEFAULT={HeadTurn:5,HeadNod:5,HeadRoll:5,EyeTurn:5,EyeTilt:5,TopLip:5,BottomLip:5,Lid:0,color:null};
-function ohbotState(s){if(!s._ob)s._ob=Object.assign({},OHBOT_DEFAULT);return s._ob;}
-function _obv(ob,k){const v=ob[k];return v==null?(k==='Lid'?0:5):v;}
-// Map a letter to a mouth shape (top/bottom lip 0–10). Browsers don't expose true phonemes,
-// so this is a graphemeviseme approximation — the standard way to lip-sync to speech.
-function visemeFor(ch){ch=(ch||'').toLowerCase();
-  if(ch==='a')return{t:8,b:9};                 // open wide
-  if(ch==='e')return{t:7,b:7.5};               // mid-open
-  if(ch==='i'||ch==='y')return{t:6.5,b:6};     // ee — narrow
-  if(ch==='o')return{t:7,b:8};                 // rounded open
-  if(ch==='u'||ch==='w')return{t:6,b:7};       // rounded small
-  if(ch==='m'||ch==='b'||ch==='p')return{t:5,b:5}; // lips closed
-  if(ch==='f'||ch==='v')return{t:6,b:4.5};     // lower lip to teeth
-  if('ldtnrszcg'.includes(ch))return{t:6.5,b:6.5}; // tongue/teeth consonants — slight open
-  if(ch===' ')return{t:5,b:5};                 // pause
-  return{t:6,b:6};}                            // default
-// The Ohbot is drawn in 3D (ohbot/ohbot-3d.js, our own model, lazy-loaded with Three.js the first time one is painted).
-// Until it has loaded — or offline — the flat picture below is used.
-let ohbot3d=null,_ob3dLoading=null;
-function ohbotBase(){return /^https?:/.test(location.protocol)?new URL('ohbot/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/ohbot/';}
-function loadOhbot3D(){if(!_ob3dLoading)_ob3dLoading=import(ohbotBase()+'ohbot-3d.js').then(m=>{ohbot3d=m.createOhbotRenderer();stageNeedsDraw=true;
-  if(typeof renderSpritePanel==='function'&&projectType==='stage')try{renderSpritePanel();}catch(e){}return ohbot3d;}).catch(e=>{console.warn('Ohbot 3D unavailable',e);});return _ob3dLoading;}
-function paintOhbot(c,ob,color){ob=ob||OHBOT_DEFAULT;
-  if(ohbot3d){try{ohbot3d.draw(c,ob,color&&color!=='#39c0ed'?color:null,-110,-116,220,220);return;}catch(e){}}else loadOhbot3D();
-  const eye=ob.color||color||'#39c0ed';
-  const turn=_obv(ob,'HeadTurn')-5,nod=_obv(ob,'HeadNod')-5,fx=turn*2.4,fy=nod*1.9;
-  c.save();
-  // base + spine (the stand the head sits on)
-  c.fillStyle='#33373d';c.beginPath();c.ellipse(0,47,23,6,0,0,Math.PI*2);c.fill();
-  c.fillStyle='#5c626a';c.fillRect(-5,29,10,16);c.strokeStyle='#222';c.lineWidth=2;c.strokeRect(-5,29,10,16);
-  c.fillStyle='#7b828b';c.beginPath();c.arc(-9,35,2.6,0,Math.PI*2);c.arc(9,35,2.6,0,Math.PI*2);c.fill();
-  c.rotate(turn*1.3*Math.PI/180);
-  c.strokeStyle='#1c1c1c';c.lineWidth=2.5;
-  // skull/head (cream, with a brow and jaw)
-  c.fillStyle='#f3ead7';c.beginPath();c.moveTo(-26,-13);
-  c.quadraticCurveTo(-30,-35,0,-37);c.quadraticCurveTo(30,-35,26,-13);
-  c.quadraticCurveTo(28,19,12,29);c.quadraticCurveTo(0,35,-12,29);c.quadraticCurveTo(-28,19,-26,-13);
-  c.closePath();c.fill();c.stroke();
-  c.strokeStyle='rgba(0,0,0,.15)';c.lineWidth=1.4;c.beginPath();c.moveTo(-24,-1);c.quadraticCurveTo(0,6,24,-1);c.stroke(); // cheek seam
-  // eyebrows
-  c.strokeStyle='#6b4f2a';c.lineWidth=3;c.lineCap='round';
-  c.beginPath();c.moveTo(-19+fx*0.4,-15+fy*0.5);c.quadraticCurveTo(-12+fx*0.4,-19+fy*0.5,-5+fx*0.4,-15+fy*0.5);c.stroke();
-  c.beginPath();c.moveTo(5+fx*0.4,-15+fy*0.5);c.quadraticCurveTo(12+fx*0.4,-19+fy*0.5,19+fx*0.4,-15+fy*0.5);c.stroke();
-  c.lineCap='butt';
-  // eyes (ping-pong eyeballs: iris + pupil + glint, eyelids)
-  const et=_obv(ob,'EyeTurn')-5,eu=_obv(ob,'EyeTilt')-5,lid=_obv(ob,'Lid')/10;
-  [[-11,-4],[11,-4]].forEach(([bx,by])=>{const ex=bx+fx,ey=by+fy;
-    c.fillStyle='#fbfbfb';c.beginPath();c.arc(ex,ey,9.6,0,Math.PI*2);c.fill();c.lineWidth=2;c.strokeStyle='#1c1c1c';c.stroke();
-    const px=ex+et*0.9,py=ey+eu*0.9;
-    c.fillStyle=eye;c.beginPath();c.arc(px,py,5,0,Math.PI*2);c.fill();
-    c.fillStyle='#111';c.beginPath();c.arc(px,py,2.2,0,Math.PI*2);c.fill();
-    c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.arc(px+1.7,py-1.7,1.5,0,Math.PI*2);c.fill();
-    if(lid>0.02){c.save();c.beginPath();c.arc(ex,ey,9.7,0,Math.PI*2);c.clip();c.fillStyle='#e6dcc6';c.fillRect(ex-11,ey-11,22,22*lid);c.restore();c.strokeStyle='#1c1c1c';c.lineWidth=2;c.beginPath();c.arc(ex,ey,9.5,0,Math.PI*2);c.stroke();}
-  });
-  c.strokeStyle='rgba(0,0,0,.22)';c.lineWidth=1.4;c.beginPath();c.moveTo(fx,5+fy);c.lineTo(fx-1.5,9+fy);c.stroke(); // nose hint
-  // lips — upper & lower move independently; opening reveals mouth + teeth
-  const tl=_obv(ob,'TopLip')-5,bl=_obv(ob,'BottomLip')-5,mx=fx,midY=16+fy,topY=midY-1-tl,botY=midY+1+bl,gap=botY-topY;
-  if(gap>3.5){c.fillStyle='#6e2f25';c.beginPath();c.moveTo(mx-9,(topY+botY)/2);c.quadraticCurveTo(mx,topY-1,mx+9,(topY+botY)/2);c.quadraticCurveTo(mx,botY+1,mx-9,(topY+botY)/2);c.closePath();c.fill();
-    c.fillStyle='#f7f2e6';c.fillRect(mx-7,topY+0.5,14,Math.min(2.4,gap*0.3));}
-  c.strokeStyle='#9c5040';c.lineWidth=3;c.lineCap='round';
-  c.beginPath();c.moveTo(mx-9,topY);c.quadraticCurveTo(mx,topY-1.5,mx+9,topY);c.stroke();
-  c.beginPath();c.moveTo(mx-9,botY);c.quadraticCurveTo(mx,botY+2,mx+9,botY);c.stroke();c.lineCap='butt';
-  c.restore();}
 // Built-in costume library — name {emoji, paint}. The single source of truth.
-const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot},ohbot:{e:'🤖',f:(c,col)=>paintOhbot(c,OHBOT_DEFAULT,col)},microbit:{e:'📟',f:(c,col)=>paintMicrobit(c,MB_DEFAULT,col)}};
+const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{e:'🐻',f:paintBear},bunny:{e:'🐰',f:paintBunny},bird:{e:'🐦',f:paintBird},ball:{e:'⚽',f:paintBall},ghost:{e:'👻',f:paintGhost},star:{e:'⭐',f:paintStar},robot:{e:'🤖',f:paintRobot},microbit:{e:'📟',f:(c,col)=>paintMicrobit(c,MB_DEFAULT,col)}};
 const COSTUME_KEYS=Object.keys(STAGE_COSTUMES);
-function pickableCostumes(){return COSTUME_KEYS.filter(k=>(OHBOT_ON||k!=='ohbot')&&((MICROBIT_ON&&keyStage!=='ks1')||k!=='microbit'));} // picker grid: hide Ohbot/micro:bit when off; micro:bit also hidden for KS1 (too advanced)
-function cycleCostumes(){return COSTUME_KEYS.filter(k=>k!=='ohbot'&&k!=='microbit');} // auto-assign for NEW sprites — never auto-pick a device costume
+function pickableCostumes(){return COSTUME_KEYS.filter(k=>((MICROBIT_ON&&keyStage!=='ks1')||k!=='microbit'));} // picker grid: hide micro:bit when off; micro:bit also hidden for KS1 (too advanced)
+function cycleCostumes(){return COSTUME_KEYS.filter(k=>k!=='microbit');} // auto-assign for NEW sprites — never auto-pick a device costume
 function paintCostume(c,name,color){(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f(c,color);}
 function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save();ctx.translate(s.x,s.y);
   if(!s.visible){ctx.globalAlpha=0.3;} // dim (not hidden) when stopped so kids can still find & move it
@@ -4944,7 +4934,7 @@ function mbPointerUp(){if(_mbPress){const o=mbState(_mbPress.s);o._A=false;o._B=
 function mbPointerMove(p){if(_mbSlider)mbSetPanelFromPoint(_mbSlider.desc,p);else if(_mbPanelDrag)stMbPanelPos={x:p.x-_mbPanelDrag.dx,y:p.y-_mbPanelDrag.dy};}
 // Half-extent (hw,hh) of a sprite's costume, for the selection box + drag hit test.
 // Most costumes are ~±24; the micro:bit board is much larger.
-function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};if(co&&co.builtin==='ohbot'&&ohbot3d)return{hw:68,hh:88};return{hw:24,hh:26};}
+function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};return{hw:24,hh:26};}
 function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100,h=costumeHalf(s);if(Math.abs(x-s.x)<(h.hw+2)*sc&&Math.abs(y-s.y)<(h.hh+2)*sc)return i;}return -1;}
 function stageDragStart(e){if(projectType!=='stage')return;const p=stagePtr(e);const i=stageSpriteAt(p.x,p.y);if(i<0)return;const sp=stageState.sprites[i];
   if(stagePlaying){if(!sp.draggable)return;}else if(i!==stageSel)stageSelectSprite(i); // during play only draggable sprites move
@@ -5608,15 +5598,6 @@ function defineStageBlocks(){
   // ── Operators: extras ──
  Blockly.Blocks['st_letter_of']={init:function(){this.appendValueInput('INDEX').appendField(' letter');this.appendValueInput('TEXT').appendField('of');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
   Blockly.Blocks['st_str_contains']={init:function(){this.appendValueInput('A');this.appendValueInput('B').appendField('contains');this.appendDummyInput().appendField('?');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
-  // ── Ohbot extension — 7 motors + say (lip-sync) + eye colour + reset ──
-  const OB_MOTORS=[['HeadNod','HeadNod'],['HeadTurn','HeadTurn'],['HeadRoll','HeadRoll'],['EyeTurn','EyeTurn'],['EyeTilt','EyeTilt'],['BottomLip','BottomLip'],['TopLip','TopLip'],['Lid','Lid']];
-  Blockly.Blocks['ob_move']={init:function(){this.appendDummyInput().appendField('move').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('to').appendField(new Blockly.FieldNumber(5,0,10),'N');stmt(this);this.setColour(195);}};
-  Blockly.Blocks['ob_change']={init:function(){this.appendDummyInput().appendField('change').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('by').appendField(new Blockly.FieldNumber(1,-10,10),'N');stmt(this);this.setColour(195);}};
-  Blockly.Blocks['ob_move_time']={init:function(){this.appendDummyInput().appendField('move').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('to').appendField(new Blockly.FieldNumber(5,0,10),'N').appendField('in').appendField(new Blockly.FieldNumber(1,0,60,0.1),'SECS').appendField('seconds');stmt(this);this.setColour(195);}};
-  Blockly.Blocks['ob_say']={init:function(){this.appendDummyInput().appendField('say').appendField(new Blockly.FieldTextInput('Hello, I am Ohbot'),'TXT');stmt(this);this.setColour(195);}};
-  Blockly.Blocks['ob_eyecolor']={init:function(){const fld=(Blockly.FieldColour)?new Blockly.FieldColour('#39c0ed'):new Blockly.FieldTextInput('#39c0ed');this.appendDummyInput().appendField('set eye colour to').appendField(fld,'COLOR');stmt(this);this.setColour(195);}};
-  Blockly.Blocks['ob_reset']={init:function(){this.appendDummyInput().appendField('reset Ohbot');stmt(this);this.setColour(195);}};
-  Blockly.Blocks['ob_speaking']={init:function(){this.appendDummyInput().appendField('Ohbot is speaking?');this.setOutput(true,null);this.setColour(195);}};
   // ── micro:bit emulator — 5×5 LED display + buttons (MakeCode-style wording) ──
   const MB_COL='#00A86B';
  const MB_ICONLIST=[[' heart','heart'],[' happy','happy'],[' sad','sad'],[' yes','yes'],[' no','no'],[' arrow up','arrow_n'],[' arrow down','arrow_s'],[' square','square'],[' duck','duck'],['• small','small']];
@@ -5766,8 +5747,7 @@ function stageToolbox(){const blk=t=>({kind:'block',type:t});
     {kind:'category',name:'Radio',colour:'#e0792b',contents:[blk('mb_radio_set_group'),{kind:'block',type:'mb_radio_send_number',inputs:{NUM:N(0)}},{kind:'block',type:'mb_radio_send_string',inputs:{MSG:{shadow:{type:'text',fields:{TEXT:'hi'}}}}},blk('mb_on_radio_number'),blk('mb_on_radio_string'),blk('mb_radio_number'),blk('mb_radio_string')]},
     {kind:'category',name:'Control',colour:'#e0792b',contents:[blk('mb_run_background')]},
   ]},
-  {kind:'category',name:'Ohbot',colour:'195',contents:[blk('ob_move'),blk('ob_change'),blk('ob_move_time'),blk('ob_say'),blk('ob_eyecolor'),blk('ob_reset'),blk('ob_speaking')]},
-].filter(cat=>(OHBOT_ON||(cat.name||'').indexOf('Ohbot')<0)&&((MICROBIT_ON&&keyStage!=='ks1')||(cat.name||'').indexOf('micro:bit')<0))};}
+].filter(cat=>((MICROBIT_ON&&keyStage!=='ks1')||(cat.name||'').indexOf('micro:bit')<0))};}
 function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="st_when_flag" x="20" y="20"><next><block type="st_goto_center"><next><block type="st_say"><field name="TXT">Use the arrow keys!</field></block></next></block></next></block>
 <block type="st_when_key" x="20" y="160"><field name="KEY">left</field><next><block type="st_change_x"><field name="N">-10</field></block></next></block>
@@ -6775,7 +6755,15 @@ const CRITTER_HELP=[
  ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Critter Lab needs the internet the first time it opens.</p><h3>3D print it</h3><p>Press <b>3D print</b> to download your Critter for a 3D printer. Pick a size (8, 12 or 16 cm long) and keep the <b>base plate</b> on so it stands up. <b>STL</b> works with any printer in one colour; <b>3MF</b> keeps your Critter’s colours for printers with more than one filament. Ask a grown-up to print it!</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
-function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
+const ROBOT_HELP=[
+ ['start',' Start',`<h3>Welcome to the Robot Lab!</h3><p>Your robot is on the right; your blocks are on the left. Press <b>Run</b> to start your program, <b>Stop</b> to stop it, and <b>Reset</b> to put the robot back how it started. Drag the picture to look around the robot.</p><h3>Make it yours</h3><p>Under the robot, give it a <b>name</b> (it goes on the plinth) and pick its <b>body</b> and <b>trim</b> colours.</p><h3>Your first program</h3><ol><li>From <b>Events</b>, drag out <b>when Run is clicked</b>.</li><li>From <b>Speech</b>, add <b>say … until done</b> and type something.</li><li>From <b>Face &amp; lights</b>, add <b>make a happy face</b>.</li><li>Press <b>Run</b>!</li></ol>`],
+ ['moves',' Moves',`<p>The robot has eight <b>motors</b>. Each one goes from <b>0</b> to <b>10</b>:</p><ul><li><b>head turn</b> — 0 looks left, 10 looks right, 5 is straight ahead.</li><li><b>head nod</b> — 0 looks down, 10 looks up.</li><li><b>head tilt</b> — tips the head to one side.</li><li><b>eyes left/right</b> and <b>eyes up/down</b> — where the eyes look.</li><li><b>eyelids</b> — 0 wide open, 10 shut.</li><li><b>eyebrows</b> — 0 low, 10 high.</li><li><b>mouth</b> — 0 closed, 10 wide open.</li></ul><p><b>move … to</b> waits until the motor gets there. <b>start moving … to</b> doesn't wait, so you can move several motors at once. <b>set speed</b> makes a motor slower (1) or faster (10). <b>look left/right/up/down</b> moves the head and eyes together.</p>`],
+ ['face',' Face & talk',`<ul><li><b>make a … face</b> — happy, sad, surprised, angry, sleepy, thinking or normal.</li><li><b>blink</b>, and <b>set … light</b> for the eyes, ears, chest or antenna (or all of them).</li><li><b>set body / trim colour</b> repaints the robot while it runs (Stop or Reset puts its own colours back).</li><li><b>say</b> — the robot talks and its mouth moves. <b>say … until done</b> waits until it has finished. <b>set voice</b> changes how it sounds.</li><li><b>ask … and wait</b> — the robot asks a question and a box appears; <b>answer</b> is what was typed. Try: <i>say (join "Hello " answer)</i>.</li></ul>`],
+ ['ideas',' Ideas',`<ul><li><b>Tap me!</b> Use <b>when the head is tapped</b> to make it giggle, and <b>when the chest light is tapped</b> to change colour.</li><li><b>Follow the mouse:</b> <i>forever: start moving head turn to (mouse x)</i> and <i>start moving head nod to (mouse y)</i>.</li><li><b>Moods:</b> press keys to change face: <b>when h key pressed</b> → happy, <b>when s key pressed</b> → sad.</li><li><b>Quiz master:</b> ask a question, then <b>if</b> the answer is right, make a happy face and turn the lights green.</li><li><b>Robot theatre:</b> write a whole show with <b>say … until done</b>, faces and <b>wait</b> blocks.</li></ul>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Robot Lab needs the internet the first time it opens. The robot's voice is your browser's own speech, so it sounds a little different on different computers.</p>`],
+ ['cloud',' Cloud',_cloudHelp]
+];
+function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
 let helpTab='start';
 function openHelp(){const T=helpTabs();buildHelpTabs();selHelpTab(T[0][0]);document.getElementById('help-modal').classList.remove('hide');}
 function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';helpTabs().forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
@@ -6864,6 +6852,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <h3> 3D World (Key Stage 2 &amp; 3)</h3>
  <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
  <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. On slower Chromebooks, the Blocky characters are the lightest.</p>
+ <h3> Robot Lab (Key Stage 2 &amp; 3)</h3>
+ <p>The <b>Robot Lab</b> is a robot to code with blocks: a 3D robot head and shoulders on a plinth, with eight motors from 0 to 10 (head turn, nod and tilt, eyes left/right and up/down, eyelids, eyebrows and mouth), lights in its eyes, ears, chest and antenna, and a voice (the browser's own speech, so no recordings are made or sent). Pupils name it and choose its colours. Blocks cover events (Run, tapping the robot, keys, messages), moves (move and wait, start moving, change by, move over time, speed, look), faces (happy, sad, surprised, angry, sleepy, thinking), lights, speech (say, say until done, voices, ask and answer), sensing (motor positions, keys, mouse position, timer), loops, if, maths, text and variables. It covers sequence, repetition, selection, variables and input/output, and works well for conversations, quizzes and short robot plays. Saving, sharing and handing in work as usual; there is no live collaboration in the Robot Lab yet.</p>
  <h3> Turtle (Logo)</h3>
  <p>The <b>Turtle</b> project is a text <b>Logo</b> playground (like the classic turtle-graphics languages): pupils type commands on the left and a turtle draws on the right. Press ▶ <b>Run</b> to draw, ⏹ <b>Stop</b> / <b>Clear</b> to start over, and use the <b> Speed</b> slider to watch the turtle move slowly or draw instantly. Built-in <b>Commands</b> and <b>Examples</b> buttons get pupils started.</p>
   <p>It supports movement (<code>fd/forward</code>, <code>bk/back</code>, <code>rt/right</code>, <code>lt/left</code>, <code>setxy</code>, <code>seth</code>, <code>home</code>), pen control (<code>pu/pd</code>, <code>setpensize</code>, <code>setpencolor</code>, <code>setbg</code>), <code>repeat</code> loops, <code>if</code>/<code>ifelse</code>, variables (<code>make "x …</code> and <code>:x</code>), arithmetic and <code>random</code>, and pupils can teach the turtle <b>their own commands</b> with <code>to NAME … end</code> — a great bridge from blocks to typed code, and ideal for maths links (angles, repetition, polygons). It works at any key stage, but typing suits <b>Key Stage 2 upward</b> best.</p>
@@ -7202,8 +7192,11 @@ function switchMode(m){
   // Turtle & Stage projects use their own unified views, not Build/Play/Code modes.
   if(projectType==='critter'){enterCritterUI();return;}
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
+  if(projectType==='robot'){enterRobotUI();return;}
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(projectType==='3d'){enter3DUI();return;}
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
   if(projectType==='turtle'){enterTurtleUI();return;}
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(projectType==='stage'){enterStageUI();return;}
@@ -7262,7 +7255,7 @@ function buildPayload(){
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},hazardCfg:L.hazardCfg||{},trapCfg:L.trapCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
-  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
+  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),robot:(projectType==='robot'?robotCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -7315,10 +7308,14 @@ function applyPayload(d){leaveLiveRoom(); // opening a different project leaves 
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
-  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':'platformer'; // legacy payloads (no field) are always platformer
+  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':(d.projectType==='robot')?'robot':'platformer'; // legacy payloads (no field) are always platformer
   if(projectType!=='critter'&&typeof exitCritterUI==='function')exitCritterUI();
   if(projectType!=='3d'&&typeof exit3DUI==='function')exit3DUI();
-  if(projectType==='critter'){
+  if(projectType!=='robot'&&typeof exitRobotUI==='function')exitRobotUI();
+  if(projectType==='robot'){
+    robotData=(d.robot&&typeof d.robot==='object')?d.robot:null; // robot-app.js checks the blocks/colours when it loads them
+    _robotLoad=true;if(typeof enterRobotUI==='function')enterRobotUI();
+  }else if(projectType==='critter'){
     critterData=(d.critter&&typeof d.critter==='object')?d.critter:null; // critter-core's normalise() checks every field when it loads
     if(typeof enterCritterUI==='function')enterCritterUI();
   }else if(projectType==='3d'){
@@ -7438,7 +7435,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&projectType!=='robot'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -8791,6 +8788,7 @@ function loop(){
   gemA+=0.07;goalA+=0.055;tick++;
   if(projectType==='critter')return; // the Critter app runs its own render + physics loop
   if(projectType==='3d')return; // the 3D World app runs its own render + physics loop
+  if(projectType==='robot')return; // the Robot Lab runs its own render loop
   if(projectType==='turtle'){turtleFrame();return;} // turtle playground renders + steps its own interpreter
  if(projectType==='stage'){if(stagePlaying){stageFrame();drawStage();}else if(stageNeedsDraw||(tick&3)===0){drawStage();stageNeedsDraw=false;}return;} // play = 60fps; idle = ~15fps (or on demand) to save battery on Chromebooks
   if(mode==='build'){drawBuild();return;}
@@ -8861,17 +8859,10 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.05.3';
+const CJ_VERSION='2026.10.05.4';
 const CJ_WHATSNEW=[
- "Ready-made lessons for teachers: 8 complete Key Stage 1 and 2 computing lessons, each with a plan, curriculum links and a starter project.",
- "Lesson slides: present each lesson on the board in full screen, with teacher notes, a Presenter view for a second screen, and Print / PDF.",
- "A new For teachers section on the home page: lessons, classes, Critter Showdown and the Teacher Guide in one place.",
- "Lesson cards: open a lesson's starter and a card in the corner guides you step by step. It can read itself aloud and remembers your step.",
- "Fixed: a Stage project saved while a later sprite was selected could mix up its sprites' code when reopened.",
- "CodeJump has a new home: codejump.co.uk! Your saved games, settings and sign-in come with you, and old links still work.",
- "NEW project type: 3D World! Build a 3D world with blocks, then press Run to play it. (Key Stage 2 & 3.)",
- "Build a 3D world together: Share, then Collaborate, and up to five classmates can edit the same world live.",
- "Critter Showdown: when your teacher picks you, a message pops up on your screen. Press Join and it saves your work first.",
+ "NEW: Robot Lab! Code a talking 3D robot with blocks. Give it a name and colours, make faces, move its head and eyes, light it up and make it talk. (Key Stage 2 and 3.)",
+ "Teachers: a new-look Teacher Hub, with every lesson as a picture, your classes, Critter Showdowns and the Teacher Guide in one place.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

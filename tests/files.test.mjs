@@ -25,7 +25,7 @@ ok(!/['"`][^'"`\n]*codejump\.primarycodingleague\.co\.uk/.test(master), 'no link
 
 // the lazy-loaded engines (ES modules) parse too
 const mods = [];
-for (const dir of ['critter', 'world']) for (const f of readdirSync(join(ROOT, dir))) if (f.endsWith('.js')) mods.push(join(dir, f));
+for (const dir of ['critter', 'world', 'robot', 'lessons']) for (const f of readdirSync(join(ROOT, dir))) if (f.endsWith('.js')) mods.push(join(dir, f));
 let badMods = 0;
 for (const m of mods) {
   try { execFileSync(process.execPath, ['--check', '--input-type=module'], { input: readFileSync(join(ROOT, m)), stdio: ['pipe', 'pipe', 'pipe'] }); }

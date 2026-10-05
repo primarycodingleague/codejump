@@ -15,6 +15,12 @@ for (const l of LESSONS) {
     `${l.id}: complete (plan ${mins} of ${l.minutes} min, ${l.steps.length} pupil steps, starter + picture)`);
 }
 
+const { CURRICULA, curriculumLinks } = await import(join(ROOT, 'lessons', 'curricula.js'));
+for (const c of Object.keys(CURRICULA)) {
+  const empty = LESSONS.filter(l => !curriculumLinks(c, l.curriculum).items.length).map(l => l.id);
+  ok(CURRICULA[c].framework && !empty.length, `${c}: curriculum links for every lesson${empty.length ? ' (missing: ' + empty.join(', ') + ')' : ''}`);
+}
+
 const site = await serve();
 const b = await browser();
 const errors = [], assigned = [];
@@ -26,7 +32,7 @@ const cloud = async (path, method, body) => {
 const step = (page, fn, arg) => page.evaluate(fn, arg);
 const run = (page, frames) => page.evaluate(n => { stageStart(); for (let i = 0; i < n; i++) stageFrame(); }, frames);
 try {
-  const { page } = await openApp(b, site.url, { errors, cloud, init: () => { localStorage.setItem('bap_cloud_token', 'tok'); } });
+  const { page } = await openApp(b, site.url, { errors, cloud, init: () => { localStorage.setItem('bap_cloud_token', 'tok'); localStorage.setItem('cj_country', 'england'); } });
   await page.waitForFunction(() => typeof cloudMe !== 'undefined' && cloudMe && cloudMe.role === 'teacher', null, { timeout: 10000 }).catch(() => {});
 
   // ---- the library
@@ -39,6 +45,17 @@ try {
   await page.waitForSelector('#ls-open');
   const detail = await page.textContent('#ls-body');
   ok(/We are learning to/.test(detail) && /National Curriculum/.test(detail) && /Lesson plan/.test(detail) && /Key words/.test(detail), 'a lesson shows its plan, curriculum links and key words');
+  // ---- country: the curriculum links, school-year names and the age chooser follow the teacher's country
+  await page.selectOption('#ls-country', 'usa');
+  await page.waitForFunction(() => /Grades K–1/.test(document.getElementById('ls-body').textContent));
+  const us = await page.textContent('#ls-body');
+  ok(!/National Curriculum \(computing\)/.test(us) && /CSTA/.test(us), 'choosing the United States shows its curriculum links and grade names');
+  ok(await page.evaluate(() => localStorage.getItem('cj_country') === 'usa' && /Grades K–2/.test(document.querySelector('#ks-modal .ks-opt[data-ks="ks1"]').textContent)), 'the country is remembered and renames the age groups in the age chooser');
+  await page.selectOption('#ls-country', 'scotland');
+  await page.waitForFunction(() => /P2–P3/.test(document.getElementById('ls-body').textContent));
+  ok(/Curriculum for Excellence/.test(await page.textContent('#ls-body')), 'Scotland shows Curriculum for Excellence links');
+  await page.selectOption('#ls-country', 'england');
+  await page.waitForFunction(() => /National Curriculum/.test(document.getElementById('ls-body').textContent));
   await page.evaluate(() => { window.__printed = ''; doPrint = h => { window.__printed = h; }; });
   await page.click('#ls-print');
   ok(/Lesson plan/.test(await page.evaluate(() => window.__printed)), 'Print lesson plan prints the plan');

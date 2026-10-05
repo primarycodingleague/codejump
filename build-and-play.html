@@ -264,7 +264,13 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .ls-head .ls-x[hidden]{display:none;}
 .ls-body{padding:18px 20px 24px;overflow-y:auto;line-height:1.5;font-size:15px;}
 .ls-intro{margin:0 0 14px;color:#4a4f57;}
-.ls-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;}
+.ls-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;align-items:center;}
+.ls-grow{flex:1;}
+.cj-country{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:inherit;}
+.cj-country select{font:inherit;font-weight:600;padding:6px 8px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#222;}
+.hm-tl .cj-country{margin-top:10px;color:#f4ead6;}
+.ls-src{font-size:.75rem;opacity:.75;margin:8px 0 0;}
+.ls-src a{color:inherit;}
 .ls-chip{border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;border-radius:999px;padding:6px 14px;font:700 14px var(--font);cursor:pointer;min-height:40px;}
 .ls-chip.on{background:#1b1b1f;color:#fff;}
 .ls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px;}
@@ -1668,7 +1674,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         <div class="hm-tl-top">
           <div class="hm-tl-text">
             <h3><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</h3>
-            <p>Each lesson has a plan with timings and what to say, slides to present on the board, a starter project, and a Lesson card that takes pupils through it step by step. Key Stage 1 and 2, linked to the National Curriculum.</p>
+            <p>Each lesson has a plan with timings and what to say, slides to present on the board, a starter project, and a Lesson card that takes pupils through it step by step. For ages 5 to 11, with the curriculum links for your country.</p>
           </div>
           <button class="hm-btn gold lg" id="h-lessons"><svg class="ic"><use href="#i-book"></use></svg> See all the lessons</button>
         </div>
@@ -1765,6 +1771,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
           <div class="hm-tl-text">
             <h3><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</h3>
             <p>Pick a lesson to present its slides, open the starter, give it to a class or print the plan.</p>
+            <div id="th-country-slot"></div>
           </div>
           <button class="hm-btn gold lg" id="th-lessons" onclick="_lsCurrent=null;openLessons()"><svg class="ic"><use href="#i-book"></use></svg> All the lessons</button>
         </div>
@@ -2785,7 +2792,7 @@ const HOME_LESSONS=['cat-to-star','turtle-shapes','teach-the-computer','microbit
 async function homeLessonStrip(){
   const el=document.getElementById('h-lesson-strip');if(!el||el.childElementCount)return;
   try{await loadLessons();}catch(e){return;}
-  el.innerHTML=HOME_LESSONS.map(id=>lessonsMod.lesson(id)).filter(Boolean).map(l=>`<button class="hm-lcard" data-lesson="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div><small>${l.ks==='ks1'?'KS1':'KS2'} · ${l.minutes} min</small><b>${lsEsc(l.title)}</b><span>${lsEsc(l.tool)}</span></div></button>`).join('');
+  el.innerHTML=HOME_LESSONS.map(id=>lessonsMod.lesson(id)).filter(Boolean).map(l=>`<button class="hm-lcard" data-lesson="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div><small>${lsEsc(cjBand(l.ks,1))} · ${l.minutes} min</small><b>${lsEsc(l.title)}</b><span>${lsEsc(l.tool)}</span></div></button>`).join('');
   el.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{_lsCurrent=b.dataset.lesson;openLessons();});
 }
 (function(){const t=document.getElementById('home-teachers');if(!t)return; // load the lessons when the teacher section comes near
@@ -3121,6 +3128,52 @@ async function withCritterLab(fn){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// COUNTRY — a teacher picks their country; the lessons then show that country's curriculum statements
+// (lessons/curricula.js), its names for school years, and the age chooser (#ks-modal) uses its names for the age groups.
+// The app's own key stages (ks1/ks2/ks3) don't change, only the words. Device setting (localStorage cj_country); the
+// first guess comes from the browser's language and time zone. To add a country: one entry here + one in curricula.js.
+// ═══════════════════════════════════════════════════════════════════════
+const _ord=n=>n+(n%100>10&&n%100<14?'th':['th','st','nd','rd'][n%10]||'th');
+const CJ_COUNTRIES=[
+  {c:'england',n:'England',bands:{ks1:['Key Stage 1','KS1','Ages 5–7'],ks2:['Key Stage 2','KS2','Ages 7–11'],ks3:['Key Stage 3','KS3','Ages 11–14']},yr:(a,b)=>'Years '+a+'–'+b},
+  {c:'scotland',n:'Scotland',bands:{ks1:['P1–P3','P1–P3','Ages 5–7'],ks2:['P4–P7','P4–P7','Ages 7–11'],ks3:['S1–S3','S1–S3','Ages 11–14']},yr:(a,b)=>'P'+(a+1)+'–P'+(b+1)},
+  {c:'wales',n:'Wales',bands:{ks1:['Years 1–2','Years 1–2','Ages 5–7'],ks2:['Years 3–6','Years 3–6','Ages 7–11'],ks3:['Years 7–9','Years 7–9','Ages 11–14']},yr:(a,b)=>'Years '+a+'–'+b},
+  {c:'ni',n:'Northern Ireland',bands:{ks1:['P1–P4','P1–P4','Ages 4–8'],ks2:['P5–P7','P5–P7','Ages 8–11'],ks3:['Years 8–10','Years 8–10','Ages 11–14']},yr:(a,b)=>'P'+(a+1)+'–P'+(b+1)},
+  {c:'ireland',n:'Ireland',bands:{ks1:['Infants–1st class','Infants–1st','Ages 4–7'],ks2:['2nd–5th class','2nd–5th class','Ages 7–11'],ks3:['6th class–2nd year','6th–2nd year','Ages 11–14']},
+    yr:(a,b)=>{const c=n=>n<=1?'Senior Infants':_ord(n-1);return a===b?c(a):c(a)+'–'+c(b)+' class';}},
+  {c:'cyprus',n:'Cyprus',bands:{ks1:['Years 1–2','Years 1–2','Ages 5–7'],ks2:['Years 3–6','Years 3–6','Ages 7–11'],ks3:['Years 7–9','Years 7–9','Ages 11–14']},yr:(a,b)=>'Years '+a+'–'+b},
+  {c:'usa',n:'United States',bands:{ks1:['Grades K–2','K–2','Ages 5–8'],ks2:['Grades 3–5','3–5','Ages 8–11'],ks3:['Grades 6–8','6–8','Ages 11–14']},
+    yr:(a,b)=>{const g=n=>n<=1?'K':String(n-1);return 'Grades '+g(a)+'–'+g(b);}},
+  {c:'australia',n:'Australia',bands:{ks1:['Foundation–Year 2','F–2','Ages 5–8'],ks2:['Years 3–6','Years 3–6','Ages 8–12'],ks3:['Years 7–8','Years 7–8','Ages 12–14']},
+    yr:(a,b)=>a<=1?'Foundation–Year '+(b-1):'Years '+(a-1)+'–'+(b-1)},
+  {c:'nz',n:'New Zealand',bands:{ks1:['Years 1–3','Years 1–3','Ages 5–7'],ks2:['Years 4–7','Years 4–7','Ages 7–11'],ks3:['Years 8–10','Years 8–10','Ages 11–14']},yr:(a,b)=>'Years '+(a+1)+'–'+(b+1)},
+  {c:'other',n:'Another country',bands:{ks1:['Ages 5–7','Ages 5–7','Younger pupils'],ks2:['Ages 7–11','Ages 7–11','Older primary'],ks3:['Ages 11–14','Ages 11–14','Lower secondary']},yr:(a,b)=>'Ages '+(a+4)+'–'+(b+5)}
+];
+function cjGuessCountry(){
+  try{const l=(navigator.language||'').toLowerCase(),tz=(Intl.DateTimeFormat().resolvedOptions().timeZone||'');
+    if(/cy$/.test(l)||tz==='Asia/Nicosia'||tz==='Asia/Famagusta')return 'cyprus';
+    if(l==='en-us'||/^America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit|Indiana)/.test(tz)||tz==='Pacific/Honolulu')return 'usa';
+    if(l==='en-au'||/^Australia\//.test(tz))return 'australia';
+    if(l==='en-nz'||tz==='Pacific/Auckland')return 'nz';
+    if(l==='en-ie'||l==='ga'||tz==='Europe/Dublin')return 'ireland';
+    if(l==='cy'||l==='cy-gb')return 'wales';
+    if(tz==='Europe/London'||l==='en-gb')return 'england';}catch(e){}
+  return 'other';
+}
+let cjCountry=(()=>{try{const v=localStorage.getItem('cj_country');if(v&&CJ_COUNTRIES.some(x=>x.c===v))return v;}catch(e){}return cjGuessCountry();})();
+function cjCountryInfo(c){return CJ_COUNTRIES.find(x=>x.c===(c||cjCountry))||CJ_COUNTRIES[0];}
+function cjBand(ks,i){const b=cjCountryInfo().bands[ks]||cjCountryInfo().bands.ks2;return b[i==null?0:i];} // 0 long name, 1 short, 2 ages
+function cjYears(years){const m=String(years||'').match(/(\d+)\D+(\d+)/)||String(years||'').match(/(\d+)/);if(!m)return years||'';const a=+m[1],b=+(m[2]||m[1]);return cjCountryInfo().yr(a,b);}
+function cjCountrySelect(id){return `<label class="cj-country" for="${id}">${ksvg('i-school')} Curriculum <select id="${id}">${CJ_COUNTRIES.map(x=>`<option value="${x.c}"${x.c===cjCountry?' selected':''}>${lsEsc(x.n)}</option>`).join('')}</select></label>`;}
+function cjBindCountry(id,after){const s=document.getElementById(id);if(s)s.onchange=()=>{setCountry(s.value);if(after)after();};}
+applyCountryLabels();
+function setCountry(c){if(!CJ_COUNTRIES.some(x=>x.c===c))return;cjCountry=c;try{localStorage.setItem('cj_country',c);}catch(e){}applyCountryLabels();}
+function applyCountryLabels(){ // the age chooser speaks the teacher's country's language for school years
+  document.querySelectorAll('#ks-modal .ks-opt[data-ks]').forEach(b=>{const k=b.dataset.ks,t=b.querySelector('b'),s=b.querySelector('small');
+    if(!b.dataset.what)b.dataset.what=(s&&s.innerHTML.split('<br>')[1])||'';
+    if(t)t.textContent=cjBand(k,0);if(s)s.innerHTML=lsEsc(cjBand(k,2))+'<br>'+b.dataset.what;});
+}
+// ═══════════════════════════════════════════════════════════════════════
 // READY-MADE LESSONS — complete, no-preparation lessons (lessons/lessons.js: the plans + pupil steps; lessons/starters/
 // <id>.json: each lesson's starter project; lessons/pics/<id>.jpg). Lazy-loaded like the Critter Lab. Opening a starter
 // sets `lessonActive` ({id, step}), which travels in the payload (`lesson`), so a starter handed out to a class opens
@@ -3131,6 +3184,11 @@ function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lesson
 function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
 const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab'};
 function lsEsc(x){return cesc(x==null?'':x);}
+function lessonLinks(l){return lessonsMod.curriculumLinks?lessonsMod.curriculumLinks(cjCountry,l.curriculum):{heading:'Curriculum',framework:'',items:[],note:''};}
+function lessonLinksHTML(cur){
+  const items=cur.items.length?'<ul>'+cur.items.map(x=>'<li>'+(x.code?'<b>'+lsEsc(x.code)+'</b> ':'')+lsEsc(x.text)+'</li>').join('')+'</ul>':'<p style="margin:0">No close match in this framework. The lesson still fits its computing aims.</p>';
+  return items+'<p class="ls-src">'+lsEsc(cur.framework)+(cur.source?' · <a href="'+lsEsc(cur.source)+'" target="_blank" rel="noopener">source</a>':'')+(cur.note?'<br>'+lsEsc(cur.note):'')+'</p>';
+}
 async function openLessons(){
   const m=document.getElementById('lessons-modal');m.classList.remove('hide');
   const body=document.getElementById('ls-body');body.innerHTML='<p>Loading the lessons…</p>';
@@ -3143,12 +3201,13 @@ function lessonList(){
   const L=lessonsMod.LESSONS.filter(l=>_lsFilter==='all'||l.ks===_lsFilter);
   const chip=(k,t)=>`<button class="ls-chip${_lsFilter===k?' on':''}" data-f="${k}" aria-pressed="${_lsFilter===k}">${t}</button>`;
   const body=document.getElementById('ls-body');
-  body.innerHTML=`<p class="ls-intro">Complete computing lessons with no preparation: a lesson plan with timings and what to say, National Curriculum links, key words, support and stretch, and a starter project. When pupils open the starter, a <b>Lesson</b> card on their screen takes them through it step by step.</p>
-    <div class="ls-filter">${chip('all','All lessons')}${chip('ks1','Key Stage 1')}${chip('ks2','Key Stage 2')}</div>
+  body.innerHTML=`<p class="ls-intro">Complete computing lessons with no preparation: a lesson plan with timings and what to say, curriculum links for your country, key words, support and stretch, and a starter project. When pupils open the starter, a <b>Lesson</b> card on their screen takes them through it step by step.</p>
+    <div class="ls-filter">${chip('all','All lessons')}${chip('ks1',cjBand('ks1'))}${chip('ks2',cjBand('ks2'))}<span class="ls-grow"></span>${cjCountrySelect('ls-country')}</div>
     <div class="ls-grid">${L.map(l=>`<button class="ls-card" data-id="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div class="ls-cbody"><h3>${lsEsc(l.title)}</h3>
-      <div class="ls-meta"><span class="ls-tag ${l.ks}">${l.ks==='ks1'?'KS1':'KS2'} · ${lsEsc(l.years)}</span><span class="ls-tag">${l.minutes} min</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
+      <div class="ls-meta"><span class="ls-tag ${l.ks}">${lsEsc(cjYears(l.years))}</span><span class="ls-tag">${l.minutes} min</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
       <p>${lsEsc(l.summary)}</p></div></button>`).join('')}</div>`;
   body.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{_lsFilter=b.dataset.f;lessonList();});
+  cjBindCountry('ls-country',lessonList);
   body.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>lessonShow(b.dataset.id));
   body.scrollTop=0;
 }
@@ -3157,17 +3216,19 @@ function lessonShow(id){
   _lsCurrent=id;document.getElementById('ls-back').hidden=false;document.getElementById('ls-title').textContent=l.title;
   const li=a=>'<ul>'+a.map(x=>'<li>'+lsEsc(x)+'</li>').join('')+'</ul>';
   const body=document.getElementById('ls-body');
-  body.innerHTML=`<div class="ls-meta" style="margin-bottom:12px"><span class="ls-tag ${l.ks}">${l.ks==='ks1'?'Key Stage 1':'Key Stage 2'} · ${lsEsc(l.years)}</span><span class="ls-tag">${l.minutes} minutes</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
+  const cur=lessonLinks(l);
+  body.innerHTML=`<div class="ls-meta" style="margin-bottom:12px"><span class="ls-tag ${l.ks}">${lsEsc(cjBand(l.ks))} · ${lsEsc(cjYears(l.years))}</span><span class="ls-tag">${l.minutes} minutes</span><span class="ls-tag">${lsEsc(l.tool)}</span><span class="ls-grow"></span>${cjCountrySelect('ls-country')}</div>
     <div class="ls-actions"><button class="ls-btn gold" id="ls-present-btn">${ksvg('i-present')} Present the slides</button><button class="ls-btn gold" id="ls-open">${ksvg('i-play')} Open the starter</button><button class="ls-btn" id="ls-give">${ksvg('i-people')} Give to my class</button><button class="ls-btn" id="ls-print">${ksvg('i-print')} Print lesson plan</button><button class="ls-btn" id="ls-print-slides">${ksvg('i-print')} Print slides / PDF</button></div>
     <div id="ls-give-box"></div>
     <p class="ls-obj">${lsEsc(l.objective)}</p>
-    <div class="ls-two" style="margin-top:12px"><div class="ls-note"><h3>Pupils can say</h3>${li(l.success)}</div><div class="ls-note"><h3>National Curriculum (computing)</h3>${li(l.curriculum)}</div></div>
+    <div class="ls-two" style="margin-top:12px"><div class="ls-note"><h3>Pupils can say</h3>${li(l.success)}</div><div class="ls-note"><h3>${lsEsc(cur.heading)}</h3>${lessonLinksHTML(cur)}</div></div>
     <div class="ls-sec"><h3>Key words</h3><div class="ls-words">${l.words.map(w=>'<b>'+lsEsc(w[0])+'</b><span>'+lsEsc(w[1])+'</span>').join('')}</div></div>
     <div class="ls-sec"><h3>You’ll need</h3>${li(l.need)}</div>
     <div class="ls-sec"><h3>Lesson plan</h3><div class="ls-plan">${l.plan.map(p=>`<div class="ls-step"><div class="ls-min">${p.min} min</div><div><h4>${lsEsc(p.title)}</h4>${p.html}</div></div>`).join('')}</div></div>
     <div class="ls-sec"><h3>What pupils see: the Lesson card</h3><ol>${l.steps.map(s=>'<li><b>'+lsEsc(s.t)+':</b> '+lsEsc(s.d)+'</li>').join('')}</ol></div>
     <div class="ls-two ls-sec"><div class="ls-note"><h3>Support</h3><p style="margin:0">${lsEsc(l.support)}</p></div><div class="ls-note"><h3>Stretch</h3><p style="margin:0">${lsEsc(l.stretch)}</p></div></div>
     <div class="ls-sec"><h3>Assessment: look for pupils who…</h3>${li(l.assess)}</div>`;
+  cjBindCountry('ls-country',()=>lessonShow(id));
   document.getElementById('ls-present-btn').onclick=()=>lessonPresent(id);
   document.getElementById('ls-open').onclick=()=>lessonOpenStarter(id);
   document.getElementById('ls-give').onclick=()=>lessonGiveView(id);
@@ -3201,9 +3262,9 @@ async function lessonGiveView(id){
     catch(e){box.innerHTML='<div class="ls-note">Couldn’t send it: '+lsEsc(e.message)+'</div>';}});
 }
 function lessonPrint(id){
-  const l=lessonsMod.lesson(id),li=a=>'<ul>'+a.map(x=>'<li>'+lsEsc(x)+'</li>').join('')+'</ul>';
-  doPrint(`<div class="ls-print"><h1>${lsEsc(l.title)}</h1><div>${l.ks==='ks1'?'Key Stage 1':'Key Stage 2'} · ${lsEsc(l.years)} · ${l.minutes} minutes · CodeJump: ${lsEsc(l.tool)}</div>
-    <h2>${lsEsc(l.objective)}</h2>${li(l.success)}<h2>National Curriculum (computing)</h2>${li(l.curriculum)}
+  const l=lessonsMod.lesson(id),li=a=>'<ul>'+a.map(x=>'<li>'+lsEsc(x)+'</li>').join('')+'</ul>',cur=lessonLinks(l);
+  doPrint(`<div class="ls-print"><h1>${lsEsc(l.title)}</h1><div>${lsEsc(cjBand(l.ks))} · ${lsEsc(cjYears(l.years))} · ${l.minutes} minutes · CodeJump: ${lsEsc(l.tool)}</div>
+    <h2>${lsEsc(l.objective)}</h2>${li(l.success)}<h2>${lsEsc(cur.heading)}</h2>${lessonLinksHTML(cur)}
     <h2>Key words</h2><ul>${l.words.map(w=>'<li><b>'+lsEsc(w[0])+'</b>: '+lsEsc(w[1])+'</li>').join('')}</ul><h2>You’ll need</h2>${li(l.need)}
     <h2>Lesson plan</h2>${l.plan.map(p=>'<p><b>'+p.min+' min · '+lsEsc(p.title)+'</b></p>'+p.html).join('')}
     <h2>Pupil steps (shown on screen)</h2><ol>${l.steps.map(s=>'<li><b>'+lsEsc(s.t)+':</b> '+lsEsc(s.d)+'</li>').join('')}</ol>
@@ -3214,7 +3275,7 @@ function lessonPrint(id){
 let _lp=null; // {id, l, deck, i, notes, win, t0}
 const _lpPos={}; // last slide shown per lesson, so reopening carries on where you were
 function lessonDeck(l){
-  const ks=(l.ks==='ks1'?'Key Stage 1':'Key Stage 2')+' · '+l.years;
+  const ks=cjBand(l.ks)+' · '+cjYears(l.years);
   const d=[{kind:'title',notes:'A '+l.minutes+'-minute lesson. “Open the starter” at the bottom opens the starter project to show the class. '+(l.objective||'')},
     {kind:'obj',notes:'Read the objective together. Come back to the “I can” statements at the end of the lesson.'},
     {kind:'words',notes:'Say each word together, then ask pupils to use one in a sentence.'}];
@@ -3230,7 +3291,7 @@ function lessonSlideHTML(l,s,i,n){
   const foot=`<div class="lp-foot"><span>CodeJump · ${e(l.title)}</span><span>${i+1} / ${n}</span></div>`;
   const wrap=(cls,inner)=>`<div class="lp-slide ${cls}"><div class="lp-in">${inner}</div>${foot}</div>`;
   const ul=a=>'<ul class="lp-b">'+a.map(x=>'<li>'+e(x)+'</li>').join('')+'</ul>';
-  if(s.kind==='title')return wrap('lp-title',`<div class="lp-body"><div class="lp-col"><div class="lp-eyebrow">Computing · ${e(l.tool)}</div><h2 class="lp-t">${e(l.title)}</h2><div class="lp-meta">${e((l.ks==='ks1'?'Key Stage 1':'Key Stage 2')+' · '+l.years)}</div><div class="lp-hint">codejump.co.uk</div></div>${pic}</div>`);
+  if(s.kind==='title')return wrap('lp-title',`<div class="lp-body"><div class="lp-col"><div class="lp-eyebrow">Computing · ${e(l.tool)}</div><h2 class="lp-t">${e(l.title)}</h2><div class="lp-meta">${e(cjBand(l.ks)+' · '+cjYears(l.years))}</div><div class="lp-hint">codejump.co.uk</div></div>${pic}</div>`);
   if(s.kind==='obj')return wrap('',`<div class="lp-eyebrow">Today</div><h2 class="lp-t">We are learning to…</h2><div class="lp-col" style="flex:1;justify-content:center"><p class="lp-obj">${e(String(l.objective).replace(/^We are learning to\s*/i,'').replace(/^./,c=>c.toUpperCase()))}</p><ul class="lp-can">${l.success.map(x=>'<li>'+ksvg('i-check')+e(x)+'</li>').join('')}</ul></div>`);
   if(s.kind==='words')return wrap('',`<div class="lp-eyebrow">Key words</div><h2 class="lp-t">Words we’ll use</h2><div class="lp-col" style="flex:1;justify-content:center"><div class="lp-words${l.words.length>4?' n5':''}">${l.words.map(w=>'<div><b>'+e(w[0])+'</b><span>'+e(w[1])+'</span></div>').join('')}</div></div>`);
   if(s.kind==='steps')return wrap('',`<div class="lp-eyebrow">Follow the Lesson card on your screen</div><h2 class="lp-t">Your turn</h2><div class="lp-col" style="flex:1;justify-content:center"><ol class="lp-steps" style="grid-template-rows:repeat(${Math.ceil(l.steps.length/2)},auto)">${l.steps.map((st,k)=>'<li><i>'+(k+1)+'</i><div><b>'+e(st.t)+'</b><span>'+e(st.d)+'</span></div></li>').join('')}</ol></div>`);
@@ -5194,12 +5255,14 @@ function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.
 function thRenderHub(){
   const who=document.getElementById('th-who');
   if(who)who.textContent=(typeof isSignedIn==='function'&&isSignedIn()&&cloudMe)?'Teacher Hub · signed in as '+(cloudMe.realName||cloudMe.displayName||''):'Teacher Hub';
+  const slot=document.getElementById('th-country-slot');
+  if(slot){slot.innerHTML=cjCountrySelect('th-country');cjBindCountry('th-country',()=>{const st=document.getElementById('th-lesson-strip');if(st)st.innerHTML='';thLessonStrip();});}
   thLessonStrip();
 }
 async function thLessonStrip(){ // every lesson as a picture card (from lessons/lessons.js; stays empty if it can't load)
   const el=document.getElementById('th-lesson-strip');if(!el||el.childElementCount)return;
   try{await loadLessons();}catch(e){return;}
-  el.innerHTML=lessonsMod.LESSONS.map(l=>`<button class="hm-lcard" data-lesson="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div><small>${l.ks==='ks1'?'KS1':'KS2'} · ${l.minutes} min</small><b>${lsEsc(l.title)}</b><span>${lsEsc(l.tool)}</span></div></button>`).join('');
+  el.innerHTML=lessonsMod.LESSONS.map(l=>`<button class="hm-lcard" data-lesson="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div><small>${lsEsc(cjBand(l.ks,1))} · ${l.minutes} min</small><b>${lsEsc(l.title)}</b><span>${lsEsc(l.tool)}</span></div></button>`).join('');
   el.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{_lsCurrent=b.dataset.lesson;openLessons();});
 }
 function thSheetHTML(L){return '<div class="th-sheet">'+
@@ -6910,7 +6973,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>What is CodeJump?</h3>
   <p>CodeJump is a browser-based game maker for primary children, part of <b>Primary Coding League CIC</b>. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
   <h3>Ready-made lessons</h3>
-  <p>Press <b>Ready-made lessons</b> on the home page (teacher section) or in the Teacher Hub. Each lesson is a complete, no-preparation computing lesson for Key Stage 1 or 2: a plan with timings and what to say, National Curriculum links, key words, support and stretch ideas, what to look for, and a <b>starter project</b>. Press <b>Present the slides</b> to show the pupil slides on the board (full screen; arrow keys, space or a clicker move on; <b>N</b> shows your notes under the slide; <b>Presenter view</b> opens a second window with your notes, the next slide and a timer, for a laptop plus a board; <b>Print / PDF</b> prints them or saves a PDF), <b>Open the starter</b> to show the project, <b>Give to my class</b> to send every pupil their own copy (they open it from Cloud → My games), or <b>Print lesson plan</b>. When a pupil opens the starter, a <b>Lesson</b> card in the corner takes them through the task step by step (it can read itself aloud, folds away, and remembers their step when they save). Lessons: Get the cat to the star, Fix the dance, Make a level for a friend (KS1); Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course (KS2).</p>
+  <p>Press <b>Ready-made lessons</b> on the home page (teacher section) or in the Teacher Hub. Each lesson is a complete, no-preparation computing lesson for ages 5–11: a plan with timings and what to say, curriculum links for your country (pick it with <b>Curriculum</b> at the top of the lessons: England, Scotland, Wales, Northern Ireland, Ireland, Cyprus, the United States, Australia or New Zealand; it also renames the age groups when pupils start a project), key words, support and stretch ideas, what to look for, and a <b>starter project</b>. Press <b>Present the slides</b> to show the pupil slides on the board (full screen; arrow keys, space or a clicker move on; <b>N</b> shows your notes under the slide; <b>Presenter view</b> opens a second window with your notes, the next slide and a timer, for a laptop plus a board; <b>Print / PDF</b> prints them or saves a PDF), <b>Open the starter</b> to show the project, <b>Give to my class</b> to send every pupil their own copy (they open it from Cloud → My games), or <b>Print lesson plan</b>. When a pupil opens the starter, a <b>Lesson</b> card in the corner takes them through the task step by step (it can read itself aloud, folds away, and remembers their step when they save). Lessons: Get the cat to the star, Fix the dance, Make a level for a friend (KS1); Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course (KS2).</p>
   <h3>The four modes</h3>
  <ul><li><b> Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b> Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
  <h3> Three project types: Platformer, Stage &amp; Turtle</h3>
@@ -8951,12 +9014,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.06';
+const CJ_VERSION='2026.10.07';
 const CJ_WHATSNEW=[
- "NEW: AI Lab! Teach a computer to recognise your drawings or your words, watch it learn, test it, look inside it, then code a game that uses it. (Key Stage 2 and 3.)",
- "Teachers: a new ready-made lesson, Teach the computer (Years 5–6), with slides. It covers machine learning, fair testing and bias.",
- "The AI Lab uses no camera or microphone, and drawings and words are never sent anywhere.",
- "Fixed: the Robot Lab’s Run button didn’t work after leaving a project and opening it again.",
+ "Teachers: choose your country under Curriculum in the lessons or the Teacher Hub. Each lesson then shows your own curriculum's statements, with the official code and a link to the source.",
+ "Countries: England, Scotland, Wales, Northern Ireland, Ireland, Cyprus, the United States, Australia and New Zealand. Lessons also use your names for school years, like P2–P3, Grades K–1 or Foundation–Year 1.",
+ "The age chooser for a new project uses your country's names for age groups too. The blocks you get stay the same.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

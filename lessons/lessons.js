@@ -6,7 +6,8 @@
  *
  * Fields: id · title · ks ('ks1'|'ks2') · years · minutes · type (projectType of the starter) · tool (what pupils
  * use, in words) · summary · objective ("We are learning to …") · success (pupil "I can" statements) · curriculum
- * (Programme of study wording) · words [[word, meaning]] · need · plan [{min, title, html}] · support · stretch ·
+ * (objective keys: alg/debug1/predict/create1 for ages 5–7, design/ssr/reason/data/safe for 7–11 — curricula.js turns them into each
+ * country's official statements) · words [[word, meaning]] · need · plan [{min, title, html}] · support · stretch ·
  * assess · steps [{t, d}] (pupil card: short title + one or two plain sentences).
  * Keep the pupil steps in step with the real buttons and block names — tests/lessons.test.mjs opens every starter.
  *
@@ -17,18 +18,6 @@
  * Presenter view)}. {use:'steps'} puts the "Your turn" slide (the pupil Lesson-card steps) at that point.
  */
 
-const NC = {
-  ks1Alg: 'Understand what algorithms are; how they are implemented as programs on digital devices; and that programs execute by following precise and unambiguous instructions.',
-  ks1Debug: 'Create and debug simple programs.',
-  ks1Predict: 'Use logical reasoning to predict the behaviour of simple programs.',
-  ks1Create: 'Use technology purposefully to create, organise, store, manipulate and retrieve digital content.',
-  ks2Design: 'Design, write and debug programs that accomplish specific goals, including controlling or simulating physical systems; solve problems by decomposing them into smaller parts.',
-  ks2SSR: 'Use sequence, selection, and repetition in programs; work with variables and various forms of input and output.',
-  ks2Reason: 'Use logical reasoning to explain how some simple algorithms work and to detect and correct errors in algorithms and programs.',
-  ks2Data: 'Select, use and combine a variety of software (including internet services) on a range of digital devices to design and create a range of programs, systems and content that accomplish given goals, including collecting, analysing, evaluating and presenting data and information.',
-  ks2Safe: 'Use technology safely, respectfully and responsibly; recognise acceptable/unacceptable behaviour; identify a range of ways to report concerns about content and contact.'
-};
-
 export const LESSONS = [
   // ───────────────────────────────── KEY STAGE 1 ─────────────────────────────────
   {
@@ -36,7 +25,7 @@ export const LESSONS = [
     summary: 'Pupils write their first algorithm: a sequence of picture blocks that moves the cat to the star.',
     objective: 'We are learning to give a computer clear instructions in the right order.',
     success: ['I can join blocks to make a program.', 'I can press GO to run my program.', 'I can change a number to fix my program.'],
-    curriculum: [NC.ks1Alg, NC.ks1Debug],
+    curriculum: ['alg', 'debug1'],
     words: [['algorithm', 'a set of steps in the right order'], ['program', 'instructions a computer can follow'], ['sequence', 'the order the steps go in'], ['run', 'make the program start']],
     need: ['A device per pupil or pair, with CodeJump open', 'The board, to show the class first'],
     plan: [
@@ -63,7 +52,7 @@ export const LESSONS = [
     summary: 'The cat’s dance program has two bugs. Pupils predict, test and debug it.',
     objective: 'We are learning to find and fix mistakes (bugs) in a program.',
     success: ['I can say what I think a program will do.', 'I can find a bug by testing.', 'I can fix a bug by changing a block.'],
-    curriculum: [NC.ks1Debug, NC.ks1Predict],
+    curriculum: ['debug1', 'predict'],
     words: [['bug', 'a mistake in a program'], ['debug', 'find and fix the mistakes'], ['predict', 'say what you think will happen'], ['test', 'run it to check']],
     need: ['A device per pupil or pair, with CodeJump open'],
     plan: [
@@ -90,7 +79,7 @@ export const LESSONS = [
     summary: 'Pupils design a platform game level from Start to Finish, play-test it, then let a friend try.',
     objective: 'We are learning to plan, make and test something on a computer.',
     success: ['I can place blocks to make a path.', 'I can test my level by playing it.', 'I can make my level better after testing.'],
-    curriculum: [NC.ks1Create, NC.ks1Debug],
+    curriculum: ['create1', 'debug1'],
     words: [['design', 'plan how something will look and work'], ['test', 'try it to check it works'], ['improve', 'make it better']],
     need: ['A device per pupil or pair', 'Optional: squared paper to sketch a level first'],
     plan: [
@@ -119,7 +108,7 @@ export const LESSONS = [
     summary: 'Pupils turn a long list of commands into a short repeat loop, then work out the rule for drawing any shape.',
     objective: 'We are learning to use repetition (loops) to make programs shorter.',
     success: ['I can spot a pattern in a program.', 'I can use repeat to draw a shape.', 'I can explain how to work out the turn for any shape.'],
-    curriculum: [NC.ks2SSR, NC.ks2Reason],
+    curriculum: ['ssr', 'reason'],
     words: [['repeat / loop', 'do the same steps again'], ['command', 'one instruction, like fd 100'], ['angle', 'how far to turn, in degrees'], ['pattern', 'something that happens again and again']],
     need: ['A device per pupil or pair', 'Optional: protractors / a shape poster'],
     plan: [
@@ -147,7 +136,7 @@ export const LESSONS = [
     summary: 'Pupils finish a catching game: an “if touching” check adds to the score and sends the star back to the top.',
     objective: 'We are learning to use selection (if … then) and a score variable in a game.',
     success: ['I can explain what my program does when the star touches the catcher.', 'I can use an if block with a condition.', 'I can change the score.'],
-    curriculum: [NC.ks2SSR, NC.ks2Design],
+    curriculum: ['ssr', 'design'],
     words: [['selection', 'choosing what to do with if … then'], ['condition', 'a question that is true or false'], ['variable', 'a named value that can change, like the score'], ['forever loop', 'repeats until the game stops']],
     need: ['A device per pupil or pair'],
     plan: [
@@ -176,7 +165,7 @@ export const LESSONS = [
     summary: 'Pupils make a rock, paper, scissors game: shaking the micro:bit picks a random number, and if blocks choose which picture to show.',
     objective: 'We are learning to use input, random numbers, variables and selection to control a device.',
     success: ['I can use an input (shake) to start my code.', 'I can store a random number in a variable.', 'I can use if blocks to choose an output.'],
-    curriculum: [NC.ks2Design, NC.ks2SSR],
+    curriculum: ['design', 'ssr'],
     words: [['input', 'something the device senses, like a shake or a button'], ['output', 'something the device does, like lighting LEDs'], ['random', 'cannot be predicted'], ['variable', 'a named value that can change'], ['selection', 'choosing what to do with if … then']],
     need: ['A device per pupil or pair', 'Optional: real micro:bits (V2) and USB cables to try it for real'],
     plan: [
@@ -204,7 +193,7 @@ export const LESSONS = [
     summary: 'Pupils test a wobbly walking robot creature, change one thing at a time, and measure how much further it goes.',
     objective: 'We are learning to test and improve a design, changing one thing at a time.',
     success: ['I can test my Critter and record the result.', 'I can change one thing and test again (a fair test).', 'I can explain which change made it better.'],
-    curriculum: [NC.ks2Design, NC.ks2Reason],
+    curriculum: ['design', 'reason'],
     words: [['fair test', 'change only one thing so you know what made the difference'], ['iterate', 'test, improve, test again'], ['timing (beat)', 'when each leg moves in its cycle'], ['debug', 'find and fix what is going wrong']],
     need: ['A device per pupil or pair (Critter Lab needs the internet the first time)', 'A results table: change · Sprint distance'],
     plan: [
@@ -232,7 +221,7 @@ export const LESSONS = [
     summary: 'Pupils build a 3D obstacle course: walls to dodge, a moving block, lava that sends you back, and a finish line event.',
     objective: 'We are learning to use events and loops to make a 3D game work.',
     success: ['I can add and place objects in a 3D world.', 'I can use an event (when … touches …) to make something happen.', 'I can use a forever loop to make an object move.'],
-    curriculum: [NC.ks2Design, NC.ks2SSR],
+    curriculum: ['design', 'ssr'],
     words: [['event', 'something that happens, like touching, that starts code'], ['x, y, z', 'left/right, up/down and forwards/backwards in 3D'], ['loop', 'repeat code'], ['debug', 'find and fix problems']],
     need: ['A device per pupil or pair (3D World needs the internet the first time)'],
     plan: [
@@ -260,7 +249,7 @@ export const LESSONS = [
     summary: 'Pupils train a real neural network to recognise drawings, find out it only knows what it was shown, make it better with more varied examples, test it fairly, then code a game with it.',
     objective: 'We are learning how a computer can learn from examples (machine learning).',
     success: ['I can teach an AI with labelled examples.', 'I can test an AI fairly, with examples it has never seen.', 'I can explain why more, and more varied, examples make an AI better.', 'I can use the AI’s guess in a program.'],
-    curriculum: [NC.ks2Data, NC.ks2Reason, NC.ks2SSR],
+    curriculum: ['data', 'reason', 'ssr'],
     words: [['AI (artificial intelligence)', 'a computer doing something that seems clever, like recognising pictures'], ['machine learning', 'a computer learning from examples instead of being given rules'],
       ['label', 'the name of a group of examples, like “circle”'], ['training', 'when the computer practises on the examples'], ['confidence', 'how sure the AI is, from 0 to 100%'], ['bias', 'when an AI is unfair because of the examples it was given']],
     need: ['A device per pupil or pair, with CodeJump open (a touch screen or mouse to draw with)', 'The board, to show the class first'],
@@ -367,4 +356,5 @@ const SLIDES = {
 };
 for (const l of LESSONS) l.slides = SLIDES[l.id] || [];
 
+export { CURRICULA, curriculumLinks } from './curricula.js';
 export function lesson(id) { return LESSONS.find(l => l.id === id) || null; }

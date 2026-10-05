@@ -2494,7 +2494,7 @@ document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   else if(b.dataset.pt==='critter')startNewCritter(_pendingKs);
   else startNewProject(_pendingKs);
 });
-function startNewProject(ks){clearDirty();projectType='platformer';
+function startNewProject(ks){clearDirty();leaveLiveRoom();projectType='platformer';
   setKeyStage(ks);
   const szEl=document.getElementById('ks-size');setGridSize((ks==='ks1')?'standard':(szEl?szEl.value:'standard'));
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
@@ -2559,7 +2559,7 @@ function sanitizeKs1(arr){if(!Array.isArray(arr))return [];return arr.slice(0,40
 function sanitizeBackdrop(b){if(!b||typeof b!=='object')return null;const name=(typeof b.name==='string'?b.name:'backdrop').slice(0,24);
   if(typeof b.img==='string'&&/^data:image\/(png|jpeg);/.test(b.img)&&b.img.length<1000000)return{name,img:b.img};
   return{name,color:safeColor(b.color)||'#bfe3ff'};}
-function startNewStage(ks){clearDirty();projectType='stage';
+function startNewStage(ks){clearDirty();leaveLiveRoom();projectType='stage';
   setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
@@ -2653,7 +2653,7 @@ const TURTLE_COMMANDS=[
   {g:'Variables',items:[['make "score 0','make a box called score holding 0'],[':score','use what is in the box']]},
   {g:'Your own commands',items:[['to NAME :a ... end','teach the turtle a new command'],['stop','leave the current command early']]},
 ];
-function startNewTurtle(ks){clearDirty();projectType='turtle';
+function startNewTurtle(ks){clearDirty();leaveLiveRoom();projectType='turtle';
   setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
@@ -2704,12 +2704,13 @@ function loadCritterEngine(){
   if(!_critterLoading)_critterLoading=import(critterBase()+'critter-app.js').catch(e=>{_critterLoading=null;throw e;});
   return _critterLoading;}
 function critterCurrent(){return critterApp?critterApp.getCritter():critterData;}
-function startNewCritter(ks){clearDirty();projectType='critter';setKeyStage(ks);
+function startNewCritter(ks){clearDirty();leaveLiveRoom();projectType='critter';setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
   critterData=null;hideHome();enterCritterUI(); // a fresh body to build on
 }
 function enterCritterUI(){
+  leaveLiveRoom(); // the Critter Lab has no live collaboration (Showdowns use their own connection)
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
@@ -2748,6 +2749,52 @@ const critterCloud={
     const d=await cloudApi('/project/load',{token:cloudToken,id:key.slice(2)});return d&&d.payload;},
   signIn:()=>openCloud()
 };
+// INBOX: a live line from the cloud for notices meant for this pupil. When a teacher picks them for a Critter Showdown the
+// worker (v14, /inbox WebSocket) pushes {type:'notify',notice:{id:roomId,kind:'showdown',title,from}} and it pops up here at
+// once; notices wait on the server until the pupil answers (ack), and the teacher ending the Showdown clears them.
+let _inbox=null,_inboxTok=null,_inboxTries=0,_inboxRetry=0,_inboxPing=0,_inboxQueue=[],_inboxOpen=null;
+function inboxSync(){const want=(cloudOn()&&isSignedIn()&&!isTeacher())?cloudToken:null;
+  if(want===_inboxTok)return;inboxClose();_inboxTok=want;_inboxTries=0;if(want)inboxConnect();}
+function inboxClose(){clearTimeout(_inboxRetry);_inboxRetry=0;clearInterval(_inboxPing);_inboxPing=0;_inboxQueue=[];
+  if(_inbox){const w=_inbox;_inbox=null;try{w.close();}catch(e){}}}
+function inboxConnect(){_inboxRetry=0;if(!_inboxTok||typeof WebSocket==='undefined')return;let ws;
+  try{ws=new WebSocket(CLOUD_URL.replace(/^http/,'ws').replace(/\/$/,'')+'/inbox?token='+encodeURIComponent(_inboxTok));}catch(e){inboxLost();return;}
+  _inbox=ws;
+  ws.onopen=()=>{_inboxTries=0;clearInterval(_inboxPing);_inboxPing=setInterval(()=>{try{ws.send('ping');}catch(e){}},45000);};
+  ws.onmessage=ev=>{if(ev.data==='pong')return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}inboxOnMessage(m);};
+  ws.onclose=()=>{if(_inbox!==ws)return;_inbox=null;clearInterval(_inboxPing);inboxLost();};}
+function inboxLost(){if(!_inboxTok)return;_inboxTries++;_inboxRetry=setTimeout(inboxConnect,Math.min(60000,3000*_inboxTries));}
+function inboxAck(id){try{if(_inbox&&_inbox.readyState===1)_inbox.send(JSON.stringify({type:'ack',id}));}catch(e){}}
+function inboxOnMessage(m){
+  if(m.type==='notices')(m.notices||[]).forEach(inboxAdd);
+  else if(m.type==='notify'&&m.notice)inboxAdd(m.notice);
+  else if(m.type==='clear'){_inboxQueue=_inboxQueue.filter(n=>n.id!==m.id);
+    if(_inboxOpen&&_inboxOpen.id===m.id&&!_inboxOpen.answered){_inboxOpen.gone=true;const d=document.getElementById('cj-dialog');if(d)d.classList.add('hide');}}}
+function inboxAdd(n){if(!n||n.kind!=='showdown'||!n.id)return;
+  if(critterApp&&critterApp.showdownRoom&&critterApp.showdownRoom()===n.id){inboxAck(n.id);return;} // already in it
+  if((_inboxOpen&&_inboxOpen.id===n.id)||_inboxQueue.some(q=>q.id===n.id))return;
+  _inboxQueue.push(n);inboxNext();}
+async function inboxNext(){if(_inboxOpen||!_inboxQueue.length)return;
+  const n=_inboxQueue.shift(),cur={id:n.id,gone:false,answered:false};_inboxOpen=cur;
+  try{
+    const who=n.from||'Your teacher',busy=!!dirty; // cjConfirm escapes the text itself
+    const msg=who+' has picked you for a Critter Showdown'+(n.title&&n.title.indexOf(' · ')>0?' ('+n.title.split(' · ').slice(1).join(' · ')+')':'')+'!'+
+      (busy?' Let’s save what you’re working on first, then you can join.':' Join now to send in one of your Critters.')+' (Not now? You can join later from Cloud → Collaborations.)';
+    const yes=await cjConfirm(msg,{title:'Critter Showdown',okLabel:busy?'Save my work and join':'Join the Showdown',cancelLabel:'Not now'});
+    if(cur.gone){toast('That Showdown has ended','#585555');return;}
+    cur.answered=true; // the dialog box is free for the save prompt now; a 'clear' from our own ack mustn't close it
+    inboxAck(n.id);
+    if(!yes)return;
+    if(busy&&!await inboxSaveWork()){toast('Your work isn’t saved yet, so you haven’t joined. You can join from Cloud → Collaborations.','#ef4444');return;}
+    withCritterLab(app=>app.openShowdown(n.id));
+  }finally{_inboxOpen=null;setTimeout(inboxNext,300);}}
+// Save the pupil's current work before the Showdown opens: back to its own cloud copy if it has one (never to a class —
+// that would hand it in), else to this device.
+async function inboxSaveWork(){
+  if(isSignedIn()&&cloudProjectId&&!cloudProjectClass){try{commitLevel();
+    await cloudApi('/project/save',{token:cloudToken,id:cloudProjectId,title:cloudProjectTitle||'My Game',class:null,payload:buildPayload()});
+    clearDirty();toast('Saved to the Cloud','#10b981');return true;}catch(e){toast('Couldn’t save to the Cloud, so saving on this device instead','#ef4444');}}
+  await saveCurrentLevel();return !dirty;}
 function isCritterShowdown(title){return String(title||'').indexOf('Critter Showdown')===0;}
 // Open the Critter Lab (if it isn't already) and then do fn(critterApp)
 async function withCritterLab(fn){
@@ -2774,7 +2821,7 @@ function loadWorldEngine(){
   if(!_worldLoading)_worldLoading=import(worldBase()+'world-app.js').catch(e=>{_worldLoading=null;throw e;});
   return _worldLoading;}
 function worldCurrent(){return worldApp?worldApp.getProject():worldData;}
-function startNew3D(ks){clearDirty();projectType='3d';setKeyStage(ks);
+function startNew3D(ks){clearDirty();leaveLiveRoom();projectType='3d';setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
   worldData=null;_worldLoad=true;hideHome();enter3DUI(); // null = the starter program
@@ -6179,7 +6226,7 @@ const CRITTER_HELP=[
  ['start',' Start',`<h3>Welcome to the Critter Lab!</h3><p>A <b>Critter</b> is a creature you build from blobs and joints. You design it; the <b>physics</b> decides how it moves. Then you race it in contests.</p><h3>Video guides</h3><p>New here? Press <b>Guides</b> at the top of the Critter Lab for three short videos: <b>1</b> build your first walking Critter, <b>2</b> fix the wobble with beats, <b>3</b> lift higher for Hurdles.</p><h3>Build</h3><ul><li><b>Drag</b> a blob or a limb from the left onto your Critter. It sticks where it touches. With <b>Add in pairs</b> on, you get a mirror twin on the other side.</li><li><b>Tap</b> a part to change it. <b>Drag</b> a part to slide it somewhere else on your Critter (its twin follows). Drag the background to look around; pinch or scroll to zoom.</li><li><b>Starter Critters</b> gives you ready-made creatures that really move.</li></ul><h3>Test it!</h3><p>Press <b>Test it!</b>, pick a contest and press <b>Go!</b> Your Critter always heads for the <b>red target</b>.</p>`],
  ['shape',' Shape',`<p>Every part is a <b>blob</b>. On the <b>Shape</b> tab:</p><ul><li><b>Length, Height, Width</b> — its size in centimetres.</li><li><b>Squareness</b> — from round like an egg (0%) to boxy (100%).</li><li><b>Pointiness</b> — tapers the far end to a point.</li><li><b>Grip</b> — Slippy, Normal or Grippy. Grippy feet hold the ground; slippy bodies slide.</li><li><b>Colour</b> and <b>Eyes</b>. The eyes on the body show which way is forwards.</li></ul><p><b>Copy, Cut, Paste, Duplicate</b> buttons sit under the part's name. They take the part and everything hanging off it (knees, feet, motions). Pasting a pair onto the body gives you a new pair. The copy stays put when you start a new Critter, so you can reuse a good leg.</p>`],
  ['motion',' Motion',`<p>Tap a part, then its <b>Motion</b> tab. Every part hangs from a <b>joint</b>, which can:</p><ul><li><b>Still</b> — hold its angle.</li><li><b>Swing</b> — rock to and fro. Pick the <b>hinge</b> (Swing, Sweep or Twist), how far it swings, and its <b>movement cycle</b> (the timing dial). Opposite beats take turns.</li><li><b>Motion path</b> — the tip of the limb follows a loop of white <b>IK points</b>, and the limb bends itself to follow it. Drag the points in the 3D view; tap a blue dot to add one. The square point is the start; arrows show the way round.</li></ul><p><b>Lean</b> and <b>Splay</b> tip a part. <b>Bend towards the target</b> makes a joint turn to look at the red target (part targeting).</p><h3>The body's Motion tab</h3><ul><li><b>Cycle speed</b> — how fast every part does its move.</li><li><b>Turning sharpness</b> — a wide arc, or pivot on the spot.</li><li><b>Turning smoothness</b> — snap round, or ease round gently.</li><li><b>Muscle power</b> — how hard every joint pushes.</li></ul>`],
- ['contests',' Contests',`<ul><li><b>Sprint</b> — how far towards the target in 15 seconds.</li><li><b>Hurdles</b> — a sprint over humps that get steeper.</li><li><b>Block Push</b> — shove ten blocks in 13 seconds.</li><li><b>High Jump</b> — how high can it get?</li><li><b>Lap</b> — follow the target round eight flags.</li><li><b>Head-to-head</b> — race another Critter in the next lane.</li><li><b>Super Sumo</b> — push the other Critter off the platform!</li><li><b>Free roam</b> — tap the ground to move the target and watch it steer.</li></ul><p>Your best score in each contest is saved with your Critter.</p><h3>Showdown (with your class)</h3><p>Your teacher can start a <b>Showdown</b> and pick up to four of you. Open the Critter Lab, press <b>Showdown</b> (or find it under Cloud → Collaborations) and send in one of your saved Critters. When your teacher presses Start, everyone watches the race live and sees who came 1st, 2nd, 3rd and 4th. Showdowns use Sprint, Hurdles, High Jump, Lap or Super Sumo. In the races every Critter gets its own lane and scores exactly what it scores in Test it!; in Super Sumo all four share one platform and push each other.</p>`],
+ ['contests',' Contests',`<ul><li><b>Sprint</b> — how far towards the target in 15 seconds.</li><li><b>Hurdles</b> — a sprint over humps that get steeper.</li><li><b>Block Push</b> — shove ten blocks in 13 seconds.</li><li><b>High Jump</b> — how high can it get?</li><li><b>Lap</b> — follow the target round eight flags.</li><li><b>Head-to-head</b> — race another Critter in the next lane.</li><li><b>Super Sumo</b> — push the other Critter off the platform!</li><li><b>Free roam</b> — tap the ground to move the target and watch it steer.</li></ul><p>Your best score in each contest is saved with your Critter.</p><h3>Showdown (with your class)</h3><p>Your teacher can start a <b>Showdown</b> and pick up to four of you. If you’re signed in, a message pops up on your screen: press <b>Join</b> (if you’re in the middle of something, it saves your work first). You can also open the Critter Lab and press <b>Showdown</b>, or find it under Cloud → Collaborations. Then send in one of your saved Critters. When your teacher presses Start, everyone watches the race live and sees who came 1st, 2nd, 3rd and 4th. Showdowns use Sprint, Hurdles, High Jump, Lap or Super Sumo. In the races every Critter gets its own lane and scores exactly what it scores in Test it!; in Super Sumo all four share one platform and push each other.</p>`],
  ['keys',' Keys',`<p>Press <b>?</b> (or the <b>Keys</b> button) any time to see these.</p><h3>Building</h3><ul><li><b>Ctrl+Z / Ctrl+Y</b> — undo / redo</li><li><b>Ctrl+C / Ctrl+X</b> — copy / cut the chosen part (with everything on it)</li><li><b>Ctrl+V</b> — paste it onto the chosen part · <b>Ctrl+D</b> — duplicate</li><li><b>Delete</b> — remove the chosen part (and its twin)</li><li><b>Esc</b> — stop choosing a part</li><li><b>N / Shift+N</b> — choose the next / previous part · <b>P</b> — choose the part it hangs from</li><li><b>Arrow keys</b> — slide the chosen part around the side it's on (hold Shift for big steps)</li><li><b>[ ]</b> lean · <b>, .</b> splay · <b>+ −</b> bigger / smaller</li><li><b>W</b> wiggle preview · <b>M</b> add in pairs · <b>F</b> fit the Critter in view</li><li><b>Enter</b> or <b>T</b> — Test it!</li></ul><h3>Testing</h3><ul><li><b>Space</b> — Go / Stop · <b>1–8</b> — pick a contest · <b>T</b> — Turbo · <b>B</b> or <b>Esc</b> — back to Build</li></ul>`],
  ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Critter Lab needs the internet the first time it opens.</p><h3>3D print it</h3><p>Press <b>3D print</b> to download your Critter for a 3D printer. Pick a size (8, 12 or 16 cm long) and keep the <b>base plate</b> on so it stands up. <b>STL</b> works with any printer in one colour; <b>3MF</b> keeps your Critter’s colours for printers with more than one filament. Ask a grown-up to print it!</p>`],
  ['cloud',' Cloud',_cloudHelp]
@@ -6267,7 +6314,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p><b>Video guides:</b> the <b>Guides</b> button in the Critter Lab plays three short captioned videos (no sound needed, about a minute and a half each) that take pupils from an empty body to a walking Critter: <i>Build your first walking Critter</i> (two pairs of Walking legs, 1.0 m in the Sprint), <i>Fix the wobble with beats</i> (the beat chart and Opposite beat give a trot, 2.8 m) and <i>Lift higher for Hurdles</i> (taller foot loops, 2.3 m → 2.9 m). They work well on the board as a lesson starter.</p>
  <p><b>3D printing:</b> the <b>3D print</b> button in the Critter Lab downloads the Critter as an <b>STL</b> (any slicer, one colour) or a <b>3MF</b> (one part per colour, for multi-colour printers), at 8, 12 or 16 cm long, optionally on a 2.4 mm base plate. Every joint gets a small ball so the parts fuse into one solid piece; parts thinner than 2 mm at the chosen size are flagged. Turn on supports (tree supports suit legs) and use a brim without the base plate; PLA at 0.2 mm layers is fine. Everything is made in the browser, nothing is uploaded.</p>
  <h4>Critter Showdown (live, up to four pupils)</h4>
- <p>Race up to four pupils’ Critters against each other on your screen. Open <b>Cloud → Teacher</b>, choose the class and press <b>Critter Showdown</b> (or press <b>Showdown</b> inside the Critter Lab). Pick up to four pupils and a contest (Sprint, Hurdles, High Jump, Lap or Super Sumo) and press <b>Open the Showdown</b>. The pupils press <b>Showdown</b> in their Critter Lab (or open it from Cloud → Collaborations) and send in one of their saved Critters (cloud or device), or the one on their screen. Your panel shows who’s here, who’s choosing and who’s ready. You can take an entry out, fill empty lanes with Starter Critters, change the contest, then press <b>Start the race!</b>. Every screen shows the race live with a leaderboard and a podium at the end. In the races each Critter runs exactly as it does in its owner’s Test it!, so the lane makes no difference; Super Sumo is one shared platform. Press <b>Race again</b> or change the contest for another round, and <b>End Showdown</b> when you’re done. Pupils need to be signed in, and it uses the same live rooms as Collaborate (no extra set-up).</p>
+ <p>Race up to four pupils’ Critters against each other on your screen. Open <b>Cloud → Teacher</b>, choose the class and press <b>Critter Showdown</b> (or press <b>Showdown</b> inside the Critter Lab). Pick up to four pupils and a contest (Sprint, Hurdles, High Jump, Lap or Super Sumo) and press <b>Open the Showdown</b>. Pupils who are signed in get a pop-up on their screen inviting them to join straight away (it saves whatever they were working on first); they can also press <b>Showdown</b> in their Critter Lab or open it from Cloud → Collaborations. They and send in one of their saved Critters (cloud or device), or the one on their screen. Your panel shows who’s here, who’s choosing and who’s ready. You can take an entry out, fill empty lanes with Starter Critters, change the contest, then press <b>Start the race!</b>. Every screen shows the race live with a leaderboard and a podium at the end. In the races each Critter runs exactly as it does in its owner’s Test it!, so the lane makes no difference; Super Sumo is one shared platform. Press <b>Race again</b> or change the contest for another round, and <b>End Showdown</b> when you’re done. Pupils need to be signed in, and it uses the same live rooms as Collaborate (no extra set-up).</p>
  <h3> 3D World (Key Stage 2 &amp; 3)</h3>
  <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
  <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. On slower Chromebooks, the Blocky characters are the lightest.</p>
@@ -6716,7 +6763,8 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
   pageSprites:sanitizePageSprites(L&&L.pageSprites)
 };}
 function sanitizePageSprites(m){const out={};if(!m||typeof m!=='object')return out;const ok=DT.filter(t=>t.type==='sprite').map(t=>t.key);for(const k in m){if(ok.indexOf(k)<0)continue;const a=m[k];if(!Array.isArray(a))continue;out[k]=a.slice(0,256).map(x=>(typeof x==='string'&&/^#?[0-9a-fA-F]{0,8}$/.test(x))?x:'');}return out;}
-function applyPayload(d){
+function applyPayload(d){leaveLiveRoom(); // opening a different project leaves any live room (not when the room itself sends it)
+
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
@@ -6896,6 +6944,7 @@ function closeCloud(){document.getElementById('cloud-modal').classList.add('hide
 function cloudError(e){_cb().innerHTML=`<h2> Oops</h2><p style="text-align:center">${cesc(e&&e.message||'Something went wrong')}</p><button class="cloud-btn" id="c-back"> Back</button>`;document.getElementById('c-back').onclick=openCloud;}
 function showCloudBtns(){const t=document.getElementById('t-cloud'),h=document.getElementById('h-cloud');if(t)t.style.display=cloudOn()?'':'none';if(h)h.style.display=cloudOn()?'':'none';updateAccountChips();}
 function updateAccountChips(){
+  if(typeof inboxSync==='function')inboxSync(); // signed in as a pupil → listen for Showdown invites
   const ha=document.getElementById('home-account'),ta=document.getElementById('t-account');
   if(ha){if(!cloudOn())ha.innerHTML='';else if(isSignedIn())ha.innerHTML=`<button class="acc-chip" id="ha-me"><svg class="ic"><use href="#i-user"></use></svg> ${cesc(cloudMe.displayName)}${isTeacher()?' <svg class="ic"><use href="#i-teacher"></use></svg>':''}</button><button class="acc-chip plain" id="ha-set"><svg class="ic"><use href="#i-gear"></use></svg> Settings</button>`;else ha.innerHTML=`<button class="acc-chip" id="ha-in"><svg class="ic"><use href="#i-key"></use></svg> Sign in</button>`;
     const me=document.getElementById('ha-me'),set=document.getElementById('ha-set'),inb=document.getElementById('ha-in');
@@ -7104,6 +7153,9 @@ let collabMe=null,collabMembers={},collabRemoteCursors={},_collabSnapT=null,_col
 function collabWsUrl(roomId){return CLOUD_URL.replace(/^http/,'ws').replace(/\/$/,'')+'/room/'+roomId+'?token='+encodeURIComponent(cloudToken||'');}
 function collabSend(o){if(collabWS&&collabWS.readyState===1){try{collabWS.send(JSON.stringify(o));}catch(e){}}}
 function collabDisconnect(silent){const ws=collabWS;collabWS=null;collabActive=false;collabMembers={};collabRemoteCursors={};if(ws){try{ws.close();}catch(e){}}updateCollabBar();var ccl=document.getElementById('collab-cursors');if(ccl)ccl.innerHTML='';if(!silent)toast('You left the live room','#585555');}
+// A live room belongs to the project you opened it with: starting or opening a different one leaves it, so your new work
+// isn't sent into the room (and your partner's edits don't land on it).
+function leaveLiveRoom(){try{if(collabApplyingRemote)return;if(collabActive||collabWS)collabDisconnect();}catch(e){/* collab code not set up yet */}}
 function collabConnect(roomId){if(!cloudToken){toast('Sign in to collaborate','#ef4444');return;}if(collabWS)collabDisconnect(true);collabRoomId=roomId;
   const ws=new WebSocket(collabWsUrl(roomId));collabWS=ws;
   ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}collabOnMessage(m);};
@@ -8234,7 +8286,7 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.04.2';
+const CJ_VERSION='2026.10.05';
 const CJ_WHATSNEW=[
  "NEW project type: 3D World! Build a 3D world with blocks, then press Run to play it. (Key Stage 2 & 3.)",
  "12 characters to dress up, with 37 animations: walk, run, wave, dance, clap, flip, swim and more.",
@@ -8243,6 +8295,7 @@ const CJ_WHATSNEW=[
  "Before you press Run, click anything in your world to find its block, and drag the arrows to move it. The numbers in the block change to match!",
  "Camera, sound, speech bubbles and words on the screen, so you can make a proper 3D game with a score.",
  "Build a 3D world together: Share, then Collaborate, and up to five classmates can edit the same world live.",
+ "Critter Showdown: when your teacher picks you, a message pops up on your screen. Press Join and it saves your work first.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

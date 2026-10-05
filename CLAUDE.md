@@ -514,6 +514,21 @@ target" aim at it). Moved here from the Coding Hubs site, where it began as a pr
   mount option `cloud`: me/api/wsUrl/saves/loadSave/signIn), `withCritterLab(fn)`, roster button `#cr-showdown`, and
   `cloudCollabList` routes Showdown rooms to `critterApp.openShowdown`. Tested end to end against a local `wrangler dev`
   of codejump-cloud (scratch copy with CLOUD_URL pointed at it).
+- **Showdown invite pop-up (5 Oct 2026, on branch `claude/vibrant-cori-tho25y`; needs cloud worker v14):** each signed-in PUPIL
+  keeps a small WebSocket to their own **inbox** (`inboxSync` from `updateAccountChips` → `wss …/inbox?token=`, 45 s `ping`,
+  reconnects with back-off; teachers don't open one). Worker v14: `/inbox` routes to the `Room` DO `idFromName('inbox:'+uid)`
+  in inbox mode (hibernating sockets — idle pupils cost nothing; `ping`/`pong` auto-response); `/collab/invite` on a room titled
+  "Critter Showdown…" posts `{notice:{id:roomId,kind:'showdown',title,from:teacher's real name}}`, `/collab/remove` clears it;
+  notices wait 12 h until the pupil answers (`ack`). App: `inboxAdd`/`inboxNext` show a `cjConfirm` ("Mr X has picked you…") —
+  if there's unsaved work it's "Save my work and join" (`inboxSaveWork`: back to its own cloud copy, never to a class, else a
+  device save) then `withCritterLab(app=>app.openShowdown(id))`; "Not now" acks it (still under Cloud → Collaborations).
+  `critterApp.showdownRoom()` stops a repeat pop-up. GOTCHA: the ack's `clear` echo reaches the same tab — only close the pop-up
+  if it hasn't been answered yet, or it closes the save-name prompt that reuses `#cj-dialog`.
+- **Live rooms now end when you switch project (bug found 5 Oct 2026):** nothing used to leave a live room except the Leave
+  button, so starting/opening another project (e.g. a teacher opening the Critter Lab for a Showdown while still in a 3D room)
+  kept broadcasting into the room and partners' snapshots landed on the new project (a blank Critter view, "Live M P" bar still
+  showing). `leaveLiveRoom()` is now called by every `startNew*`, `enterCritterUI` and `applyPayload` (skipped while
+  `collabApplyingRemote`, i.e. when the room itself sends the doc).
 - **Video guides** (2 Oct 2026): `critter/guides/g1-build-your-first-critter`, `g2-fix-the-wobble-with-beats`,
   `g3-lift-higher-for-hurdles` (.mp4 1280×800 25 fps, captions only, no audio (a Kokoro bf_emma voice-over was tried on 2 Oct 2026 and stripped before release as too robotic), + .jpg posters), played from the
   **Guides** button (`showGuides`, list in `GUIDES`). Recorded from the real app frame by frame: a virtual clock drives

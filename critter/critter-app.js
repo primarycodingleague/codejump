@@ -2226,6 +2226,7 @@ return {
   // Showdown: open the menu, open a room by id (from CodeJump's Collaborations list), or start hosting for a class
   showdownMenu: function () { showdownMenu(); },
   openShowdown: function (roomId) { sdOpen(roomId, null); },
+  showdownRoom: function () { return sd ? sd.roomId : null; },
   hostShowdown: function (code, name) { sdSetup(code, name); },
   // the video guides dialog
   showGuides: function () { showGuides(); },

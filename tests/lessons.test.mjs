@@ -192,6 +192,21 @@ try {
   ok(Math.abs(((flipped - foot.phase + 1) % 1) - 0.5) < 1e-9, 'Critter engineers: a back foot → Motion tab → Opposite beat flips its timing (' + foot.phase + ' → ' + flipped + ')');
   ok(await page.evaluate(() => /Beat chart/.test(document.body.textContent)), 'Critter engineers: the beat chart the lesson mentions is there');
 
+  await page.evaluate(() => { clearDirty(); return lessonOpenStarter('teach-the-computer'); });
+  await page.waitForFunction(() => projectType === 'ai' && aiApp && aiApp._ws() && aiApp._labels().length === 2, null, { timeout: 30000 });
+  const ai = await page.evaluate(async () => {
+    const M = await import(aiBase() + 'ai-model.js'), wait = () => new Promise(r => { const t = setInterval(() => { if (aiApp._brain() && !aiApp._training()) { clearInterval(t); r(); } }, 50); });
+    aiApp.show('train'); document.getElementById('alTrain').click(); await wait();
+    const sq = M.sampleDrawing('square', 31), before = M.guess(aiApp._brain(), sq);
+    // the lesson: add a square label with six varied squares, and more circles and triangles, then train again
+    const P = aiApp.getProject(), more = M.sampleLabels('shapes', 6, 99);
+    P.labels = P.labels.map(l => ({ ...l, ex: l.ex.concat(more.find(m => m.name === l.name).ex) })).concat([{ name: 'square', ex: more.find(m => m.name === 'square').ex }]);
+    aiApp.setProject(P); aiApp.show('train'); document.getElementById('alTrain').click(); await wait();
+    let right = 0; for (let s = 300; s < 310; s++) for (const n of ['circle', 'square', 'triangle']) if (M.guess(aiApp._brain(), M.sampleDrawing(n, s)).label === n) right++;
+    return { before: before.label, after: M.guess(aiApp._brain(), sq).label, right, check: aiApp._brain().check.total };
+  });
+  ok(ai.before !== 'square', 'Teach the computer: the starter AI can’t recognise a square (it says ' + ai.before + ')');
+  ok(ai.after === 'square' && ai.right >= 27 && ai.check > 0, 'Teach the computer: after teaching squares and more examples it gets them right ' + JSON.stringify(ai));
   ok(errors.length === 0, 'no errors while following the lessons' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } catch (e) {
   ok(false, 'the lessons browser test stopped: ' + (e && e.message));

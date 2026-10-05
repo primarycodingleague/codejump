@@ -70,6 +70,10 @@ try {
   await page.evaluate(j => applyPayload(JSON.parse(j)), saved);
   await page.waitForFunction(() => robotApp._ws().getTopBlocks().length === 4 && document.getElementById('rbName').value === 'Bolt', null, { timeout: 15000 });
   ok(true, 'reopening the saved robot brings everything back');
+  await page.click('#rbRun');
+  await page.waitForSelector('#rbAsk:not([hidden])', { timeout: 20000 });
+  ok(true, 'Run still works after leaving the Robot Lab and reopening a project');
+  await page.click('#rbStop');
 
   // ---- the old Ohbot has gone from the Stage
   await page.evaluate(() => { startNewStage('ks2'); document.getElementById('tutorial').classList.add('hide'); });

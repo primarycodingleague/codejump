@@ -19,6 +19,12 @@ const M = await import(pathToFileURL(join(ROOT, 'ai/ai-model.js')).href);
     'a saved project is checked: names, colours, numbers and sizes');
   const circ = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI * 2; circ.push(Math.round(128 + 80 * Math.cos(a)), Math.round(128 + 80 * Math.sin(a))); }
   ok(M.simplifyStroke(circ).length >= 20, 'a shape that ends where it began (a circle in one go) keeps its points when saved');
+  const weather = M.train(M.sampleLabels('weather'), { kind: 'text' });
+  ok(['it is so hot and sunny', 'take an umbrella it is raining', 'icy roads and deep snow'].map(t => M.guess(weather, t).label).join() === 'sunny,rainy,snowy', 'a words AI learns from sentences (sunny, rainy, snowy)');
+  ok(weather.check && weather.check.matrix.length === 3 && weather.check.matrix.flat().reduce((a, b) => a + b, 0) === weather.check.total, 'the check also counts the mix-ups');
+  ok(M.keyWords(weather, M.sampleLabels('weather'))[2].some(w => /snow/.test(w.word)), 'it can show the words that matter most for each label');
+  ok(M.cleanLabels([{ name: 'a', ex: ['  hello   <b>there ', 42, [[1, 2]]] }], 'text')[0].ex.join('|') === 'hello bthere', 'saved words are checked too (tidied, no HTML, no drawings)');
+  ok(M.averages(M.sampleLabels('shapes', 4)).length === 3, 'it can show the average drawing of each label');
   const faces = M.train(M.sampleLabels('faces', 10));
   ok(M.guess(faces, M.sampleDrawing('happy', 321)).label === 'happy' && M.guess(faces, M.sampleDrawing('sad', 321)).label === 'sad', 'it can tell happy faces from sad ones');
 }
@@ -98,6 +104,41 @@ try {
   await page.evaluate(j => applyPayload(JSON.parse(j)), saved);
   await page.waitForFunction(() => aiApp._labels()[1].name === 'box' && aiApp._brain() && !aiApp._training(), null, { timeout: 30000 });
   ok(true, 'reopening brings everything back and the AI is ready again');
+  // ---- see inside (drawings): the teaching pad shows what the computer sees, training shows averages and mix-ups
+  await page.click('#alTabTeach');
+  await page.evaluate(async () => { const M = await import(aiBase() + 'ai-model.js'); aiApp._pads.teach.set(M.sampleDrawing('circle', 3)); });
+  const tb = await page.locator('#alTeachPad').boundingBox();
+  await page.mouse.move(tb.x + 20, tb.y + 20); await page.mouse.down(); await page.mouse.move(tb.x + 30, tb.y + 30, { steps: 3 }); await page.mouse.up();
+  ok(await page.evaluate(() => !document.getElementById('alTeachSees').hidden && !!document.querySelector('#alTeachSees canvas.al-grid')), 'teaching shows what the computer sees (a 20 × 20 grid)');
+  await page.click('#alTabTrain');
+  ok(await page.evaluate(() => document.querySelectorAll('.al-avg canvas').length === 3 && !!document.querySelector('.al-mix')), 'Look inside shows the average of each label and the mix-ups table');
+
+  // ---- a words AI
+  await page.click('#alTabTeach');
+  await page.evaluate(() => { const s = document.getElementById('alSamples'); s.value = 'weather'; s.dispatchEvent(new Event('change')); });
+  await page.click('#cj-dialog button:has-text("Yes")').catch(() => {});
+  await page.waitForFunction(() => aiApp._labels()[0].name === 'sunny' && document.querySelector('.ailab').classList.contains('k-text'));
+  ok(await page.evaluate(() => getComputedStyle(document.getElementById('alTeachText')).display !== 'none' && getComputedStyle(document.getElementById('alTeachPad')).display === 'none'), 'Words mode swaps the drawing pad for a typing box');
+  await page.click('.al-label >> nth=2 >> .al-count');
+  await page.fill('#alTeachText', 'hail and sleet, so cold'); await page.press('#alTeachText', 'Enter');
+  ok(await page.evaluate(() => aiApp._labels()[2].ex.includes('hail and sleet, so cold') && document.getElementById('alTeachText').value === ''), 'typing an example and pressing Enter teaches it');
+  await page.click('#alTabTrain'); await page.click('#alTrain');
+  await page.waitForFunction(() => aiApp._brain() && aiApp._brain().kind === 'text' && !aiApp._training(), null, { timeout: 30000 });
+  await page.fill('#alTestText', 'the snow is so deep');
+  await page.waitForFunction(() => /snowy/.test(document.getElementById('alGuess').textContent));
+  ok(await page.evaluate(() => document.querySelectorAll('.al-kwrow').length === 3), 'testing a words AI: it guesses as you type, and shows its key words');
+  await page.fill('#alTestText', 'snow zorblax');
+  await page.waitForFunction(() => /never seen/.test(document.getElementById('alGuess').textContent));
+  ok(true, 'it points out words it has never seen');
+  await page.click('#alTabCode'); await page.click('#alRun');
+  await page.fill('#alPlayText', 'bring your umbrella, it is pouring'); await page.press('#alPlayText', 'Enter');
+  await page.waitForFunction(() => document.getElementById('alBubble').textContent === 'I see a rainy', null, { timeout: 10000 });
+  ok(true, 'Code it: typing and pressing Enter makes the AI guess and runs the program');
+  const tsaved = await page.evaluate(() => JSON.stringify(buildPayload()));
+  await page.evaluate(() => { startNewProject('ks2'); document.getElementById('tutorial').classList.add('hide'); });
+  await page.evaluate(j => applyPayload(JSON.parse(j)), tsaved);
+  await page.waitForFunction(() => aiApp._brain() && aiApp._brain().kind === 'text' && !aiApp._training(), null, { timeout: 30000 });
+  ok(await page.evaluate(() => JSON.parse(JSON.stringify(aiApp.getProject())).kind === 'text' && aiApp._labels()[2].ex.length === 15), 'a words AI saves and reopens as words');
   await page.evaluate(() => openShareModal());
   ok(await page.evaluate(() => document.getElementById('sh-collab').style.display === 'none'), 'live collaboration isn’t offered for the AI Lab');
   ok(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));

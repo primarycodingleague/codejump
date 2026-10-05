@@ -24,7 +24,9 @@ const NC = {
   ks1Create: 'Use technology purposefully to create, organise, store, manipulate and retrieve digital content.',
   ks2Design: 'Design, write and debug programs that accomplish specific goals, including controlling or simulating physical systems; solve problems by decomposing them into smaller parts.',
   ks2SSR: 'Use sequence, selection, and repetition in programs; work with variables and various forms of input and output.',
-  ks2Reason: 'Use logical reasoning to explain how some simple algorithms work and to detect and correct errors in algorithms and programs.'
+  ks2Reason: 'Use logical reasoning to explain how some simple algorithms work and to detect and correct errors in algorithms and programs.',
+  ks2Data: 'Select, use and combine a variety of software (including internet services) on a range of digital devices to design and create a range of programs, systems and content that accomplish given goals, including collecting, analysing, evaluating and presenting data and information.',
+  ks2Safe: 'Use technology safely, respectfully and responsibly; recognise acceptable/unacceptable behaviour; identify a range of ways to report concerns about content and contact.'
 };
 
 export const LESSONS = [
@@ -252,6 +254,36 @@ export const LESSONS = [
       { t: 'Lava!', d: 'Make a flat red box called lava (a new variable again). From Events, add “when player touches lava” and put “move player to x 0 y 0 z 0” (Motion) inside.' },
       { t: 'Test and swap', d: 'Press Run and try your course. Then let a friend play it!' }
     ]
+  },
+  {
+    id: 'teach-the-computer', title: 'Teach the computer', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'ai', tool: 'AI Lab (drawings)',
+    summary: 'Pupils train a real neural network to recognise drawings, find out it only knows what it was shown, make it better with more varied examples, test it fairly, then code a game with it.',
+    objective: 'We are learning how a computer can learn from examples (machine learning).',
+    success: ['I can teach an AI with labelled examples.', 'I can test an AI fairly, with examples it has never seen.', 'I can explain why more, and more varied, examples make an AI better.', 'I can use the AI’s guess in a program.'],
+    curriculum: [NC.ks2Data, NC.ks2Reason, NC.ks2SSR],
+    words: [['AI (artificial intelligence)', 'a computer doing something that seems clever, like recognising pictures'], ['machine learning', 'a computer learning from examples instead of being given rules'],
+      ['label', 'the name of a group of examples, like “circle”'], ['training', 'when the computer practises on the examples'], ['confidence', 'how sure the AI is, from 0 to 100%'], ['bias', 'when an AI is unfair because of the examples it was given']],
+    need: ['A device per pupil or pair, with CodeJump open (a touch screen or mouse to draw with)', 'The board, to show the class first'],
+    plan: [
+      { min: 5, title: 'Rules or examples?', html: '<p><b>Ask:</b> how would you explain to an alien what a <i>cat</i> looks like? Try writing rules (“four legs, pointy ears…”). Then point out a dog also has four legs! Show a few cat pictures instead: people learn from <b>examples</b>. Some computers can too. That’s called <b>machine learning</b>.</p>' },
+      { min: 10, title: 'Meet the AI', html: '<p>Open the starter on the board. Step <b>1 Teach</b> shows two <b>labels</b>, <i>circle</i> and <i>triangle</i>, with three drawings each. Go to <b>2 Train &amp; test</b> and press <b>Train</b>: the green line shows how often it was right while it practised.</p><p>Draw a circle on the test pad. The bars show how <b>confident</b> it is. Now draw a <b>square</b>. It still says circle or triangle, often very sure! <b>Ask:</b> why? (It only knows the labels it was taught. It can be <i>confidently wrong</i>.)</p>' },
+      { min: 25, title: 'Make it better', html: '<p>Pupils follow the Lesson card: add a <b>square</b> label, draw lots of different examples, retrain and test each other’s drawings. Point out <b>Look inside your AI</b>: the average drawing of each label (all the computer has to go on is a 20 × 20 grid) and the <b>mix-ups</b> table.</p><p>Talk about the fair test: the AI is checked on 1 in 4 drawings it was <i>not</i> allowed to practise on. Why is that fairer than testing it on drawings it has already seen?</p><p>Fast finishers move on to <b>3 Code it</b> and the challenge.</p>' },
+      { min: 10, title: 'Is AI always right?', html: '<p>On the board, choose <b>Ready-made examples → Kind or unkind messages</b> (it switches to words), train it, and type a few messages: “I love your drawing” is often called unkind, because “your drawing is rubbish” was in the unkind examples. <b>Ask:</b> would you let this AI decide which messages to block? What would make it fairer? This is <b>bias</b>: an AI is only as good, and as fair, as the examples people give it.</p>' },
+      { min: 10, title: 'Plenary', html: '<p><b>Ask:</b> how did your AI learn? (From labelled examples, by practising.) How did you make it better? (More, and more different, examples; a label for every kind of thing.) How do we know if it is any good? (Test it on examples it has never seen.)</p>' }
+    ],
+    support: 'Work in pairs: one draws, one checks the label is right before pressing Add. Use the ready-made Shapes examples if drawing is hard.',
+    stretch: 'Make a “Draw it!” game in Code it with a random label, wait for the next guess and a score. Or switch to Words and teach it something new, like sunny, rainy and snowy.',
+    assess: ['Teaches at least three labels with varied examples', 'Explains that the AI can only recognise what it was taught', 'Uses the check on unseen drawings to judge the AI', 'Uses the AI’s guess or confidence in a program'],
+    steps: [
+      { t: 'Meet your AI', d: 'This AI knows circles and triangles. Tap 2 Train & test at the top, press Train and watch the green line.' },
+      { t: 'Test it', d: 'Draw a circle on the test pad. Look at the bars: how sure is it? Press Clear and try a triangle.' },
+      { t: 'Trick it', d: 'Now draw a square. What does the AI say? Why can’t it get it right?' },
+      { t: 'Teach squares', d: 'Tap 1 Teach. Press New label and name it square. Draw at least 6 squares — big, small, wonky — pressing Add after each one.' },
+      { t: 'More examples', d: 'Click the circle label and add more circles, then more triangles: at least 6 of each, all a bit different.' },
+      { t: 'Train it again', d: 'Tap 2 Train & test and press Train. How many did it get right in the check? Open Look inside your AI.' },
+      { t: 'Swap and test', d: 'Ask a partner to draw on your test pad. Does your AI guess their drawings right too?' },
+      { t: 'Code it', d: 'Tap 3 Code it and press Run, then draw. Try changing the 60 in the if block to 90. What changes?' }
+    ]
   }
 ];
 
@@ -321,6 +353,16 @@ const SLIDES = {
     { use: 'steps' },
     { t: 'Swap and play', b: ['Play a partner’s course.', 'Suggest one improvement.'], notes: 'Pupils return to their own course to make the change.' },
     { t: 'Think', q: 'Which parts of your game were events? Which used a loop?', notes: 'Touch events: finish and lava. Loop: the forever loop that glides the mover.' }
+  ],
+  'teach-the-computer': [
+    { t: 'Describe a cat', q: 'Can you write rules that describe every cat — and only cats?', b: ['Four legs? So does a dog.', 'Pointy ears? So does a fox.'], notes: 'Let pupils try for a minute. Rules get very hard very quickly.' },
+    { t: 'Learning from examples', lead: 'Machine learning: the computer learns from lots of labelled examples instead of being given rules.', b: ['Examples → practise → test'], notes: 'People learn what a cat is from seeing lots of cats. Some AI learns the same way.' },
+    { t: 'Meet the AI', pic: true, b: ['Two labels: circle and triangle', 'Three drawings each', 'Train it, then test it'], notes: 'Open the starter. Press Train in 2 Train & test. Draw a circle, then a triangle, on the test pad.' },
+    { t: 'Confidently wrong', q: 'We draw a square. What will it say?', b: ['It only knows circle and triangle.', 'It has to pick one — and it can be very sure and still wrong!'], notes: 'Draw a square on the test pad. It usually says circle or triangle with a high percentage.' },
+    { t: 'A fair test', lead: 'Test an AI on examples it has never seen.', b: ['The AI Lab hides 1 in 4 of your drawings while it practises.', 'Then it asks the AI about them.'], notes: 'Ask: why is it not fair to test it only on the drawings it practised on? (It could just remember them.)' },
+    { use: 'steps' },
+    { t: 'Is AI always right?', q: 'Would you let an AI decide which messages to block?', b: ['Try the “Kind or unkind messages” examples.', '“I love your drawing” → unkind?!'], notes: 'Demo it on the board (Ready-made examples → Kind or unkind messages, Train, type messages). The AI learned that “your drawing” went with unkind messages. This is bias.' },
+    { t: 'Think', q: 'How did you make your AI better?', b: ['Why does it matter who chooses the examples?'], notes: 'Listen for: more examples, more varied examples, a label for every kind of thing, and testing on new examples. Bias: if the examples are unfair or narrow, so is the AI.' }
   ]
 };
 for (const l of LESSONS) l.slides = SLIDES[l.id] || [];

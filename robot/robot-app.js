@@ -284,8 +284,9 @@ export function mount(root, host) {
       setStamp = { t: Number(proj.st) || 0, cid: String(proj.scid || '') };
       if (runner) runner.stop(true);
       if (ws) loadBlocks(proj);
-      if (view) { view.reset(true); restyle(); }
+      if (view) { view.reset(true); restyle(); view.start(); }
       showSettings();
+      if (!raf && view) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
     },
     resume() { if (view) { view.start(); view.resize(); } if (ws) Blockly.svgResize(ws); if (!raf) raf = requestAnimationFrame(tick); },
     pause() { if (runner) runner.stop(true); cancelAsk(); if (view) view.stop(); cancelAnimationFrame(raf); raf = 0; },

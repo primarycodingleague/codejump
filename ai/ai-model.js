@@ -2,22 +2,27 @@
  * network on the pupil's own examples, and makes guesses. No DOM and no network: it runs in the browser and in Node
  * tests, and nothing a pupil draws ever leaves their device (except inside their own saved project).
  *
+ * Two kinds of AI: 'draw' (it learns from drawings) and 'text' (it learns from words and sentences).
  * A drawing is a list of strokes; a stroke is a flat list of points [x0,y0,x1,y1,…] in a 256×256 box (whole numbers).
- * A project's examples are { labels: [{ name, color, ex: [drawing, …] }, …] }.
+ * A text example is a short string. A project's examples are { labels: [{ name, color, ex: [drawing or text, …] }, …] }.
  *
- *   const g = trainer(labels);             // a generator: for (const p of g) shows progress p = {phase, done, acc}
+ *   const g = trainer(labels, { kind });   // a generator: for (const p of g) shows progress p = {phase, done, acc}
  *   const brain = result of the generator  // (the value it returns)
- *   guess(brain, drawing) -> { label, index, conf, probs }   ·   similar(brain, drawing, n) -> [{li, ei, score}]
+ *   guess(brain, example) -> { label, index, conf, probs }   ·   similar(brain, example, n) -> [{li, ei, score}]
+ *   averages(labels) -> a G×G picture per label · brain.check.matrix = mix-ups · keyWords(brain, labels) -> words per label
  *
  * How it learns (kept simple on purpose so it can be explained to a class): every drawing is scaled to fit a 20×20
  * grid of squares (so size and position don't matter), lightly blurred, and fed to a neural network with one hidden
  * layer of 32 "neurons". It practises on each example many times, slightly turned and stretched each time, so it copes
  * with drawings that are a bit different from the ones it was shown. Training uses a fixed random seed, so the same
  * examples always make the same brain — that's why a project only saves the examples, never the brain itself.
+ * Words work the same way, but each sentence becomes a list of 512 numbers: one "bucket" per word, per pair of words
+ * next to each other, and per 3-letter piece of a word (so "happy", "happier" and "hapy" still look alike).
  */
 
 export const G = 20;              // the grid each drawing is turned into
-export const MAX_LABELS = 6, MIN_LABELS = 2, MAX_EXAMPLES = 30, MIN_EXAMPLES = 3;
+export const MAX_LABELS = 6, MIN_LABELS = 2, MAX_EXAMPLES = 30, MIN_EXAMPLES = 3, MAX_TEXT = 120, TD = 512;
+export const KINDS = ['draw', 'text'];
 export const COLOURS = ['#e8533f', '#2f80ed', '#27ae60', '#f2b705', '#9b51e0', '#ff7ab6'];
 const HIDDEN = 32;
 
@@ -67,7 +72,8 @@ export const cleanName = n => String(n == null ? '' : n).replace(/[<>"]/g, '').r
 const okColour = c => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c).toLowerCase() : null);
 
 // checks the labels part of a saved project
-export function cleanLabels(list) {
+export const cleanText = t => String(t == null ? '' : t).replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT);
+export function cleanLabels(list, kind = 'draw') {
   const out = [], seen = new Set();
   for (const l of Array.isArray(list) ? list : []) {
     if (!l || typeof l !== 'object' || out.length >= MAX_LABELS) continue;
@@ -75,7 +81,7 @@ export function cleanLabels(list) {
     while (seen.has(name.toLowerCase())) name = name.slice(0, 17) + ' ' + (out.length + 1);
     seen.add(name.toLowerCase());
     const ex = [];
-    for (const d of Array.isArray(l.ex) ? l.ex : []) { const c = cleanDrawing(d); if (c && ex.length < MAX_EXAMPLES) ex.push(c); }
+    for (const d of Array.isArray(l.ex) ? l.ex : []) { const c = kind === 'text' ? (typeof d === 'string' ? cleanText(d) : '') : cleanDrawing(d); if (c && ex.length < MAX_EXAMPLES) ex.push(c); }
     out.push({ name, color: okColour(l.color) || COLOURS[out.length % COLOURS.length], ex });
   }
   return out;
@@ -129,9 +135,27 @@ export function rasterize(d, tf) {
   return out;
 }
 
+// ── words → numbers
+export function words(t) { return (String(t || '').toLowerCase().replace(/[’`]/g, "'").match(/[a-z0-9']+/g) || []).map(w => w.replace(/^'+|'+$/g, '')).filter(Boolean); }
+function hash(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h % TD; }
+export function textVector(t, drop) {
+  const v = new Float32Array(TD);
+  let w = words(t);
+  if (drop && w.length > 2) { const i = Math.floor(drop() * w.length); w = w.slice(0, i).concat(w.slice(i + 1)); } // a practice copy leaves out a word
+  w.forEach((x, i) => {
+    v[hash('w:' + x)] += 1;
+    if (i) v[hash('p:' + w[i - 1] + ' ' + x)] += 0.7;
+    const y = '<' + x + '>'; for (let k = 0; k + 3 <= y.length; k++) v[hash('c:' + y.slice(k, k + 3))] += 0.6;
+  });
+  let n = 0; for (let i = 0; i < TD; i++) n += v[i] * v[i]; n = Math.sqrt(n) || 1;
+  for (let i = 0; i < TD; i++) v[i] /= n;
+  return v;
+}
+const features = (kind, ex) => (kind === 'text' ? textVector(ex) : rasterize(ex));
+
 // ── the neural network: input (G×G) → 32 hidden (ReLU) → one output per label (softmax)
-function newNet(K, rand) {
-  const D = G * G, H = HIDDEN, n = () => { let u = 0, v = 0; while (!u) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+function newNet(K, rand, D) {
+  const H = HIDDEN, n = () => { let u = 0, v = 0; while (!u) u = rand(); v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
   const W1 = new Float32Array(H * D), b1 = new Float32Array(H), W2 = new Float32Array(K * H), b2 = new Float32Array(K);
   const s1 = Math.sqrt(2 / D), s2 = Math.sqrt(2 / H);
   for (let i = 0; i < W1.length; i++) W1[i] = n() * s1;
@@ -148,11 +172,12 @@ function forward(net, x, h, o) {
   return o;
 }
 
-// practice copies of one drawing: the original plus `n` turned / stretched / wobbly ones
-function practiceSet(labels, which, copies, rand) {
+// practice copies of one example: the original plus `n` turned / stretched / wobbly drawings (or sentences with a word left out)
+function practiceSet(labels, which, copies, rand, kind) {
   const out = [];
   for (const [li, ei] of which) {
     const d = labels[li].ex[ei];
+    if (kind === 'text') { out.push({ x: textVector(d), y: li }); for (let c = 0; c < copies; c++) out.push({ x: textVector(d, rand), y: li }); continue; }
     out.push({ x: rasterize(d), y: li });
     for (let c = 0; c < copies; c++) {
       const tf = { rot: (rand() - 0.5) * 0.45, sx: 0.8 + rand() * 0.4, sy: 0.8 + rand() * 0.4, jitter: 6, rand };
@@ -164,7 +189,7 @@ function practiceSet(labels, which, copies, rand) {
 
 // trains one network on a set of practice pictures; yields after each round so the page stays responsive
 function* fit(samples, K, rand, rounds, report) {
-  const net = newNet(K, rand), { D, H } = net;
+  const net = newNet(K, rand, samples[0].x.length), { D, H } = net;
   const P = [net.W1, net.b1, net.W2, net.b2], M = P.map(p => new Float32Array(p.length)), V = P.map(p => new Float32Array(p.length)), Gr = P.map(p => new Float32Array(p.length));
   const h = new Float32Array(H), o = new Float32Array(K), dh = new Float32Array(H);
   const lr = 0.006, B1 = 0.9, B2 = 0.999, batch = 16, decay = 1e-4;
@@ -207,10 +232,10 @@ function* fit(samples, K, rand, rounds, report) {
   return net;
 }
 
-export function canTrain(labels) {
+export function canTrain(labels, kind = 'draw') {
   if (!Array.isArray(labels) || labels.length < MIN_LABELS) return 'Make at least two labels to teach your AI.';
   const few = labels.find(l => l.ex.length < MIN_EXAMPLES);
-  if (few) return 'Draw at least ' + MIN_EXAMPLES + ' examples of “' + few.name + '” first.';
+  if (few) return (kind === 'text' ? 'Type' : 'Draw') + ' at least ' + MIN_EXAMPLES + ' examples of “' + few.name + '” first.';
   return '';
 }
 
@@ -218,44 +243,52 @@ export function canTrain(labels) {
 // them and is tested on the rest — drawings it has never seen — which is the honest way to say how good it is.
 // Yields progress {phase:'check'|'learn', done:0..1, acc}; returns the brain.
 export function* trainer(labels, opts = {}) {
-  const msg = canTrain(labels); if (msg) throw new Error(msg);
-  const K = labels.length, seed = opts.seed || 20261005, copies = opts.copies == null ? 5 : opts.copies, rounds = opts.rounds || 14;
+  const kind = opts.kind === 'text' ? 'text' : 'draw';
+  const msg = canTrain(labels, kind); if (msg) throw new Error(msg);
+  const K = labels.length, seed = opts.seed || 20261005, copies = opts.copies == null ? (kind === 'text' ? 3 : 5) : opts.copies, rounds = opts.rounds || 14;
   const all = []; labels.forEach((l, li) => l.ex.forEach((_, ei) => all.push([li, ei])));
   const doCheck = labels.every(l => l.ex.length >= 4);
   let check = null;
   if (doCheck) {
     const rand = rng(seed + 7);
     const held = all.filter(([, ei]) => ei % 4 === 3), learn = all.filter(([, ei]) => ei % 4 !== 3);
-    const net = yield* fit(practiceSet(labels, learn, copies, rand), K, rand, rounds, (r, acc) => ({ phase: 'check', done: r / rounds * 0.4, acc }));
-    const h = new Float32Array(net.H), o = new Float32Array(K), wrong = [];
+    const net = yield* fit(practiceSet(labels, learn, copies, rand, kind), K, rand, rounds, (r, acc) => ({ phase: 'check', done: r / rounds * 0.4, acc }));
+    const h = new Float32Array(net.H), o = new Float32Array(K), wrong = [], matrix = labels.map(() => new Array(K).fill(0));
     for (const [li, ei] of held) {
-      forward(net, rasterize(labels[li].ex[ei]), h, o);
+      forward(net, features(kind, labels[li].ex[ei]), h, o);
       let best = 0; for (let k = 1; k < K; k++) if (o[k] > o[best]) best = k;
+      matrix[li][best]++;
       if (best !== li) wrong.push({ li, ei, guess: best });
     }
-    check = { total: held.length, right: held.length - wrong.length, wrong };
+    check = { total: held.length, right: held.length - wrong.length, wrong, matrix }; // matrix[real][guess]
   }
   const rand = rng(seed);
-  const net = yield* fit(practiceSet(labels, all, copies, rand), K, rand, rounds, (r, acc) => ({ phase: 'learn', done: (doCheck ? 0.4 : 0) + r / rounds * (doCheck ? 0.6 : 1), acc }));
+  const net = yield* fit(practiceSet(labels, all, copies, rand, kind), K, rand, rounds, (r, acc) => ({ phase: 'learn', done: (doCheck ? 0.4 : 0) + r / rounds * (doCheck ? 0.6 : 1), acc }));
   // remember how each example "looks" to the brain (its hidden neurons), to find the most similar ones later
   const h = new Float32Array(net.H), o = new Float32Array(K), seen = [];
-  for (const [li, ei] of all) { forward(net, rasterize(labels[li].ex[ei]), h, o); seen.push({ li, ei, h: Float32Array.from(h) }); }
-  return { net, names: labels.map(l => l.name), check, seen, key: dataKey(labels) };
+  for (const [li, ei] of all) { forward(net, features(kind, labels[li].ex[ei]), h, o); seen.push({ li, ei, h: Float32Array.from(h) }); }
+  return { kind, net, names: labels.map(l => l.name), check, seen, key: dataKey(labels, kind) };
 }
 export function train(labels, opts) { const g = trainer(labels, opts); let r; do r = g.next(); while (!r.done); return r.value; }
 
 // a short fingerprint of the examples, so the app knows when the brain is out of date
-export function dataKey(labels) {
+export function dataKey(labels, kind = 'draw') {
   let h = 2166136261 >>> 0;
   const add = v => { h ^= v; h = Math.imul(h, 16777619) >>> 0; };
-  for (const l of labels || []) { add(l.ex.length + 7); for (const d of l.ex) for (const s of d) { add(s.length); for (let i = 0; i < s.length; i += 3) add(s[i]); } }
-  return (labels || []).length + ':' + h.toString(36);
+  for (const l of labels || []) {
+    add(l.ex.length + 7);
+    for (const d of l.ex) {
+      if (typeof d === 'string') { add(d.length); for (let i = 0; i < d.length; i++) add(d.charCodeAt(i)); }
+      else for (const s of d) { add(s.length); for (let i = 0; i < s.length; i += 3) add(s[i]); }
+    }
+  }
+  return kind + (labels || []).length + ':' + h.toString(36);
 }
 
 export function guess(brain, d) {
-  if (!brain || !d || !d.length) return null;
+  if (!brain || !d || !d.length || (brain.kind === 'text' && !words(d).length)) return null;
   const { net, names } = brain, h = new Float32Array(net.H), o = new Float32Array(net.K);
-  forward(net, rasterize(d), h, o);
+  forward(net, features(brain.kind, d), h, o);
   let best = 0; for (let k = 1; k < net.K; k++) if (o[k] > o[best]) best = k;
   return { label: names[best], index: best, conf: Math.round(o[best] * 100), probs: Array.from(o, p => Math.round(p * 100)) };
 }
@@ -264,10 +297,28 @@ export function guess(brain, d) {
 export function similar(brain, d, n = 3) {
   if (!brain || !d || !d.length) return [];
   const { net } = brain, h = new Float32Array(net.H), o = new Float32Array(net.K);
-  forward(net, rasterize(d), h, o);
+  forward(net, features(brain.kind, d), h, o);
   const nh = Math.hypot(...h) || 1;
   return brain.seen.map(s => { let dot = 0; for (let j = 0; j < h.length; j++) dot += h[j] * s.h[j]; return { li: s.li, ei: s.ei, score: dot / nh / (Math.hypot(...s.h) || 1) }; })
     .sort((a, b) => b.score - a.score).slice(0, n);
+}
+
+// ── seeing inside the AI
+// the "average" of each label's drawings, as the computer sees them (a G×G grid, 0..1) — what it has to go on
+export function averages(labels) {
+  return labels.map(l => {
+    const a = new Float32Array(G * G); if (!l.ex.length) return a;
+    for (const d of l.ex) { const g = rasterize(d); for (let i = 0; i < a.length; i++) a[i] += g[i]; }
+    let mx = 0; for (let i = 0; i < a.length; i++) mx = Math.max(mx, a[i]); if (mx) for (let i = 0; i < a.length; i++) a[i] /= mx;
+    return a;
+  });
+}
+// for a words AI: the words from the examples that, on their own, make it most sure of each label
+export function keyWords(brain, labels, n = 5) {
+  if (!brain || brain.kind !== 'text') return [];
+  const vocab = new Set(); for (const l of labels) for (const t of l.ex) for (const w of words(t)) vocab.add(w);
+  const scored = [...vocab].map(w => ({ w, p: guess(brain, w).probs }));
+  return labels.map((l, li) => scored.filter(s => s.p[li] >= 50).sort((a, b) => b.p[li] - a.p[li]).slice(0, n).map(s => ({ word: s.w, p: s.p[li] })));
 }
 
 // ── ready-made example sets (drawn by code, a bit wobbly like a person's), for a quick start or a demo
@@ -291,11 +342,32 @@ function face(r, mood) {
   return [head, eye(cx - e), eye(cx + e), mouth];
 }
 export const SAMPLE_SETS = {
-  shapes: { title: 'Shapes', labels: ['circle', 'square', 'triangle'] },
-  faces: { title: 'Happy or sad', labels: ['happy', 'sad'] }
+  shapes: { title: 'Shapes', kind: 'draw', labels: ['circle', 'square', 'triangle'] },
+  faces: { title: 'Happy or sad faces', kind: 'draw', labels: ['happy', 'sad'] },
+  kind: { title: 'Kind or unkind messages', kind: 'text', labels: ['kind', 'unkind'] },
+  weather: { title: 'Sunny, rainy or snowy', kind: 'text', labels: ['sunny', 'rainy', 'snowy'] }
+};
+const TEXTS = { // each label's sentences share some key words, as real examples would (and some don't, to keep it honest)
+  kind: ['well done, that was brilliant', 'you can play with us', 'thank you for helping me', 'I love your drawing', 'great idea, let\'s try it',
+    'are you ok? do you want to sit with me', 'you were really brave today', 'thank you, you\'re a good friend', 'good luck in your match',
+    'I\'m sorry I knocked your tower over', 'can I help you tidy up', 'well done, you tried really hard', 'your story was amazing', 'you can borrow my pencil',
+    'do you want to play with me', 'you\'re a great friend'],
+  unkind: ['go away', 'you can\'t play with us', 'that\'s a silly idea', 'nobody wants you on their team', 'your drawing is rubbish', 'stop copying me, go away',
+    'you\'re too slow, we don\'t want you', 'that\'s a stupid question', 'I\'m not your friend any more', 'you always get it wrong, you\'re rubbish',
+    'leave us alone', 'you\'re so annoying', 'you\'re not invited to my party', 'nobody cares what you think', 'go away, nobody likes you', 'that\'s stupid'],
+  sunny: ['the sun is shining and it\'s hot', 'put your sun cream on', 'a lovely bright blue sky', 'it\'s a scorcher, let\'s get ice cream', 'warm and sunny at the beach',
+    'wear your sunglasses in the sun', 'not a cloud in the sky', 'hot sunny weather all week', 'the sunshine is so bright', 'perfect sunny day for a picnic',
+    'it\'s boiling hot today', 'blue sky and sunshine', 'too hot, let\'s find some shade', 'sunny and warm'],
+  rainy: ['it\'s pouring with rain', 'take your umbrella, it\'s raining', 'big puddles everywhere', 'wet and grey all day', 'put your wellies on to splash in the puddles',
+    'the rain is dripping down the window', 'stormy showers this afternoon', 'my coat is soaking wet from the rain', 'rain, rain and more rain', 'drizzle and dark clouds',
+    'it\'s raining cats and dogs', 'grey clouds and heavy rain', 'wet weather, take a raincoat', 'light showers and drizzle'],
+  snowy: ['let\'s build a snowman', 'the ground is white with snow', 'freezing cold and icy', 'snowflakes are falling', 'wrap up warm, it\'s snowing',
+    'we went sledging in the snow', 'a big snowball fight', 'frosty and frozen outside', 'gloves, hat and scarf, it\'s freezing', 'deep snow on the cars',
+    'icy roads and snow', 'it\'s snowing again', 'cold, white and frosty', 'snow day, no school']
 };
 export function sampleLabels(set, per = 10, seed = 11) {
   const s = SAMPLE_SETS[set]; if (!s) return null;
+  if (s.kind === 'text') return s.labels.map((name, i) => ({ name, color: COLOURS[i], ex: TEXTS[name].slice(0, Math.max(per, 14)) }));
   const r = rng(seed);
   return s.labels.map((name, i) => ({ name, color: COLOURS[i], ex: Array.from({ length: per }, () => SHAPES[name](r).map(st => simplifyStroke(st))) }));
 }

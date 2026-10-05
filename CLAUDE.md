@@ -232,7 +232,22 @@ safeguarding choice; nothing leaves the device except inside their saved/shared 
   `#pt-modal` tile `data-pt="ai"` (KS1 hidden; the chooser is now a 4-column grid), home tile `data-start="ai"` (`home/ai.jpg`; the tiles
   grid is 4 per row ≥1180px), icon `#i-ai`, `AI_HELP`, Teacher Guide "AI Lab" section, thumbnail badge, `LS_TYPE.ai`. **No live
   collaboration** (Share hides Collaborate). Test: `tests/ai.test.mjs` (brain in Node + the app end to end).
-- **Ideas not done yet:** an AI lesson + slides (bias talk is in AI_HELP Ideas), sounds as a second input type (needs mic consent).
+- **Words AI (`kind:'text'`, added 6 Oct 2026):** the project has `kind` 'draw'|'text' (Teach → "Teach it with Drawings / Words";
+  switching clears the examples after a confirm). Text examples are strings (≤120 chars, `cleanText`); `textVector` hashes each word,
+  each word pair and each 3-letter piece into 512 buckets (L2-normalised); practice copies leave out a word. Same network/trainer
+  (`trainer(labels,{kind})`, `canTrain(labels,kind)`, `dataKey(labels,kind)`, `brain.kind`). Ready-made text sets: `weather`
+  (sunny/rainy/snowy, ~7/9 on the check) and `kind` (kind/unkind messages — deliberately overlapping, ~4/6, used to TEACH BIAS: "I love
+  your drawing" comes out unkind). App: `makeInput` = pad + textarea per step (`.ailab.k-text` shows the textarea); Enter adds / sends;
+  the test box guesses as you type and lists words it has never seen. Blocks reworded neutrally: "wait for the next guess", "clear the pad".
+- **Look inside (added 6 Oct 2026):** Teach shows "What the computer sees" (the 20×20 `rasterize` grid, `gridPic`) under the pad; Train
+  shows `averages(labels)` per label (draw) or `keyWords(brain, labels)` (text) and a mix-ups table from `brain.check.matrix[real][guess]`.
+- **Lesson "Teach the computer"** (lessons.js, KS2 Y5–6, 60 min, slides incl. the bias demo; starter = circle + triangle, 3 neat drawings
+  each, no square, built by make-starters `aiShapes()`); on the home lesson strip (`HOME_LESSONS`). In ai-mode the Lesson card sits
+  bottom-left; "New label" + Ready-made moved ABOVE the label list so the card never hides them.
+- **Bug found + fixed (also in the LIVE Robot Lab):** `pause()` stopped the app's rAF loop and `setProject()` never restarted it, so after
+  leaving a project and reopening one (applyPayload → enter*UI → setProject) Run did nothing. Both apps' `setProject` now restart the loop
+  (robot also `view.start()`); tests in ai.test.mjs + robot.test.mjs ("Run still works after … reopening").
+- **Ideas not done yet:** sounds as an input type (needs mic consent), a KS1 version, using the AI from Stage projects.
 
 ## Robot Lab project type — `projectType==='robot'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.05.4; cloud worker v16 live, deployed automatically by codejump-cloud's GitHub Actions)
 **Replaces the old Stage "Ohbot" extension, which was REMOVED (5 Oct 2026, Charlie: it looked too much like Ohbot; robot coding

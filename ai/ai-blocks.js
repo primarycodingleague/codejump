@@ -17,23 +17,23 @@ const LABEL = { type: 'ai_label_field', name: 'LABEL' }; // replaced with a dyna
 export const BLOCKS = [
   // ── Events
   { type: 'ai_when_run', message0: 'when Run is clicked', nextStatement: null, colour: C.events, tooltip: 'Starts this script when you press Run.' },
-  { type: 'ai_when_guess', message0: 'when the AI makes a guess', nextStatement: null, colour: C.events, tooltip: 'Starts this script each time someone finishes a drawing and the AI has guessed what it is.' },
+  { type: 'ai_when_guess', message0: 'when the AI makes a guess', nextStatement: null, colour: C.events, tooltip: 'Starts this script each time someone finishes a drawing (or types something and presses Enter) and the AI has guessed what it is.' },
   { type: 'ai_when_thinks', message0: 'when the AI thinks it’s %1', args0: [LABEL], nextStatement: null, colour: C.events, tooltip: 'Starts this script when the AI’s best guess for a drawing is this label.' },
   { type: 'ai_when_message', message0: 'when I receive %1', args0: [{ type: 'field_input', name: 'MSG', text: 'go' }], nextStatement: null, colour: C.events, tooltip: 'Starts this script when a message with this name is sent.' },
   { type: 'ai_send', message0: 'send message %1', args0: [{ type: 'field_input', name: 'MSG', text: 'go' }], previousStatement: null, nextStatement: null, colour: C.events, tooltip: 'Starts every “when I receive” script with this name.' },
   // ── AI
-  { type: 'ai_guess', message0: 'AI’s guess', output: null, colour: C.ai, tooltip: 'The label the AI thinks the last drawing is.' },
+  { type: 'ai_guess', message0: 'AI’s guess', output: null, colour: C.ai, tooltip: 'The label the AI thinks the last drawing (or typed message) is.' },
   { type: 'ai_confidence', message0: 'how sure the AI is (%)', output: 'Number', colour: C.ai, tooltip: 'How sure the AI is about its guess, from 0 to 100.' },
   { type: 'ai_thinks', message0: 'AI thinks it’s %1 ?', args0: [LABEL], output: 'Boolean', colour: C.ai, tooltip: 'True if the AI’s best guess for the last drawing is this label.' },
   { type: 'ai_conf_of', message0: 'how sure it’s %1 (%)', args0: [LABEL], output: 'Number', colour: C.ai, tooltip: 'How sure the AI is that the last drawing is this label, from 0 to 100.' },
   { type: 'ai_random_label', message0: 'a random label', output: null, colour: C.ai, tooltip: 'One of your labels, picked at random. Great for “draw a …!” games.' },
-  { type: 'ai_wait_drawing', message0: 'wait for a drawing', previousStatement: null, nextStatement: null, colour: C.ai, tooltip: 'Waits until someone finishes a drawing and the AI has guessed it.' },
-  { type: 'ai_clear', message0: 'clear the drawing', previousStatement: null, nextStatement: null, colour: C.ai, tooltip: 'Wipes the drawing pad ready for the next drawing.' },
+  { type: 'ai_wait_drawing', message0: 'wait for the next guess', previousStatement: null, nextStatement: null, colour: C.ai, tooltip: 'Waits until someone finishes a drawing (or types something) and the AI has guessed it.' },
+  { type: 'ai_clear', message0: 'clear the pad', previousStatement: null, nextStatement: null, colour: C.ai, tooltip: 'Wipes the drawing pad (or the typing box) ready for the next one.' },
   // ── Screen
-  { type: 'ai_say', message0: 'show %1', args0: [num('TEXT')], previousStatement: null, nextStatement: null, colour: C.screen, tooltip: 'Shows a message in the speech bubble above the drawing pad.' },
+  { type: 'ai_say', message0: 'show %1', args0: [num('TEXT')], previousStatement: null, nextStatement: null, colour: C.screen, tooltip: 'Shows a message in the speech bubble above the pad.' },
   { type: 'ai_say_for', message0: 'show %1 for %2 seconds', args0: [num('TEXT'), num('S')], inputsInline: true, previousStatement: null, nextStatement: null, colour: C.screen, tooltip: 'Shows a message, waits, then hides it.' },
   { type: 'ai_speak', message0: 'say %1 out loud', args0: [num('TEXT')], previousStatement: null, nextStatement: null, colour: C.screen, tooltip: 'Reads the words out loud (and shows them), and waits until it has finished.' },
-  { type: 'ai_colour', message0: 'set the pad colour to %1', args0: [{ type: 'field_colour', name: 'COL', colour: '#fff3b0' }], previousStatement: null, nextStatement: null, colour: C.screen, tooltip: 'Changes the colour of the drawing pad.' },
+  { type: 'ai_colour', message0: 'set the pad colour to %1', args0: [{ type: 'field_colour', name: 'COL', colour: '#fff3b0' }], previousStatement: null, nextStatement: null, colour: C.screen, tooltip: 'Changes the colour of the pad (or the typing box).' },
   // ── Sound
   { type: 'ai_sound', message0: 'play sound %1', args0: [dd('S', SOUNDS)], previousStatement: null, nextStatement: null, colour: C.sound, tooltip: 'Plays a sound effect.' },
   // ── Score
@@ -91,10 +91,10 @@ export function toolbox() {
 }
 
 // a new project's program: "Guess my drawing"
-export function starterProgram() {
+export function starterProgram(kind = 'draw') {
   const chain = list => { let first = null, prev = null; for (const b of list) { if (prev) prev.next = { block: b }; else first = b; prev = b; } return first; };
   const run = { type: 'ai_when_run', x: 24, y: 24 };
-  run.next = { block: chain([{ type: 'ai_say', inputs: { TEXT: T('Draw something and I’ll guess what it is!') } }]) };
+  run.next = { block: chain([{ type: 'ai_say', inputs: { TEXT: T(kind === 'text' ? 'Type something and I’ll guess what it is!' : 'Draw something and I’ll guess what it is!') } }]) };
   const g = { type: 'ai_when_guess', x: 24, y: 150 };
   g.next = { block: chain([
     { type: 'controls_if', extraState: { hasElse: true }, inputs: {

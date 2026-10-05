@@ -59,6 +59,10 @@ const MICROBIT_XML = `<xml xmlns="https://developers.google.com/blockly/xml"><va
 <statement name="DO"><block type="mb_show_leds"><field name="PATTERN">${ROCK}</field></block></statement></block></next></block></next></block>
 </xml>`;
 
+// ---- AI Lab: circle and triangle, three neat drawings each (too few, and no square yet — the lesson fixes that)
+const AIM = await import(join(ROOT, 'ai', 'ai-model.js'));
+const aiShapes = () => AIM.sampleLabels('shapes', 3, 7).filter(l => l.name !== 'square').map((l, i) => ({ ...l, color: AIM.COLOURS[i] }));
+
 // Each build runs inside the page and leaves the starter open; the payload is then taken with buildPayload().
 const BUILD = {
   'cat-to-star': () => {
@@ -102,13 +106,18 @@ const BUILD = {
     for (let i = 0; i < 200 && !critterApp; i++) await new Promise(r => setTimeout(r, 50));
     critterApp.setCritter(critter);
   },
+  'teach-the-computer': async ({ aiLabels }) => {
+    startNewAI('ks2');
+    for (let i = 0; i < 400 && !(aiApp && aiApp._ws && aiApp._ws()); i++) await new Promise(r => setTimeout(r, 50));
+    aiApp.setProject({ kind: 'draw', labels: aiLabels });
+  },
   'obstacle-course': async ({ world }) => {
     startNew3D('ks2');
     for (let i = 0; i < 400 && !(worldApp && worldApp._world && worldApp._world()); i++) await new Promise(r => setTimeout(r, 50));
     worldApp.setProject({ blocks: world });
   }
 };
-const ARGS = { CATCHER_XML, STAR_XML, MICROBIT_XML, critter: wobbly(), world: course() };
+const ARGS = { CATCHER_XML, STAR_XML, MICROBIT_XML, critter: wobbly(), world: course(), aiLabels: aiShapes() };
 
 const site = await serve();
 const b = await browser();

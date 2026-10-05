@@ -656,7 +656,7 @@ shared animation clips + a model library, reusing Flock's MIT assets (DONE, see 
   to the program); `createModel` now only deletes its own entry (`objs.get(id) === o`). Tests (scratchpad): `room.mjs`
   (a stand-in Room using the REAL `Room.prototype.applyOp` from worker.js; `old` arg = v12 behaviour) + `collab.mjs`
   (Ana/Ben/Cara in 3 browser contexts: join, number edit, new block, gizmo drag, delete, identical workspaces, undo
-  isolation, same-moment conflict, late joiner, pointers, no echo loop, Run is local) and `test8.mjs` (the rebuild race).
+  isolation, same-moment conflict, late joiner, pointers, no echo loop, Run is local) and `test8.mjs` (the rebuild race). **Charlie tested it end to end on the preview (two accounts, two windows) on 5 Oct 2026: all works.**
 - **Gotchas:** Blockly 10 has NO `Blockly.Themes.Dark` (only Classic/Zelos) — the main app's `base:Blockly.Themes.Dark`
   silently falls back to Classic; the 3D editor sets `componentStyles` instead. `eval` can't be a parameter name in strict
   mode. Headless Havok needs `new HavokPlugin(false, hk)` + `setTimeStep(1/60)` (the runtime does this when there's no canvas).

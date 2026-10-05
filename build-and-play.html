@@ -417,18 +417,33 @@ body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode) #le
 .teacher-link button{background:rgba(57,57,57,.7);border:1px solid var(--gray);color:var(--gold);font-weight:700;letter-spacing:1.2px;text-transform:uppercase;font-size:12px;padding:10px 18px;border-radius:30px;cursor:pointer;transition:.15s;font-family:var(--font);}
 .teacher-link button:hover{border-color:var(--gold);background:rgba(57,57,57,.95);}
 /* ── TEACHER HUB ───────────────────────────────────────────────────── */
-#teacher{position:fixed;inset:0;z-index:520;overflow-y:auto;background:var(--black);background-image:radial-gradient(rgba(174,133,62,.45) 1px,transparent 1px);background-size:28px 28px;padding-bottom:60px;}
+#teacher{position:fixed;inset:0;z-index:520;overflow-y:auto;background:#f7f5f1;color:#24292f;padding-bottom:60px;font-family:var(--font);}
 #teacher.hide{display:none;}
 .th-screen{display:none;}.th-screen.on{display:block;}
-.th-wrap{max-width:1180px;margin:0 auto;padding:22px 18px 40px;}
-.th-bar{background:var(--dark);border-bottom:2px solid var(--gold);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:5;}
-.th-logo{font-weight:900;letter-spacing:1px;font-size:17px;}.th-logo .g{color:var(--gold);}
-.th-bar .lbl{opacity:.6;font-weight:700;letter-spacing:1px;font-size:12px;}
+.th-wrap{max-width:1200px;margin:0 auto;padding:clamp(28px,5vw,56px) clamp(16px,4vw,48px) 40px;}
+.th-bar{background:#000;color:#fff;border-bottom:3px solid var(--gold);padding:10px clamp(16px,4vw,48px);display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;position:sticky;top:0;z-index:5;}
+.th-logo{font-family:var(--display);font-size:26px;letter-spacing:.5px;color:#fff;}.th-logo .g{color:var(--gold);}
+.th-bar .lbl{font-weight:800;letter-spacing:.14em;font-size:12px;text-transform:uppercase;color:rgba(255,255,255,.65);}
 .th-bar .spacer{flex:1;}
-.th-chip{border:1px solid var(--gray);border-radius:4px;padding:8px 13px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:transparent;transition:.15s;font-family:var(--font);}
+.th-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:2px solid #393939;border-radius:10px;padding:0 16px;font-size:14px;font-weight:800;color:#fff;background:#262626;transition:.15s;font-family:var(--font);cursor:pointer;}
 .th-chip:hover{border-color:var(--gold);color:var(--gold);}
 .th-chip.gold{background:var(--gold);color:#000;border-color:var(--gold);}
-.th-year.active{background:var(--gold);color:#000;border-color:var(--gold);}
+.th-chip.gold:hover{filter:brightness(1.08);color:#000;}
+#teacher .ic{width:1.15em;height:1.15em;vertical-align:-.2em;}
+#teacher .hm-tcard-ic .ic{width:34px;height:34px;vertical-align:0;}
+#teacher .hm-tlist .ic{color:#008a47;width:20px;height:20px;margin-top:1px;flex:none;}
+#teacher .hm-tl-strip{grid-template-columns:repeat(4,1fr);}
+.th-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
+.th-acts .hm-btn{margin-top:0;}
+.th-paper{background:#fff;border:2px solid #000;border-radius:16px;padding:clamp(18px,3vw,32px);}
+#teacher .tg-doc{color:#24292f;}
+#teacher .tg-doc h3{color:#7a5c25;border-bottom-color:#e2dccf;}
+#teacher .tg-doc h4{color:#585555;opacity:1;}
+#teacher .tg-doc b{color:#000;}
+#teacher .tg-doc code{background:#f2ead9;color:#5a3f12;}
+#teacher .tg-doc a{color:#1a5fb4;}
+@media (max-width:980px){#teacher .hm-tl-strip{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:640px){.th-bar .lbl{display:none;}.th-logo{font-size:22px;}}
 .th-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .th-panel{background:var(--dark);border:1px solid var(--gray);border-radius:6px;padding:18px;}
 .th-panel h3{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
@@ -1695,33 +1710,62 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <div class="th-screen on" id="t-hub">
     <div class="th-bar">
       <span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Teacher Hub</span>
-      <span style="display:flex;gap:6px;margin-left:8px;">
-        <button class="th-chip th-year" data-year="1" onclick="thSetYear(1)">Year 1</button>
-        <button class="th-chip th-year" data-year="2" onclick="thSetYear(2)">Year 2</button>
-      </span>
       <span class="spacer"></span>
       <button class="th-chip" onclick="openTeacherGuide()"><svg class="ic"><use href="#i-book"></use></svg> Teacher Guide</button>
- <button class="th-chip gold" onclick="hideTeacher()"> Back to CodeJump</button>
+      <button class="th-chip gold" onclick="hideTeacher()"><svg class="ic"><use href="#i-arr-l"></use></svg> Back to CodeJump</button>
     </div>
     <div class="th-wrap">
-      <div class="th-grid">
-        <div class="th-panel th-span2">
-          <h3><svg class="ic"><use href="#i-people"></use></svg> My classes &amp; pupils' work</h3>
-          <p class="th-muted" style="margin-bottom:12px;">Create classes, manage pupils, send games to a class, and open the work pupils have handed in — on any device.</p>
- <button class="th-btn" id="th-classes" onclick="teacherHubClasses()"><svg class="ic"><use href="#i-school"></use></svg> Open my classes </button>
-          <button class="th-btn ghost" style="margin-top:8px" onclick="openSubmission()"><svg class="ic"><use href="#i-folder"></use></svg> …or open a level file</button>
+      <div class="hm-teach-head">
+        <div class="hm-eyebrow dark" id="th-who">Teacher Hub</div>
+        <h2 class="hm-h2 display">Your classroom</h2>
+        <p class="hm-teach-lede">Present a lesson, hand out projects, open your pupils’ work and run a Critter Showdown, all from here.</p>
+      </div>
+      <div class="hm-tl">
+        <div class="hm-tl-top">
+          <div class="hm-tl-text">
+            <h3><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</h3>
+            <p>Pick a lesson to present its slides, open the starter, give it to a class or print the plan.</p>
+          </div>
+          <button class="hm-btn gold lg" id="th-lessons" onclick="_lsCurrent=null;openLessons()"><svg class="ic"><use href="#i-book"></use></svg> All the lessons</button>
         </div>
-        <div class="th-panel">
-          <h3><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</h3>
-          <p class="th-muted" style="margin-bottom:12px;">Complete KS1 and KS2 computing lessons: a plan with timings and what to say, curriculum links, key words, slides to present, a starter project and step-by-step cards for pupils. Present one on the board or give it to a class.</p>
-          <button class="th-btn" id="th-lessons" onclick="openLessons()"><svg class="ic"><use href="#i-book"></use></svg> Browse the lessons</button>
-        </div>
+        <div class="hm-tl-strip" id="th-lesson-strip" aria-label="Ready-made lessons"></div>
+      </div>
+      <div class="hm-tcards">
+        <article class="hm-tcard">
+          <div class="hm-tcard-ic"><svg class="ic"><use href="#i-people"></use></svg></div>
+          <h3>My classes and pupils’ work</h3>
+          <ul class="hm-tlist">
+            <li><svg class="ic"><use href="#i-check"></use></svg>Make a class and add pupils from a list</li>
+            <li><svg class="ic"><use href="#i-check"></use></svg>Print login cards and reset passwords</li>
+            <li><svg class="ic"><use href="#i-check"></use></svg>Give a project to everyone, then open what they hand in</li>
+          </ul>
+          <div class="th-acts">
+            <button class="hm-btn ink" id="th-classes" onclick="teacherHubClasses()"><svg class="ic"><use href="#i-school"></use></svg> Open my classes</button>
+            <button class="hm-btn outline-ink" onclick="openSubmission()"><svg class="ic"><use href="#i-folder"></use></svg> Open a level file</button>
+          </div>
+        </article>
+        <article class="hm-tcard hm-tcard-pic">
+          <img data-home="showdown.jpg" alt="A Critter Showdown podium: Amara wins Super Sumo, Leo 2nd, Isla 3rd, Ravi 4th">
+          <h3>Critter Showdown</h3>
+          <p>Race up to four pupils’ Critters live on the board. Open a class and press <b>Critter Showdown</b>: the pupils you pick get a pop-up asking them to join.</p>
+          <button class="hm-btn outline-ink" onclick="teacherHubClasses()"><svg class="ic"><use href="#i-critter"></use></svg> Start a Showdown</button>
+        </article>
+        <article class="hm-tcard">
+          <div class="hm-tcard-ic"><svg class="ic"><use href="#i-teacher"></use></svg></div>
+          <h3>Teacher Guide</h3>
+          <ul class="hm-tlist">
+            <li><svg class="ic"><use href="#i-check"></use></svg>How every project type works, block by block</li>
+            <li><svg class="ic"><use href="#i-check"></use></svg>Video guides for the Critter Lab</li>
+            <li><svg class="ic"><use href="#i-check"></use></svg>Privacy, data and safeguarding policies</li>
+          </ul>
+          <button class="hm-btn outline-ink" onclick="openTeacherGuide()"><svg class="ic"><use href="#i-book"></use></svg> Open the Teacher Guide</button>
+        </article>
       </div>
     </div>
   </div>
   <!-- LESSON DETAIL -->
   <div class="th-screen" id="t-lesson">
- <div class="th-bar"><span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Lesson</span><span class="spacer"></span><button class="th-back" onclick="thGo('t-hub')"> Back to Hub</button></div>
+ <div class="th-bar"><span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Lesson</span><span class="spacer"></span><button class="th-chip gold" onclick="thGo('t-hub')"><svg class="ic"><use href="#i-arr-l"></use></svg> Back to the Hub</button></div>
     <div class="th-wrap"><div class="th-ldwrap">
       <div class="th-ld" id="th-ldLeft"></div>
       <div id="th-ldSheet"></div>
@@ -1731,8 +1775,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <div class="th-screen" id="t-guide">
     <div class="th-bar"><span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Teacher Guide</span><span class="spacer"></span>
       <button class="th-chip" onclick="printGuide()"><svg class="ic"><use href="#i-print"></use></svg> Print</button>
- <button class="th-back" onclick="thGo('t-hub')"> Back to Hub</button></div>
-    <div class="th-wrap"><div class="th-panel th-guide-body" id="th-guide-body"></div></div>
+      <button class="th-chip gold" onclick="thGo('t-hub')"><svg class="ic"><use href="#i-arr-l"></use></svg> Back to the Hub</button></div>
+    <div class="th-wrap"><div class="th-paper th-guide-body" id="th-guide-body"></div></div>
   </div>
 </div>
 
@@ -2682,7 +2726,7 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
 });
 // Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
 function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https://codejump.co.uk/home/')+f;}
-document.querySelectorAll('#home img[data-home]').forEach(im=>{im.src=homeAsset(im.dataset.home);im.loading='lazy';im.decoding='async';});
+document.querySelectorAll('#home img[data-home],#teacher img[data-home]').forEach(im=>{im.src=homeAsset(im.dataset.home);im.loading='lazy';im.decoding='async';});
 document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendingPt=b.dataset.start;document.getElementById('ks-modal').classList.remove('hide');});
 {const t3=document.getElementById('h-tile-3d');if(t3&&!THREED_ON)t3.style.display='none';}
 document.getElementById('h-myprojects').onclick=()=>{const el=document.getElementById('home-projects');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
@@ -5079,10 +5123,16 @@ function thLessons(){return TH_UNITS[thYear].lessons;}
 function showTeacher(){document.getElementById('teacher').classList.remove('hide');{const lg=document.getElementById('lesson-guide');if(lg)lg.classList.add('hide');}const rp=document.getElementById('resume-pill');if(rp)rp.classList.add('hide');thGo('t-hub');thRenderHub();}
 function hideTeacher(){document.getElementById('teacher').classList.add('hide');if(typeof lessonGuideRender==='function')lessonGuideRender();}
 function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
-function thSetYear(y){thYear=y;thRenderHub();}
 function thRenderHub(){
-  // Lesson resources are "Coming soon" — only the year toggle remains in the hub for now.
-  document.querySelectorAll('.th-year').forEach(b=>b.classList.toggle('active',(+b.dataset.year)===thYear));
+  const who=document.getElementById('th-who');
+  if(who)who.textContent=(typeof isSignedIn==='function'&&isSignedIn()&&cloudMe)?'Teacher Hub · signed in as '+(cloudMe.realName||cloudMe.displayName||''):'Teacher Hub';
+  thLessonStrip();
+}
+async function thLessonStrip(){ // every lesson as a picture card (from lessons/lessons.js; stays empty if it can't load)
+  const el=document.getElementById('th-lesson-strip');if(!el||el.childElementCount)return;
+  try{await loadLessons();}catch(e){return;}
+  el.innerHTML=lessonsMod.LESSONS.map(l=>`<button class="hm-lcard" data-lesson="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div><small>${l.ks==='ks1'?'KS1':'KS2'} · ${l.minutes} min</small><b>${lsEsc(l.title)}</b><span>${lsEsc(l.tool)}</span></div></button>`).join('');
+  el.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{_lsCurrent=b.dataset.lesson;openLessons();});
 }
 function thSheetHTML(L){return '<div class="th-sheet">'+
   '<div class="ks">'+L.ks+'</div>'+

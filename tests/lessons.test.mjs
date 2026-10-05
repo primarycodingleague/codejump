@@ -89,6 +89,16 @@ try {
   ok(/Critter engineers/.test(await page.textContent('#ls-title')), 'the Critter Showdown card opens the Critter lesson');
   await page.click('#ls-close');
 
+  // ---- the Teacher Hub lists every lesson as a picture card
+  await page.evaluate(() => showTeacher());
+  await page.waitForSelector('#th-lesson-strip .hm-lcard');
+  ok((await page.$$eval('#th-lesson-strip .hm-lcard', c => c.length)) === LESSONS.length, 'the Teacher Hub shows every lesson');
+  await page.click('#th-lesson-strip .hm-lcard >> nth=0');
+  await page.waitForSelector('#ls-present-btn');
+  ok(await page.textContent('#ls-title') === LESSONS[0].title, 'tapping a lesson in the Hub opens it');
+  await page.click('#ls-close');
+  await page.evaluate(() => hideTeacher());
+
   // ---- every starter opens as the right project type with its Lesson card
   for (const l of LESSONS) {
     await page.evaluate(() => clearDirty());

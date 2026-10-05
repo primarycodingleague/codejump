@@ -1113,6 +1113,11 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
   lesson pictures `#h-lesson-strip`, filled by `homeLessonStrip()` from `HOME_LESSONS` when the section scrolls near; empty if
   lessons.js can't load) → cards: Your class in minutes (`#h-setup-class`), Critter Showdown (picture; `#h-showdown-lesson` opens the
   Critter engineers lesson), Teacher Guide (`#h-guide`). CSS `.hm-tl*`, `.hm-lcard`, `.hm-tcard*`, `.hm-tlist`.
+- **Teacher Hub restyled (5 Oct 2026) to match the home page:** light paper page, ink top bar (`.th-bar`, Lazydog wordmark,
+  `.th-chip` buttons), "Your classroom" heading (`#th-who` shows who is signed in), the dark lessons panel with EVERY lesson as a
+  picture card (`#th-lesson-strip`, `thLessonStrip()`), then `.hm-tcard`s: classes (`#th-classes`, open a level file), Critter
+  Showdown, Teacher Guide. The old Year 1/Year 2 toggle (did nothing) is gone. The Teacher Guide screen is a white `.th-paper`
+  card with dark `#teacher .tg-doc` colours.
 - **Tests:** `tests/lessons.test.mjs` (library, give/print, every starter opens with its card, card next/back/save/reopen, and
   each lesson's promised result: cat reaches the star, fixed dance comes home, if-touching scores, repeat 3 closes the triangle,
   shake picks 1–3 and shows the rock, Python version, Critter Motion-tab Opposite beat) + `tests/lessons-engines.test.mjs`

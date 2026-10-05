@@ -2794,7 +2794,8 @@ function enter3DUI(){
   holder.innerHTML='<div id="world-loading">Getting the 3D world ready…</div>';
   loadWorldEngine().then(mod=>{
     if(worldApp){_worldQuiet=true;try{worldApp.setProject(worldData);}finally{_worldQuiet=false;}return;}
-    worldApp=mod.mount(holder,{project:worldData,onChange:()=>{if(!_worldQuiet&&projectType==='3d')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e')});
+    worldApp=mod.mount(holder,{project:worldData,onChange:()=>{if(!_worldQuiet&&projectType==='3d')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+      collab:{active:()=>typeof collabActive!=='undefined'&&collabActive&&projectType==='3d',send:op=>collabSend({type:'op',op})}});
   }).catch(()=>{holder.innerHTML='<div id="world-loading">The 3D world needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
 function exit3DUI(){
@@ -4377,7 +4378,7 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   gc.addEventListener('touchmove',e=>{if((_mbSlider||_mbPanelDrag)&&e.touches[0]){mbPointerMove(stagePtr(e.touches[0]));e.preventDefault();}},{passive:false});
   gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;}});
   // whole-editor collab cursor (blocks + canvas), so partners see each other while building, not just over the canvas
-  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&projectType==='stage'&&document.body.classList.contains('stage-mode'))collabStageCursor(e.clientX,e.clientY);});
+  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&((projectType==='stage'&&document.body.classList.contains('stage-mode'))||(projectType==='3d'&&document.body.classList.contains('threed-mode'))))collabStageCursor(e.clientX,e.clientY);}); // Stage + 3D World: whole-editor pointers
   window.addEventListener('blur',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
   window.addEventListener('resize',()=>{if(typeof renderCollabStageCursors==='function')renderCollabStageCursors();});
   gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);if(mbPointerDown(p))return;stageFireClick(p.x,p.y);}});
@@ -6171,7 +6172,7 @@ const WORLD_HELP=[
  ['blocks',' Blocks',`<ul><li><b>Scene</b> — sky and ground colours, fog, brightness, gravity.</li><li><b>Shapes</b> — make a box, ball, cylinder, cone or capsule. Each one goes in a <b>variable</b> (like <i>box1</i>), so other blocks can use it.</li><li><b>Characters</b> and <b>Models</b> — people, animals, trees, huts, gems and more (see the next page).</li><li><b>Events</b> — <i>when Run is clicked</i>, when a thing is clicked, when a key is pressed, when two things touch, and messages.</li><li><b>Motion</b> and <b>Looks</b> — move, glide, turn, resize, colour, show, hide, speech bubbles and words on the screen.</li><li><b>Sound</b> — sounds, notes and reading words out loud.</li><li><b>Physics</b> — <i>fall and bump</i> things drop and knock into each other; <i>solid but still</i> things never move. Bounciness, grip, weight, push.</li><li><b>Game</b> and <b>Camera</b> — control a player with the arrow keys, and make the camera follow it.</li><li><b>Control</b>, <b>Sensing</b>, <b>Operators</b>, <b>Variables</b> — wait, repeat, forever, if, touching, distance, timer, maths and joining words.</li></ul><p>Only blocks inside an <b>event</b> block (like <i>when Run is clicked</i>) do anything.</p>`],
  ['models',' Characters',`<h3>Characters</h3><p><b>make character</b> adds a person or animal. Pick one from the pictures. Characters can <b>play animations</b>: walk, run, wave, dance, clap, flip, swim and many more, <i>over and over</i>, <i>once</i>, or <i>once and wait</i>. Use <b>set hair / skin / eyes / T-shirt / shorts / sleeves colour</b> to dress them.</p><p>A character you <b>control</b> walks, runs and jumps by itself as you move it.</p><h3>Models</h3><p><b>make</b> in the Models group adds trees, rocks, huts, a pond, boats, aeroplanes, stars, gems, coins and more. They work just like shapes: move them, give them physics, check if they're touching.</p><p>The Blocky characters are the quickest. The Ponytail and Spiky hair characters have lots of detail, so use them one at a time on slower computers.</p>`],
  ['game',' Make a game',`<ol><li>Make a <b>character</b> called <i>player</i>, make it <b>fall and bump</b>, and add <b>control player with the arrow keys</b>.</li><li>Add <b>camera follows player</b> (or <i>from behind</i>).</li><li>Make some <b>solid but still</b> boxes to jump on.</li><li>Make a <b>Star</b> called <i>prize</i>, and add <b>when player touches prize</b> → <b>hide prize</b>, <b>change score by 1</b> and <b>show "Score: " + score on the screen</b>.</li><li>Add <b>play sound coin</b> and a <b>wave</b> animation to celebrate!</li></ol><p>Keys: <b>arrow keys</b> or <b>WASD</b> to move, <b>Space</b> to jump. On a tablet, buttons appear on the world.</p>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class.</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class.</p><h3>Build together</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to five classmates. Everyone sees the same blocks and the same world, and every change (even dragging a tree with the arrows) shows up on everyone's screen. You can see where your friends are pointing. <b>Run</b> only plays on your own screen, so each of you can test the game.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
 const CRITTER_HELP=[
@@ -6269,7 +6270,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p>Race up to four pupils’ Critters against each other on your screen. Open <b>Cloud → Teacher</b>, choose the class and press <b>Critter Showdown</b> (or press <b>Showdown</b> inside the Critter Lab). Pick up to four pupils and a contest (Sprint, Hurdles, High Jump, Lap or Super Sumo) and press <b>Open the Showdown</b>. The pupils press <b>Showdown</b> in their Critter Lab (or open it from Cloud → Collaborations) and send in one of their saved Critters (cloud or device), or the one on their screen. Your panel shows who’s here, who’s choosing and who’s ready. You can take an entry out, fill empty lanes with Starter Critters, change the contest, then press <b>Start the race!</b>. Every screen shows the race live with a leaderboard and a podium at the end. In the races each Critter runs exactly as it does in its owner’s Test it!, so the lane makes no difference; Super Sumo is one shared platform. Press <b>Race again</b> or change the contest for another round, and <b>End Showdown</b> when you’re done. Pupils need to be signed in, and it uses the same live rooms as Collaborate (no extra set-up).</p>
  <h3> 3D World (Key Stage 2 &amp; 3)</h3>
  <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
- <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses); live collaboration isn't available for 3D yet. On slower Chromebooks, the Blocky characters are the lightest.</p>
+ <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. On slower Chromebooks, the Blocky characters are the lightest.</p>
  <h3> Turtle (Logo)</h3>
  <p>The <b>Turtle</b> project is a text <b>Logo</b> playground (like the classic turtle-graphics languages): pupils type commands on the left and a turtle draws on the right. Press ▶ <b>Run</b> to draw, ⏹ <b>Stop</b> / <b>Clear</b> to start over, and use the <b> Speed</b> slider to watch the turtle move slowly or draw instantly. Built-in <b>Commands</b> and <b>Examples</b> buttons get pupils started.</p>
   <p>It supports movement (<code>fd/forward</code>, <code>bk/back</code>, <code>rt/right</code>, <code>lt/left</code>, <code>setxy</code>, <code>seth</code>, <code>home</code>), pen control (<code>pu/pd</code>, <code>setpensize</code>, <code>setpencolor</code>, <code>setbg</code>), <code>repeat</code> loops, <code>if</code>/<code>ifelse</code>, variables (<code>make "x …</code> and <code>:x</code>), arithmetic and <code>random</code>, and pupils can teach the turtle <b>their own commands</b> with <code>to NAME … end</code> — a great bridge from blocks to typed code, and ideal for maths links (angles, repetition, polygons). It works at any key stage, but typing suits <b>Key Stage 2 upward</b> best.</p>
@@ -6840,7 +6841,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='3d'&&projectType!=='critter'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // 3D and Critter have no live collaboration yet (turtle now does)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -7116,11 +7117,14 @@ function collabOnMessage(m){
       else if(mode!=='build')switchMode('build');}
     else{collabSnapshotNow();}
  updateCollabBar();toast("You're in the live room! ",'#10b981');}
- else if(m.type==='join'){collabMembers[m.member.uid]=m.member;updateCollabBar();toast(cesc(m.member.name)+' joined ',m.member.color);}
-  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage')renderCollabStageCursors();if(g)toast(cesc(g.name)+' left','#585555');}
+ else if(m.type==='join'){collabMembers[m.member.uid]=m.member;updateCollabBar();toast(cesc(m.member.name)+' joined ',m.member.color);
+    if(projectType==='3d')collabSnapshotSoon();} // 3D: make sure the newcomer gets the latest blocks (an older cloud server doesn't keep 3D edits)
+  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage'||projectType==='3d')renderCollabStageCursors();if(g)toast(cesc(g.name)+' left','#585555');}
   else if(m.type==='op'){collabApplyRemote(()=>collabApplyOp(m.op));}
-  else if(m.type==='snapshot'){collabApplyRemote(()=>collabApplyDoc(m.doc));}
-  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage')renderCollabStageCursors();}
+  else if(m.type==='snapshot'){
+    if(projectType==='3d'&&m.doc&&m.doc.projectType==='3d'&&m.doc.world&&worldApp&&document.body.classList.contains('threed-mode'))worldApp.applyRemote({k:'w3_doc',blocks:m.doc.world.blocks}); // only swaps blocks if they differ
+    else collabApplyRemote(()=>collabApplyDoc(m.doc));}
+  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage'||projectType==='3d')renderCollabStageCursors();}
   else if(m.type==='full'){toast('That live room is full (max 6 people)','#ef4444');collabDisconnect(true);}}
 function collabApplyOp(op){if(!op)return;
   if(op.k==='cell'){const lvl=op.lvl||0;
@@ -7130,6 +7134,10 @@ function collabApplyOp(op){if(!op)return;
   if(op.k==='meta'){applyMetaOp(op);return;}
   if(op.k==='lvl'){applyLvlOp(op);return;}
   if(op.k==='prog'){applyProgOp(op);return;}
+  if(op.k==='w3_ev'||op.k==='w3_doc'){ // 3D World: a partner's block changes, or a full copy of the blocks
+    if(projectType!=='3d')return;
+    if(worldApp)worldApp.applyRemote(op);else if(op.k==='w3_doc'&&op.blocks)worldData={blocks:op.blocks};
+    return;}
   if(op.k==='t_code'){turtleCode=op.code||'';const ta=document.getElementById('turtle-code');if(ta&&document.activeElement!==ta)ta.value=turtleCode;return;} // turtle: apply remote code (don't stomp your own typing)
   applyStageOp(op);} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
 let _turtleCollabT=null;
@@ -7150,7 +7158,7 @@ function collabVars(){if(stageState)collabStageOp({k:'st_var',vars:stageState.va
 function collabStageCursor(clientX,clientY){if(!collabActive)return;const w=window.innerWidth,h=window.innerHeight;if(!w||!h)return;const ex=clientX/w,ey=clientY/h;const now=Date.now();if(now-_collabCurT<55)return;_collabCurT=now;collabSend({type:'cursor',cell:{ex:Math.round(ex*1000)/1000,ey:Math.round(ey*1000)/1000}});}
 function collabStageCursorGone(){if(collabActive)collabSend({type:'cursor'});} // no cell remote clears your pointer
 function renderCollabStageCursors(){var layer=document.getElementById('collab-cursors');
-  if(typeof collabActive==='undefined'||!collabActive||!document.body.classList.contains('stage-mode')){if(layer)layer.innerHTML='';return;}
+  if(typeof collabActive==='undefined'||!collabActive||!(document.body.classList.contains('stage-mode')||document.body.classList.contains('threed-mode'))){if(layer)layer.innerHTML='';return;}
   if(!layer){layer=document.createElement('div');layer.id='collab-cursors';document.body.appendChild(layer);}
   var w=window.innerWidth,h=window.innerHeight,seen={};
   for(var uid in collabRemoteCursors){var cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.ex==null)continue;seen[uid]=1;
@@ -8234,6 +8242,7 @@ const CJ_WHATSNEW=[
  "Real physics: things fall, bounce and knock into each other. Control a player with the arrow keys and jump with Space.",
  "Before you press Run, click anything in your world to find its block, and drag the arrows to move it. The numbers in the block change to match!",
  "Camera, sound, speech bubbles and words on the screen, so you can make a proper 3D game with a score.",
+ "Build a 3D world together: Share, then Collaborate, and up to five classmates can edit the same world live.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

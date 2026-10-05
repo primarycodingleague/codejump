@@ -3,8 +3,13 @@
  * only when a 3D World project opens, and mounted into #world-ui. CodeJump owns saving and sharing:
  * getProject() goes into the payload (payload.world) and onChange() marks the project dirty.
  *
- *   const app = (await import('./world/world-app.js')).mount(rootEl, { project, onChange, toast });
- *   app.getProject() · app.setProject(p) · app.pause() · app.destroy()
+ *   const app = (await import('./world/world-app.js')).mount(rootEl, { project, onChange, toast, collab });
+ *   app.getProject() · app.setProject(p) · app.pause() · app.destroy() · app.applyRemote(op)
+ *
+ * Live collaboration (host.collab = { active(), send(op) }, CodeJump's live rooms): every block change you make is sent
+ * as Blockly's own event JSON ({k:'w3_ev', evs}) and partners replay it; a full copy of the blocks ({k:'w3_doc'}) follows
+ * 1.5 s after you stop, which the room keeps for late joiners and which fixes anyone who fell out of step. Events are
+ * tagged with a Blockly event group: 'w3load…' (opening a project) and 'w3remote…' (a partner's change) are never sent on.
  *
  * A project is { blocks: <Blockly JSON workspace> }. Uses the page's Blockly 10 (window.Blockly) plus
  * Blockly's JavaScript generator from vendor/, which world-blocks.js drives.
@@ -101,7 +106,8 @@ export function mount(root, host) {
 
   let ws = null, world = null, gen = null, alive = true, quiet = false, pendingProject = host.project || null, padWanted = false;
   let changeTimer = 0, editTimer = 0, selBlock = null, tool = 'move', staleWarned = false;
-  const GIZMO = 'w3gizmo';
+  const GIZMO = 'w3gizmo', LOAD = 'w3load', REMOTE = 'w3remote';
+  let groupN = 0;
   const EDIT_TIP = 'Click a thing to move it, or its block to find it. Press Run to play.';
 
   function status(msg, kind) { const s = $('w3Status'); s.textContent = msg || ''; s.className = 'w3-status' + (kind ? ' ' + kind : ''); }
@@ -111,6 +117,7 @@ export function mount(root, host) {
   // ── editor ──
   function loadProject(p) {
     quiet = true;
+    Blockly.Events.setGroup(LOAD + (++groupN)); // opening a project is not an edit (not sent to partners, not "unsaved")
     try {
       ws.clear();
       const data = p && p.blocks && typeof p.blocks === 'object' ? p.blocks : WB.starterProgram();
@@ -118,11 +125,79 @@ export function mount(root, host) {
         ws.clear(); Blockly.serialization.workspaces.load(WB.starterProgram(), ws);
         toast('Some blocks in this project couldn’t be loaded, so it starts from the example instead.');
       }
-    } finally { quiet = false; }
+    } finally { quiet = false; Blockly.Events.setGroup(false); }
     // start at the top-left of the program, where the "when Run is clicked" block sits
     try { const top = ws.getTopBlocks(true)[0]; if (top) { const xy = top.getRelativeToSurfaceXY(), sc = ws.scale; ws.scroll(-(xy.x * sc) + 20, -(xy.y * sc) + 20); } } catch (e) { /* hidden */ }
   }
   function getProject() { return ws ? { blocks: Blockly.serialization.workspaces.save(ws) } : pendingProject; }
+
+  // ── live collaboration ──
+  // Two people changing the same thing at once can each end up with the other's value. Every full copy carries a time
+  // and this screen's random id, and on every screen the newest copy wins, so everyone settles on the same blocks.
+  let outBox = [], outTimer = 0, docTimer = 0, needDoc = false, mySent = null, retryTimer = 0;
+  const cid = Math.random().toString(36).slice(2, 10);
+  const newer = (a, b) => (a.t !== b.t ? a.t > b.t : a.cid > b.cid);
+  const collabOn = () => !!(host.collab && host.collab.active());
+  function flushOut() {
+    outTimer = 0;
+    if (outBox.length && collabOn()) host.collab.send({ k: 'w3_ev', evs: outBox });
+    outBox = [];
+  }
+  function sendDocSoon() {
+    clearTimeout(docTimer);
+    docTimer = setTimeout(() => {
+      docTimer = 0;
+      if (!alive || !ws || !collabOn()) return;
+      mySent = { t: Date.now(), cid };
+      host.collab.send({ k: 'w3_doc', blocks: Blockly.serialization.workspaces.save(ws), t: mySent.t, cid });
+    }, 1500);
+  }
+  function shareEvent(e) {
+    try { outBox.push(e.toJson()); } catch (err) { return; }
+    if (!outTimer) outTimer = setTimeout(flushOut, 100);
+    sendDocSoon();
+  }
+  // the same blocks always compare equal, whatever order they were made in
+  function same(a, b) {
+    const norm = d => JSON.stringify(Object.assign({}, d, { blocks: d && d.blocks && Object.assign({}, d.blocks, { blocks: (d.blocks.blocks || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1)) }) }));
+    return norm(a) === norm(b);
+  }
+  function busy() {
+    return (ws.isDragging && ws.isDragging()) || (Blockly.WidgetDiv && Blockly.WidgetDiv.isVisible()) || (Blockly.DropDownDiv && Blockly.DropDownDiv.isVisible());
+  }
+  function applyRemote(op) {
+    if (!op) return;
+    if (!ws) { if (op.k === 'w3_doc' && op.blocks) pendingProject = { blocks: op.blocks }; return; }
+    const group = REMOTE + (++groupN);
+    const undo = Blockly.Events.getRecordUndo ? Blockly.Events.getRecordUndo() : true;
+    if (op.k === 'w3_ev' && Array.isArray(op.evs)) {
+      Blockly.Events.setGroup(group);
+      if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(false); // Ctrl+Z only undoes your own changes
+      try {
+        for (const j of op.evs) { try { Blockly.Events.fromJson(j, ws).run(true); } catch (err) { needDoc = true; } }
+      } finally { Blockly.Events.setGroup(false); if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(undo); }
+      return;
+    }
+    if (op.k === 'w3_doc' && op.blocks && typeof op.blocks === 'object') {
+      const mine = Blockly.serialization.workspaces.save(ws);
+      if (same(mine, op.blocks)) { needDoc = false; return; }
+      // in the middle of a drag or typing in a field: try again in a moment
+      if (busy()) { clearTimeout(retryTimer); retryTimer = setTimeout(() => applyRemote(op), 500); return; }
+      if (!needDoc) {
+        if (outTimer || docTimer) return; // your own change is on its way, and its newer copy will settle everyone
+        const theirs = { t: Number(op.t) || 0, cid: String(op.cid || '') };
+        if (mySent && newer(mySent, theirs)) return; // yours is newer: they'll take yours
+      }
+      const sx = ws.scrollX, sy = ws.scrollY;
+      Blockly.Events.setGroup(group);
+      if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(false);
+      try { ws.clear(); Blockly.serialization.workspaces.load(op.blocks, ws); } catch (err) { /* keep what we have */ } finally {
+        Blockly.Events.setGroup(false); if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(undo);
+      }
+      try { ws.scroll(sx, sy); } catch (err) { /* hidden */ }
+      needDoc = false;
+    }
+  }
 
   // ── running, and the edit view (the world as it starts, before you press Run) ──
   function compile() {
@@ -272,12 +347,15 @@ export function mount(root, host) {
     loadProject(pendingProject);
     ws.addChangeListener(e => {
       if (quiet) return;
+      const grp = String(e.group || '');
+      if (grp.startsWith(LOAD)) return; // opening a project
       if (e.isUiEvent) {
         if (e.type === Blockly.Events.SELECTED && world && world.editing() && e.newElementId !== selBlock) pickBlock(e.newElementId);
         return;
       }
+      if (!grp.startsWith(REMOTE) && collabOn()) shareEvent(e); // a partner's change isn't sent back
       clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 250);
-      if (!world || String(e.group || '').startsWith(GIZMO)) return; // the gizmo already moved it
+      if (!world || grp.startsWith(GIZMO)) return; // the gizmo already moved it
       if (world.editing()) editSoon(); // the starting layout follows your blocks as you change them
       else if (world.running() && !staleWarned) { staleWarned = true; status('You changed your blocks: press Run to try them.'); }
     });
@@ -321,6 +399,7 @@ export function mount(root, host) {
       if (world) world.dispose(); if (ws) ws.dispose();
       root.innerHTML = '';
     },
+    applyRemote,
     _world: () => world, _ws: () => ws
   };
 }

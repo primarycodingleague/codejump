@@ -270,12 +270,12 @@ export function createWorld(B, opts) {
     objs.set(id, o); // holds the name while the file loads; get() ignores it until o.mesh is set
     let cont;
     try { cont = await container(kind === 'character' ? LIB.characterFile(model) : LIB.objectFile(model)); } catch (e) {
-      objs.delete(id);
+      if (objs.get(id) === o) objs.delete(id); // a newer run may have taken the name since
       if (r.stopped || r !== run) throw STOP;
       onError('Couldn’t load the ' + model + ' model (are you online?), so it’s a box for now.');
       return create('box', name, p);
     }
-    if (r.stopped || r !== run || o.gone) { objs.delete(id); throw STOP; }
+    if (r.stopped || r !== run || o.gone) { if (objs.get(id) === o) objs.delete(id); throw STOP; }
     const inst = cont.instantiateModelsToScene(n => n, true, { doNotInstantiate: true });
     inst.skeletons.forEach(sk => { sk.useTextureToStoreBoneMatrices = true; }); // 155 bones: too many for vertex uniforms on some tablets
     const root = inst.rootNodes[0];

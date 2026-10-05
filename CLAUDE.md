@@ -637,6 +637,26 @@ shared animation clips + a model library, reusing Flock's MIT assets (DONE, see 
   undid zoom and drifted — always `setTarget(v, false, false, true)`. A ground with `opacity < 1` is alpha-blended and
   depth-sorted against other transparent meshes, so it covered speech bubbles once a player walked past its centre —
   keep the ground opaque and draw bubbles in rendering group 1.
+- **Live collaboration for 3D (DONE & verified, before launch):** Share → Collaborate now shows for 3D (only Critter Lab
+  hides it). world-app.js mount option `collab:{active(),send(op)}` + `app.applyRemote(op)`. Every local NON-UI Blockly
+  event is sent as Blockly's own JSON, batched 100 ms (`{k:'w3_ev', evs}`); partners replay with
+  `Blockly.Events.fromJson(j, ws).run(true)` inside an event group `w3remote…` with `setRecordUndo(false)` (so it is never
+  sent back and Ctrl+Z only undoes your own changes). 1.5 s after your last edit a full copy goes out (`{k:'w3_doc', blocks,
+  t, cid}`); a receiver swaps its blocks only if they differ, it isn't mid-drag/typing (`busy()` → retry in 500 ms), it has no
+  unsent edit of its own, and the copy is newer than its own last copy (`t`, then `cid`) — so two people changing the same
+  thing at once always settle on one version on every screen. Opening a project runs in group `w3load…` (not sent, not
+  "unsaved"). Gizmo drags are just field changes, so they sync too. Host (build-and-play.html): `collabApplyOp` routes
+  `w3_ev`/`w3_doc` to `worldApp.applyRemote` (or `worldData` if not mounted); a 3D `snapshot` message goes through
+  `applyRemote` (no editor reload); on `join` every 3D member sends `collabSnapshotSoon()` so newcomers are current even on
+  a pre-v13 server; whole-editor pointers (`collabStageCursor`/`renderCollabStageCursors`) now also run in `threed-mode`.
+  Run plays only on your own screen. **Cloud worker v13** (codejump-cloud `applyOp`: `w3_doc` → `doc.world`, `w3_ev`
+  relayed only) — pushed to a branch, NEEDS DEPLOY (`npx wrangler deploy`); 3D collab already works on v12, but late joiners
+  then rely on the join snapshot. **Also fixed** (found by this testing): a layout rebuild that started while an earlier
+  one was still loading a character let the old run delete the new run's character from `objs` by name (drawn but unknown
+  to the program); `createModel` now only deletes its own entry (`objs.get(id) === o`). Tests (scratchpad): `room.mjs`
+  (a stand-in Room using the REAL `Room.prototype.applyOp` from worker.js; `old` arg = v12 behaviour) + `collab.mjs`
+  (Ana/Ben/Cara in 3 browser contexts: join, number edit, new block, gizmo drag, delete, identical workspaces, undo
+  isolation, same-moment conflict, late joiner, pointers, no echo loop, Run is local) and `test8.mjs` (the rebuild race).
 - **Gotchas:** Blockly 10 has NO `Blockly.Themes.Dark` (only Classic/Zelos) — the main app's `base:Blockly.Themes.Dark`
   silently falls back to Classic; the 3D editor sets `componentStyles` instead. `eval` can't be a parameter name in strict
   mode. Headless Havok needs `new HavokPlugin(false, hk)` + `setTimeStep(1/60)` (the runtime does this when there's no canvas).

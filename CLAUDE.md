@@ -19,8 +19,9 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
   try the preview → only then push `main`.** Add a test when you fix a bug or add a feature.
 - (Historical note: on the original Mac the master lived at `~/build-and-play.html` — the notes
   below sometimes reference that path. The repo copy is now the source of truth.)
-- The backend (accounts/classes/collab) is the separate repo `primarycodingleague/codejump-cloud`,
-  deployed with wrangler; app + worker share a contract — change both together.
+- The backend (accounts/classes/collab) is the separate repo `primarycodingleague/codejump-cloud`. Since 5 Oct 2026 it
+  DEPLOYS ITSELF: a push to its `main` runs its tests and then `wrangler deploy` (repo secret `CLOUDFLARE_API_TOKEN`); the run
+  summary shows the live version. App + worker share a contract — change both together.
 
 ---
 
@@ -200,7 +201,7 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
-## Robot Lab project type — `projectType==='robot'` (5 Oct 2026, on branch `claude/vibrant-cori-tho25y`, CJ_VERSION 2026.10.05.4)
+## Robot Lab project type — `projectType==='robot'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.05.4; cloud worker v16 live, deployed automatically by codejump-cloud's GitHub Actions)
 **Replaces the old Stage "Ohbot" extension, which was REMOVED (5 Oct 2026, Charlie: it looked too much like Ohbot; robot coding
 should be its own thing).** The Ohbot costume/blocks/`paintOhbot`/`OHBOT_*`/`ohbot/` folder are all gone; old Stage saves with an
 `ohbot` costume fall back via `sanitizeCostume`. Never bring back Ohbot's name, look (open laser-cut plate frame, wire lips) or

@@ -2268,7 +2268,7 @@ function paintSky(tx){
 // Set this to the public address where CodeJump lives, so that "Copy Link"
 // always produces a branded link even when the app is embedded (e.g. inside
 // a Wix iframe). Leave as '' to use the page's own address automatically.
-const CANONICAL_URL='https://primarycodingleague.co.uk/codejump';
+const CANONICAL_URL='https://codejump.co.uk/';
 // Marker the self-contained export injects so a baked file knows its level.
 window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
@@ -2477,7 +2477,7 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   document.getElementById('pt-modal').classList.remove('hide');
 });
 // Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
-function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https://codejump.primarycodingleague.co.uk/home/')+f;}
+function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https://codejump.co.uk/home/')+f;}
 document.querySelectorAll('#home img[data-home]').forEach(im=>{im.src=homeAsset(im.dataset.home);im.loading='lazy';im.decoding='async';});
 document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendingPt=b.dataset.start;document.getElementById('ks-modal').classList.remove('hide');});
 {const t3=document.getElementById('h-tile-3d');if(t3&&!THREED_ON)t3.style.display='none';}
@@ -2699,7 +2699,7 @@ function exitTurtleUI(){
 // ═══════════════════════════════════════════════════════════════════════
 let critterData=null,critterApp=null,_critterLoading=null,_critterQuiet=false;
 // Where the engine lives: next to this page, or the live site when running from a downloaded .html file.
-function critterBase(){return /^https?:/.test(location.protocol)?new URL('critter/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.primarycodingleague.co.uk/critter/';}
+function critterBase(){return /^https?:/.test(location.protocol)?new URL('critter/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/critter/';}
 function loadCritterEngine(){
   if(!_critterLoading)_critterLoading=import(critterBase()+'critter-app.js').catch(e=>{_critterLoading=null;throw e;});
   return _critterLoading;}
@@ -2816,7 +2816,7 @@ async function withCritterLab(fn){
 // ═══════════════════════════════════════════════════════════════════════
 let worldData=null,worldApp=null,_worldLoading=null,_worldQuiet=false,_worldLoad=false;
 // Where the engine lives: next to this page, or the live site when running from a downloaded .html file.
-function worldBase(){return /^https?:/.test(location.protocol)?new URL('world/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.primarycodingleague.co.uk/world/';}
+function worldBase(){return /^https?:/.test(location.protocol)?new URL('world/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/world/';}
 function loadWorldEngine(){
   if(!_worldLoading)_worldLoading=import(worldBase()+'world-app.js').catch(e=>{_worldLoading=null;throw e;});
   return _worldLoading;}
@@ -7145,6 +7145,32 @@ document.getElementById('h-cloud').onclick=openCloud;
 document.getElementById('cloud-close').onclick=closeCloud;
 showCloudBtns();
 if(cloudToken)cloudRefresh();
+// NEW ADDRESS (Oct 2026): CodeJump moved from codejump.primarycodingleague.co.uk to codejump.co.uk. Browsers keep each address's
+// storage apart, so the old address (repo primarycodingleague/codejump-old-address) now only redirects: on a device's first visit
+// it uploads that browser's CodeJump storage to the cloud (POST /move → one-time code) and adds ?cjmove=<code>. Here we fetch it
+// once (the cloud deletes it on read) and merge it in, so saved games, the draft, settings and the sign-in all come across.
+(async function cjImportMove(){
+  const code=new URLSearchParams(location.search).get('cjmove');if(!code)return;
+  try{const u=new URL(location.href);u.searchParams.delete('cjmove');window.history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}
+  if(!/^[a-z0-9]{8,40}$/i.test(code)||!cloudOn())return;
+  let d=null;try{const r=await fetch(CLOUD_URL.replace(/\/$/,'')+'/move/'+code);if(r.ok)d=(await r.json()).data;}catch(e){}
+  if(!d||typeof d!=='object')return;
+  let games=0;
+  for(const k of Object.keys(d)){
+    if(!/^(bap_|cj-)/.test(k)||typeof d[k]!=='string')continue;
+    try{
+      if(k==='bap_saves'){ // add the old games to any made here already (same id = same game)
+        const mine=getSaves(),old=JSON.parse(d[k]||'[]');if(!Array.isArray(old))continue;
+        const ids=new Set(mine.map(x=>String(x&&x.id))),add=old.filter(x=>x&&!ids.has(String(x.id)));
+        if(add.length&&setSaves(mine.concat(add)))games+=add.length;
+      }else if(localStorage.getItem(k)===null)localStorage.setItem(k,d[k]); // never overwrite anything set here already
+    }catch(e){/* storage full: keep what fitted */}
+  }
+  try{applyA11y();}catch(e){}
+  if(!cloudToken){try{cloudToken=localStorage.getItem('bap_cloud_token')||null;}catch(e){}if(cloudToken)cloudRefresh();}
+  if(!document.getElementById('home').classList.contains('hide')){renderHomeSaves();updateResumePill();}
+  toast('CodeJump has a new address: codejump.co.uk'+(games?' — your '+games+' saved game'+(games>1?'s are':' is')+' here too':''),'#10b981');
+})();
 // ═══════════════════════════════════════════════════════════════════════
 // LIVE COLLABORATION — WebSocket client (rooms via the Durable Object)
 // ═══════════════════════════════════════════════════════════════════════
@@ -8286,8 +8312,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.05';
+const CJ_VERSION='2026.10.05.2';
 const CJ_WHATSNEW=[
+ "CodeJump has a new home: codejump.co.uk! Your saved games, settings and sign-in come with you, and old links still work.",
  "NEW project type: 3D World! Build a 3D world with blocks, then press Run to play it. (Key Stage 2 & 3.)",
  "12 characters to dress up, with 37 animations: walk, run, wave, dance, clap, flip, swim and more.",
  "Add ready-made models: trees, rocks, huts, a waterfall, boats, aeroplanes, stars and gems.",

@@ -1,6 +1,7 @@
 # CodeJump — working notes for Claude
 
-**This repo IS the live site** (GitHub Pages → codejump.primarycodingleague.co.uk). Pushing `main`
+**This repo IS the live site** (GitHub Pages → **codejump.co.uk**, since Oct 2026; the old address codejump.primarycodingleague.co.uk is
+now the separate repo `primarycodingleague/codejump-old-address`, which redirects and carries device storage across — see "New address" below). Pushing `main`
 = publishing to kids/schools, so only push finished, verified work. Never delete `CNAME`.
 
 ## Repo layout & workflow (machine-independent)
@@ -8,7 +9,7 @@
 - `index.html` = the deployed copy. After every change: `cp build-and-play.html index.html`.
 - Then: quick JS syntax check (extract <script> blocks, `node --check`), verify in a browser,
   bump `CJ_VERSION` + `CJ_WHATSNEW` for user-facing changes, commit, push `main`, and confirm the
-  live site serves the new CJ_VERSION (Pages rebuild ~1–2 min).
+  live site serves the new CJ_VERSION (Pages rebuild ~1–2 min). Never change `CNAME` (codejump.co.uk).
 - (Historical note: on the original Mac the master lived at `~/build-and-play.html` — the notes
   below sometimes reference that path. The repo copy is now the source of truth.)
 - The backend (accounts/classes/collab) is the separate repo `primarycodingleague/codejump-cloud`,
@@ -1064,3 +1065,17 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
 - Keep KS1 simple (game blocks only); KS2 gets full coding blocks + the interpreter.
 - After changes, run a quick JS syntax check (extract `<script>` blocks, `node --check`).
 - Always sync the deploy copy at the end.
+
+## New address: codejump.co.uk (Oct 2026)
+- Domain bought at GoDaddy; DNS there points the apex at GitHub Pages (A 185.199.108–111.153, AAAA 2606:50c0:8000–8003::153) and
+  `www` CNAME → primarycodingleague.github.io. `CNAME` = `codejump.co.uk`.
+- `CANONICAL_URL` (share links) = `https://codejump.co.uk/`; the downloaded-file fallbacks in `homeAsset`/`critterBase`/`worldBase`
+  point at codejump.co.uk too.
+- **Old address** = repo `primarycodingleague/codejump-old-address` (GitHub Pages, custom domain codejump.primarycodingleague.co.uk):
+  `index.html` = `404.html` = a redirect to the same path/query/hash on codejump.co.uk. On a device's first visit it POSTs every
+  `bap_*`/`cj-*` localStorage key to the cloud (`/move`, worker v15 → one-time 24-hex code, KV `move:<code>`, 1-day TTL, deleted
+  on read) and adds `?cjmove=<code>`; `cj_moved` stops it uploading twice. The app's `cjImportMove()` (after the start-up
+  `cloudRefresh`) fetches it once, merges `bap_saves` by id, fills in other keys only if absent, adopts the sign-in token,
+  strips `cjmove` with `window.history.replaceState` (the app's own `history` global is the undo stack!) and toasts.
+- Downloaded playable files made before the move load engine files from the old address, which now only redirects, so a
+  downloaded Critter Lab / 3D World file from before Oct 2026 needs downloading again.

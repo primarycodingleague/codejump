@@ -369,6 +369,9 @@ function chain(list) {
   return list[0];
 }
 
+// for building ready-made programs elsewhere (lessons/make-starters.mjs)
+export const _make = { block: pb, chain };
+
 export function starterProgram() {
   const run = pb('w3_when_run', null, null, { x: 20, y: 20 });
   const sel = (type, vars, model, over) => pb(type, Object.assign({}, vars, { MODEL: { value: model } }), over);

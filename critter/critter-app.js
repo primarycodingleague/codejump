@@ -2227,6 +2227,7 @@ return {
   showdownMenu: function () { showdownMenu(); },
   openShowdown: function (roomId) { sdOpen(roomId, null); },
   showdownRoom: function () { return sd ? sd.roomId : null; },
+  _select: function (id) { state.selected = id; setMode('build'); renderInspector(); }, // for tests
   hostShowdown: function (code, name) { sdSetup(code, name); },
   // the video guides dialog
   showGuides: function () { showGuides(); },

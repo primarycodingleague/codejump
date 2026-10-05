@@ -60,6 +60,22 @@ try {
   await page.evaluate(j => applyPayload(JSON.parse(j)), plat);
   ok(await page.evaluate(() => grid[5][5] === T.STAR && T.STAR > 0), 'the platformer kept the star placed on it');
 
+  // ---- a Stage project saved with its SECOND sprite on screen reopens without mixing up the sprites' code
+  const mixed = await page.evaluate(() => {
+    startNewStage('ks2');
+    const a = blankSprite('Alpha', 0), z = blankSprite('Zed', 1);
+    a.xml = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="st_when_flag" x="10" y="10"><next><block type="st_say"><field name="TXT">I am Alpha</field></block></next></block></xml>';
+    z.xml = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="st_when_flag" x="10" y="10"><next><block type="st_say"><field name="TXT">I am Zed</field></block></next></block></xml>';
+    stageState.sprites = [a, z]; stageSel = 1; stageLoadSpriteScripts(1);
+    const saved = JSON.stringify(buildPayload());
+    applyPayload(JSON.parse(saved));
+    const shown = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));
+    stageSelectSprite(1); stageSelectSprite(0); // switching sprites saves the one on screen
+    const p = buildPayload();
+    return { sel: stageSel, shownAlpha: /I am Alpha/.test(shown) && !/I am Zed/.test(shown), alpha: /I am Alpha/.test(p.stage.sprites[0].xml), zed: /I am Zed/.test(p.stage.sprites[1].xml) };
+  });
+  ok(mixed.shownAlpha && mixed.alpha && mixed.zed, 'reopening a Stage project keeps each sprite\'s own code ' + JSON.stringify(mixed));
+
   // ---- device save, then load from the home screen
   await page.evaluate(() => { saveCurrentLevel(); });
   await page.waitForSelector('.cj-dlg-input'); await page.fill('.cj-dlg-input', 'Test game'); await page.click('.cj-dlg-btn.ok');

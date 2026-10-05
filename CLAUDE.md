@@ -1086,3 +1086,26 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
   strips `cjmove` with `window.history.replaceState` (the app's own `history` global is the undo stack!) and toasts.
 - Downloaded playable files made before the move load engine files from the old address, which now only redirects, so a
   downloaded Critter Lab / 3D World file from before Oct 2026 needs downloading again.
+
+## Ready-made lessons (5 Oct 2026, CJ_VERSION 2026.10.05.3)
+- **What:** 8 complete, no-preparation computing lessons (KS1: Get the cat to the star, Fix the dance, Make a level for a friend;
+  KS2: Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course). Each has a
+  teacher plan (timed sections with what to say), objective + "I can" statements, England National Curriculum computing links,
+  key words, what you need, support/stretch, assessment, a **starter project** and **pupil steps**.
+- **Files (lazy-loaded, not in the HTML):** `lessons/lessons.js` (the data: `LESSONS`, `lesson(id)`), `lessons/starters/<id>.json`
+  (payloads) and `lessons/pics/<id>.jpg` (card pictures), both made by **`lessons/make-starters.mjs`** inside the real app
+  (Playwright, uses tests/lib.mjs; `node lessons/make-starters.mjs [id]`). Re-run it if a starter or the payload format changes.
+- **App:** `openLessons()` → `#lessons-modal` (library with KS filter → detail view: Open the starter / Give to my class
+  (`/class/assign` with the starter payload) / Print lesson plan (`doPrint`)). Entry points: home teacher band `#h-lessons`, Teacher
+  Hub panel `#th-lessons`. **Lesson card** `#lesson-guide`: `lessonActive={id,step}` travels in the payload (`lesson`), set by
+  `lessonFromPayload` in `applyPayload` (not for live-room applies), cleared by every `startNew*`; Back/Next/Finish, read aloud
+  (auto on Next in KS1 only), fold away (`.min`), drag by the gold header, hidden on the home screen/Teacher Hub. Default
+  position per editor (CSS): Stage KS2 bottom-left over the code area, platformer top-right, others bottom-right.
+- **Tests:** `tests/lessons.test.mjs` (library, give/print, every starter opens with its card, card next/back/save/reopen, and
+  each lesson's promised result: cat reaches the star, fixed dance comes home, if-touching scores, repeat 3 closes the triangle,
+  shake picks 1–3 and shows the rock, Python version, Critter Motion-tab Opposite beat) + `tests/lessons-engines.test.mjs`
+  (Critter starter 1.1 m → 2.9 m with both back feet on Opposite beat; 3D course shows "Finished!" at the finish).
+- **Found while building (fixed):** reopening a Stage project loaded the top-level `blocklyXml` (the sprite on screen at save
+  time) over sprite 0's code, so the next sprite switch overwrote sprite 0 — `applyPayload` now skips `blocklyXml` for Stage.
+  Also learned: Opposite beat lives on a foot's **Motion** tab; `mb_show_number` only takes a fixed number (so the micro:bit
+  lesson is rock-paper-scissors, not a step counter); 3D objects need a variable (Variables → Create variable) to get a name.

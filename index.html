@@ -224,6 +224,73 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .policy-body h3:first-child{margin-top:0;}
 .policy-body ul{margin:6px 0 6px 18px;}.policy-body li{margin:3px 0;}
 .policy-body .pol-note{background:#fff7e6;border:1px solid #f0d68a;border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 14px;}
+/* ── READY-MADE LESSONS: library (#lessons-modal) + the pupil Lesson card (#lesson-guide) ── */
+#lessons-modal{position:fixed;inset:0;z-index:1700;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:16px;font-family:var(--font);}
+#lessons-modal.hide{display:none;}
+.ls-box{background:#f7f5f1;color:#24292f;border-radius:16px;max-width:1040px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 14px 50px rgba(0,0,0,.5);overflow:hidden;}
+.ls-head{display:flex;align-items:center;gap:10px;padding:14px 18px;background:#1b1b1f;color:#fff;}
+.ls-head h2{margin:0;font-size:20px;flex:1;min-width:0;}
+.ls-head .ls-x{width:40px;height:40px;border-radius:50%;border:0;background:#2c2c33;color:#fff;cursor:pointer;display:grid;place-items:center;}
+.ls-head .ls-x[hidden]{display:none;}
+.ls-body{padding:18px 20px 24px;overflow-y:auto;line-height:1.5;font-size:15px;}
+.ls-intro{margin:0 0 14px;color:#4a4f57;}
+.ls-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;}
+.ls-chip{border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;border-radius:999px;padding:6px 14px;font:700 14px var(--font);cursor:pointer;min-height:40px;}
+.ls-chip.on{background:#1b1b1f;color:#fff;}
+.ls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px;}
+.ls-card{background:#fff;border:2px solid #1b1b1f;border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;text-align:left;padding:0;font:inherit;color:inherit;}
+.ls-card:hover,.ls-card:focus-visible{box-shadow:0 8px 24px rgba(20,14,0,.18);transform:translateY(-1px);}
+.ls-card img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#ddd;display:block;border-bottom:2px solid #1b1b1f;}
+.ls-card .ls-cbody{padding:10px 12px 14px;display:flex;flex-direction:column;gap:6px;}
+.ls-card h3{margin:0;font-size:17px;}
+.ls-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;font-weight:700;}
+.ls-tag{border-radius:999px;padding:2px 9px;background:#ece7dd;color:#4a3d22;}
+.ls-tag.ks1{background:#d8f3dc;color:#1b5e20;}.ls-tag.ks2{background:#dbe7ff;color:#173d8f;}
+.ls-card p{margin:0;font-size:14px;color:#4a4f57;}
+.ls-actions{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 18px;}
+.ls-btn{border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;border-radius:10px;padding:10px 16px;font:800 15px var(--font);cursor:pointer;min-height:44px;display:inline-flex;align-items:center;gap:8px;}
+.ls-btn.gold{background:var(--gold);border-color:#7a5c25;color:#000;}
+.ls-btn:disabled{opacity:.5;cursor:default;}
+.ls-obj{font-size:19px;font-weight:800;margin:0 0 6px;}
+.ls-sec{margin:18px 0 0;}
+.ls-sec h3{font-size:16px;margin:0 0 6px;color:#1b1b1f;}
+.ls-sec ul,.ls-sec ol{margin:4px 0 4px 20px;padding:0;}.ls-sec li{margin:3px 0;}
+.ls-words{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;}
+.ls-plan{display:flex;flex-direction:column;gap:10px;}
+.ls-step{display:grid;grid-template-columns:64px 1fr;gap:12px;background:#fff;border:1px solid #ddd5c6;border-radius:10px;padding:10px 12px;}
+.ls-step .ls-min{font-weight:800;color:#7a5c25;}
+.ls-step h4{margin:0 0 4px;font-size:15px;}
+.ls-step p{margin:0 0 6px;}.ls-step p:last-child{margin:0;}
+.ls-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;}
+.ls-note{background:#fff;border:1px solid #ddd5c6;border-radius:10px;padding:10px 12px;}
+.ls-note h3{margin-top:0;}
+.ls-classes{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.ls-print{font-family:Arial,sans-serif;font-size:12.5px;line-height:1.45;color:#000;}
+.ls-print h1{font-size:22px;margin:0 0 4px;}.ls-print h2{font-size:15px;margin:14px 0 4px;}.ls-print ul,.ls-print ol{margin:2px 0 2px 18px;padding:0;}
+#lesson-guide{position:fixed;right:16px;bottom:16px;z-index:510;width:min(340px,calc(100vw - 32px));background:#fff;color:#1b1b1f;border:3px solid #1b1b1f;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-family:var(--font);}
+#lesson-guide.hide{display:none;}
+#lesson-guide .lg-head{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;background:var(--gold);border-radius:12px 12px 0 0;cursor:move;touch-action:none;user-select:none;}
+#lesson-guide .lg-name{flex:1;min-width:0;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#lesson-guide .lg-icon{width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.12);cursor:pointer;display:grid;place-items:center;color:#000;font:800 18px var(--font);flex:none;}
+#lesson-guide .lg-body{padding:12px 14px 14px;}
+#lesson-guide .lg-count{font-size:12px;font-weight:800;color:#7a5c25;text-transform:uppercase;letter-spacing:.04em;}
+#lesson-guide .lg-t{margin:2px 0 6px;font-size:18px;}
+#lesson-guide .lg-d{margin:0;font-size:15px;line-height:1.45;}
+#lesson-guide .lg-dots{display:flex;gap:4px;margin:10px 0 0;}
+#lesson-guide .lg-dots i{flex:1;height:5px;border-radius:3px;background:#e6e0d4;}
+#lesson-guide .lg-dots i.on{background:var(--gold);}
+#lesson-guide .lg-nav{display:flex;gap:8px;margin-top:12px;}
+#lesson-guide .lg-nav button{flex:1;min-height:44px;border-radius:10px;border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;font:800 15px var(--font);cursor:pointer;}
+#lesson-guide .lg-nav .lg-next{background:#1b1b1f;color:#fff;}
+#lesson-guide .lg-nav button:disabled{opacity:.4;cursor:default;}
+#lesson-guide.min{width:auto;max-width:calc(100vw - 32px);}
+#lesson-guide.min .lg-body{display:none;}
+#lesson-guide.min .lg-head{border-radius:12px;}
+body.ks1-mode #lesson-guide .lg-d{font-size:17px;}
+/* where the card starts (pupils can drag it anywhere): over empty space, not the controls a lesson asks them to use */
+body.stage-mode:not(.ks1-mode) #lesson-guide{right:auto;left:136px;}
+body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode) #lesson-guide{bottom:auto;top:104px;}
+@media (max-width:820px){body.stage-mode:not(.ks1-mode) #lesson-guide{left:16px;}}
 .policy-body a{color:#1f6fae;}
 .policy-foot{padding:12px 22px;border-top:1px solid #e6e9ee;text-align:right;}
 .policy-foot button{background:#3b8eea;color:#fff;border:0;border-radius:10px;padding:9px 20px;font-weight:bold;cursor:pointer;}
@@ -1455,10 +1522,12 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
           <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Classes in minutes:</b> add pupils from a list and print login cards.</span></li>
           <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Hand-outs and hand-ins:</b> give a game to everyone, then open each pupil’s work.</span></li>
           <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Critter Showdown:</b> race up to four pupils’ Critters live on the board.</span></li>
+          <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Ready-made lessons:</b> complete KS1 and KS2 lesson plans with starter projects and step-by-step cards for pupils.</span></li>
           <li><svg class="ic"><use href="#i-check"></use></svg><span><b>Teacher Guide and video guides</b> for every project type.</span></li>
         </ul>
         <div class="hm-actions">
-          <button class="hm-btn ink lg" id="h-setup-class"><svg class="ic"><use href="#i-school"></use></svg> Set up a class</button>
+          <button class="hm-btn ink lg" id="h-lessons"><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</button>
+          <button class="hm-btn outline-ink lg" id="h-setup-class"><svg class="ic"><use href="#i-school"></use></svg> Set up a class</button>
           <button class="hm-btn outline-ink lg" id="h-guide"><svg class="ic"><use href="#i-book"></use></svg> Teacher Guide</button>
         </div>
       </div>
@@ -1484,6 +1553,17 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
 </div>
 
 <!-- ══ TEACHER HUB ══════════════════════════════════════════════════════ -->
+<div id="lessons-modal" class="hide" role="dialog" aria-modal="true" aria-labelledby="ls-title">
+  <div class="ls-box">
+    <div class="ls-head"><button class="ls-x" id="ls-back" aria-label="Back to all lessons" hidden><svg class="ic"><use href="#i-arr-l"></use></svg></button><h2 id="ls-title">Ready-made lessons</h2><button class="ls-x" id="ls-close" aria-label="Close"><svg class="ic"><use href="#i-x"></use></svg></button></div>
+    <div class="ls-body" id="ls-body"></div>
+  </div>
+</div>
+<div id="lesson-guide" class="hide" role="region" aria-label="Lesson steps">
+  <div class="lg-head" id="lg-head"><span class="lg-name" id="lg-name">Lesson</span><button class="lg-icon" id="lg-read" title="Read this step aloud" aria-label="Read this step aloud"><svg class="ic"><use href="#i-read"></use></svg></button><button class="lg-icon" id="lg-min" title="Make smaller" aria-label="Make the lesson card smaller">&#8211;</button><button class="lg-icon" id="lg-close" title="Hide the lesson steps" aria-label="Hide the lesson steps"><svg class="ic"><use href="#i-x"></use></svg></button></div>
+  <div class="lg-body"><div class="lg-count" id="lg-count"></div><h4 class="lg-t" id="lg-t"></h4><p class="lg-d" id="lg-d"></p><div class="lg-dots" id="lg-dots"></div>
+    <div class="lg-nav"><button id="lg-prev">Back</button><button class="lg-next" id="lg-next">Next</button></div></div>
+</div>
 <div id="teacher" class="hide">
   <!-- HUB -->
   <div class="th-screen on" id="t-hub">
@@ -1506,13 +1586,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
           <button class="th-btn ghost" style="margin-top:8px" onclick="openSubmission()"><svg class="ic"><use href="#i-folder"></use></svg> …or open a level file</button>
         </div>
         <div class="th-panel">
-          <h3><svg class="ic"><use href="#i-book"></use></svg> Lesson resources</h3>
-          <p class="th-muted" style="margin-bottom:6px;">Lesson plans, worksheets, challenges and starter levels.</p>
-          <div style="text-align:center;padding:18px 8px;">
-            <div style="font-size:30px;"><svg class="ic" style="width:34px;height:34px;"><use href="#i-cone"></use></svg></div>
-            <div style="font-weight:800;color:var(--gold);font-size:18px;margin-top:6px;">Coming soon</div>
-            <p class="th-muted" style="margin-top:6px;font-size:12px;">We're putting together brilliant teaching resources — check back shortly.</p>
-          </div>
+          <h3><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</h3>
+          <p class="th-muted" style="margin-bottom:12px;">Complete KS1 and KS2 computing lessons: a plan with timings and what to say, curriculum links, key words, a starter project and step-by-step cards for pupils. Open one on the board or give it to a class.</p>
+          <button class="th-btn" id="th-lessons" onclick="openLessons()"><svg class="ic"><use href="#i-book"></use></svg> Browse the lessons</button>
         </div>
       </div>
     </div>
@@ -2368,11 +2444,13 @@ function showHome(){
   document.getElementById('app').classList.add('hide');
   renderHomeSaves();
   updateResumePill();
+  if(typeof lessonGuideRender==='function')lessonGuideRender();
 }
 function hideHome(){
   document.getElementById('home').classList.add('hide');
   document.getElementById('app').classList.remove('hide');
   const rp=document.getElementById('resume-pill');if(rp)rp.classList.add('hide');
+  if(typeof lessonGuideRender==='function')lessonGuideRender();
 }
 function getDraft(){try{return JSON.parse(localStorage.getItem('bap_autosave')||'null');}catch(e){return null;}}
 function updateResumePill(){const el=document.getElementById('resume-pill');if(!el)return;el.classList.toggle('hide',!getDraft());}
@@ -2484,6 +2562,7 @@ document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendi
 document.getElementById('h-myprojects').onclick=()=>{const el=document.getElementById('home-projects');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 document.getElementById('h-setup-class').onclick=()=>document.getElementById('h-teacher').click();
 document.getElementById('h-guide').onclick=()=>{showTeacher();openTeacherGuide();};
+document.getElementById('h-lessons').onclick=()=>openLessons();
 document.getElementById('pt-cancel').onclick=()=>{document.getElementById('pt-modal').classList.add('hide');document.getElementById('ks-modal').classList.remove('hide');};
 document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   if(dirty){autoSaveDraft();if(!await cjConfirm('Start a new project? Your current game is saved as a draft you can resume from the home screen.',{title:'Start fresh?',okLabel:'Start new',cancelLabel:'Stay'}))return;}
@@ -2494,7 +2573,7 @@ document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   else if(b.dataset.pt==='critter')startNewCritter(_pendingKs);
   else startNewProject(_pendingKs);
 });
-function startNewProject(ks){clearDirty();leaveLiveRoom();projectType='platformer';
+function startNewProject(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='platformer';
   setKeyStage(ks);
   const szEl=document.getElementById('ks-size');setGridSize((ks==='ks1')?'standard':(szEl?szEl.value:'standard'));
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
@@ -2559,7 +2638,7 @@ function sanitizeKs1(arr){if(!Array.isArray(arr))return [];return arr.slice(0,40
 function sanitizeBackdrop(b){if(!b||typeof b!=='object')return null;const name=(typeof b.name==='string'?b.name:'backdrop').slice(0,24);
   if(typeof b.img==='string'&&/^data:image\/(png|jpeg);/.test(b.img)&&b.img.length<1000000)return{name,img:b.img};
   return{name,color:safeColor(b.color)||'#bfe3ff'};}
-function startNewStage(ks){clearDirty();leaveLiveRoom();projectType='stage';
+function startNewStage(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='stage';
   setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
@@ -2653,7 +2732,7 @@ const TURTLE_COMMANDS=[
   {g:'Variables',items:[['make "score 0','make a box called score holding 0'],[':score','use what is in the box']]},
   {g:'Your own commands',items:[['to NAME :a ... end','teach the turtle a new command'],['stop','leave the current command early']]},
 ];
-function startNewTurtle(ks){clearDirty();leaveLiveRoom();projectType='turtle';
+function startNewTurtle(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='turtle';
   setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
@@ -2704,7 +2783,7 @@ function loadCritterEngine(){
   if(!_critterLoading)_critterLoading=import(critterBase()+'critter-app.js').catch(e=>{_critterLoading=null;throw e;});
   return _critterLoading;}
 function critterCurrent(){return critterApp?critterApp.getCritter():critterData;}
-function startNewCritter(ks){clearDirty();leaveLiveRoom();projectType='critter';setKeyStage(ks);
+function startNewCritter(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='critter';setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
   critterData=null;hideHome();enterCritterUI(); // a fresh body to build on
@@ -2809,6 +2888,139 @@ async function withCritterLab(fn){
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// READY-MADE LESSONS — complete, no-preparation lessons (lessons/lessons.js: the plans + pupil steps; lessons/starters/
+// <id>.json: each lesson's starter project; lessons/pics/<id>.jpg). Lazy-loaded like the Critter Lab. Opening a starter
+// sets `lessonActive` ({id, step}), which travels in the payload (`lesson`), so a starter handed out to a class opens
+// with the same Lesson card on every pupil's screen and remembers which step they reached.
+// ═══════════════════════════════════════════════════════════════════════
+let lessonsMod=null,_lessonsLoading=null,lessonActive=null,_lsFilter='all',_lsCurrent=null;
+function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lessons/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/lessons/';}
+function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
+const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World'};
+function lsEsc(x){return cesc(x==null?'':x);}
+async function openLessons(){
+  const m=document.getElementById('lessons-modal');m.classList.remove('hide');
+  const body=document.getElementById('ls-body');body.innerHTML='<p>Loading the lessons…</p>';
+  try{await loadLessons();}catch(e){body.innerHTML='<p>The lessons need the internet the first time they open. Check your connection and try again.</p>';return;}
+  if(_lsCurrent)lessonShow(_lsCurrent);else lessonList();
+}
+function closeLessons(){document.getElementById('lessons-modal').classList.add('hide');}
+function lessonList(){
+  _lsCurrent=null;document.getElementById('ls-back').hidden=true;document.getElementById('ls-title').textContent='Ready-made lessons';
+  const L=lessonsMod.LESSONS.filter(l=>_lsFilter==='all'||l.ks===_lsFilter);
+  const chip=(k,t)=>`<button class="ls-chip${_lsFilter===k?' on':''}" data-f="${k}" aria-pressed="${_lsFilter===k}">${t}</button>`;
+  const body=document.getElementById('ls-body');
+  body.innerHTML=`<p class="ls-intro">Complete computing lessons with no preparation: a lesson plan with timings and what to say, National Curriculum links, key words, support and stretch, and a starter project. When pupils open the starter, a <b>Lesson</b> card on their screen takes them through it step by step.</p>
+    <div class="ls-filter">${chip('all','All lessons')}${chip('ks1','Key Stage 1')}${chip('ks2','Key Stage 2')}</div>
+    <div class="ls-grid">${L.map(l=>`<button class="ls-card" data-id="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div class="ls-cbody"><h3>${lsEsc(l.title)}</h3>
+      <div class="ls-meta"><span class="ls-tag ${l.ks}">${l.ks==='ks1'?'KS1':'KS2'} · ${lsEsc(l.years)}</span><span class="ls-tag">${l.minutes} min</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
+      <p>${lsEsc(l.summary)}</p></div></button>`).join('')}</div>`;
+  body.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{_lsFilter=b.dataset.f;lessonList();});
+  body.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>lessonShow(b.dataset.id));
+  body.scrollTop=0;
+}
+function lessonShow(id){
+  const l=lessonsMod.lesson(id);if(!l){lessonList();return;}
+  _lsCurrent=id;document.getElementById('ls-back').hidden=false;document.getElementById('ls-title').textContent=l.title;
+  const li=a=>'<ul>'+a.map(x=>'<li>'+lsEsc(x)+'</li>').join('')+'</ul>';
+  const body=document.getElementById('ls-body');
+  body.innerHTML=`<div class="ls-meta" style="margin-bottom:12px"><span class="ls-tag ${l.ks}">${l.ks==='ks1'?'Key Stage 1':'Key Stage 2'} · ${lsEsc(l.years)}</span><span class="ls-tag">${l.minutes} minutes</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
+    <div class="ls-actions"><button class="ls-btn gold" id="ls-open">${ksvg('i-play')} Open the starter</button><button class="ls-btn" id="ls-give">${ksvg('i-people')} Give to my class</button><button class="ls-btn" id="ls-print">${ksvg('i-print')} Print lesson plan</button></div>
+    <div id="ls-give-box"></div>
+    <p class="ls-obj">${lsEsc(l.objective)}</p>
+    <div class="ls-two" style="margin-top:12px"><div class="ls-note"><h3>Pupils can say</h3>${li(l.success)}</div><div class="ls-note"><h3>National Curriculum (computing)</h3>${li(l.curriculum)}</div></div>
+    <div class="ls-sec"><h3>Key words</h3><div class="ls-words">${l.words.map(w=>'<b>'+lsEsc(w[0])+'</b><span>'+lsEsc(w[1])+'</span>').join('')}</div></div>
+    <div class="ls-sec"><h3>You’ll need</h3>${li(l.need)}</div>
+    <div class="ls-sec"><h3>Lesson plan</h3><div class="ls-plan">${l.plan.map(p=>`<div class="ls-step"><div class="ls-min">${p.min} min</div><div><h4>${lsEsc(p.title)}</h4>${p.html}</div></div>`).join('')}</div></div>
+    <div class="ls-sec"><h3>What pupils see: the Lesson card</h3><ol>${l.steps.map(s=>'<li><b>'+lsEsc(s.t)+':</b> '+lsEsc(s.d)+'</li>').join('')}</ol></div>
+    <div class="ls-two ls-sec"><div class="ls-note"><h3>Support</h3><p style="margin:0">${lsEsc(l.support)}</p></div><div class="ls-note"><h3>Stretch</h3><p style="margin:0">${lsEsc(l.stretch)}</p></div></div>
+    <div class="ls-sec"><h3>Assessment: look for pupils who…</h3>${li(l.assess)}</div>`;
+  document.getElementById('ls-open').onclick=()=>lessonOpenStarter(id);
+  document.getElementById('ls-give').onclick=()=>lessonGiveView(id);
+  document.getElementById('ls-print').onclick=()=>lessonPrint(id);
+  body.scrollTop=0;
+}
+async function lessonStarterPayload(id){
+  const r=await fetch(lessonsBase()+'starters/'+encodeURIComponent(id)+'.json');if(!r.ok)throw new Error('starter missing');
+  const p=await r.json();p.lesson={id,step:0};return p;
+}
+async function lessonOpenStarter(id){
+  if(dirty){autoSaveDraft();if(!await cjConfirm('Open this lesson’s starter project? Your current work is saved as a draft you can resume from the home screen.',{title:'Open the starter',okLabel:'Open it',cancelLabel:'Stay'}))return;}
+  let p;try{p=await lessonStarterPayload(id);}catch(e){toast('Couldn’t load the starter. Check your internet connection.','#ef4444');return;}
+  closeLessons();hideTeacher();hideHome();
+  applyPayload(p);clearDirty();
+  const tut=document.getElementById('tutorial');if(tut)tut.classList.add('hide'); // the lesson card replaces the first-time tutorial
+  toast('Lesson starter opened. Follow the Lesson card in the corner.','#10b981');
+}
+async function lessonGiveView(id){
+  const box=document.getElementById('ls-give-box'),l=lessonsMod.lesson(id);
+  if(!cloudOn()||!isSignedIn()||!isTeacher()){box.innerHTML='<div class="ls-note"><p style="margin:0 0 8px">Sign in with a teacher account to send this starter to a class. Every pupil gets their own copy in their class work, and it opens with the Lesson card.</p><button class="ls-btn" id="ls-signin">'+ksvg('i-key')+' Sign in</button></div>';
+    document.getElementById('ls-signin').onclick=()=>{closeLessons();openCloud();};return;}
+  const cls=(cloudMe.classes||[]);
+  if(!cls.length){box.innerHTML='<div class="ls-note"><p style="margin:0">You haven’t made a class yet. Open <b>Cloud → Teacher</b> to make one, then come back here.</p></div>';return;}
+  box.innerHTML='<div class="ls-note"><b>Send “'+lsEsc(l.title)+'” to:</b><div class="ls-classes">'+cls.map(c=>'<button class="ls-btn" data-code="'+lsEsc(c.code)+'">'+ksvg('i-school')+' '+lsEsc(c.name||c.code)+'</button>').join('')+'</div></div>';
+  box.querySelectorAll('[data-code]').forEach(b=>b.onclick=async()=>{
+    box.querySelectorAll('button').forEach(x=>x.disabled=true);
+    try{const p=await lessonStarterPayload(id);const res=await cloudApi('/class/assign',{token:cloudToken,code:b.dataset.code,title:l.title,payload:p});
+      box.innerHTML='<div class="ls-note"><b>Sent!</b> “'+lsEsc(l.title)+'” is now in '+res.count+' pupil'+(res.count===1?'':'s')+'’ class work. They open it from <b>Cloud → My games</b>.</div>';}
+    catch(e){box.innerHTML='<div class="ls-note">Couldn’t send it: '+lsEsc(e.message)+'</div>';}});
+}
+function lessonPrint(id){
+  const l=lessonsMod.lesson(id),li=a=>'<ul>'+a.map(x=>'<li>'+lsEsc(x)+'</li>').join('')+'</ul>';
+  doPrint(`<div class="ls-print"><h1>${lsEsc(l.title)}</h1><div>${l.ks==='ks1'?'Key Stage 1':'Key Stage 2'} · ${lsEsc(l.years)} · ${l.minutes} minutes · CodeJump: ${lsEsc(l.tool)}</div>
+    <h2>${lsEsc(l.objective)}</h2>${li(l.success)}<h2>National Curriculum (computing)</h2>${li(l.curriculum)}
+    <h2>Key words</h2><ul>${l.words.map(w=>'<li><b>'+lsEsc(w[0])+'</b>: '+lsEsc(w[1])+'</li>').join('')}</ul><h2>You’ll need</h2>${li(l.need)}
+    <h2>Lesson plan</h2>${l.plan.map(p=>'<p><b>'+p.min+' min · '+lsEsc(p.title)+'</b></p>'+p.html).join('')}
+    <h2>Pupil steps (shown on screen)</h2><ol>${l.steps.map(s=>'<li><b>'+lsEsc(s.t)+':</b> '+lsEsc(s.d)+'</li>').join('')}</ol>
+    <h2>Support</h2><p>${lsEsc(l.support)}</p><h2>Stretch</h2><p>${lsEsc(l.stretch)}</p><h2>Assessment</h2>${li(l.assess)}
+    <p style="margin-top:14px">codejump.co.uk · Lessons → ${lsEsc(l.title)}</p></div>`);
+}
+// ---- the pupil Lesson card
+function lessonFromPayload(d){ // called by applyPayload (not for edits arriving from a live room)
+  const L=d&&d.lesson;lessonActive=(L&&typeof L.id==='string'&&/^[a-z0-9-]{1,40}$/.test(L.id))?{id:L.id,step:Math.max(0,Math.min(50,L.step|0))}:null;
+  lessonGuideRender();
+}
+function lessonStop(){lessonActive=null;lessonGuideRender();}
+async function lessonGuideRender(){
+  const g=document.getElementById('lesson-guide');if(!g)return;
+  if(!lessonActive||!document.getElementById('home').classList.contains('hide')||!document.getElementById('teacher').classList.contains('hide')){g.classList.add('hide');return;}
+  if(!lessonsMod){try{await loadLessons();}catch(e){g.classList.add('hide');return;}}
+  const l=lessonActive&&lessonsMod.lesson(lessonActive.id);if(!l){g.classList.add('hide');return;}
+  const n=l.steps.length,i=Math.min(lessonActive.step,n-1),st=l.steps[i];lessonActive.step=i;
+  document.getElementById('lg-name').textContent='Lesson: '+l.title+(g.classList.contains('min')?' · step '+(i+1)+' of '+n:'');
+  document.getElementById('lg-count').textContent='Step '+(i+1)+' of '+n;
+  document.getElementById('lg-t').textContent=st.t;document.getElementById('lg-d').textContent=st.d;
+  document.getElementById('lg-dots').innerHTML=l.steps.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('');
+  document.getElementById('lg-prev').disabled=i===0;
+  document.getElementById('lg-next').textContent=i===n-1?'Finish':'Next';
+  g.classList.remove('hide');
+}
+(function lessonGuideBind(){
+  const g=document.getElementById('lesson-guide');if(!g)return;
+  document.getElementById('lg-prev').onclick=()=>{if(lessonActive&&lessonActive.step>0){lessonActive.step--;lessonGuideRender();}};
+  document.getElementById('lg-next').onclick=()=>{if(!lessonActive||!lessonsMod)return;const l=lessonsMod.lesson(lessonActive.id);if(!l)return;
+    if(lessonActive.step<l.steps.length-1){lessonActive.step++;lessonGuideRender();if(keyStage==='ks1'&&typeof readAloud!=='undefined'&&readAloud)lessonSpeak();} // KS1 cards read themselves aloud
+    else{toast('Well done! You finished the lesson steps.','#10b981');g.classList.add('min');lessonGuideRender();}};
+  document.getElementById('lg-read').onclick=e=>{e.stopPropagation();lessonSpeak();};
+  document.getElementById('lg-min').onclick=e=>{e.stopPropagation();g.classList.toggle('min');lessonGuideRender();};
+  document.getElementById('lg-close').onclick=async e=>{e.stopPropagation();if(await cjConfirm('Hide the lesson steps for this project? Your work stays as it is.',{title:'Lesson steps',okLabel:'Hide them'}))lessonStop();};
+  document.getElementById('lg-head').addEventListener('click',e=>{if(g._dragged&&Date.now()-g._dragged<300)return;if(g.classList.contains('min')&&!e.target.closest('button')){g.classList.remove('min');lessonGuideRender();}});
+  // drag the card by its gold header
+  let drag=null;const head=document.getElementById('lg-head');
+  head.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=g.getBoundingClientRect();drag={dx:e.clientX-r.left,dy:e.clientY-r.top,x0:e.clientX,y0:e.clientY,moved:false};head.setPointerCapture(e.pointerId);});
+  head.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.clientX-drag.x0)+Math.abs(e.clientY-drag.y0)>4)drag.moved=true;if(!drag.moved)return;
+    const x=Math.max(0,Math.min(innerWidth-g.offsetWidth,e.clientX-drag.dx)),y=Math.max(0,Math.min(innerHeight-g.offsetHeight,e.clientY-drag.dy));
+    g.style.left=x+'px';g.style.top=y+'px';g.style.right='auto';g.style.bottom='auto';});
+  head.addEventListener('pointerup',()=>{if(drag&&drag.moved)g._dragged=Date.now();drag=null;});
+  document.getElementById('ls-close').onclick=closeLessons;
+  document.getElementById('ls-back').onclick=()=>lessonList();
+  document.getElementById('lessons-modal').addEventListener('click',e=>{if(e.target.id==='lessons-modal')closeLessons();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.getElementById('lessons-modal').classList.contains('hide'))closeLessons();});
+})();
+function lessonSpeak(){const t=document.getElementById('lg-t').textContent,d=document.getElementById('lg-d').textContent;
+  try{if(typeof speechSynthesis==='undefined')return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t+'. '+d);u.lang='en-GB';u.rate=0.95;speechSynthesis.speak(u);}catch(e){}}
+
+// ═══════════════════════════════════════════════════════════════════════
 // 3D WORLD — block-based 3D worlds, after Flock XR. projectType==='3d', behind THREED_ON.
 // The engine (world/: Babylon.js + Havok physics, its own Blockly workspace, blocks compiled to async JS)
 // is lazy-loaded like the Critter Lab, only when a 3D project opens, so the rest of CodeJump stays
@@ -2821,7 +3033,7 @@ function loadWorldEngine(){
   if(!_worldLoading)_worldLoading=import(worldBase()+'world-app.js').catch(e=>{_worldLoading=null;throw e;});
   return _worldLoading;}
 function worldCurrent(){return worldApp?worldApp.getProject():worldData;}
-function startNew3D(ks){clearDirty();leaveLiveRoom();projectType='3d';setKeyStage(ks);
+function startNew3D(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='3d';setKeyStage(ks);
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
   document.getElementById('pt-modal').classList.add('hide');
   worldData=null;_worldLoad=true;hideHome();enter3DUI(); // null = the starter program
@@ -4593,8 +4805,8 @@ const TH_UNITS={
 };
 let thYear=1, thCurrent=null;
 function thLessons(){return TH_UNITS[thYear].lessons;}
-function showTeacher(){document.getElementById('teacher').classList.remove('hide');const rp=document.getElementById('resume-pill');if(rp)rp.classList.add('hide');thGo('t-hub');thRenderHub();}
-function hideTeacher(){document.getElementById('teacher').classList.add('hide');}
+function showTeacher(){document.getElementById('teacher').classList.remove('hide');{const lg=document.getElementById('lesson-guide');if(lg)lg.classList.add('hide');}const rp=document.getElementById('resume-pill');if(rp)rp.classList.add('hide');thGo('t-hub');thRenderHub();}
+function hideTeacher(){document.getElementById('teacher').classList.add('hide');if(typeof lessonGuideRender==='function')lessonGuideRender();}
 function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
 function thSetYear(y){thYear=y;thRenderHub();}
 function thRenderHub(){
@@ -6299,6 +6511,8 @@ function guideTileRef(){let h='';TILE_GROUPS.forEach(([g,name])=>{h+='<h4>'+name
 function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>What is CodeJump?</h3>
   <p>CodeJump is a browser-based game maker for primary children, part of <b>Primary Coding League CIC</b>. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
+  <h3>Ready-made lessons</h3>
+  <p>Press <b>Ready-made lessons</b> on the home page (teacher section) or in the Teacher Hub. Each lesson is a complete, no-preparation computing lesson for Key Stage 1 or 2: a plan with timings and what to say, National Curriculum links, key words, support and stretch ideas, what to look for, and a <b>starter project</b>. Press <b>Open the starter</b> to show it on the board, <b>Give to my class</b> to send every pupil their own copy (they open it from Cloud → My games), or <b>Print lesson plan</b>. When a pupil opens the starter, a <b>Lesson</b> card in the corner takes them through the task step by step (it can read itself aloud, folds away, and remembers their step when they save). Lessons: Get the cat to the star, Fix the dance, Make a level for a friend (KS1); Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course (KS2).</p>
   <h3>The four modes</h3>
  <ul><li><b> Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b> Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
  <h3> Three project types: Platformer, Stage &amp; Turtle</h3>
@@ -6716,7 +6930,7 @@ function buildPayload(){
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},hazardCfg:L.hazardCfg||{},trapCfg:L.trapCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
-  return{version:2,keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
+  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -6764,6 +6978,7 @@ function cleanLevel(L){const _g=sanitizeGrid(L&&L.grid),_w=sanitizeWaterGrid(L&&
 };}
 function sanitizePageSprites(m){const out={};if(!m||typeof m!=='object')return out;const ok=DT.filter(t=>t.type==='sprite').map(t=>t.key);for(const k in m){if(ok.indexOf(k)<0)continue;const a=m[k];if(!Array.isArray(a))continue;out[k]=a.slice(0,256).map(x=>(typeof x==='string'&&/^#?[0-9a-fA-F]{0,8}$/.test(x))?x:'');}return out;}
 function applyPayload(d){leaveLiveRoom(); // opening a different project leaves any live room (not when the room itself sends it)
+  if(!(typeof collabApplyingRemote!=='undefined'&&collabApplyingRemote)&&typeof lessonFromPayload==='function')lessonFromPayload(d); // a lesson starter (or a pupil's copy of one) brings its Lesson card
 
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
@@ -6796,7 +7011,9 @@ function applyPayload(d){leaveLiveRoom(); // opening a different project leaves 
     LEVELS=lvls.map(cleanLevel);if(!LEVELS.length)LEVELS=[blankLevel()];
     curLevel=0;playLevel=0;activateLevel(0);renderPagesStrip();
   }
-  if(typeof d.blocklyXml==='string'){
+  // Stage keeps each sprite's code in stageState (enterStageUI loads the selected sprite's), so the top-level
+  // blocklyXml (whichever sprite was on screen at save time) must not be loaded over it.
+  if(typeof d.blocklyXml==='string'&&projectType!=='stage'){
     window._pendingXml=d.blocklyXml;
     if(blocklyWorkspace){
       let cur=null;try{cur=Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));}catch(e){}
@@ -8312,15 +8529,13 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.05.2';
+const CJ_VERSION='2026.10.05.3';
 const CJ_WHATSNEW=[
+ "Ready-made lessons for teachers: 8 complete Key Stage 1 and 2 computing lessons, each with a plan, curriculum links and a starter project.",
+ "Lesson cards: open a lesson's starter and a card in the corner guides you step by step. It can read itself aloud and remembers your step.",
+ "Fixed: a Stage project saved while a later sprite was selected could mix up its sprites' code when reopened.",
  "CodeJump has a new home: codejump.co.uk! Your saved games, settings and sign-in come with you, and old links still work.",
  "NEW project type: 3D World! Build a 3D world with blocks, then press Run to play it. (Key Stage 2 & 3.)",
- "12 characters to dress up, with 37 animations: walk, run, wave, dance, clap, flip, swim and more.",
- "Add ready-made models: trees, rocks, huts, a waterfall, boats, aeroplanes, stars and gems.",
- "Real physics: things fall, bounce and knock into each other. Control a player with the arrow keys and jump with Space.",
- "Before you press Run, click anything in your world to find its block, and drag the arrows to move it. The numbers in the block change to match!",
- "Camera, sound, speech bubbles and words on the screen, so you can make a proper 3D game with a score.",
  "Build a 3D world together: Share, then Collaborate, and up to five classmates can edit the same world live.",
  "Critter Showdown: when your teacher picks you, a message pops up on your screen. Press Join and it saves your work first.",
 ];

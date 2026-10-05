@@ -220,6 +220,21 @@ is reimplemented. Branding: user opted to use the "Ohbot" name (flagged: get the
   their design + the Ohbot name in a PUBLIC product is trade-dress/trademark territory → get Ohbot's blessing.
 - **Future:** real-hardware bridge (Web Serial/Bluetooth) for clubs that own a physical Ohbot — separate from
   the emulator.
+- **3D Ohbot (5 Oct 2026, on the branch; the extension is still HIDDEN — `OHBOT_ON` is true only with `?ohbot=1` in the URL, for
+  previews):** `ohbot/ohbot-3d.js` = OUR OWN procedural Three.js model (reuses `critter/vendor/three…`), styled after the real
+  robot: laser-cut acrylic plates (sprite colour = plate colour), ping-pong eyes with iris/pupil and swinging lid shells,
+  a bent strip nose, two-loop wire lips on pivoting arms, neck servo, oval base + frame. `createOhbotRenderer().draw(ctx, ob,
+  colour, x,y,w,h)` poses it from the sprite's motor state and caches each pose (one shared WebGL context). Host:
+  `loadOhbot3D()`/`ohbotBase()` lazy-load it the first time `paintOhbot` runs; until then (or offline) the old flat
+  drawing shows. Drawn at 220 px (`-110,-116,220,220`), `costumeHalf` = 68×88. Motors gained **HeadRoll**; new block
+  `ob_change` ("change [motor] by [n]", like Ohbot's own). Tests: `tests/ohbot.test.mjs`.
+- **Research (5 Oct 2026):** Ohbot's Scratch (scratch.ohbot.co.uk = github ohbot/scratch-gui + scratch-vm, BSD for MIT's
+  Scratch code) drives a separate **Unity WebGL simulator** (`static/Build`, 36 MB, Ohbot's own model) via
+  `unityInstance.SendMessage(Robot,'JSONCommand',{type:'setMotor'|'changeMotor',motor,value})`, `SetColByName`, `SetR/G/B`,
+  `ResetController`, `CameraHolder.ShowRobot('Ohbot'|'Picoh')`. We do NOT ship or copy that build or its model (their IP).
+  Their block set: set/change [motor] (HeadTurn HeadNod HeadRoll EyeTurn EyeTilt TopLip BottomLip LidBlink) to/by, set
+  motor speed, set eyeshape (Picoh), set colour (named / RGB), reset, speak [/until done/and wait], set voice, set
+  language, lip, mouse x/y (0–10).
 
 ## Real micro:bit over USB (WebUSB flashing) — IN PROGRESS / experimental
 A 🔌 micro:bit toolbar button (`btn-mbsend`, stage-only, shown in KS2/KS3 when `MB_FLASH_ON`) opens `mbSendOpen()`:

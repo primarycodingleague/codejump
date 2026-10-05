@@ -2520,7 +2520,7 @@ window.__CJ_BAKED__=window.__CJ_BAKED__||null;
 let blocklyWorkspace=null;
 let keyStage='ks2'; // 'ks1' = simple game blocks · 'ks2' = full coding blocks + interpreter · 'ks3' = Python-style text code
 let projectType='platformer'; // 'platformer' = the grid game (default, all existing work) · 'stage' = sprite/stage projects (Scratch-style). The seam every future engine plugs into.
-let OHBOT_ON=false; // Ohbot extension HIDDEN in public builds (pending Ohbot's blessing/assets). Flip to true to re-enable the Ohbot category + costume. All Ohbot code stays in place.
+let OHBOT_ON=/[?&]ohbot=1\b/.test(location.search); // Ohbot extension HIDDEN in public builds (pending Ohbot's blessing/assets). Flip to true to re-enable the Ohbot category + costume. All Ohbot code stays in place.
 let MICROBIT_ON=true; // micro:bit emulator extension (native, clean-room). Flip to false to hide the micro:bit category + costume. Clean-room reimplementation of documented behaviour only.
 let THREED_ON=true;  // 3D World project type (world/: Babylon.js + Havok, lazy-loaded). false hides the 3D option on the home page and in the chooser.
 function codingOn(){return keyStage==='ks2'||keyStage==='ks3';} // any tier that runs code (blocks or text)
@@ -4044,6 +4044,7 @@ function* stRunOne(b,s,depth){if(depth>60)return;const t=b.type;const num=f=>{co
     case'st_stop':{if(b.getFieldValue('WHAT')==='all'){stageStopRun();}else{throw{__stopThis:true};}break;}
     case'st_reset_timer':stTimerBase=performance.now();break;
     case'ob_move':{const o=ohbotState(s),mk=b.getFieldValue('M'),t=Math.max(0,Math.min(10,num('N'))),f0=_obv(o,mk);for(let i=1;i<=8&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/8;yield 0;}o[mk]=t;break;}
+    case'ob_change':{const o=ohbotState(s),mk=b.getFieldValue('M'),f0=_obv(o,mk),t=Math.max(0,Math.min(10,f0+num('N')));for(let i=1;i<=8&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/8;yield 0;}o[mk]=t;break;}
     case'ob_move_time':{const o=ohbotState(s),mk=b.getFieldValue('M'),t=Math.max(0,Math.min(10,num('N'))),fr=Math.max(1,Math.round(num('SECS')*60)),f0=_obv(o,mk);for(let i=1;i<=fr&&stagePlaying;i++){o[mk]=f0+(t-f0)*i/fr;yield 0;}o[mk]=t;break;}
     case'ob_eyecolor':ohbotState(s).color=b.getFieldValue('COLOR')||'#39c0ed';break;
     case'ob_reset':{const o=ohbotState(s),st0={};OHBOT_MOTORS.forEach(k=>st0[k]=_obv(o,k));o.color=null;for(let i=1;i<=10&&stagePlaying;i++){OHBOT_MOTORS.forEach(k=>{const d=(k==='Lid'?0:5);o[k]=st0[k]+(d-st0[k])*i/10;});yield 0;}OHBOT_MOTORS.forEach(k=>o[k]=(k==='Lid'?0:5));break;}
@@ -4801,8 +4802,8 @@ function paintMicrobit(c,mb,color){mb=mb||MB_DEFAULT;const leds=(mb&&mb.leds)||M
     c.fillStyle='#1b1b1d';c.beginPath();c.arc(px,by+BH-15,5,0,Math.PI*2);c.fill();
     c.fillStyle='#1b1b1d';c.font='bold 9px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,px,by+BH-5);});
   c.restore();}
-const OHBOT_MOTORS=['HeadTurn','HeadNod','EyeTurn','EyeTilt','TopLip','BottomLip','Lid'];
-const OHBOT_DEFAULT={HeadTurn:5,HeadNod:5,EyeTurn:5,EyeTilt:5,TopLip:5,BottomLip:5,Lid:0,color:null};
+const OHBOT_MOTORS=['HeadTurn','HeadNod','HeadRoll','EyeTurn','EyeTilt','TopLip','BottomLip','Lid'];
+const OHBOT_DEFAULT={HeadTurn:5,HeadNod:5,HeadRoll:5,EyeTurn:5,EyeTilt:5,TopLip:5,BottomLip:5,Lid:0,color:null};
 function ohbotState(s){if(!s._ob)s._ob=Object.assign({},OHBOT_DEFAULT);return s._ob;}
 function _obv(ob,k){const v=ob[k];return v==null?(k==='Lid'?0:5):v;}
 // Map a letter to a mouth shape (top/bottom lip 0–10). Browsers don't expose true phonemes,
@@ -4818,7 +4819,15 @@ function visemeFor(ch){ch=(ch||'').toLowerCase();
   if('ldtnrszcg'.includes(ch))return{t:6.5,b:6.5}; // tongue/teeth consonants — slight open
   if(ch===' ')return{t:5,b:5};                 // pause
   return{t:6,b:6};}                            // default
-function paintOhbot(c,ob,color){ob=ob||OHBOT_DEFAULT;const eye=ob.color||color||'#39c0ed';
+// The Ohbot is drawn in 3D (ohbot/ohbot-3d.js, our own model, lazy-loaded with Three.js the first time one is painted).
+// Until it has loaded — or offline — the flat picture below is used.
+let ohbot3d=null,_ob3dLoading=null;
+function ohbotBase(){return /^https?:/.test(location.protocol)?new URL('ohbot/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/ohbot/';}
+function loadOhbot3D(){if(!_ob3dLoading)_ob3dLoading=import(ohbotBase()+'ohbot-3d.js').then(m=>{ohbot3d=m.createOhbotRenderer();stageNeedsDraw=true;
+  if(typeof renderSpritePanel==='function'&&projectType==='stage')try{renderSpritePanel();}catch(e){}return ohbot3d;}).catch(e=>{console.warn('Ohbot 3D unavailable',e);});return _ob3dLoading;}
+function paintOhbot(c,ob,color){ob=ob||OHBOT_DEFAULT;
+  if(ohbot3d){try{ohbot3d.draw(c,ob,color&&color!=='#39c0ed'?color:null,-110,-116,220,220);return;}catch(e){}}else loadOhbot3D();
+  const eye=ob.color||color||'#39c0ed';
   const turn=_obv(ob,'HeadTurn')-5,nod=_obv(ob,'HeadNod')-5,fx=turn*2.4,fy=nod*1.9;
   c.save();
   // base + spine (the stand the head sits on)
@@ -4935,7 +4944,7 @@ function mbPointerUp(){if(_mbPress){const o=mbState(_mbPress.s);o._A=false;o._B=
 function mbPointerMove(p){if(_mbSlider)mbSetPanelFromPoint(_mbSlider.desc,p);else if(_mbPanelDrag)stMbPanelPos={x:p.x-_mbPanelDrag.dx,y:p.y-_mbPanelDrag.dy};}
 // Half-extent (hw,hh) of a sprite's costume, for the selection box + drag hit test.
 // Most costumes are ~±24; the micro:bit board is much larger.
-function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};return{hw:24,hh:26};}
+function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};if(co&&co.builtin==='ohbot'&&ohbot3d)return{hw:68,hh:88};return{hw:24,hh:26};}
 function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100,h=costumeHalf(s);if(Math.abs(x-s.x)<(h.hw+2)*sc&&Math.abs(y-s.y)<(h.hh+2)*sc)return i;}return -1;}
 function stageDragStart(e){if(projectType!=='stage')return;const p=stagePtr(e);const i=stageSpriteAt(p.x,p.y);if(i<0)return;const sp=stageState.sprites[i];
   if(stagePlaying){if(!sp.draggable)return;}else if(i!==stageSel)stageSelectSprite(i); // during play only draggable sprites move
@@ -5600,8 +5609,9 @@ function defineStageBlocks(){
  Blockly.Blocks['st_letter_of']={init:function(){this.appendValueInput('INDEX').appendField(' letter');this.appendValueInput('TEXT').appendField('of');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
   Blockly.Blocks['st_str_contains']={init:function(){this.appendValueInput('A');this.appendValueInput('B').appendField('contains');this.appendDummyInput().appendField('?');this.setInputsInline(true);this.setOutput(true,null);this.setColour(120);}};
   // ── Ohbot extension — 7 motors + say (lip-sync) + eye colour + reset ──
-  const OB_MOTORS=[['HeadNod','HeadNod'],['HeadTurn','HeadTurn'],['EyeTurn','EyeTurn'],['EyeTilt','EyeTilt'],['BottomLip','BottomLip'],['TopLip','TopLip'],['Lid','Lid']];
+  const OB_MOTORS=[['HeadNod','HeadNod'],['HeadTurn','HeadTurn'],['HeadRoll','HeadRoll'],['EyeTurn','EyeTurn'],['EyeTilt','EyeTilt'],['BottomLip','BottomLip'],['TopLip','TopLip'],['Lid','Lid']];
   Blockly.Blocks['ob_move']={init:function(){this.appendDummyInput().appendField('move').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('to').appendField(new Blockly.FieldNumber(5,0,10),'N');stmt(this);this.setColour(195);}};
+  Blockly.Blocks['ob_change']={init:function(){this.appendDummyInput().appendField('change').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('by').appendField(new Blockly.FieldNumber(1,-10,10),'N');stmt(this);this.setColour(195);}};
   Blockly.Blocks['ob_move_time']={init:function(){this.appendDummyInput().appendField('move').appendField(new Blockly.FieldDropdown(OB_MOTORS),'M').appendField('to').appendField(new Blockly.FieldNumber(5,0,10),'N').appendField('in').appendField(new Blockly.FieldNumber(1,0,60,0.1),'SECS').appendField('seconds');stmt(this);this.setColour(195);}};
   Blockly.Blocks['ob_say']={init:function(){this.appendDummyInput().appendField('say').appendField(new Blockly.FieldTextInput('Hello, I am Ohbot'),'TXT');stmt(this);this.setColour(195);}};
   Blockly.Blocks['ob_eyecolor']={init:function(){const fld=(Blockly.FieldColour)?new Blockly.FieldColour('#39c0ed'):new Blockly.FieldTextInput('#39c0ed');this.appendDummyInput().appendField('set eye colour to').appendField(fld,'COLOR');stmt(this);this.setColour(195);}};
@@ -5756,7 +5766,7 @@ function stageToolbox(){const blk=t=>({kind:'block',type:t});
     {kind:'category',name:'Radio',colour:'#e0792b',contents:[blk('mb_radio_set_group'),{kind:'block',type:'mb_radio_send_number',inputs:{NUM:N(0)}},{kind:'block',type:'mb_radio_send_string',inputs:{MSG:{shadow:{type:'text',fields:{TEXT:'hi'}}}}},blk('mb_on_radio_number'),blk('mb_on_radio_string'),blk('mb_radio_number'),blk('mb_radio_string')]},
     {kind:'category',name:'Control',colour:'#e0792b',contents:[blk('mb_run_background')]},
   ]},
-  {kind:'category',name:'Ohbot',colour:'195',contents:[blk('ob_move'),blk('ob_move_time'),blk('ob_say'),blk('ob_eyecolor'),blk('ob_reset'),blk('ob_speaking')]},
+  {kind:'category',name:'Ohbot',colour:'195',contents:[blk('ob_move'),blk('ob_change'),blk('ob_move_time'),blk('ob_say'),blk('ob_eyecolor'),blk('ob_reset'),blk('ob_speaking')]},
 ].filter(cat=>(OHBOT_ON||(cat.name||'').indexOf('Ohbot')<0)&&((MICROBIT_ON&&keyStage!=='ks1')||(cat.name||'').indexOf('micro:bit')<0))};}
 function stageDefaultXml(){return`<xml xmlns="https://developers.google.com/blockly/xml">
 <block type="st_when_flag" x="20" y="20"><next><block type="st_goto_center"><next><block type="st_say"><field name="TXT">Use the arrow keys!</field></block></next></block></next></block>

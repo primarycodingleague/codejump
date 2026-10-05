@@ -1165,6 +1165,20 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
 - Downloaded playable files made before the move load engine files from the old address, which now only redirects, so a
   downloaded Critter Lab / 3D World file from before Oct 2026 needs downloading again.
 
+## Curriculum by country (CJ_VERSION 2026.10.07, branch `claude/vibrant-cori-tho25y`, NOT on main yet)
+- Teachers pick a country (`Curriculum` select in the lessons library + lesson detail + Teacher Hub, `cjCountrySelect`/`setCountry`;
+  localStorage `cj_country`, first guess `cjGuessCountry()` from language/time zone). Countries: England, Scotland, Wales, Northern
+  Ireland, Ireland, Cyprus, USA, Australia, New Zealand, Other. `CJ_COUNTRIES` (build-and-play.html) = names for age bands (`cjBand`)
+  and school years (`cjYears` maps England "Years a–b": P(n+1), Grade n−1/K, Foundation/Year n−1, NZ Year n+1, Ireland classes) —
+  the age chooser `#ks-modal` is relabelled by `applyCountryLabels()` (ks1/ks2/ks3 themselves don't change).
+- Lessons store objective KEYS in `curriculum` (alg, debug1, predict, create1 / design, ssr, reason, data, safe); `lessons/curricula.js`
+  (`CURRICULA`, `curriculumLinks(country, keys)`, re-exported by lessons.js) holds each country's official statements + code + source.
+  Ireland has no computing strand (`none:true`, shows a note); Cyprus uses England's links (English-medium schools) with a note.
+- **Accuracy:** non-England statements were confirmed only against search excerpts of the official documents (the official sites
+  were unreachable from the sandbox; from-memory wording was left out). Check each against the source PDF before it goes live.
+  CSTA released new 2026 PK–12 standards (July 2026); the app cites the 2017 codes. NZ's Technology curriculum is being replaced
+  (required Years 0–8 from 2029). Tests: tests/lessons.test.mjs (every country links every lesson; switching country in the UI).
+
 ## Ready-made lessons (5 Oct 2026, CJ_VERSION 2026.10.05.3)
 - **What:** 8 complete, no-preparation computing lessons (KS1: Get the cat to the star, Fix the dance, Make a level for a friend;
   KS2: Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course). Each has a

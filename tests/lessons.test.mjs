@@ -42,11 +42,51 @@ try {
   await page.evaluate(() => { window.__printed = ''; doPrint = h => { window.__printed = h; }; });
   await page.click('#ls-print');
   ok(/Lesson plan/.test(await page.evaluate(() => window.__printed)), 'Print lesson plan prints the plan');
+  // ---- slides: present, move with keys/buttons, notes, print, presenter view, open the starter
+  await page.click('#ls-print-slides');
+  ok((await page.evaluate(() => (window.__printed.match(/class="lp-pslide"/g) || []).length)) >= 8, 'Print slides prints every slide, one per page');
+  await page.click('#ls-present-btn');
+  await page.waitForSelector('#ls-present:not(.hide) .lp-slide');
+  const deckLen = await page.evaluate(() => _lp.deck.length);
+  ok(deckLen === 4 + LESSONS[0].slides.filter(x => !x.use).length + 1, 'the deck = title, objective, key words, the lesson’s slides, Your turn and How did we do?');
+  ok(/Get the cat to the star/i.test(await page.textContent('#lp-stage')) && await page.textContent('#lp-count') === '1 / ' + deckLen, 'the slides open on the title slide');
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+  ok(/Key words/i.test(await page.textContent('#lp-stage')), 'the arrow keys move through the slides');
+  await page.click('#lp-prev');
+  ok(/We are learning to/i.test(await page.textContent('#lp-stage')), 'the Back button goes back a slide');
+  ok(await page.evaluate(() => document.getElementById('lp-notes').classList.contains('hide')), 'teacher notes are hidden at first');
+  await page.keyboard.press('n');
+  ok(await page.evaluate(() => !document.getElementById('lp-notes').classList.contains('hide') && /Read the objective/.test(document.getElementById('lp-notes').textContent)), 'N shows the teacher notes');
+  await page.keyboard.press('End');
+  ok(/How did we do/i.test(await page.textContent('#lp-stage')), 'End goes to the last slide (How did we do?)');
+  await page.evaluate(() => lpGo(_lp.deck.findIndex(s => s.kind === 'steps')));
+  ok((await page.$$eval('.lp-steps li', l => l.length)) === LESSONS[0].steps.length, 'the Your turn slide lists the pupils’ Lesson-card steps');
+  const [pv] = await Promise.all([page.waitForEvent('popup'), page.click('#lp-pview')]);
+  await pv.waitForSelector('#pv-cur .lp-slide');
+  await page.keyboard.press('ArrowRight');
+  ok(/Show and tell/i.test(await pv.textContent('#pv-cur')) && /Two or three pupils/.test(await pv.textContent('#pv-notes')), 'Presenter view follows the slides and shows the notes');
+  await pv.keyboard.press('ArrowLeft');
+  ok(/Your turn/i.test(await page.textContent('#lp-stage')), 'keys pressed in Presenter view move the board too');
+  await page.keyboard.press('Escape');
+  ok(await page.evaluate(() => document.getElementById('ls-present').classList.contains('hide')) && pv.isClosed(), 'Escape closes the slides and the Presenter view');
   await page.click('#ls-give');
   await page.waitForSelector('#ls-give-box [data-code="ABCD"]');
   await page.click('#ls-give-box [data-code="ABCD"]');
   await page.waitForFunction(() => /Sent!/.test(document.getElementById('ls-give-box').textContent));
   ok(assigned.length === 1 && assigned[0].code === 'ABCD' && assigned[0].payload.lesson && assigned[0].payload.lesson.id === 'cat-to-star', 'Give to my class sends the starter (with its Lesson card) to the class');
+  await page.click('#ls-close');
+
+  // ---- the home page's For teachers section shows lessons you can open
+  await page.evaluate(() => { showHome(); document.getElementById('home-teachers').scrollIntoView(); });
+  await page.waitForSelector('#h-lesson-strip .hm-lcard');
+  ok((await page.$$eval('#h-lesson-strip .hm-lcard', c => c.length)) === 4, 'the For teachers section shows four lessons');
+  await page.click('#h-lesson-strip .hm-lcard >> nth=1');
+  await page.waitForSelector('#ls-present-btn');
+  ok(await page.textContent('#ls-title') === LESSONS.find(l => l.id === 'turtle-shapes').title, 'tapping a lesson picture opens that lesson');
+  await page.click('#ls-close');
+  await page.click('#h-showdown-lesson');
+  await page.waitForSelector('#ls-present-btn');
+  ok(/Critter engineers/.test(await page.textContent('#ls-title')), 'the Critter Showdown card opens the Critter lesson');
   await page.click('#ls-close');
 
   // ---- every starter opens as the right project type with its Lesson card

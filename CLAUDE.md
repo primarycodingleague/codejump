@@ -1101,6 +1101,18 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
   `lessonFromPayload` in `applyPayload` (not for live-room applies), cleared by every `startNew*`; Back/Next/Finish, read aloud
   (auto on Next in KS1 only), fold away (`.min`), drag by the gold header, hidden on the home screen/Teacher Hub. Default
   position per editor (CSS): Stage KS2 bottom-left over the code area, platformer top-right, others bottom-right.
+- **Slides:** `SLIDES` in lessons.js (pupil-facing content + teacher `notes`, attached as `lesson.slides`); the host builds the deck
+  with `lessonDeck(l)` = title · objective + "I can" · key words · the lesson's slides (`{use:'steps'}` = "Your turn", the Lesson-card
+  steps) · "How did we do?". `lessonSlideHTML` renders a 16:9 slide sized in `cqw`, so one markup works on the board, in the
+  Presenter view and in print. Presenter `#ls-present` (`lessonPresent(id)`, `lpGo`, keys ←/→/space/PageUp/PageDown/Home/End, N notes,
+  F full screen, Esc; click/swipe) remembers the slide per lesson (`_lpPos`); **Presenter view** (`lpOpenPresenter`) = a same-origin
+  `window.open` window (copies the page's CSS + icon sprite) with current/next slide, notes and a timer; keys there move both.
+  **Print / PDF** (`lessonPrintSlides`) = `doPrint`, one slide per A4-landscape page (`@page lpslides`). Entry: "Present the slides" in a
+  lesson's detail view.
+- **Home "For teachers" section (reworked 5 Oct 2026):** heading + lede → dark "Ready-made lessons" panel (`#h-lessons` + a strip of 4
+  lesson pictures `#h-lesson-strip`, filled by `homeLessonStrip()` from `HOME_LESSONS` when the section scrolls near; empty if
+  lessons.js can't load) → cards: Your class in minutes (`#h-setup-class`), Critter Showdown (picture; `#h-showdown-lesson` opens the
+  Critter engineers lesson), Teacher Guide (`#h-guide`). CSS `.hm-tl*`, `.hm-lcard`, `.hm-tcard*`, `.hm-tlist`.
 - **Tests:** `tests/lessons.test.mjs` (library, give/print, every starter opens with its card, card next/back/save/reopen, and
   each lesson's promised result: cat reaches the star, fixed dance comes home, if-touching scores, repeat 3 closes the triangle,
   shake picks 1–3 and shows the rock, Python version, Critter Motion-tab Opposite beat) + `tests/lessons-engines.test.mjs`

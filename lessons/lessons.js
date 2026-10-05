@@ -9,6 +9,12 @@
  * (Programme of study wording) · words [[word, meaning]] · need · plan [{min, title, html}] · support · stretch ·
  * assess · steps [{t, d}] (pupil card: short title + one or two plain sentences).
  * Keep the pupil steps in step with the real buttons and block names — tests/lessons.test.mjs opens every starter.
+ *
+ * Slides (SLIDES below, attached as lesson.slides): the pupil-facing slides a teacher presents on the board. CodeJump
+ * builds the deck as: title · "We are learning to" + "I can" · key words · these slides · "How did we do?". A slide is
+ * {t (title), lead? (one big sentence), q? (a question to discuss), b? (bullet points), code? (typed code), pic? (true =
+ * the starter picture), table? ([[header…], [row…]…]), notes (what the teacher says/does — shown only in Notes and
+ * Presenter view)}. {use:'steps'} puts the "Your turn" slide (the pupil Lesson-card steps) at that point.
  */
 
 const NC = {
@@ -248,5 +254,75 @@ export const LESSONS = [
     ]
   }
 ];
+
+const SLIDES = {
+  'cat-to-star': [
+    { t: 'Be a robot!', q: 'Which instruction can a robot follow?', b: ['“Take 3 steps forward. Turn right.”', '“Go over there.”'], notes: 'Choose a pupil to be the robot. Give the exact instruction first, then the vague one. Ask which worked and why computers need exact steps.' },
+    { t: 'Algorithm', lead: 'An algorithm is a set of steps in the right order.', notes: 'Say the word together. Ask: what was the algorithm for our robot?' },
+    { t: 'Our mission', pic: true, b: ['Make the cat walk to the star.', 'Join blocks to make a program.', 'Press GO to run it.'], notes: 'Press Open the starter (under the slide). Drag the flag block into the script area, then one move-right arrow. Press GO: the cat moves one step.' },
+    { t: 'Count the squares', q: 'How many steps does the cat need to reach the star?', notes: 'Count together. Change the number on the block with + or − and press GO again.' },
+    { use: 'steps' },
+    { t: 'Show and tell', b: ['Read your program out loud.', '“When GO is pressed, move right 5, then say I did it!”'], q: 'Did anyone use different blocks to get there?', notes: 'Two or three pupils show their program on the board. Read each one aloud as an algorithm.' }
+  ],
+  'fix-the-dance': [
+    { t: 'The dance', b: ['3 steps right', 'hop', '3 steps back left', 'say “Ta-da!”'], lead: 'Let’s all do it!', notes: 'Do the dance together as a class.' },
+    { t: 'Predict', pic: true, q: 'Will the cat do our dance?', b: ['Read the blocks one by one.', 'Don’t press GO yet!', 'Vote: yes or no?'], notes: 'Open the starter. Read the program aloud block by block without pressing GO. Take a vote, then press GO.' },
+    { t: 'Bugs', lead: 'A bug is a mistake in a program. To debug means to find and fix the mistakes.', notes: 'There are two bugs: a turn block instead of a hop, and moving back left only 2 instead of 3. Don’t give them away!' },
+    { t: 'How to debug', b: ['Test: press GO and watch.', 'Spot what is different.', 'Change ONE block.', 'Test again.'], notes: 'Encourage “change one thing, then test”.' },
+    { use: 'steps' },
+    { t: 'Bug hunters', b: ['Swap with a partner.', 'Put ONE new bug in their dance.', 'Swap back. Can they find it?'], notes: 'Pupils swap devices, add one bug, swap back and debug.' },
+    { t: 'Think', q: 'What is the best way to find a bug?', notes: 'Look for: test it, compare what happens with what should happen, change one thing at a time.' }
+  ],
+  'level-for-a-friend': [
+    { t: 'What makes a good level?', pic: true, q: 'What do we need to add so the player can reach the Finish?', notes: 'Open the starter. It has a Start, a Finish flag and a big gap. Press Play and fall in the gap!' },
+    { t: 'Build a bit, test a bit', b: ['Build a few blocks.', 'Press Play to test.', 'Fix it.', 'Build some more!'], notes: 'Insist on testing after every few changes.' },
+    { use: 'steps' },
+    { t: 'Friend test', b: ['Swap seats.', 'Play your partner’s level.', 'Say one thing you liked.', 'Say one thing to make better.'], notes: 'Model kind, helpful feedback first.' },
+    { t: 'Make it better', lead: 'Make one change after your friend’s test.', notes: 'Pupils go back to their own level and improve one thing.' },
+    { t: 'Think', q: 'Why did we test our levels?', b: ['What did you change after your friend played?'], notes: 'Draw out: testing finds problems we didn’t know were there.' }
+  ],
+  'turtle-shapes': [
+    { t: 'Spot the pattern', pic: true, code: 'fd 100\nrt 90\nfd 100\nrt 90\nfd 100\nrt 90\nfd 100\nrt 90', q: 'What do you notice?', notes: 'Open the starter and press Run. fd 100 and rt 90 happen four times.' },
+    { t: 'Repeat', code: 'repeat 4 [fd 100 rt 90]', b: ['The number says how many times.', 'The [square brackets] hold the steps to repeat.'], notes: 'Replace the eight lines with this and Run. Same square, one line!' },
+    { t: 'Shape hunt', table: [['Shape', 'Sides', 'Turn', 'Sides × turn'], ['Square', '4', '90', '360'], ['Triangle', '3', '?', '?'], ['Hexagon', '6', '?', '?'], ['Octagon', '8', '?', '?']], notes: 'Many will guess rt 60 for a triangle. Let them test it and see why it fails. Fill the table in as pupils find each turn (120, 60, 45): sides × turn is always 360.' },
+    { use: 'steps' },
+    { t: 'A loop inside a loop', code: 'repeat 12 [repeat 4 [fd 80 rt 90] rt 30]', b: ['Change the numbers.', 'Add setpencolor "blue at the start.'], notes: 'Pupils make their own pattern and change colours.' },
+    { t: 'Think', q: 'How would you draw a 10-sided shape?', b: ['Why are loops useful?'], notes: 'Answer: repeat 10 [fd 50 rt 36] — 360 ÷ 10 = 36.' }
+  ],
+  'catch-the-stars': [
+    { t: 'Play the game', pic: true, q: 'What should happen when the star touches the catcher?', notes: 'Open the starter and press GO. The catcher moves with the arrow keys, but catching the star does nothing.' },
+    { t: 'If … then', lead: 'If the star is touching the catcher, then add 1 to the score and go back to the top.', b: ['Choosing what to do is called selection.', '“touching Catcher?” is the condition: true or false.'], notes: 'Write the sentence on the board too.' },
+    { t: 'Read the Star’s code', b: ['A forever loop moves it down.', 'An if sends it back to the top when it reaches the bottom.'], q: 'Where should our new if go?', notes: 'Click the Star sprite and read its blocks together. That first if is selection already!' },
+    { use: 'steps' },
+    { t: 'How often does it check?', q: 'What happens if the if block is outside the forever loop?', notes: 'It only checks once, at the start. Inside the loop it checks every moment.' },
+    { t: 'Explain it', b: ['Tell a partner what your if block does.', 'Use the words condition and selection.'], notes: 'Listen for: the condition is “touching Catcher?”; selection chooses whether to add to the score.' }
+  ],
+  'microbit-rps': [
+    { t: 'Rock, paper, scissors', q: 'How could a computer choose fairly?', notes: 'Play a round or two with the class first.' },
+    { t: 'Random', lead: 'Random means it cannot be predicted.', b: ['Like rolling a dice.'], notes: 'Ask for other random things: shuffling cards, picking a name from a hat.' },
+    { t: 'Read the starter', pic: true, b: ['on shake: the input', 'set hand to random 1 to 3: a variable', 'if hand = 1: selection', 'show leds: the output'], q: 'Why does nothing show sometimes?', notes: 'Open the starter, press GO, then the Shake button a few times. 2 and 3 have no pictures yet.' },
+    { use: 'steps' },
+    { t: 'Real micro:bits', b: ['Press the micro:bit button at the top.', 'Flash over USB (Chrome or Edge),', 'or Download .hex and drag it onto the MICROBIT drive.'], notes: 'Optional: needs micro:bit V2 boards and USB cables.' },
+    { t: 'Label your code', b: ['input', 'variable', 'random', 'selection', 'output'], q: 'Which part of your code is each one?', notes: 'Pupils point to or label each part of their program.' }
+  ],
+  'critter-engineers': [
+    { t: 'How do animals walk?', q: 'Do four-legged animals move all their legs at once?', notes: 'Show a video of a horse or a dog walking if you can.' },
+    { t: 'Fair test', lead: 'Change only ONE thing, then test again.', b: ['Then you know what made the difference.'], notes: 'Engineers test like this.' },
+    { t: 'Test the starter', pic: true, b: ['Press Test it!', 'Watch the Sprint.', 'Write down the distance.'], notes: 'It rocks from side to side and gets about 1 m: the front and back feet on each side step at the same time.' },
+    { t: 'Results table', table: [['Change', 'Sprint distance'], ['Starter (no change)', ''], ['', ''], ['', ''], ['', '']], notes: 'Pupils copy this table and add one row for every change.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'Which change made the biggest difference?', b: ['How do you know it was that change?'], notes: 'Opposite beat on both back feet makes diagonal feet step together (a trot), nearly 3 m. We know because it was the only change.' }
+  ],
+  'obstacle-course': [
+    { t: 'Play the course', pic: true, b: ['Press Run.', 'Arrow keys walk. Space jumps.', 'Reach the gold finish block!'], q: 'Which block made “You made it!” appear?', notes: 'Open the starter and play it on the board.' },
+    { t: 'Events', lead: 'An event is something that happens, like touching, that starts code.', b: ['when player touches finish → say “You made it!”'], notes: 'Find the event block together.' },
+    { t: 'Where is it?', b: ['x: left and right', 'y: up and down', 'z: forwards and backwards'], notes: 'Press Stop, click the wall and drag its arrows. Watch the x, y, z numbers change in its block.' },
+    { t: 'Every object needs a name', b: ['Variables → Create variable', 'Pick the name in the make block.'], notes: 'Show this once on the board before pupils add their own walls.' },
+    { use: 'steps' },
+    { t: 'Swap and play', b: ['Play a partner’s course.', 'Suggest one improvement.'], notes: 'Pupils return to their own course to make the change.' },
+    { t: 'Think', q: 'Which parts of your game were events? Which used a loop?', notes: 'Touch events: finish and lava. Loop: the forever loop that glides the mover.' }
+  ]
+};
+for (const l of LESSONS) l.slides = SLIDES[l.id] || [];
 
 export function lesson(id) { return LESSONS.find(l => l.id === id) || null; }

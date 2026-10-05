@@ -33,7 +33,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 Mockups (3 directions) on the claude.ai canvas "CodeJump home page redesign"; B was chosen. Uses the Primary Coding
 League design system's colours/type (gold #ae853e on ink, Lazydog display + Montserrat; Lazydog shipped as
 `home/Lazydog.otf`, falling back to the cdnfonts "Lazy Dog"). Pupils first, teachers below:
-header (League + Clubs crests, `#h-teacher` For teachers, `#h-a11y`, `#home-account` chip) → hero (the ORIGINAL CodeJump SVG logo `.home-logomark`, unchanged from before the redesign — never replace it; "Let's get coding!",
+header (League + Clubs crests, `#h-a11y`, `#home-account` chip) → hero (the ORIGINAL CodeJump SVG logo `.home-logomark`, unchanged from before the redesign — never replace it; "Let's get coding!",
 `#h-new` Start building, `#h-myprojects` scrolls to `#home-projects`, Critter Lab spotlight) → "What do you want to make?"
 tiles (`[data-start=<projectType>]`: set `_pendingPt`, open the KS modal, then the KS handler clicks that type in
 `#pt-modal`; a type that KS1 doesn't get falls back to the chooser with a toast; the 3D tile `#h-tile-3d` hides while
@@ -1037,7 +1037,7 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
   by code; a project can only be saved to a class the user has joined; teachers can only open work handed
   into a class they own.
 - **App side:** cloud UI is JS-rendered in `#cloud-modal` (the big cloud module near `let CLOUD_URL`). Only
-  signed-in users can cloud-save; the **Teacher Hub (`h-teacher`) is gated to teacher accounts** when cloud is on.
+  signed-in users can cloud-save; the **Teacher Hub (`openTeacherHubGated`, from `#h-setup-class`; the header For teachers button was removed 5 Oct 2026) is gated to teacher accounts** when cloud is on.
 - If the Worker API changes, the app **must be re-deployed AND the Worker re-pasted/deployed** — they share a contract.
 - **Save = OVERWRITE, not duplicate (fixed 2026-06-16, app 2026.08.11):** device save (`saveCurrentLevel`) used to assign
   a fresh `Date.now()` id every time → a new home-tile each save. Now a `curSaveId` global tracks the slot you're editing:

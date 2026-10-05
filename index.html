@@ -1528,7 +1528,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
       </div>
       <nav class="hm-nav" aria-label="CodeJump">
-        <button id="h-teacher" class="hm-pill"><svg class="ic"><use href="#i-teacher"></use></svg> For teachers</button>
         <button id="h-a11y" class="hm-round" title="Accessibility options" aria-label="Accessibility options"><svg class="ic"><use href="#i-access"></use></svg></button>
         <div id="home-account"></div>
       </nav>
@@ -2687,7 +2686,7 @@ document.querySelectorAll('#home img[data-home]').forEach(im=>{im.src=homeAsset(
 document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendingPt=b.dataset.start;document.getElementById('ks-modal').classList.remove('hide');});
 {const t3=document.getElementById('h-tile-3d');if(t3&&!THREED_ON)t3.style.display='none';}
 document.getElementById('h-myprojects').onclick=()=>{const el=document.getElementById('home-projects');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
-document.getElementById('h-setup-class').onclick=()=>document.getElementById('h-teacher').click();
+document.getElementById('h-setup-class').onclick=()=>openTeacherHubGated();
 document.getElementById('h-guide').onclick=()=>{showTeacher();openTeacherGuide();};
 document.getElementById('h-lessons').onclick=()=>{_lsCurrent=null;openLessons();};
 document.getElementById('h-showdown-lesson').onclick=()=>{_lsCurrent='critter-engineers';openLessons();};
@@ -5141,13 +5140,14 @@ function openProjector(){const ch=dailyChallenge();
 function thTickProj(){const m=Math.floor(thProjLeft/60),s=thProjLeft%60;document.getElementById('ptimer').textContent=m+':'+String(s).padStart(2,'0');}
 function closeProjector(){document.getElementById('projector').classList.remove('on');clearInterval(thProjInt);}
 {const ab=document.getElementById('h-a11y');if(ab)ab.onclick=()=>a11yOpen();}
-document.getElementById('h-teacher').onclick=()=>{
+// the Teacher Hub (reached from the home page's For teachers section): teacher accounts only when the cloud is on
+function openTeacherHubGated(){
   if(typeof cloudOn==='function'&&cloudOn()){
     if(typeof isTeacher==='function'&&isTeacher())showTeacher();
     else if(typeof isSignedIn==='function'&&isSignedIn())toast('The Teacher Hub is for teacher accounts — sign out and make a teacher account to use it.','#ae853e');
     else{openCloud();toast('Please sign in with a teacher account to open the Teacher Hub','#ae853e');}
   }else showTeacher();
-};
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // CANVAS

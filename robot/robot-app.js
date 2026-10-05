@@ -104,8 +104,10 @@ export function mount(root, host) {
   function restyle() { if (!view) return; view.setBody(okColour(proj.body) || DEF.body); view.setAccent(okColour(proj.trim) || DEF.trim); view.setName(proj.name || DEF.name); }
   function showSettings() { $('rbName').value = proj.name || ''; $('rbBody').value = okColour(proj.body) || DEF.body; $('rbTrim').value = okColour(proj.trim) || DEF.trim; }
 
+  const LOAD = 'rbload', REMOTE = 'rbremote'; let groupN = 0;
   function loadBlocks(p) {
     quiet = true;
+    Blockly.Events.setGroup(LOAD + (++groupN)); // opening a project is not an edit (not sent to partners, not "unsaved")
     try {
       ws.clear();
       const data = p && p.blocks && typeof p.blocks === 'object' ? p.blocks : RB.starterProgram(proj.name || DEF.name);
@@ -113,12 +115,91 @@ export function mount(root, host) {
         ws.clear(); Blockly.serialization.workspaces.load(RB.starterProgram(proj.name || DEF.name), ws);
         if (host.toast) host.toast('Some blocks in this project couldn’t be loaded, so it starts from the example instead.');
       }
-    } finally { quiet = false; }
+    } finally { quiet = false; Blockly.Events.setGroup(false); }
     try { ws.scroll(20, 20); } catch (e) { /* hidden */ }
+  }
+
+  // ── live collaboration (host.collab = { active(), send(op) }, CodeJump's live rooms) — the same way as 3D World:
+  // each block change goes out as Blockly's own event JSON ({k:'rb_ev'}); 1.5 s after you stop, a full copy
+  // ({k:'rb_doc'}: blocks + name + colours) follows, which the room keeps for late joiners and which settles everyone on
+  // one version (newest copy wins: time, then this screen's random id). The name and colours go out at once ({k:'rb_set'}).
+  // Run, Stop and Reset only happen on your own screen.
+  let outBox = [], outTimer = 0, docTimer = 0, setTimer = 0, needDoc = false, mySent = null, retryTimer = 0;
+  const cid = Math.random().toString(36).slice(2, 10);
+  const newer = (a, b) => (a.t !== b.t ? a.t > b.t : a.cid > b.cid);
+  const collabOn = () => !!(host.collab && host.collab.active());
+  // the name and colours carry their own "last changed" stamp, so a block copy made before a rename can't undo the rename
+  let setStamp = { t: Number(proj.st) || 0, cid: String(proj.scid || '') };
+  const settings = () => ({ name: cleanName(proj.name) || DEF.name, body: okColour(proj.body) || DEF.body, trim: okColour(proj.trim) || DEF.trim, st: setStamp.t, scid: setStamp.cid });
+  function flushOut() { outTimer = 0; if (outBox.length && collabOn()) host.collab.send({ k: 'rb_ev', evs: outBox }); outBox = []; }
+  function sendDocSoon() {
+    clearTimeout(docTimer);
+    docTimer = setTimeout(() => {
+      docTimer = 0;
+      if (!alive || !ws || !collabOn()) return;
+      mySent = { t: Date.now(), cid };
+      host.collab.send(Object.assign({ k: 'rb_doc', blocks: Blockly.serialization.workspaces.save(ws), t: mySent.t, cid }, settings()));
+    }, 1500);
+  }
+  function shareEvent(e) { try { outBox.push(e.toJson()); } catch (err) { return; } if (!outTimer) outTimer = setTimeout(flushOut, 100); sendDocSoon(); }
+  function shareSettings() {
+    setStamp = { t: Date.now(), cid };
+    if (!collabOn()) return;
+    clearTimeout(setTimer); setTimer = setTimeout(() => { setTimer = 0; if (collabOn()) host.collab.send(Object.assign({ k: 'rb_set' }, settings())); }, 150);
+    sendDocSoon();
+  }
+  function takeSettings(o) {
+    const theirs = { t: Number(o.st) || 0, cid: String(o.scid || '') };
+    if (!newer(theirs, setStamp)) return;
+    setStamp = theirs;
+    let ch = false;
+    if (o.name != null) { const n = cleanName(o.name) || DEF.name; if (n !== proj.name) { proj.name = n; ch = true; } }
+    for (const k of ['body', 'trim']) if (okColour(o[k]) && o[k] !== proj[k]) { proj[k] = o[k]; ch = true; }
+    if (!ch) return;
+    restyle();
+    if (document.activeElement !== $('rbName')) $('rbName').value = proj.name;
+    $('rbBody').value = okColour(proj.body) || DEF.body; $('rbTrim').value = okColour(proj.trim) || DEF.trim;
+  }
+  const same = (a, b) => {
+    const norm = d => JSON.stringify(Object.assign({}, d, { blocks: d && d.blocks && Object.assign({}, d.blocks, { blocks: (d.blocks.blocks || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1)) }) }));
+    return norm(a) === norm(b);
+  };
+  const busy = () => (ws.isDragging && ws.isDragging()) || (Blockly.WidgetDiv && Blockly.WidgetDiv.isVisible()) || (Blockly.DropDownDiv && Blockly.DropDownDiv.isVisible());
+  function applyRemote(op) {
+    if (!op) return;
+    if (op.k === 'rb_set') { takeSettings(op); return; }
+    if (!ws) { if (op.k === 'rb_doc' && op.blocks) { proj = Object.assign({}, proj, { blocks: op.blocks }); takeSettings(op); } return; }
+    const undo = Blockly.Events.getRecordUndo ? Blockly.Events.getRecordUndo() : true;
+    if (op.k === 'rb_ev' && Array.isArray(op.evs)) {
+      Blockly.Events.setGroup(REMOTE + (++groupN));
+      if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(false); // Ctrl+Z only undoes your own changes
+      try { for (const j of op.evs) { try { Blockly.Events.fromJson(j, ws).run(true); } catch (err) { needDoc = true; } } }
+      finally { Blockly.Events.setGroup(false); if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(undo); }
+      return;
+    }
+    if (op.k === 'rb_doc' && op.blocks && typeof op.blocks === 'object') {
+      const theirs = { t: Number(op.t) || 0, cid: String(op.cid || '') };
+      const mine = Blockly.serialization.workspaces.save(ws);
+      takeSettings(op); // the name and colours follow their own stamp, whatever happens to the blocks
+      if (same(mine, op.blocks)) { needDoc = false; return; }
+      if (busy()) { clearTimeout(retryTimer); retryTimer = setTimeout(() => applyRemote(op), 500); return; }
+      if (!needDoc) {
+        if (outTimer || docTimer) return; // your own change is on its way, and its newer copy will settle everyone
+        if (mySent && newer(mySent, theirs)) return; // yours is newer: they'll take yours
+      }
+      const sx = ws.scrollX, sy = ws.scrollY;
+      Blockly.Events.setGroup(REMOTE + (++groupN));
+      if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(false);
+      try { ws.clear(); Blockly.serialization.workspaces.load(op.blocks, ws); } catch (err) { /* keep what we have */ } finally {
+        Blockly.Events.setGroup(false); if (Blockly.Events.setRecordUndo) Blockly.Events.setRecordUndo(undo);
+      }
+      try { ws.scroll(sx, sy); } catch (err) { /* hidden */ }
+      needDoc = false;
+    }
   }
   function getProject() {
     return { blocks: ws ? Blockly.serialization.workspaces.save(ws) : (proj.blocks || null), name: cleanName(proj.name) || DEF.name,
-      body: okColour(proj.body) || DEF.body, trim: okColour(proj.trim) || DEF.trim };
+      body: okColour(proj.body) || DEF.body, trim: okColour(proj.trim) || DEF.trim, st: setStamp.t || undefined, scid: setStamp.cid || undefined };
   }
 
   // speech bubble + ask box
@@ -157,9 +238,9 @@ export function mount(root, host) {
   $('rbCanvas').addEventListener('pointermove', e => { const r = e.target.getBoundingClientRect(); mouse.x = Math.max(0, Math.min(10, (e.clientX - r.left) / r.width * 10)); mouse.y = Math.max(0, Math.min(10, 10 - (e.clientY - r.top) / r.height * 10)); });
 
   $('rbRun').onclick = run; $('rbStop').onclick = stop; $('rbReset').onclick = reset;
-  $('rbName').addEventListener('input', () => { proj.name = cleanName($('rbName').value); if (view) view.setName(proj.name || DEF.name); changed(); });
-  $('rbBody').addEventListener('input', () => { proj.body = $('rbBody').value; restyle(); changed(); });
-  $('rbTrim').addEventListener('input', () => { proj.trim = $('rbTrim').value; restyle(); changed(); });
+  $('rbName').addEventListener('input', () => { proj.name = cleanName($('rbName').value); if (view) view.setName(proj.name || DEF.name); changed(); shareSettings(); });
+  $('rbBody').addEventListener('input', () => { proj.body = $('rbBody').value; restyle(); changed(); shareSettings(); });
+  $('rbTrim').addEventListener('input', () => { proj.trim = $('rbTrim').value; restyle(); changed(); shareSettings(); });
 
   const ro = new ResizeObserver(() => { if (view) view.resize(); if (ws) Blockly.svgResize(ws); });
   ro.observe($('rbStage')); ro.observe($('rbBlocks'));
@@ -175,6 +256,9 @@ export function mount(root, host) {
     loadBlocks(proj);
     ws.addChangeListener(e => {
       if (quiet || e.isUiEvent) return;
+      const grp = String(e.group || '');
+      if (grp.startsWith(LOAD)) return; // opening a project
+      if (!grp.startsWith(REMOTE) && collabOn()) shareEvent(e); // a partner's change isn't sent back
       changed();
       if (runner && runner.running()) status('You changed your blocks: press Run to try them.');
     });
@@ -197,6 +281,7 @@ export function mount(root, host) {
     getProject,
     setProject(p) {
       proj = Object.assign({}, DEF, p || {}); proj.name = cleanName(proj.name) || DEF.name;
+      setStamp = { t: Number(proj.st) || 0, cid: String(proj.scid || '') };
       if (runner) runner.stop(true);
       if (ws) loadBlocks(proj);
       if (view) { view.reset(true); restyle(); }
@@ -210,6 +295,7 @@ export function mount(root, host) {
       if (runner) runner.stop(true); if (view) view.dispose(); if (ws) ws.dispose();
       root.innerHTML = '';
     },
+    applyRemote,
     _view: () => view, _runner: () => runner, _ws: () => ws, run, stop, reset
   };
 }

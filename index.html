@@ -3420,7 +3420,6 @@ function startNewRobot(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
   robotData=null;_robotLoad=true;hideHome();enterRobotUI(); // null = the starter program
 }
 function enterRobotUI(){
-  leaveLiveRoom(); // Robot Lab has no live collaboration yet
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
@@ -3436,7 +3435,8 @@ function enterRobotUI(){
   holder.innerHTML='<div id="robot-loading">Getting the Robot Lab ready…</div>';
   loadRobotLab().then(mod=>{
     if(robotApp){_robotQuiet=true;try{robotApp.setProject(robotData);}finally{_robotQuiet=false;}return;}
-    robotApp=mod.mount(holder,{project:robotData,onChange:()=>{if(!_robotQuiet&&projectType==='robot')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e')});
+    robotApp=mod.mount(holder,{project:robotData,onChange:()=>{if(!_robotQuiet&&projectType==='robot')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+      collab:{active:()=>typeof collabActive!=='undefined'&&collabActive&&projectType==='robot',send:op=>collabSend({type:'op',op})}});
   }).catch(()=>{holder.innerHTML='<div id="robot-loading">The Robot Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
 function exitRobotUI(){
@@ -4951,7 +4951,7 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   gc.addEventListener('touchmove',e=>{if((_mbSlider||_mbPanelDrag)&&e.touches[0]){mbPointerMove(stagePtr(e.touches[0]));e.preventDefault();}},{passive:false});
   gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;}});
   // whole-editor collab cursor (blocks + canvas), so partners see each other while building, not just over the canvas
-  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&((projectType==='stage'&&document.body.classList.contains('stage-mode'))||(projectType==='3d'&&document.body.classList.contains('threed-mode'))))collabStageCursor(e.clientX,e.clientY);}); // Stage + 3D World: whole-editor pointers
+  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&((projectType==='stage'&&document.body.classList.contains('stage-mode'))||(projectType==='3d'&&document.body.classList.contains('threed-mode'))||(projectType==='robot'&&document.body.classList.contains('robot-mode'))))collabStageCursor(e.clientX,e.clientY);}); // Stage + 3D World: whole-editor pointers
   window.addEventListener('blur',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
   window.addEventListener('resize',()=>{if(typeof renderCollabStageCursors==='function')renderCollabStageCursors();});
   gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);if(mbPointerDown(p))return;stageFireClick(p.x,p.y);}});
@@ -6760,7 +6760,7 @@ const ROBOT_HELP=[
  ['moves',' Moves',`<p>The robot has eight <b>motors</b>. Each one goes from <b>0</b> to <b>10</b>:</p><ul><li><b>head turn</b> — 0 looks left, 10 looks right, 5 is straight ahead.</li><li><b>head nod</b> — 0 looks down, 10 looks up.</li><li><b>head tilt</b> — tips the head to one side.</li><li><b>eyes left/right</b> and <b>eyes up/down</b> — where the eyes look.</li><li><b>eyelids</b> — 0 wide open, 10 shut.</li><li><b>eyebrows</b> — 0 low, 10 high.</li><li><b>mouth</b> — 0 closed, 10 wide open.</li></ul><p><b>move … to</b> waits until the motor gets there. <b>start moving … to</b> doesn't wait, so you can move several motors at once. <b>set speed</b> makes a motor slower (1) or faster (10). <b>look left/right/up/down</b> moves the head and eyes together.</p>`],
  ['face',' Face & talk',`<ul><li><b>make a … face</b> — happy, sad, surprised, angry, sleepy, thinking or normal.</li><li><b>blink</b>, and <b>set … light</b> for the eyes, ears, chest or antenna (or all of them).</li><li><b>set body / trim colour</b> repaints the robot while it runs (Stop or Reset puts its own colours back).</li><li><b>say</b> — the robot talks and its mouth moves. <b>say … until done</b> waits until it has finished. <b>set voice</b> changes how it sounds.</li><li><b>ask … and wait</b> — the robot asks a question and a box appears; <b>answer</b> is what was typed. Try: <i>say (join "Hello " answer)</i>.</li></ul>`],
  ['ideas',' Ideas',`<ul><li><b>Tap me!</b> Use <b>when the head is tapped</b> to make it giggle, and <b>when the chest light is tapped</b> to change colour.</li><li><b>Follow the mouse:</b> <i>forever: start moving head turn to (mouse x)</i> and <i>start moving head nod to (mouse y)</i>.</li><li><b>Moods:</b> press keys to change face: <b>when h key pressed</b> → happy, <b>when s key pressed</b> → sad.</li><li><b>Quiz master:</b> ask a question, then <b>if</b> the answer is right, make a happy face and turn the lights green.</li><li><b>Robot theatre:</b> write a whole show with <b>say … until done</b>, faces and <b>wait</b> blocks.</li></ul>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Robot Lab needs the internet the first time it opens. The robot's voice is your browser's own speech, so it sounds a little different on different computers.</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Robot Lab needs the internet the first time it opens. The robot's voice is your browser's own speech, so it sounds a little different on different computers.</p><h3>Build together</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to five classmates. Everyone sees the same blocks, name and colours as you change them, and you can see each other's pointers. <b>Run</b> only plays on your own screen, so each of you can try the program.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
 function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
@@ -6853,7 +6853,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
  <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. On slower Chromebooks, the Blocky characters are the lightest.</p>
  <h3> Robot Lab (Key Stage 2 &amp; 3)</h3>
- <p>The <b>Robot Lab</b> is a robot to code with blocks: a 3D robot head and shoulders on a plinth, with eight motors from 0 to 10 (head turn, nod and tilt, eyes left/right and up/down, eyelids, eyebrows and mouth), lights in its eyes, ears, chest and antenna, and a voice (the browser's own speech, so no recordings are made or sent). Pupils name it and choose its colours. Blocks cover events (Run, tapping the robot, keys, messages), moves (move and wait, start moving, change by, move over time, speed, look), faces (happy, sad, surprised, angry, sleepy, thinking), lights, speech (say, say until done, voices, ask and answer), sensing (motor positions, keys, mouse position, timer), loops, if, maths, text and variables. It covers sequence, repetition, selection, variables and input/output, and works well for conversations, quizzes and short robot plays. Saving, sharing and handing in work as usual; there is no live collaboration in the Robot Lab yet.</p>
+ <p>The <b>Robot Lab</b> is a robot to code with blocks: a 3D robot head and shoulders on a plinth, with eight motors from 0 to 10 (head turn, nod and tilt, eyes left/right and up/down, eyelids, eyebrows and mouth), lights in its eyes, ears, chest and antenna, and a voice (the browser's own speech, so no recordings are made or sent). Pupils name it and choose its colours. Blocks cover events (Run, tapping the robot, keys, messages), moves (move and wait, start moving, change by, move over time, speed, look), faces (happy, sad, surprised, angry, sleepy, thinking), lights, speech (say, say until done, voices, ask and answer), sensing (motor positions, keys, mouse position, timer), loops, if, maths, text and variables. It covers sequence, repetition, selection, variables and input/output, and works well for conversations, quizzes and short robot plays. Saving, sharing and handing in work as usual, and pupils can build a robot together live (Share → Collaborate): blocks, name and colours stay in step on every screen, while Run plays on each pupil's own screen.</p>
  <h3> Turtle (Logo)</h3>
  <p>The <b>Turtle</b> project is a text <b>Logo</b> playground (like the classic turtle-graphics languages): pupils type commands on the left and a turtle draws on the right. Press ▶ <b>Run</b> to draw, ⏹ <b>Stop</b> / <b>Clear</b> to start over, and use the <b> Speed</b> slider to watch the turtle move slowly or draw instantly. Built-in <b>Commands</b> and <b>Examples</b> buttons get pupils started.</p>
   <p>It supports movement (<code>fd/forward</code>, <code>bk/back</code>, <code>rt/right</code>, <code>lt/left</code>, <code>setxy</code>, <code>seth</code>, <code>home</code>), pen control (<code>pu/pd</code>, <code>setpensize</code>, <code>setpencolor</code>, <code>setbg</code>), <code>repeat</code> loops, <code>if</code>/<code>ifelse</code>, variables (<code>make "x …</code> and <code>:x</code>), arithmetic and <code>random</code>, and pupils can teach the turtle <b>their own commands</b> with <code>to NAME … end</code> — a great bridge from blocks to typed code, and ideal for maths links (angles, repetition, polygons). It works at any key stage, but typing suits <b>Key Stage 2 upward</b> best.</p>
@@ -7435,7 +7435,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&projectType!=='robot'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -7742,13 +7742,14 @@ function collabOnMessage(m){
     else{collabSnapshotNow();}
  updateCollabBar();toast("You're in the live room! ",'#10b981');}
  else if(m.type==='join'){collabMembers[m.member.uid]=m.member;updateCollabBar();toast(cesc(m.member.name)+' joined ',m.member.color);
-    if(projectType==='3d')collabSnapshotSoon();} // 3D: make sure the newcomer gets the latest blocks (an older cloud server doesn't keep 3D edits)
-  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage'||projectType==='3d')renderCollabStageCursors();if(g)toast(cesc(g.name)+' left','#585555');}
+    if(projectType==='3d'||projectType==='robot')collabSnapshotSoon();} // 3D: make sure the newcomer gets the latest blocks (an older cloud server doesn't keep 3D edits)
+  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage'||projectType==='3d'||projectType==='robot')renderCollabStageCursors();if(g)toast(cesc(g.name)+' left','#585555');}
   else if(m.type==='op'){collabApplyRemote(()=>collabApplyOp(m.op));}
   else if(m.type==='snapshot'){
     if(projectType==='3d'&&m.doc&&m.doc.projectType==='3d'&&m.doc.world&&worldApp&&document.body.classList.contains('threed-mode'))worldApp.applyRemote({k:'w3_doc',blocks:m.doc.world.blocks}); // only swaps blocks if they differ
+    else if(projectType==='robot'&&m.doc&&m.doc.projectType==='robot'&&m.doc.robot&&robotApp&&document.body.classList.contains('robot-mode'))robotApp.applyRemote(Object.assign({k:'rb_doc'},m.doc.robot)); // swaps blocks/name/colours only if they differ
     else collabApplyRemote(()=>collabApplyDoc(m.doc));}
-  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage'||projectType==='3d')renderCollabStageCursors();}
+  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage'||projectType==='3d'||projectType==='robot')renderCollabStageCursors();}
   else if(m.type==='full'){toast('That live room is full (max 6 people)','#ef4444');collabDisconnect(true);}}
 function collabApplyOp(op){if(!op)return;
   if(op.k==='cell'){const lvl=op.lvl||0;
@@ -7761,6 +7762,10 @@ function collabApplyOp(op){if(!op)return;
   if(op.k==='w3_ev'||op.k==='w3_doc'){ // 3D World: a partner's block changes, or a full copy of the blocks
     if(projectType!=='3d')return;
     if(worldApp)worldApp.applyRemote(op);else if(op.k==='w3_doc'&&op.blocks)worldData={blocks:op.blocks};
+    return;}
+  if(op.k==='rb_ev'||op.k==='rb_doc'||op.k==='rb_set'){ // Robot Lab: a partner's block changes, a full copy, or the name/colours
+    if(projectType!=='robot')return;
+    if(robotApp)robotApp.applyRemote(op);else if(op.k!=='rb_ev')robotData=Object.assign({},robotData||{},op.k==='rb_doc'&&op.blocks?{blocks:op.blocks}:{},op.name!=null?{name:op.name}:{},op.body?{body:op.body}:{},op.trim?{trim:op.trim}:{});
     return;}
   if(op.k==='t_code'){turtleCode=op.code||'';const ta=document.getElementById('turtle-code');if(ta&&document.activeElement!==ta)ta.value=turtleCode;return;} // turtle: apply remote code (don't stomp your own typing)
   applyStageOp(op);} // Stage granular ops (sprite move / blocks / costume / add / del / backdrop / vars)
@@ -7782,7 +7787,7 @@ function collabVars(){if(stageState)collabStageOp({k:'st_var',vars:stageState.va
 function collabStageCursor(clientX,clientY){if(!collabActive)return;const w=window.innerWidth,h=window.innerHeight;if(!w||!h)return;const ex=clientX/w,ey=clientY/h;const now=Date.now();if(now-_collabCurT<55)return;_collabCurT=now;collabSend({type:'cursor',cell:{ex:Math.round(ex*1000)/1000,ey:Math.round(ey*1000)/1000}});}
 function collabStageCursorGone(){if(collabActive)collabSend({type:'cursor'});} // no cell remote clears your pointer
 function renderCollabStageCursors(){var layer=document.getElementById('collab-cursors');
-  if(typeof collabActive==='undefined'||!collabActive||!(document.body.classList.contains('stage-mode')||document.body.classList.contains('threed-mode'))){if(layer)layer.innerHTML='';return;}
+  if(typeof collabActive==='undefined'||!collabActive||!(document.body.classList.contains('stage-mode')||document.body.classList.contains('threed-mode')||document.body.classList.contains('robot-mode'))){if(layer)layer.innerHTML='';return;}
   if(!layer){layer=document.createElement('div');layer.id='collab-cursors';document.body.appendChild(layer);}
   var w=window.innerWidth,h=window.innerHeight,seen={};
   for(var uid in collabRemoteCursors){var cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.ex==null)continue;seen[uid]=1;

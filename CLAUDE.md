@@ -236,6 +236,17 @@ drive a separate Unity WebGL simulator via `unityInstance.SendMessage(...)`; tha
   switchMode, applyPayload exit it), payload field `robot`, `loop()` returns early, `#pt-modal` tile `data-pt="robot"` (icon `#i-robot`,
   hidden for KS1), home tile `data-start="robot"` (`home/robot.jpg`, a rendered close-up; the tiles grid is `.hm-tiles6` = 3 per row),
   live Collaborate hidden, save thumbnail badge "Robot", `ROBOT_HELP` via `helpTabs()`, Teacher Guide section "Robot Lab".
+- **Live collaboration (5 Oct 2026; cloud worker v16 on the codejump-cloud branch — app works without it, see below):** same model as 3D
+  World. robot-app.js mount option `collab:{active(),send(op)}` + `app.applyRemote(op)`. Ops: `rb_ev` (Blockly event JSON, batched
+  100 ms, replayed in event group `rbremote…` with undo recording off), `rb_doc` (1.5 s after the last edit: blocks + name/body/trim,
+  newest-copy-wins by `t` then `cid`), `rb_set` (name/colours at once, 150 ms). **The name/colours carry their OWN stamp `st`/`scid`**
+  (set on a local change; `takeSettings` only accepts a newer stamp) — without it a block copy made before a rename undid the rename
+  (found by the test). Opening a project = event group `rbload…` (not sent/not dirty). Host: `collabApplyOp` routes `rb_*`, a robot
+  `snapshot` goes through `robotApp.applyRemote` (no reload), on `join` robot members `collabSnapshotSoon()` (so newcomers are current
+  even before worker v16 is deployed), whole-editor pointers in `robot-mode`, Collaborate shown in Share. `enterRobotUI` no longer
+  leaves the live room. Worker v16 `applyOp`: `rb_doc`/`rb_set` keep `doc.robot` (blocks; name/colours only when the stamp is newer;
+  colours must be #rrggbb), `rb_ev` relayed. Test: `tests/robot-collab.test.mjs` (3 people via Playwright `routeWebSocket` stand-in
+  room — routes only catch sockets on pages loaded AFTER the route, so the page is reloaded).
 - **Tests:** `tests/robot.test.mjs` (chooser KS1/KS2, starter runs, every block family incl. ask/answer, message, tap, key, colours,
   save/reopen, and that the Stage has no Ohbot left).
 

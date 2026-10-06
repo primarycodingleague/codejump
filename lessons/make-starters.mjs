@@ -63,6 +63,15 @@ const MICROBIT_XML = `<xml xmlns="https://developers.google.com/blockly/xml"><va
 const AIM = await import(join(ROOT, 'ai', 'ai-model.js'));
 const aiShapes = () => AIM.sampleLabels('shapes', 3, 7).filter(l => l.name !== 'square').map((l, i) => ({ ...l, color: AIM.COLOURS[i] }));
 
+// ---- Train Lab: the starter oval + passing loop, a station and a depot sign, and a train that drives when Run is clicked
+const TM = await import(join(ROOT, 'train', 'train-model.js'));
+function trainLesson() {
+  const p = TM.starterTrack();
+  return { v: 2, pieces: p.pieces, trains: [{ name: 'Train 1', color: TM.TRAIN_COLOURS[0], start: { ...TM.STARTER_TRAIN } }], wagons: [],
+    dests: [{ t: 'station', p: 10, side: -1 }, { t: 'depot', p: 19, side: 1 }], challenge: null,
+    blocks: { blocks: { languageVersion: 0, blocks: [{ type: 'tr_when_run', x: 30, y: 30, next: { block: { type: 't1_startDriving', fields: { DIRECTION: '1' }, inputs: { SPEED: { shadow: { type: 'math_number', fields: { NUM: 45 } } } } } } }] } } };
+}
+
 // Each build runs inside the page and leaves the starter open; the payload is then taken with buildPayload().
 const BUILD = {
   'cat-to-star': () => {
@@ -111,13 +120,18 @@ const BUILD = {
     for (let i = 0; i < 400 && !(aiApp && aiApp._ws && aiApp._ws()); i++) await new Promise(r => setTimeout(r, 50));
     aiApp.setProject({ kind: 'draw', labels: aiLabels });
   },
+  'smart-trains': async ({ train }) => {
+    startNewTrain('ks2');
+    for (let i = 0; i < 400 && !(trainApp && trainApp._ws && trainApp._ws()); i++) await new Promise(r => setTimeout(r, 50));
+    trainApp.setProject(train);
+  },
   'obstacle-course': async ({ world }) => {
     startNew3D('ks2');
     for (let i = 0; i < 400 && !(worldApp && worldApp._world && worldApp._world()); i++) await new Promise(r => setTimeout(r, 50));
     worldApp.setProject({ blocks: world });
   }
 };
-const ARGS = { CATCHER_XML, STAR_XML, MICROBIT_XML, critter: wobbly(), world: course(), aiLabels: aiShapes() };
+const ARGS = { CATCHER_XML, STAR_XML, MICROBIT_XML, critter: wobbly(), world: course(), aiLabels: aiShapes(), train: trainLesson() };
 
 const site = await serve();
 const b = await browser();

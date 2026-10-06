@@ -87,3 +87,7 @@
 .tl canvas#tlCanvas.panning { cursor: grabbing; }
 .tl .tl-mv { min-width: 36px; padding: 6px 8px; justify-content: center; }
 .tl .tl-mv:disabled { opacity: 0.35; cursor: default; }
+/* the program's variables, top right of the board */
+.tl .tl-vars { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; z-index: 2; }
+.tl .tl-vars div { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.94); border: 2px solid #ff8c1a; border-radius: 9px; padding: 3px 4px 3px 10px; color: #1f2024; font-size: 13px; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.tl .tl-vars b { background: #ff8c1a; color: #fff; border-radius: 6px; padding: 1px 9px; min-width: 2.2em; text-align: center; font-size: 15px; }

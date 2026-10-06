@@ -245,6 +245,37 @@ export const LESSONS = [
     ]
   },
   {
+    id: 'smart-trains', title: 'Smart trains: sense, react, decide', ks: 'ks2', years: 'Years 4–6', minutes: 60, type: 'train', tool: 'Train Lab (blocks)',
+    summary: 'Pupils find out how a smart train senses the coloured snaps on its track, write an event script that reacts to what its sensor sees, count laps with a variable, then use if … else so the train decides which way to go at a split: round the oval three times, then off to the depot.',
+    objective: 'We are learning how a computer senses the world, reacts to events and uses selection (if … else) to make decisions.',
+    success: ['I can explain how the train senses the coloured snaps (an input).', 'I can use an event block to make the train react to a colour.', 'I can count with a variable.', 'I can use if … else with a condition to choose which way the train goes.'],
+    curriculum: ['ssr', 'design', 'reason'],
+    words: [['sensor', 'a part that measures something about the world, like the colour under the train; it is an input'], ['event', 'something that happens, like the sensor seeing red, that starts a script'],
+      ['selection', 'choosing what to do with if … else'], ['condition', 'a question that is true or false, like “laps < 3”'], ['variable', 'a named value that can change, like the number of laps'], ['output', 'what the computer does, like driving the motor or lighting a light']],
+    need: ['A device per pupil or pair', 'Optional: red, green and white paper squares for the warm-up', 'Optional: real smart trains and track, to try the same blocks for real'],
+    plan: [
+      { min: 5, title: 'Be a smart train', html: '<p>Pupils walk slowly round a space as “trains”. Hold up colour cards: <b>red</b> = stop and count to 2, <b>green</b> = walk slowly, <b>white</b> = get ready. <b>Ask:</b> how did you know what to do? Draw out the three parts: your eyes <b>sensed</b> the colour (input), seeing it was the <b>event</b>, and you <b>decided</b> what to do (and your legs were the output).</p>' },
+      { min: 10, title: 'How does the train know?', html: '<p>Open the starter on the board and press <b>Run</b>. A smart train has a <b>colour sensor</b> underneath that reads the coloured <b>snaps</b> on the track. Watch it stop at the white-red snaps by the station and slow down at white-green. <b>Ask:</b> what is the input? (the colour sensor) What are the outputs? (the motor, the lights)</p><p>Point out the split in the top straight and the <b>Depot</b> sign on the passing loop: today the train has to decide which way to go.</p>' },
+      { min: 15, title: 'Events: react to what it sees', html: '<p>Pupils follow the Lesson card to build <b>when train sees red → set top LED color to red</b> and test it. It only runs when the sensor sees red: that is an <b>event</b>. Then they make a <b>laps</b> variable that goes up each time the train sees red (once every lap, at the station) and watch it count on the board.</p><p>Common bug: putting “set laps to 0” under the red event, so it never gets past 1. Ask “when does each script run?”</p>' },
+      { min: 20, title: 'Selection: decide at the split', html: '<p>Write the rule on the board: “<b>If</b> laps &lt; 3, go straight on. <b>Else</b>, go right to the depot.” Pupils add <b>if … else</b> under “change laps by 1”, with <b>laps &lt; 3</b> as the condition and <b>on next split go straight / right</b> inside.</p><p><b>Ask:</b> why do we decide at the station, not at the split? (The decision has to be made before the train gets there, and the station comes just before the split.) Fast finishers try the challenges on the card.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Pupils point to the part of their program that is the <b>input</b>, the <b>event</b>, the <b>variable</b>, the <b>condition</b>, the <b>selection</b> and the <b>output</b>. <b>Ask:</b> where else do computers sense, react and decide? (Automatic doors, traffic lights, railway signals, self-driving cars.)</p>' }
+    ],
+    support: 'Give pairs the finished red-event script on a card to copy and focus on predicting what the train will do next. The Help → Snap commands tab is a reminder of what each snap does.',
+    stretch: 'Make the train stop for good at the depot with a white red blue snap on the passing loop. Make the headlights green whenever the sensor sees green. With real smart trains, the same blocks work in the train’s own Scratch editor.',
+    assess: ['Explains that the colour sensor is an input and the snaps are what it senses', 'Uses an event block that reacts to a colour', 'Uses a variable to count laps', 'Uses if … else with a condition to choose the way at the split', 'Explains why the decision is made before the train reaches the split'],
+    steps: [
+      { t: 'Watch it', d: 'Press Run and watch the train go round. What does it do at the white-red snaps by the station? And at the white-green snaps?' },
+      { t: 'An event', d: 'Open the Train 1 blocks. Drag “when train sees red (1)” into the space. Under it put “set top LED color to” and pick red.' },
+      { t: 'Test it', d: 'Press Run. Does the light on top go red at the station? The sensor sees red, so your script starts: that is an event.' },
+      { t: 'Count the laps', d: 'In Variables, press Create variable and call it laps. Put “change laps by 1” under your red event, and “set laps to 0” at the top of “when Run is clicked”.' },
+      { t: 'Watch it count', d: 'Press Run. Watch laps on the board (top right). Does it go up by 1 every time the train passes the station?' },
+      { t: 'Decide', d: 'From Control, drag the “if … else” block under “change laps by 1”. From Operators, put the compare block in its gap, choose <, and make it laps < 3.' },
+      { t: 'Which way?', d: 'From Train 1, put “on next split go straight” in the if part, and “on next split go right” in the else part.' },
+      { t: 'Run it', d: 'Press Run. After 3 laps, does the train turn off to the depot? If not, check your condition and where your blocks are.' },
+      { t: 'Challenge', d: 'Make the train stop at the depot: put a white red blue snap on the passing loop. Or make the headlights green when the sensor sees green.' }
+    ]
+  },
+  {
     id: 'teach-the-computer', title: 'Teach the computer', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'ai', tool: 'AI Lab (drawings)',
     summary: 'Pupils train a real neural network to recognise drawings, find out it only knows what it was shown, make it better with more varied examples, test it fairly, then code a game with it.',
     objective: 'We are learning how a computer can learn from examples (machine learning).',
@@ -342,6 +373,16 @@ const SLIDES = {
     { use: 'steps' },
     { t: 'Swap and play', b: ['Play a partner’s course.', 'Suggest one improvement.'], notes: 'Pupils return to their own course to make the change.' },
     { t: 'Think', q: 'Which parts of your game were events? Which used a loop?', notes: 'Touch events: finish and lava. Loop: the forever loop that glides the mover.' }
+  ],
+  'smart-trains': [
+    { t: 'Be a smart train', q: 'How did you know when to stop?', b: ['Red = stop and count to 2', 'Green = walk slowly', 'White = get ready'], notes: 'Pupils walk as trains while you hold up colour cards. Then ask how they knew: they sensed the colour with their eyes and decided what to do.' },
+    { t: 'Sense, decide, act', lead: 'A sensor is an input: it tells the computer about the world.', b: ['Input: the colour sensor under the train', 'Decide: what should it do about it?', 'Output: the motor and the lights'], notes: 'Link back to the warm-up: eyes = sensor, legs = motor.' },
+    { t: 'Watch the train', pic: true, q: 'What does the train do at each coloured snap?', notes: 'Open the starter and press Run. It stops at white-red by the station and slows down at white-green. Point out the split and the Depot sign on the passing loop.' },
+    { t: 'Events', lead: 'An event is something that happens that starts a script.', b: ['when train sees red (1)', '→ set top LED color to red'], notes: 'The script waits until the sensor sees red. Build it together, then pupils build their own.' },
+    { t: 'Decide at the split', lead: 'If laps < 3, go straight on. Else, go right to the depot.', b: ['“laps < 3” is the condition: true or false.', 'Choosing which way is called selection.'], q: 'Why decide at the station, not at the split?', notes: 'The decision has to be made before the train reaches the split, and the station (red) comes just before it.' },
+    { use: 'steps' },
+    { t: 'Where else?', b: ['Automatic doors', 'Traffic lights', 'Railway signals', 'Self-driving cars'], q: 'What does each one sense? What does it decide?', notes: 'For example: an automatic door senses a person coming; if someone is there it opens, else it stays shut.' },
+    { t: 'Label your program', b: ['input (sensor)', 'event', 'variable', 'condition', 'selection', 'output'], q: 'Which block is each one?', notes: 'Pupils point to each part of their program, or label a screenshot.' }
   ],
   'teach-the-computer': [
     { t: 'Describe a cat', q: 'Can you write rules that describe every cat — and only cats?', b: ['Four legs? So does a dog.', 'Pointy ears? So does a fox.'], notes: 'Let pupils try for a minute. Rules get very hard very quickly.' },

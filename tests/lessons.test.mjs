@@ -224,6 +224,34 @@ try {
   });
   ok(ai.before !== 'square', 'Teach the computer: the starter AI can’t recognise a square (it says ' + ai.before + ')');
   ok(ai.after === 'square' && ai.right >= 27 && ai.check > 0, 'Teach the computer: after teaching squares and more examples it gets them right ' + JSON.stringify(ai));
+
+  // Smart trains: the finished lesson program — red event counts laps, if laps < 3 straight else right — goes round 3 times, then to the depot
+  await page.evaluate(() => { clearDirty(); return lessonOpenStarter('smart-trains'); });
+  await page.waitForFunction(() => projectType === 'train' && trainApp && trainApp._ws() && trainApp._proj().dests.length === 2, null, { timeout: 30000 });
+  const starterOk = await page.evaluate(() => { const ws = trainApp._ws(), tops = ws.getTopBlocks(); return tops.length === 1 && tops[0].type === 'tr_when_run' && /Smart trains/.test(document.getElementById('lesson-guide').textContent); });
+  ok(starterOk, 'Smart trains: the starter opens with “when Run is clicked → drive”, a station and a depot, and its Lesson card');
+  const trains = await page.evaluate(async () => {
+    const N = n => ({ shadow: { type: 'math_number', fields: { NUM: n } } }), V = { type: 'variables_get', fields: { VAR: { id: 'laps' } } };
+    const P = trainApp.getProject();
+    P.blocks = { blocks: { languageVersion: 0, blocks: [
+      { type: 'tr_when_run', x: 20, y: 20, next: { block: { type: 'variables_set', fields: { VAR: { id: 'laps' } }, inputs: { VALUE: N(0) }, next: { block: { type: 't1_startDriving', fields: { DIRECTION: '1' }, inputs: { SPEED: N(45) } } } } } },
+      { type: 't1_whenColorChanged', x: 20, y: 200, fields: { COLOR: '1' }, next: { block: { type: 't1_setLedColorPicker', fields: { LEDGROUP: '1', COLOR: '#ff0000' }, next: { block: { type: 'math_change', fields: { VAR: { id: 'laps' } }, inputs: { DELTA: N(1) },
+        next: { block: { type: 'controls_if', extraState: { hasElse: true }, inputs: {
+          IF0: { block: { type: 'logic_compare', fields: { OP: 'LT' }, inputs: { A: { block: V }, B: N(3) } } },
+          DO0: { block: { type: 't1_setNextSplitDecision', fields: { SIDE: '3' } } }, ELSE: { block: { type: 't1_setNextSplitDecision', fields: { SIDE: '2' } } } } } } } } } } }
+    ] }, variables: [{ name: 'laps', id: 'laps' }] };
+    trainApp.setProject(P); trainApp.run();
+    const seen = [];
+    return await new Promise(res => {
+      const t0 = Date.now(), iv = setInterval(() => {
+        const tr = trainApp._sim().trains[0], laps = trainApp._runner()._vars().laps;
+        if (seen[seen.length - 1] !== tr.p) seen.push(tr.p);
+        if (tr.p === 18 || tr.p === 19 || Date.now() - t0 > 60000) { clearInterval(iv); trainApp.stop(); res({ laps, seen: seen.join(','), top: tr.top, shown: document.getElementById('tlVars').textContent }); }
+      }, 50);
+    });
+  });
+  const loopsBefore = trains.seen.split(',').map(Number).filter(p => p === 18 || p === 19).length;
+  ok(trains.laps === 3 && loopsBefore === 1 && trains.top === '#ff0000' && /laps\s*3/.test(trains.shown), 'Smart trains: it goes straight on for laps 1 and 2, then turns off to the depot after lap 3 (laps shows on the board) ' + JSON.stringify({ laps: trains.laps, top: trains.top, shown: trains.shown }));
   ok(errors.length === 0, 'no errors while following the lessons' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } catch (e) {
   ok(false, 'the lessons browser test stopped: ' + (e && e.message));

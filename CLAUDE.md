@@ -261,6 +261,12 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   `tapAt` on pointerup; a drag pans. **Order tool** (`'order'`, in the Places group): tap signs in order → each appends a challenge step
   (made as "My route" if none; first = start on a start sign else stop; later start sign = end); tapping the last again pops it; "Clear the
   order". Gold badges (`orderLabels` → `drawDestBadge`) on the board and the card; jobs move ▲▼ in the panel.
+- **Lesson "Smart trains: sense, react, decide"** (`smart-trains`, KS2 Years 4–6, 60 min; CJ_VERSION 2026.10.08.3): events (when train
+  sees red), sensing (the colour sensor = input), a `laps` variable and selection (if laps < 3 → on next split go straight, else right
+  → the depot on the passing loop). Starter (make-starters `trainLesson()`): starter track, station sign on piece 10, depot on 19, one
+  script "when Run is clicked → drive forward at 45". Red is seen exactly once a lap (the station, just BEFORE the split at piece 0/1),
+  so deciding in the red event is in time. tests/lessons.test.mjs follows it to the depot after lap 3. The app now shows the program's
+  variables top-right of the board (`#tlVars`, `renderVars`, from `runner._vars()`; cleared on Reset). Lesson card sits bottom-left in train-mode.
 
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate

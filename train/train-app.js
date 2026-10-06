@@ -37,6 +37,7 @@ const TEMPLATE = `
     <div class="tl-stage" id="tlStage">
       <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a blue plus at the end of the track to click it on; tap a piece to turn it."></canvas>
       <div class="tl-check" id="tlCheck" hidden></div>
+      <div class="tl-vars" id="tlVars" hidden aria-live="off"></div>
       <div class="tl-zoom" role="group" aria-label="Zoom">
         <button type="button" id="tlZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
         <button type="button" id="tlZoomOut" title="Zoom out" aria-label="Zoom out">&minus;</button>
@@ -643,11 +644,21 @@ export function mount(root, host) {
       runner.tick(dt);
       if (checker) { checker.tick(dt); renderCheck(); if (checker.complete() && !cheered) { cheered = true; playSound('dingdong'); status('Challenge complete! Well done.', 'ok'); } }
     }
+    renderVars();
     $('tlRun').classList.toggle('on', running());
     root.querySelector('.tl').classList.toggle('playing', running());
     draw();
   }
 
+  // the program's variables on the board (like Scratch's monitors), so pupils can watch a count go up
+  let varsKey = '';
+  function renderVars() {
+    const v = runner && runner._vars ? runner._vars() : null, names = v ? Object.keys(v).sort() : [];
+    const show = v ? names.map(n => [n, typeof v[n] === 'number' ? Math.round(v[n] * 100) / 100 : String(v[n]).slice(0, 20)]) : [];
+    const key = JSON.stringify(show); if (key === varsKey) return; varsKey = key;
+    const box = $('tlVars'); box.hidden = !show.length;
+    box.innerHTML = show.map(([n, x]) => `<div><span>${esc(n)}</span><b>${esc(String(x))}</b></div>`).join('');
+  }
   function run() {
     audio();
     if (!ws) return;

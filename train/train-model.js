@@ -10,15 +10,17 @@
  * Snaps sit in slots down the middle of a piece. With snap commands on (the default) a train obeys them like the real
  * thing: a command starts with WHITE (in the direction of travel), has no gaps and is all on one piece —
  *   white green / green green / green green green = slow / medium / fast · white red / red red / red red red = stop 2 / 5 / 10 s
- *   white blue = reverse · white red blue = end route · white yellow (… red / … blue) = wagon drop-offs · white magenta X = custom
+ *   white blue = reverse (drives tail first) · white red blue = end route · white yellow (… red / … blue) = wagon drop-offs · white magenta X = custom
  * Splits start with built-in cyan + red (straight-or-left) or cyan + blue (straight-or-right) markers and then one slot:
- *   green straight · red left · blue right · yellow alternate · magenta turn, straight, straight · empty = a random choice.
+ *   green straight · red left · blue right · yellow alternate (straight first) · magenta turn, straight, straight · empty = random.
  *
- *   const sim = createSim(project, { onEvent(trainIndex, kind, data) })  // kind: colour | command | split | end | bump
- *   sim.go() (= pressing the train's button) · sim.step(dt) · sim.pose(i) → {x, y, ang} · sim.reset()
- *   sim.setTarget(i, speed) · sim.turnAround(i) · sim.stopFor(i, secs) · train.next / train.dflt = 'left'|'straight'|'right'|'random'
+ *   const sim = createSim(project, { onEvent(trainIndex, kind, data) })
+ *   sim.go(i?) (= pressing the train's button) · sim.step(dt) · sim.pose(i) → {x, y, ang of the front} · sim.reset()
+ *   sim.drive(i, backward, speed) · sim.setTarget(i, speed) · sim.turnAround(i) · sim.stopFor(i, secs)
+ *   train.next / train.dflt = 'left'|'straight'|'right'|'random' · events: snap (4 colours) | command | colour (sensor) | split | end | bump | feedback
+ *   Speeds are pieces per second; CM converts to the real train's cm.
  *
- * A project is { v: 2, pieces: [[type, x, y, d, snaps|null]], trains: [{ name, color, start: {p, k, rev}|null, blocks }] }.
+ * A project is { v: 2, pieces: [[type, x, y, d, snaps|null]], trains: [{ name, color, start: {p, k, rev}|null }], blocks }.
  */
 
 export const R = 0.884; // curve radius: makes 2 splits + a short exactly as long as their passing loop, so loops close
@@ -27,7 +29,7 @@ const CURVE_LEN = R * H;
 const slotsOn = (len, n, first, gap) => Array.from({ length: n }, (_, k) => (first + k * gap) / len);
 // ends: [x, y, out-heading] (out = pointing away from the piece); paths: [end, end, shape]; slots: fractions along path 0
 export const PIECES = {
-  straight: { name: 'Straight', ends: [[0, 0, PI], [1, 0, 0]], paths: [[0, 1, 'line']], slots: slotsOn(1, 6, 0.175, 0.13) },
+  straight: { name: 'Straight', ends: [[0, 0, PI], [1, 0, 0]], paths: [[0, 1, 'line']], slots: slotsOn(1, 7, 0.14, 0.12) },
   short: { name: 'Short straight', ends: [[0, 0, PI], [0.5, 0, 0]], paths: [[0, 1, 'line']], slots: slotsOn(0.5, 2, 0.12, 0.13) },
   curveL: { name: 'Curve left', ends: [[0, 0, PI], [CE, -CY, -H]], paths: [[0, 1, 'arcL']], slots: slotsOn(CURVE_LEN, 3, CURVE_LEN / 2 - 0.13, 0.13) },
   curveR: { name: 'Curve right', ends: [[0, 0, PI], [CE, CY, H]], paths: [[0, 1, 'arcR']], slots: slotsOn(CURVE_LEN, 3, CURVE_LEN / 2 - 0.13, 0.13) },
@@ -38,13 +40,16 @@ export const PIECES = {
 export const MARK_U = [0.125, 0.255]; // where a split's built-in markers are (fractions of its straight path)
 export const PIECE_KEYS = Object.keys(PIECES);
 export const SNAPS = { white: '#f6f6f6', red: '#ef4b3c', green: '#3cb54a', blue: '#1f6fd1', yellow: '#ffd21f', magenta: '#d63fb5', cyan: '#4fc9ea' };
-export const SNAP_KEYS = Object.keys(SNAPS);
+export const SNAP_KEYS = ['white', 'red', 'green', 'blue', 'yellow', 'magenta']; // the snaps in the box (cyan is only built into splits)
+// colour numbers, as the train reports them to Scratch
+export const COLOUR_NUM = { black: 0, red: 1, green: 2, yellow: 3, blue: 4, magenta: 5, cyan: 6, white: 7 };
 export const slotCount = t => (PIECES[t] ? PIECES[t].slots.length : 0);
-export const SPEEDS = { slow: 1.1, medium: 1.65, fast: 2.2 }; // pieces per second (the real 30 / 45 / 60 cm/s, scaled)
-export const MAX_SPEED = 2.75; // 100%
+export const CM = 25; // how many cm one straight piece stands for (speeds and distances in blocks are in cm, like the real train)
+export const SPEEDS = { slow: 30 / CM, medium: 45 / CM, fast: 60 / CM }; // the real 30 / 45 / 60 cm/s
+export const MAX_SPEED = 100 / CM; // the real train's top speed, 100 cm/s
 export const MAX_TRAINS = 3;
 export const MAX_PIECES = 200;
-export const TRAIN_COLOURS = ['#21b8e8', '#f0623c', '#3cbf5a', '#9b6cf0'];
+export const TRAIN_COLOURS = ['#21b8e8', '#f0623c', '#f5b31b']; // blue, red, yellow, like the trains in the Scratch extension
 const ACCEL = 3; // pieces/s² when speeding up or braking
 const BUMP = 0.5; // trains closer than this have bumped
 const okColour = c => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c) : null);
@@ -110,10 +115,9 @@ export function cleanProject(p) {
     const i = trains.length, s = tr.start;
     let start = null;
     if (s && typeof s === 'object' && Number.isInteger(s.p) && pieces[s.p] && Number.isInteger(s.k) && s.k >= 0 && s.k < PIECES[pieces[s.p][0]].paths.length) start = { p: s.p, k: s.k, rev: !!s.rev };
-    trains.push({ name: cleanName(tr.name) || 'Train ' + (i + 1), color: okColour(tr.color) || TRAIN_COLOURS[i % TRAIN_COLOURS.length], start,
-      blocks: tr.blocks && typeof tr.blocks === 'object' ? tr.blocks : null });
+    trains.push({ name: cleanName(tr.name) || 'Train ' + (i + 1), color: okColour(tr.color) || TRAIN_COLOURS[i % TRAIN_COLOURS.length], start });
   }
-  return { v: 2, pieces, trains };
+  return { v: 2, pieces, trains, blocks: p.blocks && typeof p.blocks === 'object' ? p.blocks : null }; // one program for all the trains
 }
 
 // lay pieces one after another from an open end; a step is a type or [type, end to join (0), end to carry on from]
@@ -160,41 +164,54 @@ export function createSim(project, opts = {}) {
     t = 0;
     for (const tr of trains) {
       place(tr);
-      Object.assign(tr, { next: null, dflt: null, cruise: 0, dist: 0, head: '#ffffff', top: null, lastColour: '', lastCommand: '', touching: new Set(),
-        ended: false, cmd: null, pause: null, alt: 0, mag: 0, snapsOn: true });
+      // back: driving tail first (the engine never turns round; "reverse" just drives the other way)
+      Object.assign(tr, { back: false, next: null, dflt: null, cruise: 0, dist: 0, odo0: 0, head: '#ffffff', tail: '#ff2a1a', top: null, flash: null,
+        sensor: 'black', sensorTill: 0, lastColour: '', lastCommand: '', lastTurn: 0, touching: new Set(), ended: false, cmd: null, pause: null,
+        alt: 0, mag: 0, snapsOn: true, feedbackSound: true, feedbackLights: true });
     }
   }
   reset();
 
-  // ── reading snaps like the real train: a command starts with white and ends at a gap, another white or the piece's end
+  // ── reading snaps like the real train: a command starts with white and ends at a gap, another white or the piece's end.
+  // Every command it carries out (and, with snap commands off, every row it reads) is a "snap" event of 4 colours,
+  // padded with 'black' (none), like the train reports to Scratch.
   const COMMANDS = {
     'white green': ['slow', tr => setSpeed(tr, SPEEDS.slow)], 'white green green': ['medium', tr => setSpeed(tr, SPEEDS.medium)],
     'white green green green': ['fast', tr => setSpeed(tr, SPEEDS.fast)],
     'white red': ['stop 2 seconds', tr => stopFor(tr, 2)], 'white red red': ['stop 5 seconds', tr => stopFor(tr, 5)], 'white red red red': ['stop 10 seconds', tr => stopFor(tr, 10)],
-    'white blue': ['reverse', tr => turnAround(tr)], 'white red blue': ['end route', tr => { tr.pause = null; tr.vt = 0; tr.cruise = 0; }],
-    'white yellow': ['drop off wagon', () => {}], 'white yellow red': ['stop and drop off wagon', tr => stopFor(tr, 2)], 'white yellow blue': ['reverse drop off wagon', () => {}]
+    'white blue': ['reverse', tr => reverse(tr)], 'white red blue': ['end route', tr => { tr.pause = null; tr.vt = 0; tr.cruise = 0; }],
+    'white yellow': ['drop on the go', () => {}], 'white yellow red': ['stop and drop', tr => stopFor(tr, 2)], 'white yellow blue': ['reverse drop', tr => reverse(tr)]
   };
+  const pad4 = c => [...c, 'black', 'black', 'black', 'black'].slice(0, 4);
+  function feedback(tr, col) {
+    if (tr.feedbackLights) tr.flash = { col: SNAPS[col] || '#ffffff', until: t + 0.6 };
+    if (tr.feedbackSound) emit(tr.i, 'feedback', col);
+  }
   function finish(tr) {
     const c = tr.cmd; tr.cmd = null;
-    if (!c || c.length < 2 || !tr.snapsOn) return;
-    const key = c.join(' ');
+    if (!c || c.length < 2) return;
+    const key = c.join(' '), custom = c.length <= 3 && c[1] === 'magenta';
+    if (!tr.snapsOn) { emit(tr.i, 'snap', pad4(c)); return; } // commands off: the train only reports what it read
     let name = null;
     if (COMMANDS[key]) { name = COMMANDS[key][0]; COMMANDS[key][1](tr); }
-    else if (c.length === 3 && c[1] === 'magenta') name = 'custom ' + c[2];
-    if (name) { tr.lastCommand = name; emit(tr.i, 'command', name); }
+    else if (custom) name = 'custom ' + (c[2] || 'none');
+    if (!name) return;
+    tr.lastCommand = name; emit(tr.i, 'snap', pad4(c)); emit(tr.i, 'command', name); feedback(tr, c[1]);
   }
+  function see(tr, col) { tr.sensor = col; tr.sensorTill = tr.dist + 0.09; tr.lastColour = col; emit(tr.i, 'colour', col); }
   function readSlot(tr, col) {
     if (!col) { finish(tr); return; }
-    tr.lastColour = col; emit(tr.i, 'colour', col);
+    see(tr, col);
     if (col === 'white') { finish(tr); tr.cmd = ['white']; }
     else if (tr.cmd) tr.cmd.push(col);
   }
   function setSpeed(tr, v) { tr.pause = null; tr.vt = v; if (v > 0) tr.cruise = v; tr.ended = false; }
   function stopFor(tr, secs) { const back = tr.pause ? tr.pause.resume : tr.vt || tr.cruise; tr.vt = 0; tr.pause = { until: t + secs, resume: back }; }
-  function turnAround(tr) { if (!tr.on) return; tr.cmd = null; [tr.from, tr.to] = [tr.to, tr.from]; tr.s = pathOf(tr).len - tr.s; tr.ended = false; }
+  function flip(tr) { tr.cmd = null; [tr.from, tr.to] = [tr.to, tr.from]; tr.s = pathOf(tr).len - tr.s; tr.ended = false; }
+  function reverse(tr) { if (!tr.on) return; flip(tr); tr.back = !tr.back; }
 
-  // ── splits: the way to go comes from (1) a block's "at the next split", (2) the snap in the split's slot, (3) a block's
-  // "at every split", or (4) a random choice — exactly what the real train does with an empty slot
+  // ── splits: the way to go comes from (1) "on next split go …", (2) the snap in the split's slot, (3) a block's
+  // "at every split" choice, or (4) a random choice — exactly what the real train does with an empty slot
   function choose(tr, pc, opts2) {
     const turn = opts2.find(o => o.turn !== 'straight'), straight = opts2.find(o => o.turn === 'straight');
     const pick = w => (w === 'random' ? opts2[Math.floor(rnd() * opts2.length)] : w === 'turn' ? turn : opts2.find(o => o.turn === w)) || straight || opts2[0];
@@ -203,7 +220,7 @@ export function createSim(project, opts = {}) {
     if (slot === 'green') return pick('straight');
     if (slot === 'red') return pick('left');
     if (slot === 'blue') return pick('right');
-    if (slot === 'yellow') { tr.alt = (tr.alt + 1) % 2; return pick(tr.alt === 1 ? 'turn' : 'straight'); }
+    if (slot === 'yellow') { tr.alt = (tr.alt + 1) % 2; return pick(tr.alt === 1 ? 'straight' : 'turn'); } // straight first, then turn (the command sheet's 1, 2)
     if (slot === 'magenta') { const m = tr.mag; tr.mag = (tr.mag + 1) % 3; return pick(m === 0 ? 'turn' : 'straight'); }
     return pick(tr.dflt || 'random');
   }
@@ -216,7 +233,7 @@ export function createSim(project, opts = {}) {
       const step = Math.min(d, len - tr.s);
       tr.s += step; d -= step; tr.dist += step;
       const pc = P.pieces[tr.p], def = PIECES[pc[0]];
-      if (def.slots.length && !def.marks && tr.k === 0) { // a split's slot is its steering choice, read when it decides
+      if (def.slots.length && !def.marks && tr.k === 0) { // a split's slot is its steering choice, read as it decides
         const list = def.slots.map((u, k) => [fwd(tr) ? u * len : len - u * len, k]).sort((x, y) => x[0] - y[0]);
         for (const [at, k] of list) if (before < at && tr.s >= at) readSlot(tr, pc[4] ? pc[4][k] : null);
       }
@@ -224,20 +241,28 @@ export function createSim(project, opts = {}) {
       finish(tr); // a command is always on one piece
       const link = links[tr.p + ':' + tr.to];
       if (!link) { stopDead(tr); emit(tr.i, 'end', 'track'); return; }
-      const g = geoms[link.p], e = link.e, inH = wrap(g.ends[e].h + PI);
+      const g = geoms[link.p], e = link.e, inH = wrap(g.ends[e].h + PI), npc = P.pieces[link.p], ndef = PIECES[npc[0]];
       const opts2 = g.paths.map((q, k) => (q.a === e ? { k, o: q.b } : q.b === e ? { k, o: q.a } : null)).filter(Boolean);
       for (const o of opts2) { const dh = wrap(g.ends[o.o].h - inH); o.turn = Math.abs(dh) < 0.1 ? 'straight' : dh > 0 ? 'right' : 'left'; }
-      const pick = opts2.length > 1 ? choose(tr, P.pieces[link.p], opts2) : opts2[0];
+      let pick = opts2[0];
+      if (opts2.length > 1) { // facing a split: it reads cyan, its marker and the slot, then decides
+        const slot = (npc[4] && npc[4][0]) || 'black';
+        see(tr, slot === 'black' ? ndef.marks[1] : slot);
+        pick = choose(tr, npc, opts2);
+        tr.lastTurn = pick.turn;
+        emit(tr.i, 'snap', ['cyan', ndef.marks[1], slot, 'black']);
+        emit(tr.i, 'split', pick.turn);
+      }
       tr.p = link.p; tr.k = pick.k; tr.from = e; tr.to = pick.o; tr.s = 0; tr.cmd = null;
-      if (opts2.length > 1) emit(tr.i, 'split', pick.turn);
     }
   }
   function stopDead(tr) { tr.s = pathOf(tr).len; tr.cruise = tr.vt || tr.cruise; tr.v = 0; tr.vt = 0; tr.pause = null; tr.ended = true; }
 
+  // where a train is; ang = the way its FRONT points (it may be driving backwards)
   function pose(i) {
     const tr = trains[i]; if (!tr || !tr.on) return null;
     const pth = pathOf(tr), f = fwd(tr), u = Math.max(0, Math.min(1, tr.s / pth.len)), q = pth.at(f ? u : 1 - u);
-    return { x: q.x, y: q.y, ang: f ? q.ang : q.ang + PI };
+    return { x: q.x, y: q.y, ang: (f ? q.ang : q.ang + PI) + (tr.back ? PI : 0) };
   }
   const gap = (i, j) => { const a = pose(i), b = pose(j); return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity; };
   const nearest = i => { let m = Infinity; for (const o of trains) if (o.i !== i && o.on) m = Math.min(m, gap(i, o.i)); return m; };
@@ -247,6 +272,8 @@ export function createSim(project, opts = {}) {
     for (const tr of trains) {
       if (!tr.on) continue;
       if (tr.pause && t >= tr.pause.until) { tr.vt = tr.pause.resume; tr.pause = null; }
+      if (tr.flash && t >= tr.flash.until) tr.flash = null;
+      if (tr.sensor !== 'black' && tr.dist >= tr.sensorTill) { tr.sensor = 'black'; emit(tr.i, 'colour', 'black'); }
       const dv = ACCEL * dt;
       tr.v = tr.v < tr.vt ? Math.min(tr.vt, tr.v + dv) : Math.max(tr.vt, tr.v - dv);
       if (tr.v <= 0) continue;
@@ -269,10 +296,16 @@ export function createSim(project, opts = {}) {
 
   return {
     project: P, geoms, links, trains, step, pose, reset, time: () => t,
-    // pressing Run is like pressing the button on each train: it sets off at medium speed
-    go() { for (const tr of trains) if (tr.on) setSpeed(tr, SPEEDS.medium); },
+    // pressing Run with no blocks for a train is like pressing its button: it sets off at medium speed
+    go(i) { for (const tr of trains) if (tr.on && (i == null || tr.i === i)) setSpeed(tr, SPEEDS.medium); },
+    // drive forward (front first) or backward at a speed (pieces/s); 0 = stop
+    drive(i, backward, v) {
+      const tr = trains[i]; if (!tr || !tr.on) return;
+      if (!!backward !== tr.back) reverse(tr);
+      setSpeed(tr, Math.max(0, Math.min(MAX_SPEED, Number(v) || 0)));
+    },
     setTarget(i, v) { const tr = trains[i]; if (tr && tr.on) setSpeed(tr, Math.max(0, Math.min(MAX_SPEED, Number(v) || 0))); },
     stopFor(i, secs) { const tr = trains[i]; if (tr && tr.on) stopFor(tr, secs); },
-    turnAround(i) { const tr = trains[i]; if (tr) turnAround(tr); }
+    turnAround(i) { const tr = trains[i]; if (tr) reverse(tr); }
   };
 }

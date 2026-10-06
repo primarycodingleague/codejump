@@ -217,13 +217,23 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   gap / another white / the piece's end (one piece only). white+green x1/2/3 = slow/medium/fast (`SPEEDS` 1.1/1.65/2.2 = 30/45/60 cm/s
   scaled); white+red x1/2/3 = stop 2/5/10 s then resume; white blue = reverse; white red blue = end route; white yellow (…red/…blue) = wagon
   drop-offs (no wagons yet: events only); white magenta X = custom (event only). Splits: slot green straight · red left · blue right · yellow
-  alternate (turn first — the real order is unconfirmed) · magenta turn, straight, straight · empty = RANDOM. Open end of track = the train
-  stops ('end' event; a real one would roll off). Bump = both stop. Start speed medium is a guess (unconfirmed).
-- **Blocks (`train/train-blocks.js`, `tr_*`)** on top of the snaps: Events (when Run, when I see colour, **when I read the snap command X**,
-  split, end, bump, tapped, key, messages) · Drive (drive slow/medium/fast, set speed %, drive N pieces, stop, stop for, turn around, at the
-  next split go …, at every split go … (replaces random for empty slots), **turn snap commands on/off**) · Lights · Sound · Sensing (+ last
-  snap command) · Control · Operators · Variables (shared by name). Decision order at a split: next-split block > slot snap > every-split
-  block > random. New trains start with NO blocks.
+  alternate (straight first, per intelino's command sheet) · magenta turn, straight, straight · empty = RANDOM. Open end of track = the train
+  stops ('end' event; a real one would roll off). Bump = both stop. Start speed medium is a guess (unconfirmed). Placeable snaps: white/red/green/blue/yellow/magenta (cyan only on splits).
+- **Blocks = intelino's own Scratch 3 extension, copied block for block** (read from scratch.intelino.com's bundle,
+  `scratch-vm/src/extensions/scratch3_intelino/intelino-blocks.js`, 6 Oct 2026): same wording, dropdowns + numeric values, order and '---'
+  groups, extension green #0fbd8c with a train icon. **One program (project `blocks`) with a category per train** like the extension's
+  "intelino smart train 1/2/3" (ours named after the train): types `t<N>_<opcode>` (`parseType`/`typeOf`), e.g. t1_startDriving.
+  Ops: whenMovement (1 fwd/2 back/4 paused/3 stopped), whenDistance (>= cm), startDriving (dir 1/-1, cm/s clamped 10–100, ≤0 stops),
+  moveFixedDistance (waits), stopDriving, pauseDriving (s), getDirection (1/-1/0), getSpeedCmps, getOdometerCm, resetOdometer,
+  decoupleWagon (waits 1.5 s; no wagons yet), setLedColorPicker/Hue(0–100)/Color(RGB) for top LED 1 / headlights 2 / taillights 4,
+  whenOnSplitTrack, setNextSplitDecision (1 left 2 right 3 straight 0 default), get Next/Last decision, splitDecisions, whenCustomSnapDetected
+  (white magenta X), clearCustomSnapCommands (no-op), whenSnapDetected (C1 cyan6/white7 + 3 of none0/red1/green2/yellow3/blue4/magenta5,
+  exact match of the 4-colour snap event), setSnapExecution on/off (off = only report), setSnapBehaviorFeedback (beep + top-LED flash),
+  whenColorChanged / getSensorColor / classifiedColor (0 black … 7 white). Train hats are EDGE-triggered predicates checked every tick
+  (like Scratch extension hats). Plus Scratch-style Events (when Run, key, when I receive, broadcast [and wait]), Control, Sensing (key,
+  timer), Operators, Variables. **A train with no blocks of its own drives by itself at Run (autopilot); one with blocks waits for them.**
+  `CM` = 25 cm per straight piece (an estimate — intelino publish no track sizes). Reverse = drives tail first (`tr.back`); the
+  engine never turns round. Only the LAST train can be removed (its blocks go too).
 - **App (`train/train-app.js` + `.css`, `.tl`):** slim black track (`TW` 0.24) with two white dashed lines, jigsaw joints, square snaps
   (`SNAP` 0.105), split markers, light mat; white engine with a coloured top (train colour; sky blue first), windows, 4 red LED bars + colour
   light on the roof, yellow button, red stripes. The view auto-fits the whole track (`view()`). Tools: pieces (tap a blue + at an open end to

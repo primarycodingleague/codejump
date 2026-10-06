@@ -6,7 +6,8 @@
  *   const app = (await import('./train/train-app.js')).mount(rootEl, { project, onChange, toast, confirm });
  *   app.getProject() · app.setProject(p) · app.resume() · app.pause() · app.destroy()
  *
- * A project is train-model.js's { v: 2, pieces, trains: [{ name, color, start, blocks }] }. Uses the page's Blockly 10.
+ * A project is train-model.js's { v: 2, pieces, trains: [{ name, color, start }], blocks }: ONE program, with a block category per
+ * train (like the smart train's Scratch extension). Uses the page's Blockly 10.
  */
 import * as TM from './train-model.js';
 import * as TB from './train-blocks.js';
@@ -22,7 +23,7 @@ const TEMPLATE = `
 <div class="tl">
   <div class="tl-left">
     <div class="tl-trains" id="tlTrains" role="tablist" aria-label="Trains"></div>
-    <div class="tl-blocks" id="tlBlocks" aria-label="Blocks editor for the chosen train"></div>
+    <div class="tl-blocks" id="tlBlocks" aria-label="Blocks editor"></div>
   </div>
   <div class="tl-view">
     <div class="tl-bar">
@@ -32,7 +33,7 @@ const TEMPLATE = `
       <span class="tl-status" id="tlStatus" role="status" aria-live="polite"></span>
     </div>
     <div class="tl-stage" id="tlStage">
-      <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a blue plus at the end of the track to click it on; tap a piece to turn it. While the trains run, tap a train to start its when-tapped blocks."></canvas>
+      <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a blue plus at the end of the track to click it on; tap a piece to turn it."></canvas>
       <div class="tl-loading" id="tlLoading">Getting the Train Lab ready…</div>
     </div>
     <div class="tl-tools" id="tlTools"></div>
@@ -163,10 +164,12 @@ export function drawTrain(g, T, x, y, ang, tr, opt = {}) {
   g.fillStyle = tint(tr.color, 0.5); for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-L * 0.55, s > 0 ? W * 0.5 : -W * 0.78, L * 1.05, W * 0.28, W * 0.12); g.fill(); }
   g.fillStyle = tint(tr.color, 0.82); for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(L * (0.62 + k * 0.08), -W * 0.45); g.lineTo(L * (0.68 + k * 0.08), -W * 0.45); g.lineTo(L * (0.62 + k * 0.08), -W * 0.2); g.lineTo(L * (0.56 + k * 0.08), -W * 0.2); g.fill(); }
   for (let k = 0; k < 4; k++) { g.fillStyle = opt.moving ? '#ff4a3a' : '#a8442f'; g.beginPath(); g.roundRect(-L * 0.42 + k * L * 0.12, -W * 0.36, L * 0.06, W * 0.72, L * 0.02); g.fill(); }
-  if (tr.top) { const gr = g.createRadialGradient(L * 0.2, 0, 0, L * 0.2, 0, T * 0.2); gr.addColorStop(0, tr.top + 'cc'); gr.addColorStop(1, tr.top + '00'); g.fillStyle = gr; g.beginPath(); g.arc(L * 0.2, 0, T * 0.2, 0, Math.PI * 2); g.fill(); }
-  g.fillStyle = tr.top || '#7d848f'; g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1; g.beginPath(); g.roundRect(L * 0.08, -W * 0.42, L * 0.24, W * 0.84, L * 0.05); g.fill(); g.stroke();
+  const top = (tr.flash && tr.flash.col) || tr.top;
+  if (top) { const gr = g.createRadialGradient(L * 0.2, 0, 0, L * 0.2, 0, T * 0.2); gr.addColorStop(0, top + 'cc'); gr.addColorStop(1, top + '00'); g.fillStyle = gr; g.beginPath(); g.arc(L * 0.2, 0, T * 0.2, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = top || '#7d848f'; g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1; g.beginPath(); g.roundRect(L * 0.08, -W * 0.42, L * 0.24, W * 0.84, L * 0.05); g.fill(); g.stroke();
   g.fillStyle = '#ffd23a'; g.beginPath(); g.roundRect(-L * 0.95, -W * 0.22, L * 0.14, W * 0.44, L * 0.03); g.fill();
   g.fillStyle = tr.head || '#3a3d44'; g.beginPath(); g.arc(L * 0.98, 0, T * 0.035, 0, Math.PI * 2); g.fill();
+  g.fillStyle = tr.tail || '#4a2a2a'; for (const s of [-1, 1]) { g.beginPath(); g.arc(-L * 0.99, s * W * 0.6, T * 0.025, 0, Math.PI * 2); g.fill(); } // taillights
   g.restore();
   if (opt.ring) { g.save(); g.strokeStyle = '#1d6fe0'; g.lineWidth = 2.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(x, y, T * 0.5, 0, Math.PI * 2); g.stroke(); g.restore(); }
   if (opt.label) {
@@ -179,7 +182,7 @@ export function drawTrain(g, T, x, y, ang, tr, opt = {}) {
 const TRAIN_SIZE = 0.68; // the engine is about two thirds of a straight piece long
 
 export function defaultProject() {
-  return Object.assign(TM.starterTrack(), { trains: [{ name: 'Train 1', color: TM.TRAIN_COLOURS[0], start: Object.assign({}, TM.STARTER_TRAIN), blocks: TB.starterProgram() }] });
+  return Object.assign(TM.starterTrack(), { trains: [{ name: 'Train 1', color: TM.TRAIN_COLOURS[0], start: Object.assign({}, TM.STARTER_TRAIN) }], blocks: TB.starterProgram() });
 }
 
 export function mount(root, host) {
@@ -195,7 +198,7 @@ export function mount(root, host) {
   const canvas = $('tlCanvas'), g = canvas.getContext('2d');
   let proj = TM.cleanProject(host.project || defaultProject());
   if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
-  let sel = 0, ws = null, sim = null, runner = null, headless = [], alive = true, quiet = false, raf = 0, last = 0, changeTimer = 0;
+  let sel = 0, ws = null, sim = null, runner = null, alive = true, quiet = false, raf = 0, last = 0, changeTimer = 0;
   let tool = 'straight', hover = null, undo = [], redo = [];
   const keys = new Set();
 
@@ -207,30 +210,29 @@ export function mount(root, host) {
   // ── the simulator is rebuilt whenever the track or the trains change (the trains go back to their start)
   function rebuild() {
     if (runner) runner.stop(true);
-    disposeHeadless();
     sim = TM.createSim(proj, { onEvent: (i, k, d) => { if (runner) runner.event(i, k, d); } });
     runner = createRunner(sim, {
       sound: playSound, keyDown: k => keys.has(k),
       onError: err => { console.error(err); status('Something went wrong in one of your scripts.', 'bad'); },
-      onStop: () => { disposeHeadless(); status('Stopped. Press Run to go again, or Reset to put the trains back.'); }
+      onStop: () => { status('Stopped. Press Run to go again, or Reset to put the trains back.'); }
     });
   }
-  function disposeHeadless() { for (const w of headless) try { w.dispose(); } catch (e) { /* gone */ } headless = []; }
 
-  // ── blocks: one workspace on screen, showing the chosen train's scripts
+  // ── blocks: one program for every train; the toolbox has a category per train, named after it
   const LOAD = 'tlload';
-  function flush() { if (ws && proj.trains[sel]) proj.trains[sel].blocks = Blockly.serialization.workspaces.save(ws); }
+  function flush() { if (ws) proj.blocks = Blockly.serialization.workspaces.save(ws); }
   function loadBlocks() {
     if (!ws) return;
-    const tr = proj.trains[sel];
     quiet = true; Blockly.Events.setGroup(LOAD);
     try {
+      ws.updateToolbox(TB.toolbox(proj.trains));
       ws.clear();
-      try { Blockly.serialization.workspaces.load(tr && tr.blocks ? tr.blocks : TB.newTrainProgram(), ws); }
-      catch (e) { ws.clear(); Blockly.serialization.workspaces.load(TB.newTrainProgram(), ws); if (host.toast) host.toast('Some blocks for ' + (tr ? tr.name : 'this train') + ' couldn’t be loaded.'); }
+      try { Blockly.serialization.workspaces.load(proj.blocks || TB.starterProgram(), ws); }
+      catch (e) { ws.clear(); if (host.toast) host.toast('Some blocks in this project couldn’t be loaded.'); }
     } finally { quiet = false; Blockly.Events.setGroup(false); }
     try { ws.scroll(20, 20); } catch (e) { /* hidden */ }
   }
+  function refreshToolbox() { if (ws) try { ws.updateToolbox(TB.toolbox(proj.trains)); } catch (e) { /* hidden */ } }
 
   // ── the trains row (tabs) and the chosen train's settings
   function renderTrains() {
@@ -241,27 +243,28 @@ export function mount(root, host) {
     const add = $('tlAdd'); if (add) add.onclick = addTrain;
     const t = proj.trains[sel];
     $('tlName').value = t ? t.name : ''; $('tlColour').value = t ? t.color : '#21b8e8';
-    $('tlDelTrain').hidden = proj.trains.length < 2;
+    // like the real extension, trains are numbered: only the last one can be taken away
+    $('tlDelTrain').hidden = proj.trains.length < 2 || sel !== proj.trains.length - 1;
   }
   function selectTrain(i) {
     if (i === sel || !proj.trains[i]) return;
-    flush(); sel = i; loadBlocks(); renderTrains();
+    sel = i; renderTrains(); setTool(tool);
   }
   function addTrain() {
     if (proj.trains.length >= TM.MAX_TRAINS) return;
-    flush();
     const used = new Set(proj.trains.map(t => t.color));
     const color = TM.TRAIN_COLOURS.find(c => !used.has(c)) || TM.TRAIN_COLOURS[proj.trains.length % TM.TRAIN_COLOURS.length];
     let n = proj.trains.length + 1; while (proj.trains.some(t => t.name === 'Train ' + n)) n++;
-    proj.trains.push({ name: 'Train ' + n, color, start: null, blocks: TB.newTrainProgram() });
-    sel = proj.trains.length - 1; loadBlocks(); rebuild(); renderTrains(); setTool('train'); changed();
+    proj.trains.push({ name: 'Train ' + n, color, start: null });
+    sel = proj.trains.length - 1; refreshToolbox(); rebuild(); renderTrains(); setTool('train'); changed();
     status('Now tap the track to put ' + proj.trains[sel].name + ' on it.');
   }
   async function deleteTrain() {
     if (proj.trains.length < 2) return;
     const t = proj.trains[sel];
-    if (!(await ask('Remove ' + t.name + ' and its blocks?'))) return;
-    proj.trains.splice(sel, 1); sel = Math.max(0, sel - 1); loadBlocks(); rebuild(); renderTrains(); changed();
+    if (sel !== proj.trains.length - 1 || !(await ask('Remove ' + t.name + ' and its blocks?'))) return;
+    if (ws) { const pre = TB.typeOf(sel, ''); for (const b of ws.getAllBlocks(false).filter(x => x.type.startsWith(pre))) if (!b.isDeadOrDying || !b.isDeadOrDying()) b.dispose(true); }
+    proj.trains.splice(sel, 1); sel = Math.max(0, sel - 1); flush(); refreshToolbox(); rebuild(); renderTrains(); changed();
   }
 
   // ── the tools under the board
@@ -388,10 +391,7 @@ export function mount(root, host) {
   canvas.addEventListener('pointerdown', e => {
     audio(); // sounds may only start after a tap (iPad)
     const at = worldFromEvent(e);
-    if (running()) { // tap a train
-      for (let i = 0; i < sim.trains.length; i++) { const p = sim.pose(i); if (p && Math.hypot(p.x - at.x, p.y - at.y) < 0.4) { runner.tap(i); return; } }
-      return;
-    }
+    if (running()) return;
     tapAt(at.x, at.y); e.preventDefault();
   });
   canvas.addEventListener('pointermove', e => { hover = worldFromEvent(e); });
@@ -440,17 +440,12 @@ export function mount(root, host) {
     if (!ws) return;
     flush(); rebuild();
     if (!sim.trains.some(t => t.on)) { status('Put a train on the track first: pick the train tool and tap a piece.', 'bad'); return; }
-    headless = proj.trains.map(t => {
-      const w = new Blockly.Workspace();
-      try { Blockly.serialization.workspaces.load(t.blocks || TB.newTrainProgram(), w); } catch (e) { /* an empty program */ }
-      return w;
-    });
-    runner.start(headless);
-    status('Running · the trains follow the snaps · tap a train', 'ok');
+    runner.start(ws);
+    status('Running · trains with no blocks of their own drive by themselves and follow the snaps', 'ok');
     canvas.focus({ preventScroll: true });
   }
   function stop() { if (runner) runner.stop(); }
-  function reset() { if (runner) runner.stop(true); disposeHeadless(); rebuild(); status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.'); }
+  function reset() { if (runner) runner.stop(true); rebuild(); status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.'); }
 
   function typing(e) { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
   function onKey(e) {
@@ -468,8 +463,9 @@ export function mount(root, host) {
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey);
 
   $('tlRun').onclick = run; $('tlStop').onclick = stop; $('tlReset').onclick = reset;
-  $('tlName').addEventListener('input', () => { const t = proj.trains[sel]; if (!t) return; t.name = TM.cleanName($('tlName').value) || 'Train ' + (sel + 1); if (sim.trains[sel]) sim.trains[sel].name = t.name; renderTrainsSoon(); changed(); });
+  $('tlName').addEventListener('input', () => { const t = proj.trains[sel]; if (!t) return; t.name = TM.cleanName($('tlName').value) || 'Train ' + (sel + 1); if (sim.trains[sel]) sim.trains[sel].name = t.name; renderTrainsSoon(); toolboxSoon(); changed(); });
   $('tlColour').addEventListener('input', () => { const t = proj.trains[sel]; if (!t || !okColour($('tlColour').value)) return; t.color = $('tlColour').value; if (sim.trains[sel]) sim.trains[sel].color = t.color; renderTrainsSoon(); setTool(tool); changed(); });
+  let tbTimer = 0; function toolboxSoon() { clearTimeout(tbTimer); tbTimer = setTimeout(refreshToolbox, 500); }
   let rtTimer = 0; function renderTrainsSoon() { clearTimeout(rtTimer); rtTimer = setTimeout(() => { const f = document.activeElement; renderTrains(); if (f && root.contains(f)) f.focus(); }, 300); }
   $('tlDelTrain').onclick = deleteTrain;
 
@@ -481,7 +477,7 @@ export function mount(root, host) {
   const ready = (async () => {
     if (!defined) { TB.defineBlocks(Blockly); defined = true; }
     ws = Blockly.inject($('tlBlocks'), {
-      toolbox: TB.toolbox(), renderer: 'zelos', theme: tlTheme(Blockly), scrollbars: true, trashcan: true, media: 'https://unpkg.com/blockly@10.4.3/media/',
+      toolbox: TB.toolbox(proj.trains), renderer: 'zelos', theme: tlTheme(Blockly), scrollbars: true, trashcan: true, media: 'https://unpkg.com/blockly@10.4.3/media/',
       zoom: { controls: true, wheel: true, startScale: touchy ? 0.85 : 0.72, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 },
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
@@ -499,7 +495,7 @@ export function mount(root, host) {
 
   function getProject() {
     flush();
-    return JSON.parse(JSON.stringify({ v: 2, pieces: proj.pieces, trains: proj.trains }));
+    return JSON.parse(JSON.stringify({ v: 2, pieces: proj.pieces, trains: proj.trains, blocks: proj.blocks || null }));
   }
   return {
     ready,
@@ -513,11 +509,11 @@ export function mount(root, host) {
       if (!raf && ws) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
     },
     resume() { if (ws) Blockly.svgResize(ws); if (!raf && ws) raf = requestAnimationFrame(tick); },
-    pause() { if (runner) runner.stop(true); disposeHeadless(); cancelAnimationFrame(raf); raf = 0; },
+    pause() { if (runner) runner.stop(true); cancelAnimationFrame(raf); raf = 0; },
     destroy() {
       alive = false; ro.disconnect(); cancelAnimationFrame(raf);
       document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey);
-      if (runner) runner.stop(true); disposeHeadless(); if (ws) ws.dispose();
+      if (runner) runner.stop(true); if (ws) ws.dispose();
       root.innerHTML = '';
     },
     run, stop, reset, setTool, selectTrain,

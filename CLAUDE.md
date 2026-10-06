@@ -255,6 +255,12 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   bare track doesn't. Panel `#tlModal` (Challenges button): ready-made list, editor (title/text/jobs), hint, Show the answer, Print the
   challenge card (`cardHTML(withAnswer)` → host `print` = `doPrint`): track picture (offscreen canvas), numbered jobs with icons, parts list,
   snaps only on the answer card. Erasing a piece/sign remaps `dests`/`wagons`/step indices.
+- **Zoom / pan + place order (6 Oct 2026, CJ_VERSION 2026.10.08.2):** `cam` = null (auto-fit, `#tlFit` lit) or `{T, x, y}` (scale + the
+  world point at the centre); `zoomAt(f, sx, sy)` keeps the point under the pointer, `panBy`, `fitView`; + / − / Fit buttons `.tl-zoom`,
+  wheel (ctrl = trackpad pinch), two-finger pinch, keys + − 0 and arrows (when stopped) on the canvas. Pointer: a TAP (moved ≤ 7 px) runs
+  `tapAt` on pointerup; a drag pans. **Order tool** (`'order'`, in the Places group): tap signs in order → each appends a challenge step
+  (made as "My route" if none; first = start on a start sign else stop; later start sign = end); tapping the last again pops it; "Clear the
+  order". Gold badges (`orderLabels` → `drawDestBadge`) on the board and the card; jobs move ▲▼ in the panel.
 
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate

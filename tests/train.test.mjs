@@ -241,6 +241,43 @@ try {
   const saved2 = await page.evaluate(() => JSON.stringify(buildPayload().train));
   ok(/"challenge":\{"id":"first-stop"/.test(saved2) && /"dests":\[\{"t":"start"/.test(saved2), 'the challenge and the places are saved with the project');
 
+
+  // ---- zoom and move round the board; a real click still puts a piece down, a drag only moves the view
+  await page.evaluate(() => trainApp.setProject(null));
+  const box = await page.locator('#tlCanvas').boundingBox();
+  const T0 = await page.evaluate(() => trainApp._sim() && document.getElementById('tlFit').classList.contains('on'));
+  await page.click('#tlZoomIn'); await page.click('#tlZoomIn');
+  const z1 = await page.evaluate(() => trainApp._cam());
+  ok(T0 && z1 && z1.T > 0 && await page.evaluate(() => !document.getElementById('tlFit').classList.contains('on')), 'the + button zooms in (and Fit lights up again only when it fits)');
+  const n0 = await page.evaluate(() => trainApp._proj().pieces.length);
+  await page.mouse.move(box.x + 30, box.y + box.height - 30); await page.mouse.down(); await page.mouse.move(box.x + 130, box.y + box.height - 60, { steps: 6 }); await page.mouse.up();
+  const z2 = await page.evaluate(() => trainApp._cam());
+  ok(Math.abs(z2.x - z1.x) > 0.1 && await page.evaluate(n => trainApp._proj().pieces.length === n, n0), 'dragging the mat moves round the track and doesn’t put a piece down');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.wheel(0, -300);
+  ok(await page.evaluate(T => trainApp._cam().T > T, z2.T), 'the mouse wheel zooms');
+  await page.click('#tlFit');
+  ok(await page.evaluate(() => trainApp._cam() === null), 'Fit shows the whole track again');
+  await page.evaluate(() => { trainApp.setProject({ v: 2, pieces: [['straight', 0, 0, 0, null]], trains: [{ name: 'T' }] }); trainApp.setTool('straight'); });
+  const plus = await page.evaluate(() => { const o = trainApp._openEnds().find(e => e.x > 0.5), c = document.getElementById('tlCanvas'), r = c.getBoundingClientRect(), V = { w: c.clientWidth, h: c.clientHeight };
+    trainApp.zoomAt(1); const cam = trainApp._cam(); const x = o.x + Math.cos(o.h) * 0.14, y = o.y + Math.sin(o.h) * 0.14;
+    return { x: r.left + V.w / 2 + (x - cam.x) * cam.T, y: r.top + V.h / 2 + (y - cam.y) * cam.T }; });
+  await page.mouse.click(plus.x, plus.y);
+  ok(await page.evaluate(() => trainApp._proj().pieces.length === 2), 'a click on a blue + still clicks a piece on, even zoomed in');
+
+  // ---- the order: tap places one after another
+  const ord = await page.evaluate(async () => {
+    const m = await import('./train/train-challenges.js'); const P = m.challengeProject('airport-run'); P.challenge = null; trainApp.setProject(P);
+    const A = trainApp, spot = j => { const d = A._proj().dests[j], G = A._sim().geoms[d.p].paths[0].at(0.5); return [G.x - Math.sin(G.ang) * 0.6 * d.side, G.y + Math.cos(G.ang) * 0.6 * d.side]; };
+    A.setTool('order'); for (const j of [0, 1, 2, 3, 3]) A._tapWorld(...spot(j));
+    const after = A._proj().challenge.steps.map(s => s.d + s.a).join();
+    A._tapWorld(...spot(3));
+    return { after, again: A._proj().challenge.steps.map(s => s.d + s.a).join(), check: document.querySelectorAll('#tlCheck li').length };
+  });
+  ok(ord.after === '0start,1stop,2stop' && ord.again === '0start,1stop,2stop,3stop' && ord.check === 4, 'the Order tool: tapping places numbers them 1, 2, 3… (tap the last again to take it off) and they become the jobs');
+  await page.evaluate(() => trainApp.openChallenges());
+  await page.click('[data-sw="1"]');
+  ok(await page.evaluate(() => trainApp._proj().challenge.steps.map(s => s.d).join() === '0,2,1,3'), 'in Challenges a job can be moved up or down');
+  await page.keyboard.press('Escape');
   ok(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await b.close(); site.close(); }
 done();

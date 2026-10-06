@@ -79,3 +79,11 @@
 .tl .tl-check-opt { font-size: 13px; font-weight: 800; color: #ccc; display: inline-flex; gap: 6px; align-items: center; width: 100%; }
 .tl .tl-go { border-color: var(--tl-green); background: #2c4a34; color: #fff; }
 .tl #tlPlace { background: #151515; color: #fff; border: 2px solid var(--tl-line); border-radius: 8px; padding: 6px 8px; font-size: 13px; font-weight: 700; min-height: 40px; }
+/* zoom buttons on the board */
+.tl .tl-zoom { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+.tl .tl-zoom button { width: 42px; height: 42px; border-radius: 10px; border: 2px solid #c9d2d8; background: rgba(255,255,255,0.94); color: #1f2024; font-weight: 900; font-size: 22px; line-height: 1; cursor: pointer; font-family: inherit; }
+.tl .tl-zoom #tlFit { font-size: 12px; }
+.tl .tl-zoom #tlFit.on { border-color: #ae853e; background: #fff6df; }
+.tl canvas#tlCanvas.panning { cursor: grabbing; }
+.tl .tl-mv { min-width: 36px; padding: 6px 8px; justify-content: center; }
+.tl .tl-mv:disabled { opacity: 0.35; cursor: default; }

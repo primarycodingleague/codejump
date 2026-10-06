@@ -37,6 +37,11 @@ const TEMPLATE = `
     <div class="tl-stage" id="tlStage">
       <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a blue plus at the end of the track to click it on; tap a piece to turn it."></canvas>
       <div class="tl-check" id="tlCheck" hidden></div>
+      <div class="tl-zoom" role="group" aria-label="Zoom">
+        <button type="button" id="tlZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+        <button type="button" id="tlZoomOut" title="Zoom out" aria-label="Zoom out">&minus;</button>
+        <button type="button" id="tlFit" class="on" title="Fit the whole track on the screen">Fit</button>
+      </div>
       <div class="tl-loading" id="tlLoading">Getting the Train Lab ready…</div>
     </div>
     <div class="tl-tools" id="tlTools"></div>
@@ -235,6 +240,20 @@ export function drawDest(g, T, x, y, type, label) {
     g.fillStyle = '#1f2024'; g.fillText(label, x, ty + 2); g.restore();
   }
 }
+// a gold number badge: the place's turn in the order (its job numbers)
+export function drawOrderBadge(g, x, y, r, text) {
+  g.save(); g.font = '900 ' + Math.round(r * (text.length > 2 ? 0.95 : 1.25)) + 'px Montserrat, sans-serif';
+  const w = Math.max(r * 2, g.measureText(text).width + r * 0.9);
+  g.fillStyle = '#ffd23a'; g.strokeStyle = '#1f2024'; g.lineWidth = Math.max(1.2, r * 0.16);
+  g.beginPath(); g.roundRect(x - w / 2, y - r, w, r * 2, r); g.fill(); g.stroke();
+  g.fillStyle = '#1f2024'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x, y + r * 0.06); g.restore();
+}
+export function orderLabels(challenge) { // { destIndex: '1' | '2, 5' }
+  const out = {}; if (!challenge) return out;
+  challenge.steps.forEach((s, i) => { out[s.d] = out[s.d] ? out[s.d] + ', ' + (i + 1) : String(i + 1); });
+  return out;
+}
+export function drawDestBadge(g, T, x, y, text) { const r = Math.max(9, T * 0.2); drawOrderBadge(g, x + r * 0.95, y - r * 0.85, Math.max(7, r * 0.55), text); }
 // where a destination sign stands: beside the middle of its piece, on its side
 export function destSpot(geoms, d) {
   const G = geoms[d.p]; if (!G) return null;
@@ -260,6 +279,7 @@ export function mount(root, host) {
   let proj = TM.cleanProject(host.project || defaultProject());
   if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
   let sel = 0, ws = null, sim = null, runner = null, alive = true, quiet = false, raf = 0, last = 0, changeTimer = 0;
+  let cam = null; // null = fit the whole track; else { T, x, y } (scale and the world point in the middle)
   let tool = 'straight', hover = null, undo = [], redo = [], placeType = 'station', checker = null, checkKey = '', cheered = false;
   const keys = new Set();
 
@@ -329,7 +349,7 @@ export function mount(root, host) {
   }
 
   // ── the tools under the board
-  const TOOLS = [...TM.PIECE_KEYS.map(k => ['piece', k, TM.PIECES[k].name]), ...TM.SNAP_KEYS.map(k => ['snap', k, k + ' snap']), ['train', 'train', 'Put the train on the track'], ['wagon', 'wagon', 'Wagon: tap the track to leave a wagon there (tap again to turn it, then to take it away)'], ['place', 'place', 'Places: tap beside the track to put up a sign'], ['erase', 'erase', 'Rubber: take a piece, a sign or a wagon away']];
+  const TOOLS = [...TM.PIECE_KEYS.map(k => ['piece', k, TM.PIECES[k].name]), ...TM.SNAP_KEYS.map(k => ['snap', k, k + ' snap']), ['train', 'train', 'Put the train on the track'], ['wagon', 'wagon', 'Wagon: tap the track to leave a wagon there (tap again to turn it, then to take it away)'], ['place', 'place', 'Places: tap beside the track to put up a sign'], ['order', 'order', 'Order: tap the places in the order the train should visit them (tap the last one again to take it off)'], ['erase', 'erase', 'Rubber: take a piece, a sign or a wagon away']];
   function iconFor(kind, key) {
     const cv = document.createElement('canvas'), S = 40, dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = S * dpr; cv.style.width = cv.style.height = S + 'px';
     const c = cv.getContext('2d'); c.scale(dpr, dpr);
@@ -344,12 +364,13 @@ export function mount(root, host) {
     else if (kind === 'train') { drawTrain(c, S * 0.95, S / 2, S / 2, 0, { color: proj.trains[sel] ? proj.trains[sel].color : TM.TRAIN_COLOURS[0], head: null, top: null }); }
     else if (kind === 'wagon') { drawWagon(c, S * 0.95, S / 2, S / 2, 0, TM.WAGON_COLOUR); }
     else if (kind === 'place') { drawDestIcon(c, placeType, S / 2, S / 2, 15); }
+    else if (kind === 'order') { drawOrderBadge(c, 13, 14, 9, '1'); drawOrderBadge(c, 27, 27, 9, '2'); c.strokeStyle = '#1f2024'; c.lineWidth = 1.5; c.setLineDash([2, 2]); c.beginPath(); c.moveTo(19, 19); c.lineTo(22, 22); c.stroke(); }
     else { c.strokeStyle = '#ffb0b0'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, 10); c.lineTo(30, 30); c.moveTo(30, 10); c.lineTo(10, 30); c.stroke(); }
     return cv;
   }
   function renderTools() {
     const box = $('tlTools'); box.innerHTML = '';
-    const groups = [['Track', TOOLS.filter(t => t[0] === 'piece')], ['Snaps', TOOLS.filter(t => t[0] === 'snap')], ['', TOOLS.filter(t => t[0] === 'train' || t[0] === 'wagon' || t[0] === 'erase')], ['Places', TOOLS.filter(t => t[0] === 'place')]];
+    const groups = [['Track', TOOLS.filter(t => t[0] === 'piece')], ['Snaps', TOOLS.filter(t => t[0] === 'snap')], ['', TOOLS.filter(t => t[0] === 'train' || t[0] === 'wagon' || t[0] === 'erase')], ['Places', TOOLS.filter(t => t[0] === 'place' || t[0] === 'order')]];
     for (const [title, list] of groups) {
       const grp = document.createElement('div'); grp.className = 'tl-tgroup';
       if (title) { const h = document.createElement('span'); h.className = 'tl-tlabel'; h.textContent = title; grp.appendChild(h); }
@@ -361,6 +382,8 @@ export function mount(root, host) {
         const ps = document.createElement('select'); ps.id = 'tlPlace'; ps.setAttribute('aria-label', 'Which place');
         ps.innerHTML = TM.DEST_KEYS.map(k => `<option value="${k}"${k === placeType ? ' selected' : ''}>${esc(TM.DESTS[k])}</option>`).join('');
         ps.onchange = () => { placeType = ps.value; setTool('place'); }; grp.appendChild(ps);
+        const oc = document.createElement('button'); oc.type = 'button'; oc.className = 'tl-small'; oc.id = 'tlOrderClear'; oc.innerHTML = ic('i-x') + ' Clear the order';
+        oc.title = 'Take away the order (the numbers on the places)'; oc.onclick = clearOrder; grp.appendChild(oc);
       }
       box.appendChild(grp);
     }
@@ -422,6 +445,7 @@ export function mount(root, host) {
       proj.pieces.push([tool, Math.round(x * 2) / 2, Math.round(y * 2) / 2, 0, null]); return true; // on the empty mat: start a new bit of track
     }
     if (tool === 'place') return placeSign(x, y);
+    if (tool === 'order') return orderSign(x, y);
     if (tool === 'erase') { // a sign or a wagon first, then the piece under it
       const d = destAt(x, y); if (d >= 0) { removeDest(d); return true; }
       const w = wagonAt(x, y); if (w >= 0) { proj.wagons.splice(w, 1); return true; }
@@ -479,6 +503,23 @@ export function mount(root, host) {
     proj.dests.splice(j, 1);
     if (proj.challenge) proj.challenge.steps = proj.challenge.steps.filter(s => s.d !== j).map(s => (s.d > j ? { d: s.d - 1, a: s.a } : s));
   }
+  // the order: tap signs one after another and each becomes the next job in the challenge (made if there isn't one yet)
+  function orderSign(x, y) {
+    const j = destAt(x, y);
+    if (j < 0) { if (host.toast) host.toast(proj.dests.length ? 'Tap a place’s sign to give it the next number.' : 'Put some places beside the track first, with the Places tool.'); return false; }
+    if (!proj.challenge) proj.challenge = { id: '', title: 'My route', text: '', steps: [] };
+    const st = proj.challenge.steps, last = st[st.length - 1];
+    if (last && last.d === j) { st.pop(); return true; } // tap the last one again: take it off
+    if (st.length >= 12) { if (host.toast) host.toast('That’s the most jobs a challenge can have (12).'); return false; }
+    const t = proj.dests[j].t;
+    st.push({ d: j, a: !st.length ? (t === 'start' ? 'start' : 'stop') : (t === 'start' ? 'end' : 'stop') });
+    return true;
+  }
+  async function clearOrder() {
+    const ch = proj.challenge; if (running() || !ch || !ch.steps.length) return;
+    if (!(await ask('Take the numbers off the places? (This empties the challenge’s list of jobs.)'))) return;
+    remember(); ch.steps = []; afterEdit();
+  }
   function placeSign(x, y) {
     const j = destAt(x, y);
     if (j >= 0) { if (proj.dests[j].t === placeType) removeDest(j); else proj.dests[j].t = placeType; return true; } // tap a sign: change it, or take it away
@@ -502,17 +543,58 @@ export function mount(root, host) {
     const box = $('tlCheck'), top = box && !box.hidden ? box.offsetHeight + 14 : 0, hv = Math.max(80, h - top); // leave room for the challenge's jobs
     const m = 0.8, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ww = Math.max(6, x1 - x0 + 2 * m), hh = Math.max(3.6, y1 - y0 + 2 * m);
     const T = Math.min(w / ww, hv / hh, 150);
-    return { T, ox: w / 2 - cx * T, oy: top + hv / 2 - cy * T, w, h };
+    if (cam) return { T: cam.T, ox: w / 2 - cam.x * cam.T, oy: h / 2 - cam.y * cam.T, w, h, fit: false };
+    return { T, ox: w / 2 - cx * T, oy: top + hv / 2 - cy * T, w, h, fit: true };
   }
-  function worldFromEvent(e) { const r = canvas.getBoundingClientRect(), V = view(); return { x: (e.clientX - r.left - V.ox) / V.T, y: (e.clientY - r.top - V.oy) / V.T }; }
+  // ── zoom and move round: drag the mat to move, wheel / pinch / the + − buttons to zoom, Fit to see the whole track again
+  const ZMIN = 12, ZMAX = 260;
+  function camNow() { const V = view(); return { T: V.T, x: (V.w / 2 - V.ox) / V.T, y: (V.h / 2 - V.oy) / V.T }; }
+  function zoomAt(f, sx, sy) { // keep the world point under (sx, sy) where it is
+    const c = camNow(), V = view(), w = V.w, h = V.h;
+    if (sx === undefined) { sx = w / 2; sy = h / 2; }
+    const wx = (sx - V.ox) / V.T, wy = (sy - V.oy) / V.T, T = Math.max(ZMIN, Math.min(ZMAX, c.T * f));
+    cam = { T, x: wx - (sx - w / 2) / T, y: wy - (sy - h / 2) / T }; showFit();
+  }
+  function panBy(dx, dy) { const c = camNow(); cam = { T: c.T, x: c.x - dx / c.T, y: c.y - dy / c.T }; showFit(); }
+  function fitView() { cam = null; showFit(); }
+  function showFit() { const b = $('tlFit'); if (b) b.classList.toggle('on', !cam); }
+  function localXY(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function worldFromEvent(e) { const p = localXY(e), V = view(); return { x: (p.x - V.ox) / V.T, y: (p.y - V.oy) / V.T }; }
+  const ptrs = new Map(); let gesture = null; // gesture: { kind: 'tap'|'pan'|'pinch', ... }
   canvas.addEventListener('pointerdown', e => {
     audio(); // sounds may only start after a tap (iPad)
-    const at = worldFromEvent(e);
-    if (running()) return;
-    tapAt(at.x, at.y); e.preventDefault();
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* old browsers */ }
+    ptrs.set(e.pointerId, localXY(e)); e.preventDefault();
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; gesture = { kind: 'pinch', d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; }
+    else if (ptrs.size === 1) { const p = localXY(e); gesture = { kind: 'tap', x0: p.x, y0: p.y, x: p.x, y: p.y, at: worldFromEvent(e) }; }
   });
-  canvas.addEventListener('pointermove', e => { hover = worldFromEvent(e); });
+  canvas.addEventListener('pointermove', e => {
+    hover = worldFromEvent(e);
+    if (!ptrs.has(e.pointerId) || !gesture) return;
+    const p = localXY(e); ptrs.set(e.pointerId, p);
+    if (gesture.kind === 'pinch' && ptrs.size >= 2) {
+      const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      if (gesture.d > 0) zoomAt(d / gesture.d, mx, my);
+      panBy(mx - gesture.mx, my - gesture.my); gesture.d = d; gesture.mx = mx; gesture.my = my; return;
+    }
+    if (gesture.kind === 'tap' && Math.hypot(p.x - gesture.x0, p.y - gesture.y0) > 7) gesture.kind = 'pan'; // it's a drag, not a tap
+    if (gesture.kind === 'pan') { panBy(p.x - gesture.x, p.y - gesture.y); canvas.classList.add('panning'); }
+    gesture.x = p.x; gesture.y = p.y;
+  });
+  function endPointer(e) {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    if (gesture && gesture.kind === 'tap' && e.type === 'pointerup' && !running()) tapAt(gesture.at.x, gesture.at.y);
+    if (!ptrs.size) { gesture = null; canvas.classList.remove('panning'); }
+    else if (gesture && gesture.kind === 'pinch') { const [a] = [...ptrs.values()]; gesture = { kind: 'pan', x: a.x, y: a.y }; }
+  }
+  canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
   canvas.addEventListener('pointerleave', () => { hover = null; });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault(); const p = localXY(e);
+    if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)), p.x, p.y); // wheel / trackpad pinch
+    else panBy(-e.deltaX, 0);
+  }, { passive: false });
 
   function draw() {
     const dpr = window.devicePixelRatio || 1, cw = canvas.clientWidth, ch = canvas.clientHeight;
@@ -534,10 +616,12 @@ export function mount(root, host) {
       if (hover && !touchy && TM.SNAPS[tool]) { const i = pieceAt(hover.x, hover.y); if (i >= 0) { const pts = slotPoints(sim.geoms[i]); if (pts.length) { const q = near(pts, hover.x, hover.y, 9); drawSnap(g, T, ox + q.x * T, oy + q.y * T, q.ang, tool, true); } } }
     }
     const goal = checker && running() && !checker.complete() ? checker.steps[checker.current()] : null;
+    const order = orderLabels(proj.challenge);
     proj.dests.forEach((d, j) => {
       const q = destSpot(sim.geoms, d); if (!q) return;
       if (goal && goal.d === j) { g.save(); g.strokeStyle = '#ffd23a'; g.lineWidth = 4; g.beginPath(); g.arc(ox + q.x * T, oy + q.y * T, Math.max(9, T * 0.2) + 6, 0, Math.PI * 2); g.stroke(); g.restore(); }
       drawDest(g, T, ox + q.x * T, oy + q.y * T, d.t, TM.DESTS[d.t]);
+      if (order[j]) drawDestBadge(g, T, ox + q.x * T, oy + q.y * T, order[j]);
     });
     if (hover && !touchy && tool === 'place' && !running()) { g.save(); g.globalAlpha = 0.5; drawDestIcon(g, placeType, ox + hover.x * T, oy + hover.y * T, Math.max(9, T * 0.2)); g.restore(); }
     for (const w of sim.freeWagons()) drawWagon(g, T * TRAIN_SIZE, ox + w.x * T, oy + w.y * T, w.ang, w.color);
@@ -584,6 +668,12 @@ export function mount(root, host) {
       if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); if (e.shiftKey) doRedo(); else doUndo(); }
       else if (e.key === 'y') { e.preventDefault(); doRedo(); }
       return;
+    }
+    if (e.type === 'keydown' && document.activeElement === canvas && !e.ctrlKey && !e.metaKey) {
+      if (e.key === '+' || e.key === '=') { zoomAt(1.3); e.preventDefault(); return; }
+      if (e.key === '-' || e.key === '_') { zoomAt(1 / 1.3); e.preventDefault(); return; }
+      if (e.key === '0') { fitView(); e.preventDefault(); return; }
+      if (!running() && KEYNAME[e.key] && e.key !== ' ') { const d = 60; panBy(e.key === 'ArrowLeft' ? d : e.key === 'ArrowRight' ? -d : 0, e.key === 'ArrowUp' ? d : e.key === 'ArrowDown' ? -d : 0); e.preventDefault(); return; }
     }
     if (!running()) return;
     const k = KEYNAME[e.key] || (e.key && e.key.length === 1 ? e.key.toLowerCase() : null); if (!k) return;
@@ -654,9 +744,10 @@ export function mount(root, host) {
     else mine = `
       <label class="tl-field">Title <input id="tlChTitle" maxlength="60" value="${esc(ch.title)}"></label>
       <label class="tl-field">What to do <textarea id="tlChText" maxlength="400" rows="2">${esc(ch.text)}</textarea></label>
-      <div class="tl-field">Jobs for Train 1, in order</div>
+      <div class="tl-field">Jobs for Train 1, in order <span class="tl-note" style="margin:0;font-weight:600">· the numbers show on the places too; you can also pick the <b>Order</b> tool and tap the places one after another</span></div>
       ${proj.dests.length ? `<ol class="tl-steps">${ch.steps.map((s, i) => `<li><select data-sd="${i}" aria-label="Job ${i + 1}: what">${Object.keys(TM.ACTIONS).map(a => `<option value="${a}"${a === s.a ? ' selected' : ''}>${esc(STEP_WORDS[a])}</option>`).join('')}</select>
         <select data-sp="${i}" aria-label="Job ${i + 1}: where">${destOptions(s.d)}</select>
+        <button type="button" class="tl-small tl-mv" data-su="${i}" aria-label="Move job ${i + 1} up"${i ? '' : ' disabled'}>&#9650;</button><button type="button" class="tl-small tl-mv" data-sw="${i}" aria-label="Move job ${i + 1} down"${i < ch.steps.length - 1 ? '' : ' disabled'}>&#9660;</button>
         <button type="button" class="tl-small" data-sx="${i}" aria-label="Take job ${i + 1} away">${ic('i-x')}</button></li>`).join('')}</ol>
         ${ch.steps.length < 12 ? `<button type="button" class="tl-small" id="tlStepAdd">${ic('i-plus')} Add a job</button>` : ''}`
       : '<p class="tl-note">There are no places beside the track yet. Pick the <b>Places</b> tool and tap beside a piece to put up a sign.</p>'}
@@ -679,6 +770,9 @@ export function mount(root, host) {
     on('tlChRemove', async () => { if (!(await ask('Take the challenge away? The track and the places stay.'))) return; remember(); proj.challenge = null; challengeEdited(); });
     on('tlChAnswer', showAnswer);
     on('tlCardPrint', () => printCard($('tlCardAns').checked));
+    const swap = (i, k) => { if (k < 0 || k >= ch.steps.length) return; remember(); [ch.steps[i], ch.steps[k]] = [ch.steps[k], ch.steps[i]]; challengeEdited(); };
+    body.querySelectorAll('[data-su]').forEach(b => b.onclick = () => swap(Number(b.dataset.su), Number(b.dataset.su) - 1));
+    body.querySelectorAll('[data-sw]').forEach(b => b.onclick = () => swap(Number(b.dataset.sw), Number(b.dataset.sw) + 1));
     body.querySelectorAll('[data-sx]').forEach(b => b.onclick = () => { remember(); ch.steps.splice(Number(b.dataset.sx), 1); challengeEdited(); });
     body.querySelectorAll('[data-sd]').forEach(s => s.onchange = () => { remember(); ch.steps[Number(s.dataset.sd)].a = s.value; challengeEdited(); });
     body.querySelectorAll('[data-sp]').forEach(s => s.onchange = () => { remember(); ch.steps[Number(s.dataset.sp)].d = Number(s.value); challengeEdited(); });
@@ -691,7 +785,7 @@ export function mount(root, host) {
     const c = CHALLENGES.find(x => x.id === id); if (!c) return;
     if (proj.pieces.length && !(await ask('Open the “' + c.title + '” challenge? It takes the place of this track and its blocks (save first if you want to keep them).'))) return;
     if (runner) runner.stop(true);
-    proj = TM.cleanProject(challengeProject(id)); sel = 0; undo = []; redo = []; checker = null;
+    proj = TM.cleanProject(challengeProject(id)); sel = 0; undo = []; redo = []; checker = null; cam = null; showFit();
     rebuild(); renderTrains(); renderTools(); renderCheck(); loadBlocks(); changed(); renderPanel();
     status('Challenge: ' + c.title + '. Put snaps on the track so Train 1 does every job, then press Run.');
   }
@@ -717,7 +811,8 @@ export function mount(root, host) {
     const T = Math.min(W / (x1 - x0), H / (y1 - y0)) * 0.94, ox = W / 2 - (x0 + x1) / 2 * T, oy = H / 2 - (y0 + y1) / 2 * T;
     s2.geoms.forEach((G, p) => drawPiece(c, T, ox, oy, G, P.pieces[p][4], 'bed'));
     s2.geoms.forEach((G, p) => drawPiece(c, T, ox, oy, G, P.pieces[p][4], 'top'));
-    P.dests.forEach(d => { const q = destSpot(s2.geoms, d); if (q) drawDest(c, T, ox + q.x * T, oy + q.y * T, d.t, TM.DESTS[d.t]); });
+    const order = orderLabels(P.challenge);
+    P.dests.forEach((d, j) => { const q = destSpot(s2.geoms, d); if (q) { drawDest(c, T, ox + q.x * T, oy + q.y * T, d.t, TM.DESTS[d.t]); if (order[j]) drawDestBadge(c, T, ox + q.x * T, oy + q.y * T, order[j]); } });
     for (const w of s2.freeWagons()) drawWagon(c, T * TRAIN_SIZE, ox + w.x * T, oy + w.y * T, w.ang, w.color);
     s2.trains.forEach((tr, i) => { const p = s2.wagonPose(i); if (p) drawWagon(c, T * TRAIN_SIZE, ox + p.x * T, oy + p.y * T, p.ang, tr.wagon.color); });
     s2.trains.forEach((tr, i) => { const p = s2.pose(i); if (p) drawTrain(c, T * TRAIN_SIZE, ox + p.x * T, oy + p.y * T, p.ang, tr, { label: s2.trains.length > 1 ? tr.name : '' }); });
@@ -755,6 +850,7 @@ export function mount(root, host) {
     w.document.write('<!doctype html><meta charset="utf-8"><title>Challenge card</title>' + html); w.document.close(); w.focus(); w.print();
   }
   $('tlChal').onclick = openPanel;
+  $('tlZoomIn').onclick = () => zoomAt(1.3); $('tlZoomOut').onclick = () => zoomAt(1 / 1.3); $('tlFit').onclick = fitView;
 
   function getProject() {
     flush();
@@ -766,7 +862,7 @@ export function mount(root, host) {
     setProject(p) {
       if (runner) runner.stop(true);
       proj = TM.cleanProject(p || defaultProject()); if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
-      sel = 0; undo = []; redo = []; checker = null; closePanel();
+      sel = 0; undo = []; redo = []; checker = null; cam = null; showFit(); closePanel();
       rebuild(); renderTrains(); renderTools(); renderCheck(); loadBlocks();
       status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
       if (!raf && ws) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
@@ -779,7 +875,7 @@ export function mount(root, host) {
       if (runner) runner.stop(true); if (ws) ws.dispose();
       root.innerHTML = '';
     },
-    run, stop, reset, setTool, selectTrain, openChallenges: openPanel, cardHTML, setPlace: k => { if (TM.DESTS[k]) { placeType = k; setTool('place'); } },
+    run, stop, reset, setTool, selectTrain, zoomAt, panBy, fitView, _cam: () => cam, openChallenges: openPanel, cardHTML, setPlace: k => { if (TM.DESTS[k]) { placeType = k; setTool('place'); } },
     _checker: () => checker,
     _sim: () => sim, _runner: () => runner, _ws: () => ws, _proj: () => proj, _tapWorld: tapAt, _openEnds: () => openEnds(),
   };

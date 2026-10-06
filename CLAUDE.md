@@ -201,6 +201,33 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
+## Train Lab project type — `projectType==='train'` — built 6 Oct 2026 on branch `claude/vibrant-cori-tho25y` (CJ_VERSION 2026.10.08), NOT on main yet
+Charlie's idea: a virtual smart-train set (inspired by intelino smart trains — **never use the intelino name or look in the UI**; it's
+"Train Lab"). Build a track, code each train with blocks, watch the virtual trains drive it. Real trains over Bluetooth = a possible later phase.
+- **Track + simulator (`train/train-model.js`, no DOM, Node-testable):** square grid (`cols`×`rows`, boards small 10×7 / medium 13×9 / large
+  16×11). Pieces `PIECES` = straight, curve, splitR, splitL, splitY, cross, end (buffer stop); each = paths between edges (0 top,1 right,2 bottom,
+  3 left, -1 = middle for the buffer), turned by `rot`. `pathPoint(c,r,a,b,u)` = position + heading (curves = quarter circles round the shared
+  corner). Colour snaps `SNAPS` (red/green/blue/yellow/magenta/cyan) on a tile fire when a train passes the middle. `createSim(project,{onEvent})`
+  → `step(dt)`, `pose(i)`, `reset()`, `setTarget(i,tilesPerSec)` (eases at ACCEL), `turnAround(i)`; events 'colour'|'split'|'end'|'bump'. At a
+  facing split a train takes `next` (one-shot) else `dflt` ('straight' to start; 'random' allowed). Trains that would drive closer than 0.62 tiles
+  stay put, stop and both get 'bump'. A stop at a buffer/bump keeps the speed in `cruise` so "turn around" sets off again. `cleanProject` tidies
+  saved data; `starterTrack()` = loop + shortcut row with splitR/splitL, red snap (station) on the bottom row, blue snap before the split.
+- **Blocks (`train/train-blocks.js`, `tr_*`):** Events (when Run, when I see colour, when I go through a split, when I reach the end, when I bump
+  into a train, when tapped, key, messages) · Drive (drive at slow/medium/fast, set speed %, drive N track pieces, stop, stop for N s, turn
+  around, at the next split go …, at every split go …) · Lights (headlight, roof light, off) · Sound (horn/whistle/bell/chuff/beep/ding dong,
+  own Web Audio synth in train-app.js) · Sensing · Control · Operators · Variables (shared by all trains, by NAME). `starterProgram()`.
+- **Runner (`train/train-runner.js`):** generator fibers per (train, hat), like Robot Lab; `tick` runs fibers, then `sim.step`, then starts hats
+  for queued sim events. At Run the app builds a headless `Blockly.Workspace` per train (all trains run, not just the one on screen).
+- **App (`train/train-app.js` + `.css`, scoped `.tl`, ids `tl*`):** train tabs (≤3, `MAX_TRAINS`) over one Blockly workspace (shows the chosen
+  train's blocks; `flush()` saves it into the train) · Run/Stop/Reset · the board canvas (tap = lay piece, tap again/right-click = turn, drag
+  = lay a line; snap tools; train tool puts the chosen train on (tap again turns it round / next path); rubber; Undo/Redo/Clear; Board size) ·
+  name/colour/remove train. Project `{cols,rows,tiles:[[c,r,piece,rot,snap]],trains:[{name,color,start:{c,r,p,rev},blocks}]}`. Test hooks
+  `_sim/_runner/_ws/_proj/_tap(c,r)`, `setTool`, `selectTrain`.
+- **Host glue (mirrors AI Lab):** `trainBase/loadTrainLab/trainCurrent/startNewTrain/enterTrainUI/exitTrainUI`, `body.train-mode`, `#train-ui`,
+  payload `train`, `#pt-modal` tile `data-pt="train"` (KS1 hidden), home tile `data-start="train"` (`home/train.jpg`), icon `#i-train`,
+  `TRAIN_HELP`, Teacher Guide "Train Lab" section, thumbnail badge, `LS_TYPE.train`. **No live collaboration** (Share hides Collaborate).
+  Test: `tests/train.test.mjs`.
+
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate
 safeguarding choice; nothing leaves the device except inside their saved/shared project), train it, test it, then code with it.

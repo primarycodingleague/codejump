@@ -202,12 +202,16 @@ or `startNewStage`.
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
 ## Train Lab project type — `projectType==='train'` — built 6 Oct 2026 on branch `claude/vibrant-cori-tho25y` (CJ_VERSION 2026.10.08), NOT on main yet
-Charlie's idea: a virtual smart-train set (inspired by intelino smart trains — **never use the intelino name or look in the UI**; it's
+**Look (Charlie, 6 Oct 2026, from intelino's K-1 snap-training sheets):** black track with two white dashed centre lines and round
+  jigsaw joints (a 90° curve is drawn as two 45° pieces), square snaps over the dashes, splits with built-in cyan/blue (right) and cyan/red (left)
+  markers, light play mat; the engine = white body, coloured top (train colour, sky blue first), side windows, 4 red LED bars + the colour
+  light on the roof, yellow button and red stripes at the back. intelino's own white-led snap COMMANDS (white+red = stop etc.) are NOT built in.
+  Charlie's idea: a virtual smart-train set (inspired by intelino smart trains — **never use the intelino name or look in the UI**; it's
 "Train Lab"). Build a track, code each train with blocks, watch the virtual trains drive it. Real trains over Bluetooth = a possible later phase.
 - **Track + simulator (`train/train-model.js`, no DOM, Node-testable):** square grid (`cols`×`rows`, boards small 10×7 / medium 13×9 / large
   16×11). Pieces `PIECES` = straight, curve, splitR, splitL, splitY, cross, end (buffer stop); each = paths between edges (0 top,1 right,2 bottom,
   3 left, -1 = middle for the buffer), turned by `rot`. `pathPoint(c,r,a,b,u)` = position + heading (curves = quarter circles round the shared
-  corner). Colour snaps `SNAPS` (red/green/blue/yellow/magenta/cyan) on a tile fire when a train passes the middle. `createSim(project,{onEvent})`
+  corner). Colour snaps `SNAPS` (red/green/blue/yellow/magenta/cyan/white) sit in slots `SLOTS[piece]` (fractions along path 0: straight 5, curve 4, splitR/L 3 after the built-in `SPLIT_MARKS`, end 1); tile[4] = array per slot (an old single colour goes in the middle, `cleanSnaps`); a train fires 'colour' for each snap in the order it meets them. `createSim(project,{onEvent})`
   → `step(dt)`, `pose(i)`, `reset()`, `setTarget(i,tilesPerSec)` (eases at ACCEL), `turnAround(i)`; events 'colour'|'split'|'end'|'bump'. At a
   facing split a train takes `next` (one-shot) else `dflt` ('straight' to start; 'random' allowed). Trains that would drive closer than 0.62 tiles
   stay put, stop and both get 'bump'. A stop at a buffer/bump keeps the speed in `cruise` so "turn around" sets off again. `cleanProject` tidies

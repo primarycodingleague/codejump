@@ -95,73 +95,115 @@ function playSound(name) {
 }
 
 // ── drawing (shared by the board and the tool icons). Units: one tile = T pixels; (ox, oy) = the board's top-left.
-const BED = '#4a4f5a', SLEEPER = '#a0764c', RAIL = '#dfe4ec';
-function pathPts(c, r, a, b, n = 14) { const out = []; for (let i = 0; i <= n; i++) out.push(TM.pathPoint(c, r, a, b, i / n)); return out; }
+// The look of a smart-train set: black track with white dashed lines down the middle and round jigsaw joints, square colour
+// snaps that sit over the dashes, splits with their colour markers built in, on a light play mat; a white engine with a
+// coloured top and lights on its roof. A curve here turns 90°, so it is drawn as two 45° pieces joined in the middle.
+const TRACK = '#1f2024', SEAM = '#4a4c53', DASH = '#ffffff';
+function pathPts(c, r, a, b, n = 18) { const out = []; for (let i = 0; i <= n; i++) out.push(TM.pathPoint(c, r, a, b, i / n)); return out; }
 function strokePts(g, pts, T, ox, oy, off) {
   g.beginPath();
   pts.forEach((p, i) => { const x = ox + (p.x - Math.sin(p.ang) * off) * T, y = oy + (p.y + Math.cos(p.ang) * off) * T; if (i) g.lineTo(x, y); else g.moveTo(x, y); });
   g.stroke();
 }
-export function drawPiece(g, T, ox, oy, c, r, piece, rot, snap, layer) {
+// one snap, centred at (x, y) and turned to the track's direction (ghost = a see-through preview)
+export function drawSnap(g, T, x, y, ang, col, ghost) {
+  const s = T * 0.19;
+  g.save(); g.translate(x, y); g.rotate(ang); if (ghost) g.globalAlpha = 0.55;
+  g.fillStyle = TM.SNAPS[col]; g.strokeStyle = col === 'white' ? '#9aa1ab' : shade(TM.SNAPS[col], 0.62); g.lineWidth = Math.max(1, T * 0.016);
+  g.beginPath(); g.roundRect(-s / 2, -s / 2, s, s, s * 0.14); g.fill(); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(-s * 0.38, -s * 0.38, s * 0.45, s * 0.16);
+  g.restore();
+}
+function seam(g, T, ox, oy, p, knob) { // a joint across the track, with the round knob of the jigsaw join
+  const nx = -Math.sin(p.ang) * 0.235, ny = Math.cos(p.ang) * 0.235, x = ox + p.x * T, y = oy + p.y * T;
+  g.strokeStyle = SEAM; g.lineWidth = Math.max(1, T * 0.018);
+  g.beginPath(); g.moveTo(x - nx * T, y - ny * T); g.lineTo(x + nx * T, y + ny * T); g.stroke();
+  if (knob) { g.beginPath(); g.arc(x + Math.cos(p.ang) * T * 0.03, y + Math.sin(p.ang) * T * 0.03, T * 0.055, 0, Math.PI * 2); g.stroke(); }
+}
+export function drawPiece(g, T, ox, oy, c, r, piece, rot, snaps, layer) {
   const paths = TM.piecePaths(piece, rot);
   g.lineCap = 'butt'; g.lineJoin = 'round';
-  if (layer !== 'rails') {
-    g.strokeStyle = BED; g.lineWidth = T * 0.46;
+  if (layer !== 'rails') { // the black track with a soft shadow on the mat
+    g.strokeStyle = 'rgba(20,30,40,0.18)'; g.lineWidth = T * 0.5;
+    for (const [a, b] of paths) strokePts(g, pathPts(c, r, a, b), T, ox + T * 0.02, oy + T * 0.035, 0);
+    g.strokeStyle = TRACK; g.lineWidth = T * 0.48;
     for (const [a, b] of paths) strokePts(g, pathPts(c, r, a, b), T, ox, oy, 0);
-    g.strokeStyle = SLEEPER; g.lineWidth = T * 0.07;
-    for (const [a, b] of paths) {
-      const len = TM.pathLen(a, b), n = Math.max(2, Math.round(len / 0.2));
-      for (let i = 0; i < n; i++) {
-        const p = TM.pathPoint(c, r, a, b, (i + 0.5) / n), nx = -Math.sin(p.ang) * 0.2, ny = Math.cos(p.ang) * 0.2;
-        g.beginPath(); g.moveTo(ox + (p.x - nx) * T, oy + (p.y - ny) * T); g.lineTo(ox + (p.x + nx) * T, oy + (p.y + ny) * T); g.stroke();
-      }
-    }
-    if (snap && TM.SNAPS[snap]) {
-      const [a, b] = paths[0], p = TM.pathPoint(c, r, a, b, a < 0 || b < 0 ? 0.5 : 0.5);
-      g.save(); g.translate(ox + p.x * T, oy + p.y * T); g.rotate(p.ang);
-      g.fillStyle = TM.SNAPS[snap]; g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = Math.max(1, T * 0.02);
-      for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-T * 0.09, s > 0 ? T * 0.2 : -T * 0.34, T * 0.18, T * 0.14, T * 0.03); g.fill(); g.stroke(); }
-      g.globalAlpha = 0.85; g.fillRect(-T * 0.07, -T * 0.2, T * 0.14, T * 0.4); g.restore();
-    }
+    if (piece === 'end') { const [a, b] = paths[0], p = TM.pathPoint(c, r, a, b, 1); g.fillStyle = TRACK; g.beginPath(); g.arc(ox + p.x * T, oy + p.y * T, T * 0.22, 0, Math.PI * 2); g.fill(); }
   }
   if (layer !== 'bed') {
-    g.strokeStyle = RAIL; g.lineWidth = Math.max(1.2, T * 0.05);
-    for (const [a, b] of paths) { const pts = pathPts(c, r, a, b); strokePts(g, pts, T, ox, oy, -0.12); strokePts(g, pts, T, ox, oy, 0.12); }
-    if (piece === 'end') { // the buffer stop
+    // the white dashes: two dashed lines down the middle
+    g.strokeStyle = DASH; g.lineWidth = Math.max(1, T * 0.028); g.setLineDash([T * 0.07, T * 0.06]); g.lineDashOffset = -T * 0.02;
+    for (const [a, b] of paths) {
+      const pts = pathPts(c, r, a, b);
+      strokePts(g, pts, T, ox, oy, -0.06); strokePts(g, pts, T, ox, oy, 0.06);
+    }
+    g.setLineDash([]);
+    for (const [a, b] of paths) { // jigsaw joints where pieces meet (a curve is two 45° pieces)
+      if (a >= 0) seam(g, T, ox, oy, TM.pathPoint(c, r, a, b, 0), true);
+      if (piece === 'curve') seam(g, T, ox, oy, TM.pathPoint(c, r, a, b, 0.5), true);
+    }
+    if (TM.SPLIT_MARKS[piece]) { // the split's own colour markers, just inside the end trains come in at
+      const [a, b] = paths[0], marks = TM.SPLIT_MARKS[piece];
+      g.save(); const p0 = TM.pathPoint(c, r, a, b, 0.2); g.translate(ox + p0.x * T, oy + p0.y * T); g.rotate(p0.ang);
+      g.fillStyle = TRACK; g.fillRect(-T * 0.2, -T * 0.11, T * 0.4, T * 0.22); g.restore();
+      marks.forEach((m, k) => { const p = TM.pathPoint(c, r, a, b, 0.12 + k * 0.165); drawSnap(g, T * 0.95, ox + p.x * T, oy + p.y * T, p.ang, m); });
+    }
+    const n = TM.slotCount(piece);
+    if (n && snaps) {
+      g.fillStyle = TRACK;
+      const [a, b] = paths[0];
+      for (let k = 0; k < n; k++) if (snaps[k]) { const p = TM.pathPoint(c, r, a, b, TM.slotU(piece, k)); drawSnap(g, T, ox + p.x * T, oy + p.y * T, p.ang, snaps[k]); }
+    }
+    if (piece === 'end') { // the buffer: a white block with a red reflector
       const [a, b] = paths[0], p = TM.pathPoint(c, r, a, b, 1);
       g.save(); g.translate(ox + p.x * T, oy + p.y * T); g.rotate(p.ang);
-      g.fillStyle = '#d23b3b'; g.strokeStyle = '#3a0d0d'; g.lineWidth = Math.max(1, T * 0.03);
-      g.beginPath(); g.roundRect(-T * 0.04, -T * 0.26, T * 0.12, T * 0.52, T * 0.03); g.fill(); g.stroke();
-      g.fillStyle = '#ffd23a'; g.fillRect(-T * 0.02, -T * 0.06, T * 0.08, T * 0.12); g.restore();
+      g.fillStyle = '#ffffff'; g.strokeStyle = '#8f97a3'; g.lineWidth = Math.max(1, T * 0.025);
+      g.beginPath(); g.roundRect(-T * 0.02, -T * 0.25, T * 0.16, T * 0.5, T * 0.06); g.fill(); g.stroke();
+      g.fillStyle = '#e8453c'; g.beginPath(); g.roundRect(-T * 0.005, -T * 0.07, T * 0.05, T * 0.14, T * 0.02); g.fill();
+      g.restore();
     }
   }
 }
+function tint(hex, f) { const n = parseInt(hex.slice(1), 16); const ch = s => Math.round(((n >> s) & 255) + (255 - ((n >> s) & 255)) * f); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; }
 function shade(hex, f) { const n = parseInt(hex.slice(1), 16); const ch = s => Math.max(0, Math.min(255, Math.round(((n >> s) & 255) * f))); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; }
+// the engine from above: a white body; a top in the train's own colour (sky blue to start) that wraps over the rounded nose; side windows; four LED bars and
+// the colour light on the roof; a yellow button and red stripes at the back. The train's own colour is the roof stripe.
 export function drawTrain(g, T, x, y, ang, tr, opt = {}) {
   g.save(); g.translate(x, y); g.rotate(ang);
-  const L = T * 0.36, W = T * 0.19;
+  const L = T * 0.38, W = T * 0.2;
+  const shell = (l, w, rn, rb) => { g.beginPath(); g.roundRect(-l, -w, 2 * l, 2 * w, [rb, rn, rn, rb]); };
   if (tr.head) { // the headlight's beam
-    const gr = g.createRadialGradient(L, 0, 0, L, 0, T * 0.55); gr.addColorStop(0, tr.head + 'aa'); gr.addColorStop(1, tr.head + '00');
-    g.fillStyle = gr; g.beginPath(); g.moveTo(L, 0); g.arc(L, 0, T * 0.55, -0.45, 0.45); g.closePath(); g.fill();
+    const gr = g.createRadialGradient(L, 0, 0, L, 0, T * 0.6); gr.addColorStop(0, tr.head + 'b0'); gr.addColorStop(1, tr.head + '00');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(L, 0); g.arc(L, 0, T * 0.6, -0.42, 0.42); g.closePath(); g.fill();
   }
-  g.fillStyle = 'rgba(0,0,0,0.35)'; g.beginPath(); g.roundRect(-L + T * 0.03, -W + T * 0.04, 2 * L, 2 * W, W); g.fill();
-  g.fillStyle = '#1b1d22'; for (const sx of [-0.2, 0.2]) for (const sy of [-1, 1]) g.fillRect(sx * T - T * 0.05, sy * W - (sy > 0 ? 0 : T * 0.04), T * 0.1, T * 0.04);
-  g.fillStyle = tr.color; g.strokeStyle = shade(tr.color, 0.45); g.lineWidth = Math.max(1, T * 0.025);
-  g.beginPath(); g.roundRect(-L, -W, 2 * L, 2 * W, [W * 0.5, W, W, W * 0.5]); g.fill(); g.stroke();
-  g.fillStyle = shade(tr.color, 0.7); g.beginPath(); g.roundRect(-L * 0.78, -W * 0.62, L * 1.2, W * 1.24, W * 0.4); g.fill();
-  g.fillStyle = '#bfe3ff'; g.beginPath(); g.roundRect(L * 0.46, -W * 0.62, L * 0.28, W * 1.24, W * 0.25); g.fill();
-  g.fillStyle = tr.head || '#555'; g.beginPath(); g.arc(L * 0.94, 0, T * 0.045, 0, Math.PI * 2); g.fill();
-  const top = tr.top || '#3a3d44';
-  if (tr.top) { const gr = g.createRadialGradient(-L * 0.2, 0, 0, -L * 0.2, 0, T * 0.22); gr.addColorStop(0, tr.top + 'cc'); gr.addColorStop(1, tr.top + '00'); g.fillStyle = gr; g.beginPath(); g.arc(-L * 0.2, 0, T * 0.22, 0, Math.PI * 2); g.fill(); }
-  g.fillStyle = top; g.strokeStyle = '#111'; g.lineWidth = Math.max(1, T * 0.015); g.beginPath(); g.arc(-L * 0.2, 0, T * 0.065, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.save(); g.translate(T * 0.025, T * 0.04); shell(L, W, W * 0.95, W * 0.5); g.fillStyle = 'rgba(20,30,40,0.28)'; g.fill(); g.restore();
+  shell(L, W, W * 0.95, W * 0.5); g.fillStyle = '#ffffff'; g.fill(); g.strokeStyle = shade(tr.color, 0.8); g.lineWidth = Math.max(1, T * 0.022); g.stroke();
+  // red stripes on the back
+  g.save(); shell(L, W, W * 0.95, W * 0.5); g.clip(); g.strokeStyle = '#ef4b3c'; g.lineWidth = T * 0.03;
+  for (const s of [-1, 1]) for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(-L + T * (0.02 + k * 0.05), s * W * 0.95); g.lineTo(-L + T * (0.06 + k * 0.05), s * W * 0.55); g.stroke(); }
   g.restore();
-  if (opt.ring) { g.save(); g.strokeStyle = '#ffd23a'; g.lineWidth = 2; g.setLineDash([5, 4]); g.beginPath(); g.arc(x, y, T * 0.46, 0, Math.PI * 2); g.stroke(); g.restore(); }
+  // the coloured top, wrapping over the nose
+  g.fillStyle = tr.color; g.beginPath(); g.roundRect(-L * 0.72, -W * 0.82, L * 1.68, W * 1.64, [W * 0.3, W * 0.85, W * 0.85, W * 0.3]); g.fill();
+  g.fillStyle = tint(tr.color, 0.5); for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-L * 0.55, s > 0 ? W * 0.5 : -W * 0.78, L * 1.05, W * 0.28, W * 0.12); g.fill(); } // windows
+  g.fillStyle = tint(tr.color, 0.82); for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(L * (0.62 + k * 0.08), -W * 0.45); g.lineTo(L * (0.68 + k * 0.08), -W * 0.45); g.lineTo(L * (0.62 + k * 0.08), -W * 0.2); g.lineTo(L * (0.56 + k * 0.08), -W * 0.2); g.fill(); } // nose stripes
+  // roof lights: four LED bars (bright while moving) and the colour light
+  for (let k = 0; k < 4; k++) { g.fillStyle = opt.moving ? '#ff4a3a' : '#a8442f'; g.beginPath(); g.roundRect(-L * 0.42 + k * L * 0.12, -W * 0.36, L * 0.06, W * 0.72, L * 0.02); g.fill(); }
+  if (tr.top) { const gr = g.createRadialGradient(L * 0.2, 0, 0, L * 0.2, 0, T * 0.2); gr.addColorStop(0, tr.top + 'cc'); gr.addColorStop(1, tr.top + '00'); g.fillStyle = gr; g.beginPath(); g.arc(L * 0.2, 0, T * 0.2, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = tr.top || '#7d848f'; g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1; g.beginPath(); g.roundRect(L * 0.08, -W * 0.42, L * 0.24, W * 0.84, L * 0.05); g.fill(); g.stroke();
+  g.fillStyle = '#ffd23a'; g.beginPath(); g.roundRect(-L * 0.95, -W * 0.22, L * 0.14, W * 0.44, L * 0.03); g.fill(); // power button
+  g.fillStyle = tr.head || '#3a3d44'; g.beginPath(); g.arc(L * 0.98, 0, T * 0.035, 0, Math.PI * 2); g.fill();
+  g.restore();
+  if (opt.ring) { g.save(); g.strokeStyle = '#1d6fe0'; g.lineWidth = 2.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(x, y, T * 0.47, 0, Math.PI * 2); g.stroke(); g.restore(); }
   if (opt.label) {
     g.save(); g.font = '800 ' + Math.max(10, Math.round(T * 0.2)) + 'px Montserrat, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom';
     const w = g.measureText(opt.label).width + 10, ty = y - T * 0.42;
-    g.fillStyle = 'rgba(0,0,0,0.6)'; g.beginPath(); g.roundRect(x - w / 2, ty - T * 0.26, w, T * 0.27, 6); g.fill();
+    g.fillStyle = 'rgba(20,24,30,0.8)'; g.beginPath(); g.roundRect(x - w / 2, ty - T * 0.26, w, T * 0.27, 6); g.fill();
     g.fillStyle = '#fff'; g.fillText(opt.label, x, ty - T * 0.02); g.restore();
   }
+}
+// the light play mat the track sits on
+function drawFloor(g, x, y, w, h) {
+  g.fillStyle = '#eef3f6'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
 }
 
 export function defaultProject() {
@@ -226,7 +268,7 @@ export function mount(root, host) {
     box.querySelectorAll('[data-i]').forEach(b => b.onclick = () => selectTrain(Number(b.dataset.i)));
     const add = $('tlAdd'); if (add) add.onclick = addTrain;
     const t = proj.trains[sel];
-    $('tlName').value = t ? t.name : ''; $('tlColour').value = t ? t.color : '#e8453c';
+    $('tlName').value = t ? t.name : ''; $('tlColour').value = t ? t.color : '#21b8e8';
     $('tlDelTrain').hidden = proj.trains.length < 2;
     $('tlBoard').value = Object.keys(BOARDS).find(k => BOARDS[k][0] === proj.cols && BOARDS[k][1] === proj.rows) || 'small';
   }
@@ -256,9 +298,10 @@ export function mount(root, host) {
   function iconFor(kind, key) {
     const cv = document.createElement('canvas'), S = 40, d = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = S * d; cv.style.width = cv.style.height = S + 'px';
     const c = cv.getContext('2d'); c.scale(d, d);
+    if (kind !== 'erase') { c.fillStyle = '#eef3f6'; c.fillRect(0, 0, S, S); }
     if (kind === 'piece') { const rot = key === 'curve' ? 0 : key === 'end' ? 1 : key === 'straight' ? 1 : 0; drawPiece(c, S, 0, 0, 0, 0, key, rot, null); }
-    else if (kind === 'snap') { drawPiece(c, S, 0, 0, 0, 0, 'straight', 1, key); }
-    else if (kind === 'train') { drawPiece(c, S, 0, 0, 0, 0, 'straight', 1, null); drawTrain(c, S, S / 2, S / 2, 0, { color: proj.trains[sel] ? proj.trains[sel].color : '#e8453c', head: '#ffffff', top: null }); }
+    else if (kind === 'snap') { c.fillStyle = '#eef3f6'; c.fillRect(0, 0, S, S); drawSnap(c, S * 2.6, S / 2, S / 2, 0, key); }
+    else if (kind === 'train') { drawPiece(c, S, 0, 0, 0, 0, 'straight', 1, null); drawTrain(c, S, S / 2, S / 2, 0, { color: proj.trains[sel] ? proj.trains[sel].color : '#21b8e8', head: '#ffffff', top: null }); }
     else { c.strokeStyle = '#ffb0b0'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, 10); c.lineTo(30, 30); c.moveTo(30, 10); c.lineTo(10, 30); c.stroke(); }
     return cv;
   }
@@ -309,6 +352,13 @@ export function mount(root, host) {
     proj.tiles = fixed.tiles; proj.trains.forEach((t, i) => { t.start = fixed.trains[i] ? fixed.trains[i].start : null; });
     rebuild(); renderTrains(); changed();
   }
+  function nearestSlot(tile, at) { // the slot nearest a tap (the middle one when there is no tap position)
+    const n = TM.slotCount(tile[2]); let k = Math.floor((n - 1) / 2);
+    if (at.x == null) return k;
+    const [a, b] = TM.piecePaths(tile[2], tile[3])[0]; let best = Infinity;
+    for (let j = 0; j < n; j++) { const p = TM.pathPoint(tile[0], tile[1], a, b, TM.slotU(tile[2], j)), d = Math.hypot(p.x - at.x, p.y - at.y); if (d < best) { best = d; k = j; } }
+    return k;
+  }
   function tileFromEvent(e) {
     const r = canvas.getBoundingClientRect(), L = layout();
     const x = (e.clientX - r.left - L.ox) / L.T, y = (e.clientY - r.top - L.oy) / L.T;
@@ -323,7 +373,15 @@ export function mount(root, host) {
       if (tile) { tile[2] = tool; return true; }
       proj.tiles.push([at.c, at.r, tool, lastRot % 4, null]); return true;
     }
-    if (TM.SNAPS[tool]) { if (!tile) return false; const nv = tile[4] === tool && first ? null : tool; if (tile[4] === nv) return false; tile[4] = nv; return true; }
+    if (TM.SNAPS[tool]) {
+      if (!tile) return false;
+      const n = TM.slotCount(tile[2]);
+      if (!n) { if (first && host.toast) host.toast('Snaps click onto straights, curves, splits and buffer stops.'); return false; }
+      const k = nearestSlot(tile, at);
+      const arr = tile[4] ? tile[4].slice() : new Array(n).fill(null);
+      const nv = arr[k] === tool && first ? null : tool; if (arr[k] === nv) return false;
+      arr[k] = nv; tile[4] = arr.some(Boolean) ? arr : null; return true;
+    }
     if (tool === 'erase') { if (!tile) return false; proj.tiles.splice(i, 1); return true; }
     if (tool === 'train' && first) {
       const t = proj.trains[sel]; if (!t || !tile) return false;
@@ -380,10 +438,10 @@ export function mount(root, host) {
     if (canvas.width !== Math.round(cw * d) || canvas.height !== Math.round(ch * d)) { canvas.width = Math.round(cw * d); canvas.height = Math.round(ch * d); }
     g.setTransform(d, 0, 0, d, 0, 0);
     const { T, ox, oy, w, h } = layout();
-    g.fillStyle = '#1c2a20'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#2f5a3a'; g.beginPath(); g.roundRect(ox - 4, oy - 4, T * proj.cols + 8, T * proj.rows + 8, 10); g.fill();
+    g.fillStyle = '#2b2622'; g.fillRect(0, 0, w, h);
+    drawFloor(g, ox - 4, oy - 4, T * proj.cols + 8, T * proj.rows + 8);
     if (!running()) { // the grid shows while building
-      g.strokeStyle = 'rgba(255,255,255,0.09)'; g.lineWidth = 1; g.beginPath();
+      g.strokeStyle = 'rgba(40,80,110,0.13)'; g.lineWidth = 1; g.beginPath();
       for (let c = 0; c <= proj.cols; c++) { g.moveTo(ox + c * T + 0.5, oy); g.lineTo(ox + c * T + 0.5, oy + proj.rows * T); }
       for (let r = 0; r <= proj.rows; r++) { g.moveTo(ox, oy + r * T + 0.5); g.lineTo(ox + proj.cols * T, oy + r * T + 0.5); }
       g.stroke();
@@ -393,16 +451,18 @@ export function mount(root, host) {
     if (hover && !running() && !touchy) {
       g.save(); g.globalAlpha = 0.45;
       if (TM.PIECES[tool] && findTile(hover.c, hover.r) < 0) drawPiece(g, T, ox, oy, hover.c, hover.r, tool, lastRot, null);
+      const ht = proj.tiles[findTile(hover.c, hover.r)];
+      if (TM.SNAPS[tool] && ht && TM.slotCount(ht[2])) { const k = nearestSlot(ht, hover), [a, b] = TM.piecePaths(ht[2], ht[3])[0], p = TM.pathPoint(ht[0], ht[1], a, b, TM.slotU(ht[2], k)); g.globalAlpha = 1; drawSnap(g, T, ox + p.x * T, oy + p.y * T, p.ang, tool, true); }
       g.restore();
-      g.strokeStyle = 'rgba(255,210,58,0.8)'; g.lineWidth = 2; g.strokeRect(ox + hover.c * T + 1, oy + hover.r * T + 1, T - 2, T - 2);
+      g.strokeStyle = 'rgba(29,111,224,0.85)'; g.lineWidth = 2; g.strokeRect(ox + hover.c * T + 1, oy + hover.r * T + 1, T - 2, T - 2);
     }
     const many = sim.trains.length > 1;
     sim.trains.forEach((tr, i) => {
       const p = sim.pose(i); if (!p) return;
-      drawTrain(g, T, ox + p.x * T, oy + p.y * T, p.ang, tr, { ring: !running() && i === sel && many, label: many || !running() ? tr.name : '' });
+      drawTrain(g, T, ox + p.x * T, oy + p.y * T, p.ang, tr, { ring: !running() && i === sel && many, label: many || !running() ? tr.name : '', moving: tr.v > 0.01 });
     });
     if (!proj.tiles.length) {
-      g.fillStyle = 'rgba(255,255,255,0.75)'; g.font = '800 16px Montserrat, sans-serif'; g.textAlign = 'center';
+      g.fillStyle = '#3c4a55'; g.font = '800 16px Montserrat, sans-serif'; g.textAlign = 'center';
       g.fillText('Pick a track piece below, then tap the board to lay it.', w / 2, h / 2);
     }
   }

@@ -31,6 +31,10 @@ const TM = await import(pathToFileURL(ROOT + '/train/train-model.js').href);
   const ev4 = []; const s4 = TM.createSim(two, { onEvent: (i, k, d) => ev4.push(i + k + d) });
   s4.setTarget(0, 2); s4.setTarget(1, 2); for (let i = 0; i < 60 * 4; i++) s4.step(1 / 60);
   ok(ev4.includes('0bumpB') && ev4.includes('1bumpA') && s4.trains[0].v === 0 && s4.trains[1].v === 0, 'two trains that meet bump and both stop');
+  // several snaps on one piece are seen in the order the train meets them
+  const seq = dir => { const ev = []; const sm = TM.createSim({ cols: 5, rows: 3, tiles: [0, 1, 2, 3, 4].map(c => [c, 1, 'straight', 1, c === 2 ? ['white', 'red', 'blue', null, null] : null]),
+    trains: [{ name: 'Q', start: { c: dir ? 0 : 4, r: 1, p: 0, rev: dir } }] }, { onEvent: (i, k, d) => { if (k === 'colour') ev.push(d); } }); sm.setTarget(0, 2); for (let i = 0; i < 120; i++) sm.step(1 / 60); return ev.join(' '); };
+  ok(seq(false) === 'white red blue' && seq(true) === 'blue red white', 'a row of snaps is read in the order the train meets them (white red blue one way, blue red white the other)');
   const bad = TM.cleanProject({ cols: 99, rows: -3, tiles: [[0, 0, 'rocket', 0], [1, 1, 'curve', 7, 'pink'], [1, 1, 'straight', 0], 'x'], trains: [{ name: '<b>Zoom</b>', color: 'red', start: { c: 5, r: 5, p: 0 } }, 1, 2, 3] });
   ok(bad.cols === 16 && bad.rows === 4 && bad.tiles.length === 1 && bad.tiles[0][3] === 3 && bad.tiles[0][4] === null && bad.trains.length === 1 && bad.trains[0].start === null && !bad.trains[0].name.includes('<'),
     'a saved project with nonsense in it is tidied up');
@@ -71,9 +75,9 @@ try {
     A.setTool('yellow'); A._tap(3, 2);
     A.setTool('train'); A._tap(2, 2);
     const p = A._proj();
-    return { tiles: p.tiles.length, rots: p.tiles.map(t => t[3]).join(''), snap: p.tiles.find(t => t[0] === 3)[4], start: !!p.trains[0].start };
+    return { tiles: p.tiles.length, rots: p.tiles.map(t => t[3]).join(''), snap: (p.tiles.find(t => t[0] === 3)[4] || []).join(), start: !!p.trains[0].start };
   });
-  ok(built.tiles === 5 && built.rots === '33331' && built.snap === 'yellow' && built.start, 'tapping lays pieces, tapping again turns them, snaps clip on and the train goes on the track');
+  ok(built.tiles === 5 && built.rots === '33331' && built.snap === ',,yellow,,' && built.start, 'tapping lays pieces, tapping again turns them, snaps clip on and the train goes on the track');
   ok(await page.evaluate(() => { trainApp.setTool('erase'); trainApp._tap(4, 2); const n = trainApp._proj().tiles.length; document.getElementById('tlCanvas').focus(); return n; }) === 4, 'the rubber takes a piece away');
   await page.click('#tlUndo');
   ok(await page.evaluate(() => trainApp._proj().tiles.length === 5), 'Undo puts it back');

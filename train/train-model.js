@@ -3,7 +3,8 @@
  * The track is a grid of square pieces. Each piece has paths between its edges (0 = top, 1 = right, 2 = bottom,
  * 3 = left; -1 = the middle, for a buffer stop), turned by `rot` quarter turns clockwise:
  *   straight · curve · split-right / split-left (straight on, or turn) · split-Y (left or right) · crossing · buffer stop
- * A piece can carry a coloured "snap" that a train sees as it passes the middle of the piece.
+ * Straights, curves, splits and buffer stops have slots (SLOTS) that coloured "snaps" click into; a train sees each snap as it drives
+ * over it, in the order it meets them.
  *
  *   const sim = createSim(project, { onEvent(trainIndex, kind, data) })   // kind: 'colour' | 'split' | 'end' | 'bump'
  *   sim.step(dt) · sim.pose(i) → {x, y, ang} in tile units · sim.reset() · sim.trains[i] (speed, lights, …)
@@ -11,7 +12,7 @@
  *
  * A train that is stopped by a buffer stop or a bump remembers its speed in `cruise`, so "turn around" sets off again.
  *
- * A project is { cols, rows, tiles: [[c, r, piece, rot, snap|null]], trains: [{ name, color, start: {c, r, p, rev}|null, blocks }] }.
+ * A project is { cols, rows, tiles: [[c, r, piece, rot, snaps|null]] (snaps = one colour or null per slot), trains: [{ name, color, start: {c, r, p, rev}|null, blocks }] }.
  */
 
 export const PIECES = {
@@ -24,12 +25,26 @@ export const PIECES = {
   end: { name: 'Buffer stop', paths: [[2, -1]] }
 };
 export const PIECE_KEYS = Object.keys(PIECES);
-export const SNAPS = { red: '#ff3b3b', green: '#29c46a', blue: '#2f7bff', yellow: '#ffd23a', magenta: '#e04cd8', cyan: '#2fd6e6' };
+export const SNAPS = { red: '#ff3b3b', green: '#29c46a', blue: '#2f7bff', yellow: '#ffd23a', magenta: '#e04cd8', cyan: '#2fd6e6', white: '#f4f4f4' };
+// where a piece's snap slots are, as fractions along its first path (splits: after the built-in split markers)
+export const SLOTS = { straight: [0.12, 0.31, 0.5, 0.69, 0.88], curve: [0.125, 0.375, 0.625, 0.875], splitR: [0.45, 0.62, 0.79], splitL: [0.45, 0.62, 0.79], end: [0.32] };
+export const slotCount = piece => (SLOTS[piece] ? SLOTS[piece].length : 0);
+export const slotU = (piece, k) => SLOTS[piece][k];
+// the colours built into each kind of split, near where a train comes in (so a train knows a split is coming)
+export const SPLIT_MARKS = { splitR: ['cyan', 'blue'], splitL: ['cyan', 'red'], splitY: ['cyan', 'magenta'] };
+// a tile's snaps as a full array (one per slot); a single colour from an older save goes in the middle
+export function cleanSnaps(piece, v) {
+  const n = slotCount(piece); if (!n || !v) return null;
+  const out = new Array(n).fill(null);
+  if (typeof v === 'string') { if (SNAPS[v]) out[Math.floor((n - 1) / 2)] = v; }
+  else if (Array.isArray(v)) for (let k = 0; k < n; k++) if (SNAPS[v[k]]) out[k] = v[k];
+  return out.some(Boolean) ? out : null;
+}
 export const SNAP_KEYS = Object.keys(SNAPS);
 export const SPEEDS = { slow: 0.9, medium: 1.7, fast: 2.6 }; // tiles per second
 export const MAX_SPEED = 3; // 100%
 export const MAX_TRAINS = 3;
-export const TRAIN_COLOURS = ['#e8453c', '#2f7bff', '#29b45a', '#ffb31a'];
+export const TRAIN_COLOURS = ['#21b8e8', '#f0623c', '#3cbf5a', '#9b6cf0'];
 export const SIZE = { cols: 10, rows: 7, min: 4, max: 16 };
 const ACCEL = 2.6; // tiles/s² when speeding up or braking
 const BUMP = 0.62; // trains closer than this (tiles) have bumped
@@ -70,7 +85,7 @@ export function cleanProject(p) {
     const c = int(t[0], 0, cols - 1, -1), r = int(t[1], 0, rows - 1, -1);
     if (c !== Number(t[0]) || r !== Number(t[1]) || !PIECES[t[2]] || seen.has(c + ',' + r)) continue;
     seen.add(c + ',' + r);
-    tiles.push([c, r, t[2], int(t[3], 0, 3, 0), SNAPS[t[4]] ? t[4] : null]);
+    tiles.push([c, r, t[2], int(t[3], 0, 3, 0), cleanSnaps(t[2], t[4])]);
   }
   const trains = [];
   for (const tr of Array.isArray(p.trains) ? p.trains.slice(0, MAX_TRAINS) : []) {
@@ -91,7 +106,7 @@ export function cleanProject(p) {
 // the track a new project starts with: a loop with a shortcut, a red "station" snap and a blue snap before the split
 export function starterTrack() {
   const t = [];
-  const put = (c, r, piece, rot, snap) => t.push([c, r, piece, rot, snap || null]);
+  const put = (c, r, piece, rot, snap) => t.push([c, r, piece, rot, cleanSnaps(piece, snap)]);
   put(1, 1, 'curve', 0); put(8, 1, 'curve', 1); put(8, 5, 'curve', 2); put(1, 5, 'curve', 3);
   for (let c = 2; c <= 7; c++) { put(c, 1, 'straight', 1); put(c, 5, 'straight', 1, c === 4 ? 'red' : null); put(c, 3, 'straight', 1); }
   put(1, 2, 'straight', 0); put(1, 4, 'straight', 0, 'blue'); put(8, 2, 'straight', 0); put(8, 4, 'straight', 0);
@@ -132,13 +147,19 @@ export function createSim(project, opts = {}) {
   function advance(tr, d) {
     let guard = 0;
     while (d > 0 && guard++ < 50) {
-      const len = pathLen(tr.a, tr.b), half = len / 2;
+      const len = pathLen(tr.a, tr.b);
       const before = tr.s;
       const step = Math.min(d, len - tr.s);
       tr.s += step; d -= step; tr.dist += step;
-      if (before < half && tr.s >= half) {
-        const tile = tileAt(tr.c, tr.r);
-        if (tile && tile[4]) { tr.lastColour = tile[4]; emit(tr.i, 'colour', tile[4]); }
+      const here = tileAt(tr.c, tr.r);
+      if (here && here[4]) { // snaps sit on the piece's first path; the train meets them in its own direction of travel
+        const p0 = piecePaths(here[2], here[3])[0], fwd = p0[0] === tr.a && p0[1] === tr.b, back = p0[0] === tr.b && p0[1] === tr.a;
+        if (fwd || back) {
+          const hits = [];
+          here[4].forEach((col, k) => { if (!col) return; const at = (fwd ? slotU(here[2], k) : 1 - slotU(here[2], k)) * len; if (before < at && tr.s >= at) hits.push([at, col]); });
+          hits.sort((x, y) => x[0] - y[0]);
+          for (const [, col] of hits) { tr.lastColour = col; emit(tr.i, 'colour', col); }
+        }
       }
       if (tr.s < len - 1e-9) break;
       // at the end of this piece

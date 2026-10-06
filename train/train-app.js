@@ -6,7 +6,7 @@
  *   const app = (await import('./train/train-app.js')).mount(rootEl, { project, onChange, toast, confirm });
  *   app.getProject() · app.setProject(p) · app.resume() · app.pause() · app.destroy()
  *
- * A project is train-model.js's { cols, rows, tiles, trains: [{ name, color, start, blocks }] }. Uses the page's Blockly 10.
+ * A project is train-model.js's { v: 2, pieces, trains: [{ name, color, start, blocks }] }. Uses the page's Blockly 10.
  */
 import * as TM from './train-model.js';
 import * as TB from './train-blocks.js';
@@ -16,7 +16,6 @@ const CSS_URL = new URL('./train-app.css', import.meta.url).href;
 const ic = id => '<svg class="ic"><use href="#' + id + '"></use></svg>';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const okColour = c => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c) : null);
-const BOARDS = { small: [10, 7], medium: [13, 9], large: [16, 11] };
 const KEYNAME = { ' ': 'space', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
 
 const TEMPLATE = `
@@ -33,7 +32,7 @@ const TEMPLATE = `
       <span class="tl-status" id="tlStatus" role="status" aria-live="polite"></span>
     </div>
     <div class="tl-stage" id="tlStage">
-      <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a square to lay it; tap it again to turn it. While the program runs, tap a train to start its when-tapped blocks."></canvas>
+      <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a blue plus at the end of the track to click it on; tap a piece to turn it. While the trains run, tap a train to start its when-tapped blocks."></canvas>
       <div class="tl-loading" id="tlLoading">Getting the Train Lab ready…</div>
     </div>
     <div class="tl-tools" id="tlTools"></div>
@@ -41,7 +40,6 @@ const TEMPLATE = `
       <label>Name <input id="tlName" maxlength="14" autocomplete="off"></label>
       <label>Colour <input type="color" id="tlColour"></label>
       <button type="button" class="tl-small" id="tlDelTrain">${ic('i-trash')} Remove train</button>
-      <label class="tl-board">Board <select id="tlBoard"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select></label>
     </div>
   </div>
 </div>`;
@@ -94,120 +92,94 @@ function playSound(name) {
   return len;
 }
 
-// ── drawing (shared by the board and the tool icons). Units: one tile = T pixels; (ox, oy) = the board's top-left.
-// The look of a smart-train set: black track with white dashed lines down the middle and round jigsaw joints, square colour
-// snaps that sit over the dashes, splits with their colour markers built in, on a light play mat; a white engine with a
-// coloured top and lights on its roof. A curve here turns 90°, so it is drawn as two 45° pieces joined in the middle.
-const TRACK = '#1f2024', SEAM = '#4a4c53', DASH = '#ffffff';
-function pathPts(c, r, a, b, n = 18) { const out = []; for (let i = 0; i <= n; i++) out.push(TM.pathPoint(c, r, a, b, i / n)); return out; }
+// ── drawing. World units: a straight piece is 1 long; T = pixels per unit; (ox, oy) = where world (0, 0) is on screen.
+// The look of a smart-train set: slim black track with two white dashed lines down the middle and a round jigsaw joint
+// where pieces meet; square colour snaps over the dashes; splits with their built-in colour markers; a light play mat;
+// a white engine with a coloured top, side windows and lights on its roof.
+const TRACK = '#1f2024', SEAM = '#55575e', DASH = '#ffffff', TW = 0.24, SNAP = 0.105;
+const sample = (pth, u0 = 0, u1 = 1) => { const n = pth.len > 1.01 || pth.at(0.5).ang !== pth.at(0).ang ? 14 : 2, out = []; for (let i = 0; i <= n; i++) out.push(pth.at(u0 + (u1 - u0) * i / n)); return out; };
 function strokePts(g, pts, T, ox, oy, off) {
   g.beginPath();
   pts.forEach((p, i) => { const x = ox + (p.x - Math.sin(p.ang) * off) * T, y = oy + (p.y + Math.cos(p.ang) * off) * T; if (i) g.lineTo(x, y); else g.moveTo(x, y); });
   g.stroke();
 }
-// one snap, centred at (x, y) and turned to the track's direction (ghost = a see-through preview)
-export function drawSnap(g, T, x, y, ang, col, ghost) {
-  const s = T * 0.19;
-  g.save(); g.translate(x, y); g.rotate(ang); if (ghost) g.globalAlpha = 0.55;
-  g.fillStyle = TM.SNAPS[col]; g.strokeStyle = col === 'white' ? '#9aa1ab' : shade(TM.SNAPS[col], 0.62); g.lineWidth = Math.max(1, T * 0.016);
-  g.beginPath(); g.roundRect(-s / 2, -s / 2, s, s, s * 0.14); g.fill(); g.stroke();
-  g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(-s * 0.38, -s * 0.38, s * 0.45, s * 0.16);
-  g.restore();
-}
-function seam(g, T, ox, oy, p, knob) { // a joint across the track, with the round knob of the jigsaw join
-  const nx = -Math.sin(p.ang) * 0.235, ny = Math.cos(p.ang) * 0.235, x = ox + p.x * T, y = oy + p.y * T;
-  g.strokeStyle = SEAM; g.lineWidth = Math.max(1, T * 0.018);
-  g.beginPath(); g.moveTo(x - nx * T, y - ny * T); g.lineTo(x + nx * T, y + ny * T); g.stroke();
-  if (knob) { g.beginPath(); g.arc(x + Math.cos(p.ang) * T * 0.03, y + Math.sin(p.ang) * T * 0.03, T * 0.055, 0, Math.PI * 2); g.stroke(); }
-}
-export function drawPiece(g, T, ox, oy, c, r, piece, rot, snaps, layer) {
-  const paths = TM.piecePaths(piece, rot);
-  g.lineCap = 'butt'; g.lineJoin = 'round';
-  if (layer !== 'rails') { // the black track with a soft shadow on the mat
-    g.strokeStyle = 'rgba(20,30,40,0.18)'; g.lineWidth = T * 0.5;
-    for (const [a, b] of paths) strokePts(g, pathPts(c, r, a, b), T, ox + T * 0.02, oy + T * 0.035, 0);
-    g.strokeStyle = TRACK; g.lineWidth = T * 0.48;
-    for (const [a, b] of paths) strokePts(g, pathPts(c, r, a, b), T, ox, oy, 0);
-    if (piece === 'end') { const [a, b] = paths[0], p = TM.pathPoint(c, r, a, b, 1); g.fillStyle = TRACK; g.beginPath(); g.arc(ox + p.x * T, oy + p.y * T, T * 0.22, 0, Math.PI * 2); g.fill(); }
-  }
-  if (layer !== 'bed') {
-    // the white dashes: two dashed lines down the middle
-    g.strokeStyle = DASH; g.lineWidth = Math.max(1, T * 0.028); g.setLineDash([T * 0.07, T * 0.06]); g.lineDashOffset = -T * 0.02;
-    for (const [a, b] of paths) {
-      const pts = pathPts(c, r, a, b);
-      strokePts(g, pts, T, ox, oy, -0.06); strokePts(g, pts, T, ox, oy, 0.06);
-    }
-    g.setLineDash([]);
-    for (const [a, b] of paths) { // jigsaw joints where pieces meet (a curve is two 45° pieces)
-      if (a >= 0) seam(g, T, ox, oy, TM.pathPoint(c, r, a, b, 0), true);
-      if (piece === 'curve') seam(g, T, ox, oy, TM.pathPoint(c, r, a, b, 0.5), true);
-    }
-    if (TM.SPLIT_MARKS[piece]) { // the split's own colour markers, just inside the end trains come in at
-      const [a, b] = paths[0], marks = TM.SPLIT_MARKS[piece];
-      g.save(); const p0 = TM.pathPoint(c, r, a, b, 0.2); g.translate(ox + p0.x * T, oy + p0.y * T); g.rotate(p0.ang);
-      g.fillStyle = TRACK; g.fillRect(-T * 0.2, -T * 0.11, T * 0.4, T * 0.22); g.restore();
-      marks.forEach((m, k) => { const p = TM.pathPoint(c, r, a, b, 0.12 + k * 0.165); drawSnap(g, T * 0.95, ox + p.x * T, oy + p.y * T, p.ang, m); });
-    }
-    const n = TM.slotCount(piece);
-    if (n && snaps) {
-      g.fillStyle = TRACK;
-      const [a, b] = paths[0];
-      for (let k = 0; k < n; k++) if (snaps[k]) { const p = TM.pathPoint(c, r, a, b, TM.slotU(piece, k)); drawSnap(g, T, ox + p.x * T, oy + p.y * T, p.ang, snaps[k]); }
-    }
-    if (piece === 'end') { // the buffer: a white block with a red reflector
-      const [a, b] = paths[0], p = TM.pathPoint(c, r, a, b, 1);
-      g.save(); g.translate(ox + p.x * T, oy + p.y * T); g.rotate(p.ang);
-      g.fillStyle = '#ffffff'; g.strokeStyle = '#8f97a3'; g.lineWidth = Math.max(1, T * 0.025);
-      g.beginPath(); g.roundRect(-T * 0.02, -T * 0.25, T * 0.16, T * 0.5, T * 0.06); g.fill(); g.stroke();
-      g.fillStyle = '#e8453c'; g.beginPath(); g.roundRect(-T * 0.005, -T * 0.07, T * 0.05, T * 0.14, T * 0.02); g.fill();
-      g.restore();
-    }
-  }
-}
 function tint(hex, f) { const n = parseInt(hex.slice(1), 16); const ch = s => Math.round(((n >> s) & 255) + (255 - ((n >> s) & 255)) * f); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; }
 function shade(hex, f) { const n = parseInt(hex.slice(1), 16); const ch = s => Math.max(0, Math.min(255, Math.round(((n >> s) & 255) * f))); return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')'; }
-// the engine from above: a white body; a top in the train's own colour (sky blue to start) that wraps over the rounded nose; side windows; four LED bars and
-// the colour light on the roof; a yellow button and red stripes at the back. The train's own colour is the roof stripe.
+// one snap, centred at screen (x, y) and turned to the track's direction (ghost = a see-through preview)
+export function drawSnap(g, T, x, y, ang, col, ghost) {
+  const s = T * SNAP;
+  g.save(); g.translate(x, y); g.rotate(ang); if (ghost) g.globalAlpha = 0.55;
+  g.fillStyle = TM.SNAPS[col]; g.strokeStyle = col === 'white' ? '#a3a9b2' : shade(TM.SNAPS[col], 0.65); g.lineWidth = Math.max(0.8, T * 0.008);
+  g.beginPath(); g.roundRect(-s / 2, -s / 2, s, s, s * 0.12); g.fill(); g.stroke();
+  g.restore();
+}
+// the slots of a piece: [{x, y, ang, k}] (a split's one slot is its steering choice)
+export function slotPoints(geom) {
+  const def = TM.PIECES[geom.t], p0 = geom.paths[0];
+  return def.slots.map((u, k) => Object.assign(p0.at(u), { k }));
+}
+// layer 'bed' = the black track (drawn first for every piece), 'top' = dashes, joints, markers and snaps
+export function drawPiece(g, T, ox, oy, geom, snaps, layer) {
+  const def = TM.PIECES[geom.t];
+  g.lineCap = 'butt'; g.lineJoin = 'round';
+  if (layer !== 'top') {
+    g.strokeStyle = 'rgba(30,45,60,0.16)'; g.lineWidth = T * (TW + 0.03);
+    for (const pth of geom.paths) strokePts(g, sample(pth), T, ox + T * 0.015, oy + T * 0.025, 0);
+    g.strokeStyle = TRACK; g.lineWidth = T * TW;
+    for (const pth of geom.paths) strokePts(g, sample(pth), T, ox, oy, 0);
+  }
+  if (layer === 'bed') return;
+  // the white dashes (on a split, only where the two tracks have parted; the markers and slot sit before that)
+  g.strokeStyle = DASH; g.lineWidth = Math.max(0.8, T * 0.016); g.setLineDash([T * 0.055, T * 0.042]);
+  geom.paths.forEach(pth => { const pts = sample(pth, def.marks ? 0.47 : 0, 1); strokePts(g, pts, T, ox, oy, -0.042); strokePts(g, pts, T, ox, oy, 0.042); });
+  g.setLineDash([]);
+  // jigsaw joints at the ends
+  g.strokeStyle = SEAM; g.lineWidth = Math.max(0.8, T * 0.012);
+  for (const E of geom.ends) {
+    const nx = -Math.sin(E.h) * TW / 2, ny = Math.cos(E.h) * TW / 2, x = ox + E.x * T, y = oy + E.y * T;
+    g.beginPath(); g.moveTo(x - nx * T, y - ny * T); g.lineTo(x + nx * T, y + ny * T); g.stroke();
+    g.beginPath(); g.arc(x - Math.cos(E.h) * T * 0.035, y - Math.sin(E.h) * T * 0.035, T * 0.035, E.h - Math.PI / 2, E.h + Math.PI / 2); g.stroke();
+  }
+  if (def.marks) def.marks.forEach((m, k) => { const p = geom.paths[0].at(TM.MARK_U[k]); drawSnap(g, T, ox + p.x * T, oy + p.y * T, p.ang, m); });
+  if (snaps) for (const q of slotPoints(geom)) if (snaps[q.k]) drawSnap(g, T, ox + q.x * T, oy + q.y * T, q.ang, snaps[q.k]);
+}
+// the engine from above (T here is the size of the train): white body, a top in the train's own colour that wraps over
+// the rounded nose, side windows, four LED bars (bright while it moves) and the colour light on the roof, a yellow
+// button and red stripes at the back
 export function drawTrain(g, T, x, y, ang, tr, opt = {}) {
   g.save(); g.translate(x, y); g.rotate(ang);
   const L = T * 0.38, W = T * 0.2;
-  const shell = (l, w, rn, rb) => { g.beginPath(); g.roundRect(-l, -w, 2 * l, 2 * w, [rb, rn, rn, rb]); };
-  if (tr.head) { // the headlight's beam
+  const shell = () => { g.beginPath(); g.roundRect(-L, -W, 2 * L, 2 * W, [W * 0.5, W * 0.95, W * 0.95, W * 0.5]); };
+  if (tr.head) {
     const gr = g.createRadialGradient(L, 0, 0, L, 0, T * 0.6); gr.addColorStop(0, tr.head + 'b0'); gr.addColorStop(1, tr.head + '00');
     g.fillStyle = gr; g.beginPath(); g.moveTo(L, 0); g.arc(L, 0, T * 0.6, -0.42, 0.42); g.closePath(); g.fill();
   }
-  g.save(); g.translate(T * 0.025, T * 0.04); shell(L, W, W * 0.95, W * 0.5); g.fillStyle = 'rgba(20,30,40,0.28)'; g.fill(); g.restore();
-  shell(L, W, W * 0.95, W * 0.5); g.fillStyle = '#ffffff'; g.fill(); g.strokeStyle = shade(tr.color, 0.8); g.lineWidth = Math.max(1, T * 0.022); g.stroke();
-  // red stripes on the back
-  g.save(); shell(L, W, W * 0.95, W * 0.5); g.clip(); g.strokeStyle = '#ef4b3c'; g.lineWidth = T * 0.03;
+  g.save(); g.translate(T * 0.025, T * 0.04); shell(); g.fillStyle = 'rgba(20,30,40,0.28)'; g.fill(); g.restore();
+  shell(); g.fillStyle = '#ffffff'; g.fill(); g.strokeStyle = shade(tr.color, 0.8); g.lineWidth = Math.max(1, T * 0.022); g.stroke();
+  g.save(); shell(); g.clip(); g.strokeStyle = '#ef4b3c'; g.lineWidth = T * 0.03;
   for (const s of [-1, 1]) for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(-L + T * (0.02 + k * 0.05), s * W * 0.95); g.lineTo(-L + T * (0.06 + k * 0.05), s * W * 0.55); g.stroke(); }
   g.restore();
-  // the coloured top, wrapping over the nose
   g.fillStyle = tr.color; g.beginPath(); g.roundRect(-L * 0.72, -W * 0.82, L * 1.68, W * 1.64, [W * 0.3, W * 0.85, W * 0.85, W * 0.3]); g.fill();
-  g.fillStyle = tint(tr.color, 0.5); for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-L * 0.55, s > 0 ? W * 0.5 : -W * 0.78, L * 1.05, W * 0.28, W * 0.12); g.fill(); } // windows
-  g.fillStyle = tint(tr.color, 0.82); for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(L * (0.62 + k * 0.08), -W * 0.45); g.lineTo(L * (0.68 + k * 0.08), -W * 0.45); g.lineTo(L * (0.62 + k * 0.08), -W * 0.2); g.lineTo(L * (0.56 + k * 0.08), -W * 0.2); g.fill(); } // nose stripes
-  // roof lights: four LED bars (bright while moving) and the colour light
+  g.fillStyle = tint(tr.color, 0.5); for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-L * 0.55, s > 0 ? W * 0.5 : -W * 0.78, L * 1.05, W * 0.28, W * 0.12); g.fill(); }
+  g.fillStyle = tint(tr.color, 0.82); for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(L * (0.62 + k * 0.08), -W * 0.45); g.lineTo(L * (0.68 + k * 0.08), -W * 0.45); g.lineTo(L * (0.62 + k * 0.08), -W * 0.2); g.lineTo(L * (0.56 + k * 0.08), -W * 0.2); g.fill(); }
   for (let k = 0; k < 4; k++) { g.fillStyle = opt.moving ? '#ff4a3a' : '#a8442f'; g.beginPath(); g.roundRect(-L * 0.42 + k * L * 0.12, -W * 0.36, L * 0.06, W * 0.72, L * 0.02); g.fill(); }
   if (tr.top) { const gr = g.createRadialGradient(L * 0.2, 0, 0, L * 0.2, 0, T * 0.2); gr.addColorStop(0, tr.top + 'cc'); gr.addColorStop(1, tr.top + '00'); g.fillStyle = gr; g.beginPath(); g.arc(L * 0.2, 0, T * 0.2, 0, Math.PI * 2); g.fill(); }
   g.fillStyle = tr.top || '#7d848f'; g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 1; g.beginPath(); g.roundRect(L * 0.08, -W * 0.42, L * 0.24, W * 0.84, L * 0.05); g.fill(); g.stroke();
-  g.fillStyle = '#ffd23a'; g.beginPath(); g.roundRect(-L * 0.95, -W * 0.22, L * 0.14, W * 0.44, L * 0.03); g.fill(); // power button
+  g.fillStyle = '#ffd23a'; g.beginPath(); g.roundRect(-L * 0.95, -W * 0.22, L * 0.14, W * 0.44, L * 0.03); g.fill();
   g.fillStyle = tr.head || '#3a3d44'; g.beginPath(); g.arc(L * 0.98, 0, T * 0.035, 0, Math.PI * 2); g.fill();
   g.restore();
-  if (opt.ring) { g.save(); g.strokeStyle = '#1d6fe0'; g.lineWidth = 2.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(x, y, T * 0.47, 0, Math.PI * 2); g.stroke(); g.restore(); }
+  if (opt.ring) { g.save(); g.strokeStyle = '#1d6fe0'; g.lineWidth = 2.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(x, y, T * 0.5, 0, Math.PI * 2); g.stroke(); g.restore(); }
   if (opt.label) {
-    g.save(); g.font = '800 ' + Math.max(10, Math.round(T * 0.2)) + 'px Montserrat, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom';
-    const w = g.measureText(opt.label).width + 10, ty = y - T * 0.42;
-    g.fillStyle = 'rgba(20,24,30,0.8)'; g.beginPath(); g.roundRect(x - w / 2, ty - T * 0.26, w, T * 0.27, 6); g.fill();
-    g.fillStyle = '#fff'; g.fillText(opt.label, x, ty - T * 0.02); g.restore();
+    g.save(); g.font = '800 ' + Math.max(10, Math.round(T * 0.18)) + 'px Montserrat, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'bottom';
+    const w = g.measureText(opt.label).width + 10, ty = y - T * 0.4, hh = Math.max(14, T * 0.25);
+    g.fillStyle = 'rgba(20,24,30,0.8)'; g.beginPath(); g.roundRect(x - w / 2, ty - hh, w, hh, 6); g.fill();
+    g.fillStyle = '#fff'; g.fillText(opt.label, x, ty - hh * 0.12); g.restore();
   }
 }
-// the light play mat the track sits on
-function drawFloor(g, x, y, w, h) {
-  g.fillStyle = '#eef3f6'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
-}
+const TRAIN_SIZE = 0.68; // the engine is about two thirds of a straight piece long
 
 export function defaultProject() {
-  return Object.assign(TM.starterTrack(), { trains: [{ name: 'Train 1', color: TM.TRAIN_COLOURS[0], start: { c: 6, r: 5, p: 0, rev: false }, blocks: TB.starterProgram() }] });
+  return Object.assign(TM.starterTrack(), { trains: [{ name: 'Train 1', color: TM.TRAIN_COLOURS[0], start: Object.assign({}, TM.STARTER_TRAIN), blocks: TB.starterProgram() }] });
 }
 
 export function mount(root, host) {
@@ -224,7 +196,7 @@ export function mount(root, host) {
   let proj = TM.cleanProject(host.project || defaultProject());
   if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
   let sel = 0, ws = null, sim = null, runner = null, headless = [], alive = true, quiet = false, raf = 0, last = 0, changeTimer = 0;
-  let tool = 'straight', lastRot = 0, hover = null, painting = null, undo = [], redo = [];
+  let tool = 'straight', hover = null, undo = [], redo = [];
   const keys = new Set();
 
   const status = (msg, kind) => { const s = $('tlStatus'); s.textContent = msg || ''; s.className = 'tl-status' + (kind ? ' ' + kind : ''); };
@@ -270,7 +242,6 @@ export function mount(root, host) {
     const t = proj.trains[sel];
     $('tlName').value = t ? t.name : ''; $('tlColour').value = t ? t.color : '#21b8e8';
     $('tlDelTrain').hidden = proj.trains.length < 2;
-    $('tlBoard').value = Object.keys(BOARDS).find(k => BOARDS[k][0] === proj.cols && BOARDS[k][1] === proj.rows) || 'small';
   }
   function selectTrain(i) {
     if (i === sel || !proj.trains[i]) return;
@@ -294,20 +265,25 @@ export function mount(root, host) {
   }
 
   // ── the tools under the board
-  const TOOLS = [...TM.PIECE_KEYS.map(k => ['piece', k, TM.PIECES[k].name]), ...TM.SNAP_KEYS.map(k => ['snap', k, k + ' snap']), ['train', 'train', 'Put the train on the track'], ['erase', 'erase', 'Rubber']];
+  const TOOLS = [...TM.PIECE_KEYS.map(k => ['piece', k, TM.PIECES[k].name]), ...TM.SNAP_KEYS.map(k => ['snap', k, k + ' snap']), ['train', 'train', 'Put the train on the track'], ['erase', 'erase', 'Rubber: take a piece away']];
   function iconFor(kind, key) {
-    const cv = document.createElement('canvas'), S = 40, d = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = S * d; cv.style.width = cv.style.height = S + 'px';
-    const c = cv.getContext('2d'); c.scale(d, d);
+    const cv = document.createElement('canvas'), S = 40, dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = S * dpr; cv.style.width = cv.style.height = S + 'px';
+    const c = cv.getContext('2d'); c.scale(dpr, dpr);
     if (kind !== 'erase') { c.fillStyle = '#eef3f6'; c.fillRect(0, 0, S, S); }
-    if (kind === 'piece') { const rot = key === 'curve' ? 0 : key === 'end' ? 1 : key === 'straight' ? 1 : 0; drawPiece(c, S, 0, 0, 0, 0, key, rot, null); }
-    else if (kind === 'snap') { c.fillStyle = '#eef3f6'; c.fillRect(0, 0, S, S); drawSnap(c, S * 2.6, S / 2, S / 2, 0, key); }
-    else if (kind === 'train') { drawPiece(c, S, 0, 0, 0, 0, 'straight', 1, null); drawTrain(c, S, S / 2, S / 2, 0, { color: proj.trains[sel] ? proj.trains[sel].color : '#21b8e8', head: '#ffffff', top: null }); }
+    if (kind === 'piece') {
+      const geom = TM.pieceGeom([key, 0, 0, key === 'cross' ? 0 : 0]);
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const p of geom.paths) for (let i = 0; i <= 8; i++) { const q = p.at(i / 8); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+      const T = Math.min(28 / Math.max(0.6, x1 - x0 + TW), 28 / Math.max(0.6, y1 - y0 + TW));
+      drawPiece(c, T, S / 2 - (x0 + x1) / 2 * T, S / 2 - (y0 + y1) / 2 * T, geom, null);
+    } else if (kind === 'snap') { drawSnap(c, S * 2.4, S / 2, S / 2, 0, key); }
+    else if (kind === 'train') { drawTrain(c, S * 0.95, S / 2, S / 2, 0, { color: proj.trains[sel] ? proj.trains[sel].color : TM.TRAIN_COLOURS[0], head: null, top: null }); }
     else { c.strokeStyle = '#ffb0b0'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, 10); c.lineTo(30, 30); c.moveTo(30, 10); c.lineTo(10, 30); c.stroke(); }
     return cv;
   }
   function renderTools() {
     const box = $('tlTools'); box.innerHTML = '';
-    const groups = [['Track', TOOLS.filter(t => t[0] === 'piece')], ['Colour snaps', TOOLS.filter(t => t[0] === 'snap')], ['', TOOLS.filter(t => t[0] === 'train' || t[0] === 'erase')]];
+    const groups = [['Track', TOOLS.filter(t => t[0] === 'piece')], ['Snaps', TOOLS.filter(t => t[0] === 'snap')], ['', TOOLS.filter(t => t[0] === 'train' || t[0] === 'erase')]];
     for (const [title, list] of groups) {
       const grp = document.createElement('div'); grp.className = 'tl-tgroup';
       if (title) { const h = document.createElement('span'); h.className = 'tl-tlabel'; h.textContent = title; grp.appendChild(h); }
@@ -318,7 +294,7 @@ export function mount(root, host) {
       box.appendChild(grp);
     }
     const ex = document.createElement('div'); ex.className = 'tl-tgroup';
-    ex.innerHTML = `<button type="button" class="tl-small" id="tlUndo" title="Undo (Ctrl+Z)">${ic('i-undo')} Undo</button><button type="button" class="tl-small" id="tlRedo" title="Redo">${ic('i-redo')} Redo</button><button type="button" class="tl-small" id="tlClear" title="Take every piece off the board">${ic('i-trash')} Clear track</button>`;
+    ex.innerHTML = `<button type="button" class="tl-small" id="tlUndo" title="Undo (Ctrl+Z)">${ic('i-undo')} Undo</button><button type="button" class="tl-small" id="tlRedo" title="Redo">${ic('i-redo')} Redo</button><button type="button" class="tl-small" id="tlClear" title="Take every piece away">${ic('i-trash')} Clear track</button>`;
     box.appendChild(ex);
     $('tlUndo').onclick = doUndo; $('tlRedo').onclick = doRedo; $('tlClear').onclick = clearTrack;
     setTool(tool);
@@ -329,141 +305,125 @@ export function mount(root, host) {
     const tb = root.querySelector('.tl-tool[data-tool="train"]'); if (tb) { tb.innerHTML = ''; tb.appendChild(iconFor('train')); }
   }
 
-  // ── editing the track
-  const key = (c, r) => c + ',' + r;
-  const findTile = (c, r) => proj.tiles.findIndex(t => t[0] === c && t[1] === r);
-  const snapshot = () => JSON.stringify({ tiles: proj.tiles, starts: proj.trains.map(t => t.start), cols: proj.cols, rows: proj.rows });
+  // ── editing the track: pieces click onto open ends (the blue + marks); tap a piece to turn it
+  const snapshot = () => JSON.stringify({ pieces: proj.pieces, starts: proj.trains.map(t => t.start) });
   function remember() { undo.push(snapshot()); if (undo.length > 80) undo.shift(); redo = []; }
-  function restore(s) {
-    const o = JSON.parse(s); proj.tiles = o.tiles; proj.cols = o.cols; proj.rows = o.rows;
-    o.starts.forEach((st, i) => { if (proj.trains[i]) proj.trains[i].start = st; });
-    afterEdit();
-  }
+  function restore(s) { const o = JSON.parse(s); proj.pieces = o.pieces; o.starts.forEach((st, i) => { if (proj.trains[i]) proj.trains[i].start = st; }); afterEdit(); }
   function doUndo() { if (running() || !undo.length) return; redo.push(snapshot()); restore(undo.pop()); }
   function doRedo() { if (running() || !redo.length) return; undo.push(snapshot()); restore(redo.pop()); }
   async function clearTrack() {
-    if (running() || !proj.tiles.length) return;
-    if (!(await ask('Take every piece off the board?'))) return;
-    remember(); proj.tiles = []; for (const t of proj.trains) t.start = null; afterEdit();
+    if (running() || !proj.pieces.length) return;
+    if (!(await ask('Take every piece of track away?'))) return;
+    remember(); proj.pieces = []; for (const t of proj.trains) t.start = null; afterEdit();
   }
   function afterEdit() {
-    // a train whose piece has gone (or changed) comes off the track
-    const fixed = TM.cleanProject(proj);
-    proj.tiles = fixed.tiles; proj.trains.forEach((t, i) => { t.start = fixed.trains[i] ? fixed.trains[i].start : null; });
+    const fixed = TM.cleanProject(proj); // a train whose piece has gone (or changed) comes off the track
+    proj.pieces = fixed.pieces; proj.trains.forEach((t, i) => { t.start = fixed.trains[i] ? fixed.trains[i].start : null; });
     rebuild(); renderTrains(); changed();
   }
-  function nearestSlot(tile, at) { // the slot nearest a tap (the middle one when there is no tap position)
-    const n = TM.slotCount(tile[2]); let k = Math.floor((n - 1) / 2);
-    if (at.x == null) return k;
-    const [a, b] = TM.piecePaths(tile[2], tile[3])[0]; let best = Infinity;
-    for (let j = 0; j < n; j++) { const p = TM.pathPoint(tile[0], tile[1], a, b, TM.slotU(tile[2], j)), d = Math.hypot(p.x - at.x, p.y - at.y); if (d < best) { best = d; k = j; } }
-    return k;
+  function openEnds() {
+    const out = [];
+    sim.geoms.forEach((G, p) => G.ends.forEach((E, e) => { if (!sim.links[p + ':' + e]) out.push({ p, e, x: E.x, y: E.y, h: E.h }); }));
+    return out;
   }
-  function tileFromEvent(e) {
-    const r = canvas.getBoundingClientRect(), L = layout();
-    const x = (e.clientX - r.left - L.ox) / L.T, y = (e.clientY - r.top - L.oy) / L.T;
-    const c = Math.floor(x), rr = Math.floor(y);
-    return { c, r: rr, x, y, inside: c >= 0 && rr >= 0 && c < proj.cols && rr < proj.rows };
+  const near = (list, x, y, r) => { let best = null, bd = r; for (const o of list) { const d = Math.hypot(o.x - x, o.y - y); if (d < bd) { bd = d; best = o; } } return best; };
+  function pieceAt(x, y) {
+    let best = -1, bd = TW * 0.75;
+    sim.geoms.forEach((G, p) => { for (const pth of G.paths) for (let i = 0; i <= 12; i++) { const q = pth.at(i / 12), d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = p; } } });
+    return best;
   }
-  function applyTool(at, first) {
-    if (!at.inside) return false;
-    const i = findTile(at.c, at.r), tile = i >= 0 ? proj.tiles[i] : null;
+  const endTarget = (x, y) => near(openEnds().map(o => Object.assign({}, o, { x: o.x + Math.cos(o.h) * 0.14, y: o.y + Math.sin(o.h) * 0.14, ex: o.x, ey: o.y })), x, y, 0.32);
+  function turnPiece(i) {
+    const pc = proj.pieces[i], G = sim.geoms[i], joined = G.ends.map((E, e) => sim.links[i + ':' + e]).map((l, e) => (l ? { e, l } : null)).filter(Boolean);
+    if (joined.length > 1) { if (host.toast) host.toast('That piece is joined at both ends, so it can’t turn. Take a neighbour away first.'); return false; }
+    if (!joined.length) { pc[3] = (pc[3] + 1) % 8; return true; } // a piece on its own turns 45° each tap
+    const { e, l } = joined[0], E = sim.geoms[l.p].ends[l.e], n = TM.PIECES[pc[0]].ends.length;
+    const np = TM.placeAt(pc[0], (e + 1) % n, E.x, E.y, E.h); np[4] = pc[4];
+    proj.pieces[i] = np; return true; // joined by its next end instead: a curve now bends the other way, a split faces the other way
+  }
+  function applyTool(x, y) {
     if (TM.PIECES[tool]) {
-      if (tile && tile[2] === tool) { if (!first) return false; tile[3] = (tile[3] + 1) % 4; lastRot = tile[3]; return true; } // tap again = turn it
-      if (tile) { tile[2] = tool; return true; }
-      proj.tiles.push([at.c, at.r, tool, lastRot % 4, null]); return true;
+      const end = endTarget(x, y);
+      if (end) { if (proj.pieces.length >= TM.MAX_PIECES) { if (host.toast) host.toast('That’s the biggest track the Train Lab can hold.'); return false; } proj.pieces.push(TM.placeAt(tool, 0, end.ex, end.ey, end.h)); return true; }
+      const i = pieceAt(x, y); if (i >= 0) return turnPiece(i);
+      proj.pieces.push([tool, Math.round(x * 2) / 2, Math.round(y * 2) / 2, 0, null]); return true; // on the empty mat: start a new bit of track
     }
+    const i = pieceAt(x, y);
+    if (i < 0) return false;
+    const pc = proj.pieces[i];
     if (TM.SNAPS[tool]) {
-      if (!tile) return false;
-      const n = TM.slotCount(tile[2]);
-      if (!n) { if (first && host.toast) host.toast('Snaps click onto straights, curves, splits and buffer stops.'); return false; }
-      const k = nearestSlot(tile, at);
-      const arr = tile[4] ? tile[4].slice() : new Array(n).fill(null);
-      const nv = arr[k] === tool && first ? null : tool; if (arr[k] === nv) return false;
-      arr[k] = nv; tile[4] = arr.some(Boolean) ? arr : null; return true;
+      const pts = slotPoints(sim.geoms[i]);
+      if (!pts.length) { if (host.toast) host.toast('Snaps don’t go on a crossing.'); return false; }
+      const k = near(pts, x, y, 9).k, arr = pc[4] ? pc[4].slice() : new Array(pts.length).fill(null);
+      arr[k] = arr[k] === tool ? null : tool; pc[4] = arr.some(Boolean) ? arr : null; return true;
     }
-    if (tool === 'erase') { if (!tile) return false; proj.tiles.splice(i, 1); return true; }
-    if (tool === 'train' && first) {
-      const t = proj.trains[sel]; if (!t || !tile) return false;
-      const n = TM.PIECES[tile[2]].paths.length;
-      const others = proj.trains.filter((o, j) => j !== sel && o.start && o.start.c === at.c && o.start.r === at.r);
-      if (others.length) { if (host.toast) host.toast('There is already a train there.'); return false; }
-      if (t.start && t.start.c === at.c && t.start.r === at.r) { // tap again: turn it round, then try the next path
-        const k = t.start.p * 2 + (t.start.rev ? 1 : 0) + 1, kk = k % (n * 2);
-        t.start = { c: at.c, r: at.r, p: Math.floor(kk / 2), rev: kk % 2 === 1 };
-      } else t.start = { c: at.c, r: at.r, p: 0, rev: false };
+    if (tool === 'erase') {
+      proj.pieces.splice(i, 1);
+      for (const t of proj.trains) if (t.start) { if (t.start.p === i) t.start = null; else if (t.start.p > i) t.start = Object.assign({}, t.start, { p: t.start.p - 1 }); }
+      return true;
+    }
+    if (tool === 'train') {
+      const t = proj.trains[sel]; if (!t) return false;
+      if (proj.trains.some((o, j) => j !== sel && o.start && o.start.p === i)) { if (host.toast) host.toast('There is already a train on that piece.'); return false; }
+      const n = TM.PIECES[pc[0]].paths.length;
+      if (t.start && t.start.p === i) { const kk = (t.start.k * 2 + (t.start.rev ? 1 : 0) + 1) % (n * 2); t.start = { p: i, k: Math.floor(kk / 2), rev: kk % 2 === 1 }; } // tap again: turn it round, then the other track
+      else t.start = { p: i, k: 0, rev: false };
       return true;
     }
     return false;
   }
+  function tapAt(x, y) { const before = snapshot(); if (running() || !applyTool(x, y)) return false; undo.push(before); if (undo.length > 80) undo.shift(); redo = []; afterEdit(); return true; }
+
+  // ── the view: the whole track always fits, with room round the edges for the next piece
+  function view() {
+    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const G of sim.geoms) for (const pth of G.paths) for (let i = 0; i <= 4; i++) { const q = pth.at(i / 4); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+    if (!isFinite(x0)) { x0 = -3; x1 = 3; y0 = -2; y1 = 2; }
+    const m = 1.1, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ww = Math.max(6, x1 - x0 + 2 * m), hh = Math.max(3.6, y1 - y0 + 2 * m);
+    const T = Math.min(w / ww, h / hh, 150);
+    return { T, ox: w / 2 - cx * T, oy: h / 2 - cy * T, w, h };
+  }
+  function worldFromEvent(e) { const r = canvas.getBoundingClientRect(), V = view(); return { x: (e.clientX - r.left - V.ox) / V.T, y: (e.clientY - r.top - V.oy) / V.T }; }
   canvas.addEventListener('pointerdown', e => {
     audio(); // sounds may only start after a tap (iPad)
-    const at = tileFromEvent(e);
+    const at = worldFromEvent(e);
     if (running()) { // tap a train
-      for (let i = 0; i < sim.trains.length; i++) { const p = sim.pose(i); if (p && Math.hypot(p.x - at.x, p.y - at.y) < 0.45) { runner.tap(i); return; } }
+      for (let i = 0; i < sim.trains.length; i++) { const p = sim.pose(i); if (p && Math.hypot(p.x - at.x, p.y - at.y) < 0.4) { runner.tap(i); return; } }
       return;
     }
-    if (!at.inside) return;
-    canvas.setPointerCapture(e.pointerId);
-    const before = snapshot();
-    if (applyTool(at, true)) { undo.push(before); redo = []; afterEdit(); painting = { last: key(at.c, at.r), dirty: true }; }
-    else painting = { last: key(at.c, at.r), dirty: false, before };
-    e.preventDefault();
+    tapAt(at.x, at.y); e.preventDefault();
   });
-  canvas.addEventListener('pointermove', e => {
-    const at = tileFromEvent(e); hover = at.inside ? at : null;
-    if (!painting || running() || tool === 'train') return;
-    const k = key(at.c, at.r); if (k === painting.last) return; painting.last = k;
-    if (!painting.dirty && painting.before) { const b = painting.before; if (applyTool(at, false)) { undo.push(b); redo = []; painting.dirty = true; afterEdit(); } return; }
-    if (applyTool(at, false)) afterEdit();
-  });
-  const endPaint = () => { painting = null; };
-  canvas.addEventListener('pointerup', endPaint); canvas.addEventListener('pointercancel', endPaint);
+  canvas.addEventListener('pointermove', e => { hover = worldFromEvent(e); });
   canvas.addEventListener('pointerleave', () => { hover = null; });
-  canvas.addEventListener('contextmenu', e => { // right-click turns a piece
-    e.preventDefault(); if (running()) return;
-    const at = tileFromEvent(e), i = findTile(at.c, at.r); if (i < 0) return;
-    remember(); proj.tiles[i][3] = (proj.tiles[i][3] + 1) % 4; afterEdit();
-  });
 
-  // ── the board
-  function layout() {
-    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
-    const T = Math.max(8, Math.floor(Math.min(w / proj.cols, h / proj.rows)));
-    return { T, ox: Math.floor((w - T * proj.cols) / 2), oy: Math.floor((h - T * proj.rows) / 2), w, h };
-  }
   function draw() {
-    const d = window.devicePixelRatio || 1, cw = canvas.clientWidth, ch = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1, cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (!cw || !ch) return;
-    if (canvas.width !== Math.round(cw * d) || canvas.height !== Math.round(ch * d)) { canvas.width = Math.round(cw * d); canvas.height = Math.round(ch * d); }
-    g.setTransform(d, 0, 0, d, 0, 0);
-    const { T, ox, oy, w, h } = layout();
-    g.fillStyle = '#2b2622'; g.fillRect(0, 0, w, h);
-    drawFloor(g, ox - 4, oy - 4, T * proj.cols + 8, T * proj.rows + 8);
-    if (!running()) { // the grid shows while building
-      g.strokeStyle = 'rgba(40,80,110,0.13)'; g.lineWidth = 1; g.beginPath();
-      for (let c = 0; c <= proj.cols; c++) { g.moveTo(ox + c * T + 0.5, oy); g.lineTo(ox + c * T + 0.5, oy + proj.rows * T); }
-      for (let r = 0; r <= proj.rows; r++) { g.moveTo(ox, oy + r * T + 0.5); g.lineTo(ox + proj.cols * T, oy + r * T + 0.5); }
-      g.stroke();
-    }
-    for (const t of proj.tiles) drawPiece(g, T, ox, oy, t[0], t[1], t[2], t[3], t[4], 'bed');
-    for (const t of proj.tiles) drawPiece(g, T, ox, oy, t[0], t[1], t[2], t[3], t[4], 'rails');
-    if (hover && !running() && !touchy) {
-      g.save(); g.globalAlpha = 0.45;
-      if (TM.PIECES[tool] && findTile(hover.c, hover.r) < 0) drawPiece(g, T, ox, oy, hover.c, hover.r, tool, lastRot, null);
-      const ht = proj.tiles[findTile(hover.c, hover.r)];
-      if (TM.SNAPS[tool] && ht && TM.slotCount(ht[2])) { const k = nearestSlot(ht, hover), [a, b] = TM.piecePaths(ht[2], ht[3])[0], p = TM.pathPoint(ht[0], ht[1], a, b, TM.slotU(ht[2], k)); g.globalAlpha = 1; drawSnap(g, T, ox + p.x * T, oy + p.y * T, p.ang, tool, true); }
-      g.restore();
-      g.strokeStyle = 'rgba(29,111,224,0.85)'; g.lineWidth = 2; g.strokeRect(ox + hover.c * T + 1, oy + hover.r * T + 1, T - 2, T - 2);
+    if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const { T, ox, oy, w, h } = view();
+    g.fillStyle = '#eef3f6'; g.fillRect(0, 0, w, h);
+    sim.geoms.forEach((G, p) => drawPiece(g, T, ox, oy, G, proj.pieces[p][4], 'bed'));
+    sim.geoms.forEach((G, p) => drawPiece(g, T, ox, oy, G, proj.pieces[p][4], 'top'));
+    if (!running()) {
+      const tgt = hover && TM.PIECES[tool] ? endTarget(hover.x, hover.y) : null;
+      for (const o of openEnds()) { // where the next piece can go
+        const x = ox + (o.x + Math.cos(o.h) * 0.14) * T, y = oy + (o.y + Math.sin(o.h) * 0.14) * T, r = Math.max(7, T * 0.09);
+        g.fillStyle = tgt && tgt.p === o.p && tgt.e === o.e ? '#1d6fe0' : 'rgba(29,111,224,0.75)'; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#fff'; g.lineWidth = Math.max(1.5, r * 0.28); g.beginPath(); g.moveTo(x - r * 0.5, y); g.lineTo(x + r * 0.5, y); g.moveTo(x, y - r * 0.5); g.lineTo(x, y + r * 0.5); g.stroke();
+      }
+      if (tgt && !touchy) { g.save(); g.globalAlpha = 0.45; const G = TM.pieceGeom(TM.placeAt(tool, 0, tgt.ex, tgt.ey, tgt.h)); drawPiece(g, T, ox, oy, G, null, 'bed'); drawPiece(g, T, ox, oy, G, null, 'top'); g.restore(); }
+      if (hover && !touchy && TM.SNAPS[tool]) { const i = pieceAt(hover.x, hover.y); if (i >= 0) { const pts = slotPoints(sim.geoms[i]); if (pts.length) { const q = near(pts, hover.x, hover.y, 9); drawSnap(g, T, ox + q.x * T, oy + q.y * T, q.ang, tool, true); } } }
     }
     const many = sim.trains.length > 1;
     sim.trains.forEach((tr, i) => {
       const p = sim.pose(i); if (!p) return;
-      drawTrain(g, T, ox + p.x * T, oy + p.y * T, p.ang, tr, { ring: !running() && i === sel && many, label: many || !running() ? tr.name : '', moving: tr.v > 0.01 });
+      drawTrain(g, T * TRAIN_SIZE, ox + p.x * T, oy + p.y * T, p.ang, tr, { ring: !running() && i === sel && many, label: many || !running() ? tr.name : '', moving: tr.v > 0.01 });
     });
-    if (!proj.tiles.length) {
+    if (!proj.pieces.length) {
       g.fillStyle = '#3c4a55'; g.font = '800 16px Montserrat, sans-serif'; g.textAlign = 'center';
-      g.fillText('Pick a track piece below, then tap the board to lay it.', w / 2, h / 2);
+      g.fillText('Pick a track piece below, then tap here to put it down.', w / 2, h / 2);
     }
   }
   function tick(now) {
@@ -479,18 +439,18 @@ export function mount(root, host) {
     audio();
     if (!ws) return;
     flush(); rebuild();
-    if (!sim.trains.some(t => t.on)) { status('Put a train on the track first: pick the train tool and tap the track.', 'bad'); return; }
+    if (!sim.trains.some(t => t.on)) { status('Put a train on the track first: pick the train tool and tap a piece.', 'bad'); return; }
     headless = proj.trains.map(t => {
       const w = new Blockly.Workspace();
       try { Blockly.serialization.workspaces.load(t.blocks || TB.newTrainProgram(), w); } catch (e) { /* an empty program */ }
       return w;
     });
     runner.start(headless);
-    status('Running · tap a train', 'ok');
+    status('Running · the trains follow the snaps · tap a train', 'ok');
     canvas.focus({ preventScroll: true });
   }
   function stop() { if (runner) runner.stop(); }
-  function reset() { if (runner) runner.stop(true); disposeHeadless(); rebuild(); status('Press Run to start the trains.'); }
+  function reset() { if (runner) runner.stop(true); disposeHeadless(); rebuild(); status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.'); }
 
   function typing(e) { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
   function onKey(e) {
@@ -512,12 +472,7 @@ export function mount(root, host) {
   $('tlColour').addEventListener('input', () => { const t = proj.trains[sel]; if (!t || !okColour($('tlColour').value)) return; t.color = $('tlColour').value; if (sim.trains[sel]) sim.trains[sel].color = t.color; renderTrainsSoon(); setTool(tool); changed(); });
   let rtTimer = 0; function renderTrainsSoon() { clearTimeout(rtTimer); rtTimer = setTimeout(() => { const f = document.activeElement; renderTrains(); if (f && root.contains(f)) f.focus(); }, 300); }
   $('tlDelTrain').onclick = deleteTrain;
-  $('tlBoard').onchange = async () => {
-    if (running()) { renderTrains(); return; }
-    const [cols, rows] = BOARDS[$('tlBoard').value] || BOARDS.small;
-    if (proj.tiles.some(t => t[0] >= cols || t[1] >= rows) && !(await ask('Some of your track is outside a board that size and will be taken off. Change the board?'))) { renderTrains(); return; }
-    remember(); proj.cols = cols; proj.rows = rows; afterEdit();
-  };
+
 
   const ro = new ResizeObserver(() => { if (ws) Blockly.svgResize(ws); });
   ro.observe($('tlBlocks'));
@@ -539,12 +494,12 @@ export function mount(root, host) {
     });
     $('tlLoading').hidden = true;
     raf = requestAnimationFrame(tick);
-    status('Press Run to start the trains.');
+    status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
   })().catch(e => { $('tlLoading').textContent = 'The Train Lab could not start. Check your connection and try again.'; console.error(e); });
 
   function getProject() {
     flush();
-    return JSON.parse(JSON.stringify({ cols: proj.cols, rows: proj.rows, tiles: proj.tiles, trains: proj.trains }));
+    return JSON.parse(JSON.stringify({ v: 2, pieces: proj.pieces, trains: proj.trains }));
   }
   return {
     ready,
@@ -554,7 +509,7 @@ export function mount(root, host) {
       proj = TM.cleanProject(p || defaultProject()); if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
       sel = 0; undo = []; redo = [];
       rebuild(); renderTrains(); renderTools(); loadBlocks();
-      status('Press Run to start the trains.');
+      status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
       if (!raf && ws) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
     },
     resume() { if (ws) Blockly.svgResize(ws); if (!raf && ws) raf = requestAnimationFrame(tick); },
@@ -566,6 +521,6 @@ export function mount(root, host) {
       root.innerHTML = '';
     },
     run, stop, reset, setTool, selectTrain,
-    _sim: () => sim, _runner: () => runner, _ws: () => ws, _proj: () => proj, _tap: (c, r) => { const before = snapshot(); if (!running() && applyTool({ c, r, inside: c >= 0 && r >= 0 && c < proj.cols && r < proj.rows }, true)) { undo.push(before); redo = []; afterEdit(); return true; } return false; }
+    _sim: () => sim, _runner: () => runner, _ws: () => ws, _proj: () => proj, _tapWorld: tapAt, _openEnds: () => openEnds(),
   };
 }

@@ -202,35 +202,37 @@ or `startNewStage`.
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
 ## Train Lab project type — `projectType==='train'` — built 6 Oct 2026 on branch `claude/vibrant-cori-tho25y` (CJ_VERSION 2026.10.08), NOT on main yet
-**Look (Charlie, 6 Oct 2026, from intelino's K-1 snap-training sheets):** black track with two white dashed centre lines and round
-  jigsaw joints (a 90° curve is drawn as two 45° pieces), square snaps over the dashes, splits with built-in cyan/blue (right) and cyan/red (left)
-  markers, light play mat; the engine = white body, coloured top (train colour, sky blue first), side windows, 4 red LED bars + the colour
-  light on the roof, yellow button and red stripes at the back. intelino's own white-led snap COMMANDS (white+red = stop etc.) are NOT built in.
-  Charlie's idea: a virtual smart-train set (inspired by intelino smart trains — **never use the intelino name or look in the UI**; it's
-"Train Lab"). Build a track, code each train with blocks, watch the virtual trains drive it. Real trains over Bluetooth = a possible later phase.
-- **Track + simulator (`train/train-model.js`, no DOM, Node-testable):** square grid (`cols`×`rows`, boards small 10×7 / medium 13×9 / large
-  16×11). Pieces `PIECES` = straight, curve, splitR, splitL, splitY, cross, end (buffer stop); each = paths between edges (0 top,1 right,2 bottom,
-  3 left, -1 = middle for the buffer), turned by `rot`. `pathPoint(c,r,a,b,u)` = position + heading (curves = quarter circles round the shared
-  corner). Colour snaps `SNAPS` (red/green/blue/yellow/magenta/cyan/white) sit in slots `SLOTS[piece]` (fractions along path 0: straight 5, curve 4, splitR/L 3 after the built-in `SPLIT_MARKS`, end 1); tile[4] = array per slot (an old single colour goes in the middle, `cleanSnaps`); a train fires 'colour' for each snap in the order it meets them. `createSim(project,{onEvent})`
-  → `step(dt)`, `pose(i)`, `reset()`, `setTarget(i,tilesPerSec)` (eases at ACCEL), `turnAround(i)`; events 'colour'|'split'|'end'|'bump'. At a
-  facing split a train takes `next` (one-shot) else `dflt` ('straight' to start; 'random' allowed). Trains that would drive closer than 0.62 tiles
-  stay put, stop and both get 'bump'. A stop at a buffer/bump keeps the speed in `cruise` so "turn around" sets off again. `cleanProject` tidies
-  saved data; `starterTrack()` = loop + shortcut row with splitR/splitL, red snap (station) on the bottom row, blue snap before the split.
-- **Blocks (`train/train-blocks.js`, `tr_*`):** Events (when Run, when I see colour, when I go through a split, when I reach the end, when I bump
-  into a train, when tapped, key, messages) · Drive (drive at slow/medium/fast, set speed %, drive N track pieces, stop, stop for N s, turn
-  around, at the next split go …, at every split go …) · Lights (headlight, roof light, off) · Sound (horn/whistle/bell/chuff/beep/ding dong,
-  own Web Audio synth in train-app.js) · Sensing · Control · Operators · Variables (shared by all trains, by NAME). `starterProgram()`.
-- **Runner (`train/train-runner.js`):** generator fibers per (train, hat), like Robot Lab; `tick` runs fibers, then `sim.step`, then starts hats
-  for queued sim events. At Run the app builds a headless `Blockly.Workspace` per train (all trains run, not just the one on screen).
-- **App (`train/train-app.js` + `.css`, scoped `.tl`, ids `tl*`):** train tabs (≤3, `MAX_TRAINS`) over one Blockly workspace (shows the chosen
-  train's blocks; `flush()` saves it into the train) · Run/Stop/Reset · the board canvas (tap = lay piece, tap again/right-click = turn, drag
-  = lay a line; snap tools; train tool puts the chosen train on (tap again turns it round / next path); rubber; Undo/Redo/Clear; Board size) ·
-  name/colour/remove train. Project `{cols,rows,tiles:[[c,r,piece,rot,snap]],trains:[{name,color,start:{c,r,p,rev},blocks}]}`. Test hooks
-  `_sim/_runner/_ws/_proj/_tap(c,r)`, `setTool`, `selectTrain`.
+Charlie's idea: a virtual intelino-style smart-train set (**never use the intelino name or logo in the UI** — it's "Train Lab"). Charlie
+asked for the look AND the default behaviour to match intelino EXACTLY; reference = intelino's K-1 "snap training" worksheets Charlie shared
+(6 Oct 2026) + intelino's support-site command rules (found via search; the site itself is blocked from the sandbox).
+- **Track (`train/train-model.js`, no DOM, Node-testable): pieces click together end to end — NOT a grid.** Units: straight = 1; `short`
+  0.5; `curveL`/`curveR` 45° radius `R`=0.884 (8 = a circle; R chosen so 2 splits + a short = a passing loop that closes); `splitL`/`splitR`
+  (straight + 45° branch; built-in markers cyan+red / cyan+blue = `marks`, then ONE steering slot); `cross`. A piece = `[type, x, y, d, snaps]`
+  (x,y = end 0, d = ×45°); `pieceGeom` → world ends (with out-headings) + paths (`at(u)`); `placeAt(type, endIndex, x, y, h)` clicks a piece
+  onto an open end; `linkUp` joins ends that meet (≤0.05 apart, facing) so loops close by themselves; `chain()` lays pieces in a row.
+  `starterTrack()` = oval + passing loop (20 pieces): white-green (slow) and white-green³ (fast) on top, white-red station (piece 10) on the
+  bottom; `STARTER_TRAIN` on piece 9. Project = `{v:2, pieces, trains:[{name,color,start:{p,k,rev},blocks}]}`.
+- **Default behaviour = intelino's screen-free autopilot:** `sim.go()` at Run (= pressing the button) sets every train off at medium.
+  Snaps: slots down the middle (straight 6, short 2, curve 3, split 1). Command rules: starts with WHITE in the direction of travel, ends at a
+  gap / another white / the piece's end (one piece only). white+green x1/2/3 = slow/medium/fast (`SPEEDS` 1.1/1.65/2.2 = 30/45/60 cm/s
+  scaled); white+red x1/2/3 = stop 2/5/10 s then resume; white blue = reverse; white red blue = end route; white yellow (…red/…blue) = wagon
+  drop-offs (no wagons yet: events only); white magenta X = custom (event only). Splits: slot green straight · red left · blue right · yellow
+  alternate (turn first — the real order is unconfirmed) · magenta turn, straight, straight · empty = RANDOM. Open end of track = the train
+  stops ('end' event; a real one would roll off). Bump = both stop. Start speed medium is a guess (unconfirmed).
+- **Blocks (`train/train-blocks.js`, `tr_*`)** on top of the snaps: Events (when Run, when I see colour, **when I read the snap command X**,
+  split, end, bump, tapped, key, messages) · Drive (drive slow/medium/fast, set speed %, drive N pieces, stop, stop for, turn around, at the
+  next split go …, at every split go … (replaces random for empty slots), **turn snap commands on/off**) · Lights · Sound · Sensing (+ last
+  snap command) · Control · Operators · Variables (shared by name). Decision order at a split: next-split block > slot snap > every-split
+  block > random. New trains start with NO blocks.
+- **App (`train/train-app.js` + `.css`, `.tl`):** slim black track (`TW` 0.24) with two white dashed lines, jigsaw joints, square snaps
+  (`SNAP` 0.105), split markers, light mat; white engine with a coloured top (train colour; sky blue first), windows, 4 red LED bars + colour
+  light on the roof, yellow button, red stripes. The view auto-fits the whole track (`view()`). Tools: pieces (tap a blue + at an open end to
+  click on; tap a piece to turn it = re-join by its next end, or rotate 45° if loose; tap the empty mat to start a new section), 7 snap
+  colours (tap the slot), train, rubber, Undo/Redo/Clear. Test hooks `_sim/_runner/_ws/_proj/_tapWorld(x,y)/_openEnds()`, `setTool`, `selectTrain`.
 - **Host glue (mirrors AI Lab):** `trainBase/loadTrainLab/trainCurrent/startNewTrain/enterTrainUI/exitTrainUI`, `body.train-mode`, `#train-ui`,
   payload `train`, `#pt-modal` tile `data-pt="train"` (KS1 hidden), home tile `data-start="train"` (`home/train.jpg`), icon `#i-train`,
-  `TRAIN_HELP`, Teacher Guide "Train Lab" section, thumbnail badge, `LS_TYPE.train`. **No live collaboration** (Share hides Collaborate).
-  Test: `tests/train.test.mjs`.
+  `TRAIN_HELP` (incl. a Snap commands tab), Teacher Guide "Train Lab" section, thumbnail badge, `LS_TYPE.train`. No live collaboration.
+  Test: `tests/train.test.mjs` (rules in Node + the app). Ideas not done: wagons, real trains over Web Bluetooth.
 
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate

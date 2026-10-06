@@ -1,195 +1,256 @@
 /* CodeJump · Train Lab — the track and the trains (no DOM, so it also runs in Node tests).
  *
- * The track is a grid of square pieces. Each piece has paths between its edges (0 = top, 1 = right, 2 = bottom,
- * 3 = left; -1 = the middle, for a buffer stop), turned by `rot` quarter turns clockwise:
- *   straight · curve · split-right / split-left (straight on, or turn) · split-Y (left or right) · crossing · buffer stop
- * Straights, curves, splits and buffer stops have slots (SLOTS) that coloured "snaps" click into; a train sees each snap as it drives
- * over it, in the order it meets them.
+ * The track is made the way a real smart-train set is: pieces that click together end to end, not squares on a grid.
+ * Units: a straight piece is 1 long; curves turn 45° (8 make a circle, radius R); headings are radians with y pointing
+ * down (so a bigger heading turns right on screen). Each piece sits at (x, y) = its end 0, turned d × 45°.
+ *   straight · short (half) · curve left / right · split left / right (a straight with a 45° branch; built-in colour
+ *   markers) · crossing
+ * A piece's ends join any other piece end in the same place facing the other way, so loops close by themselves.
  *
- *   const sim = createSim(project, { onEvent(trainIndex, kind, data) })   // kind: 'colour' | 'split' | 'end' | 'bump'
- *   sim.step(dt) · sim.pose(i) → {x, y, ang} in tile units · sim.reset() · sim.trains[i] (speed, lights, …)
- *   drive: sim.setTarget(i, tilesPerSecond) · sim.turnAround(i) · train.next / train.dflt = 'left'|'straight'|'right'|'random'
+ * Snaps sit in slots down the middle of a piece. With snap commands on (the default) a train obeys them like the real
+ * thing: a command starts with WHITE (in the direction of travel), has no gaps and is all on one piece —
+ *   white green / green green / green green green = slow / medium / fast · white red / red red / red red red = stop 2 / 5 / 10 s
+ *   white blue = reverse · white red blue = end route · white yellow (… red / … blue) = wagon drop-offs · white magenta X = custom
+ * Splits start with built-in cyan + red (straight-or-left) or cyan + blue (straight-or-right) markers and then one slot:
+ *   green straight · red left · blue right · yellow alternate · magenta turn, straight, straight · empty = a random choice.
  *
- * A train that is stopped by a buffer stop or a bump remembers its speed in `cruise`, so "turn around" sets off again.
+ *   const sim = createSim(project, { onEvent(trainIndex, kind, data) })  // kind: colour | command | split | end | bump
+ *   sim.go() (= pressing the train's button) · sim.step(dt) · sim.pose(i) → {x, y, ang} · sim.reset()
+ *   sim.setTarget(i, speed) · sim.turnAround(i) · sim.stopFor(i, secs) · train.next / train.dflt = 'left'|'straight'|'right'|'random'
  *
- * A project is { cols, rows, tiles: [[c, r, piece, rot, snaps|null]] (snaps = one colour or null per slot), trains: [{ name, color, start: {c, r, p, rev}|null, blocks }] }.
+ * A project is { v: 2, pieces: [[type, x, y, d, snaps|null]], trains: [{ name, color, start: {p, k, rev}|null, blocks }] }.
  */
 
+export const R = 0.884; // curve radius: makes 2 splits + a short exactly as long as their passing loop, so loops close
+const H = Math.PI / 4, CE = R * Math.SQRT1_2, CY = R * (1 - Math.SQRT1_2), PI = Math.PI;
+const CURVE_LEN = R * H;
+const slotsOn = (len, n, first, gap) => Array.from({ length: n }, (_, k) => (first + k * gap) / len);
+// ends: [x, y, out-heading] (out = pointing away from the piece); paths: [end, end, shape]; slots: fractions along path 0
 export const PIECES = {
-  straight: { name: 'Straight', paths: [[0, 2]] },
-  curve: { name: 'Curve', paths: [[2, 1]] },
-  splitR: { name: 'Split (right)', paths: [[2, 0], [2, 1]] },
-  splitL: { name: 'Split (left)', paths: [[2, 0], [2, 3]] },
-  splitY: { name: 'Y split', paths: [[2, 3], [2, 1]] },
-  cross: { name: 'Crossing', paths: [[0, 2], [1, 3]] },
-  end: { name: 'Buffer stop', paths: [[2, -1]] }
+  straight: { name: 'Straight', ends: [[0, 0, PI], [1, 0, 0]], paths: [[0, 1, 'line']], slots: slotsOn(1, 6, 0.175, 0.13) },
+  short: { name: 'Short straight', ends: [[0, 0, PI], [0.5, 0, 0]], paths: [[0, 1, 'line']], slots: slotsOn(0.5, 2, 0.12, 0.13) },
+  curveL: { name: 'Curve left', ends: [[0, 0, PI], [CE, -CY, -H]], paths: [[0, 1, 'arcL']], slots: slotsOn(CURVE_LEN, 3, CURVE_LEN / 2 - 0.13, 0.13) },
+  curveR: { name: 'Curve right', ends: [[0, 0, PI], [CE, CY, H]], paths: [[0, 1, 'arcR']], slots: slotsOn(CURVE_LEN, 3, CURVE_LEN / 2 - 0.13, 0.13) },
+  splitL: { name: 'Split (straight or left)', ends: [[0, 0, PI], [1, 0, 0], [CE, -CY, -H]], paths: [[0, 1, 'line'], [0, 2, 'arcL']], marks: ['cyan', 'red'], slots: [0.385] },
+  splitR: { name: 'Split (straight or right)', ends: [[0, 0, PI], [1, 0, 0], [CE, CY, H]], paths: [[0, 1, 'line'], [0, 2, 'arcR']], marks: ['cyan', 'blue'], slots: [0.385] },
+  cross: { name: 'Crossing', ends: [[0, 0, PI], [1, 0, 0], [0.5, -0.5, -PI / 2], [0.5, 0.5, PI / 2]], paths: [[0, 1, 'line'], [2, 3, 'line']], slots: [] }
 };
+export const MARK_U = [0.125, 0.255]; // where a split's built-in markers are (fractions of its straight path)
 export const PIECE_KEYS = Object.keys(PIECES);
-export const SNAPS = { red: '#ff3b3b', green: '#29c46a', blue: '#2f7bff', yellow: '#ffd23a', magenta: '#e04cd8', cyan: '#2fd6e6', white: '#f4f4f4' };
-// where a piece's snap slots are, as fractions along its first path (splits: after the built-in split markers)
-export const SLOTS = { straight: [0.12, 0.31, 0.5, 0.69, 0.88], curve: [0.125, 0.375, 0.625, 0.875], splitR: [0.45, 0.62, 0.79], splitL: [0.45, 0.62, 0.79], end: [0.32] };
-export const slotCount = piece => (SLOTS[piece] ? SLOTS[piece].length : 0);
-export const slotU = (piece, k) => SLOTS[piece][k];
-// the colours built into each kind of split, near where a train comes in (so a train knows a split is coming)
-export const SPLIT_MARKS = { splitR: ['cyan', 'blue'], splitL: ['cyan', 'red'], splitY: ['cyan', 'magenta'] };
-// a tile's snaps as a full array (one per slot); a single colour from an older save goes in the middle
-export function cleanSnaps(piece, v) {
-  const n = slotCount(piece); if (!n || !v) return null;
-  const out = new Array(n).fill(null);
-  if (typeof v === 'string') { if (SNAPS[v]) out[Math.floor((n - 1) / 2)] = v; }
-  else if (Array.isArray(v)) for (let k = 0; k < n; k++) if (SNAPS[v[k]]) out[k] = v[k];
-  return out.some(Boolean) ? out : null;
-}
+export const SNAPS = { white: '#f6f6f6', red: '#ef4b3c', green: '#3cb54a', blue: '#1f6fd1', yellow: '#ffd21f', magenta: '#d63fb5', cyan: '#4fc9ea' };
 export const SNAP_KEYS = Object.keys(SNAPS);
-export const SPEEDS = { slow: 0.9, medium: 1.7, fast: 2.6 }; // tiles per second
-export const MAX_SPEED = 3; // 100%
+export const slotCount = t => (PIECES[t] ? PIECES[t].slots.length : 0);
+export const SPEEDS = { slow: 1.1, medium: 1.65, fast: 2.2 }; // pieces per second (the real 30 / 45 / 60 cm/s, scaled)
+export const MAX_SPEED = 2.75; // 100%
 export const MAX_TRAINS = 3;
+export const MAX_PIECES = 200;
 export const TRAIN_COLOURS = ['#21b8e8', '#f0623c', '#3cbf5a', '#9b6cf0'];
-export const SIZE = { cols: 10, rows: 7, min: 4, max: 16 };
-const ACCEL = 2.6; // tiles/s² when speeding up or braking
-const BUMP = 0.62; // trains closer than this (tiles) have bumped
-
-const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
+const ACCEL = 3; // pieces/s² when speeding up or braking
+const BUMP = 0.5; // trains closer than this have bumped
 const okColour = c => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c) : null);
-const int = (v, lo, hi, d) => { const n = Math.round(Number(v)); return isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d; };
 export const cleanName = n => String(n || '').replace(/[<>]/g, '').trim().slice(0, 14);
+const wrap = a => { while (a > PI) a -= 2 * PI; while (a <= -PI) a += 2 * PI; return a; };
 
-export function piecePaths(piece, rot) {
-  const P = PIECES[piece]; if (!P) return [];
-  return P.paths.map(([a, b]) => [a < 0 ? a : (a + rot) % 4, b < 0 ? b : (b + rot) % 4]);
+// ── geometry of one placed piece, in world units
+export function pieceGeom(pc) {
+  const [t, x, y, d] = pc, P = PIECES[t], phi = d * H, cs = Math.cos(phi), sn = Math.sin(phi);
+  const tf = (lx, ly) => [x + cs * lx - sn * ly, y + sn * lx + cs * ly];
+  const ends = P.ends.map(([lx, ly, h]) => { const [wx, wy] = tf(lx, ly); return { x: wx, y: wy, h: wrap(h + phi) }; });
+  const paths = P.paths.map(([a, b, kind]) => {
+    if (kind === 'line') {
+      const A = ends[a], B = ends[b], len = Math.hypot(B.x - A.x, B.y - A.y), ang = Math.atan2(B.y - A.y, B.x - A.x);
+      return { a, b, len, at: u => ({ x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u, ang }) };
+    }
+    const left = kind === 'arcL', [cx, cy] = tf(0, left ? -R : R);
+    const t0 = (left ? PI / 2 : -PI / 2) + phi, t1 = t0 + (left ? -H : H);
+    return { a, b, len: CURVE_LEN, at: u => { const th = t0 + (t1 - t0) * u; return { x: cx + R * Math.cos(th), y: cy + R * Math.sin(th), ang: th + (left ? -PI / 2 : PI / 2) }; } };
+  });
+  return { t, ends, paths };
 }
-export const pathLen = (a, b) => (a < 0 || b < 0 ? 0.5 : (a + 2) % 4 === b ? 1 : Math.PI / 4);
-
-// a point on a path in tile (c, r), u = 0 at edge a … 1 at edge b; ang = direction of travel (radians, 0 = right, y down)
-const edgePt = (c, r, e) => (e < 0 ? [c + 0.5, r + 0.5] : [c + 0.5 + DX[e] * 0.5, r + 0.5 + DY[e] * 0.5]);
-export function pathPoint(c, r, a, b, u) {
-  const A = edgePt(c, r, a), B = edgePt(c, r, b);
-  if (a < 0 || b < 0 || (a + 2) % 4 === b) return { x: A[0] + (B[0] - A[0]) * u, y: A[1] + (B[1] - A[1]) * u, ang: Math.atan2(B[1] - A[1], B[0] - A[0]) };
-  // a quarter circle round the corner the two edges share
-  const kx = c + 0.5 + (DX[a] + DX[b]) * 0.5, ky = r + 0.5 + (DY[a] + DY[b]) * 0.5;
-  const t0 = Math.atan2(A[1] - ky, A[0] - kx); let t1 = Math.atan2(B[1] - ky, B[0] - kx);
-  let d = t1 - t0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
-  const t = t0 + d * u;
-  return { x: kx + Math.cos(t) * 0.5, y: ky + Math.sin(t) * 0.5, ang: t + (d > 0 ? Math.PI / 2 : -Math.PI / 2) };
+// where piece type t must sit so that its end k joins an open end at (x, y) that points out at heading h
+export function placeAt(t, k, x, y, h) {
+  const [lx, ly, lh] = PIECES[t].ends[k];
+  const d = ((Math.round(wrap(h + PI - lh) / H) % 8) + 8) % 8, phi = d * H;
+  const r6 = v => Math.round(v * 1e6) / 1e6;
+  return [t, r6(x - (Math.cos(phi) * lx - Math.sin(phi) * ly)), r6(y - (Math.sin(phi) * lx + Math.cos(phi) * ly)), d, null];
 }
-// which way a path turns for a train that came in through edge e
-export function turnOf(e, o) { const d = (e + 2) % 4; return o === d || o < 0 ? 'straight' : o === (d + 1) % 4 ? 'right' : 'left'; }
+// which ends meet which: links['p:e'] = { p, e }
+export function linkUp(geoms) {
+  const links = {}, all = [];
+  geoms.forEach((g, p) => g.ends.forEach((E, e) => all.push({ p, e, E })));
+  for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+    const A = all[i], B = all[j];
+    if (A.p === B.p || links[A.p + ':' + A.e] || links[B.p + ':' + B.e]) continue;
+    if (Math.hypot(A.E.x - B.E.x, A.E.y - B.E.y) < 0.05 && Math.abs(wrap(A.E.h - B.E.h - PI)) < 0.05) {
+      links[A.p + ':' + A.e] = { p: B.p, e: B.e }; links[B.p + ':' + B.e] = { p: A.p, e: A.e };
+    }
+  }
+  return links;
+}
 
 // ── the project: checked and tidied whenever it is loaded
+export function cleanSnaps(t, v) {
+  const n = slotCount(t); if (!n || !Array.isArray(v)) return null;
+  const out = new Array(n).fill(null);
+  for (let k = 0; k < n; k++) if (SNAPS[v[k]]) out[k] = v[k];
+  return out.some(Boolean) ? out : null;
+}
 export function cleanProject(p) {
   p = p && typeof p === 'object' ? p : {};
-  const cols = int(p.cols, SIZE.min, SIZE.max, SIZE.cols), rows = int(p.rows, SIZE.min, SIZE.max, SIZE.rows);
-  const seen = new Set(), tiles = [];
-  for (const t of Array.isArray(p.tiles) ? p.tiles : []) {
-    if (!Array.isArray(t)) continue;
-    const c = int(t[0], 0, cols - 1, -1), r = int(t[1], 0, rows - 1, -1);
-    if (c !== Number(t[0]) || r !== Number(t[1]) || !PIECES[t[2]] || seen.has(c + ',' + r)) continue;
-    seen.add(c + ',' + r);
-    tiles.push([c, r, t[2], int(t[3], 0, 3, 0), cleanSnaps(t[2], t[4])]);
+  const pieces = [];
+  for (const q of Array.isArray(p.pieces) ? p.pieces.slice(0, MAX_PIECES) : []) {
+    if (!Array.isArray(q) || !PIECES[q[0]]) continue;
+    const x = Number(q[1]), y = Number(q[2]), d = Number(q[3]);
+    if (!isFinite(x) || !isFinite(y) || Math.abs(x) > 500 || Math.abs(y) > 500 || !Number.isInteger(d) || d < 0 || d > 7) continue;
+    pieces.push([q[0], x, y, d, cleanSnaps(q[0], q[4])]);
   }
   const trains = [];
   for (const tr of Array.isArray(p.trains) ? p.trains.slice(0, MAX_TRAINS) : []) {
     if (!tr || typeof tr !== 'object') continue;
-    const i = trains.length;
+    const i = trains.length, s = tr.start;
     let start = null;
-    if (tr.start && typeof tr.start === 'object') {
-      const s = tr.start, c = Number(s.c), r = Number(s.r);
-      const tile = tiles.find(t => t[0] === c && t[1] === r);
-      if (tile && Number.isInteger(s.p) && s.p >= 0 && s.p < PIECES[tile[2]].paths.length) start = { c, r, p: s.p, rev: !!s.rev };
-    }
+    if (s && typeof s === 'object' && Number.isInteger(s.p) && pieces[s.p] && Number.isInteger(s.k) && s.k >= 0 && s.k < PIECES[pieces[s.p][0]].paths.length) start = { p: s.p, k: s.k, rev: !!s.rev };
     trains.push({ name: cleanName(tr.name) || 'Train ' + (i + 1), color: okColour(tr.color) || TRAIN_COLOURS[i % TRAIN_COLOURS.length], start,
       blocks: tr.blocks && typeof tr.blocks === 'object' ? tr.blocks : null });
   }
-  return { cols, rows, tiles, trains };
+  return { v: 2, pieces, trains };
 }
 
-// the track a new project starts with: a loop with a shortcut, a red "station" snap and a blue snap before the split
-export function starterTrack() {
-  const t = [];
-  const put = (c, r, piece, rot, snap) => t.push([c, r, piece, rot, cleanSnaps(piece, snap)]);
-  put(1, 1, 'curve', 0); put(8, 1, 'curve', 1); put(8, 5, 'curve', 2); put(1, 5, 'curve', 3);
-  for (let c = 2; c <= 7; c++) { put(c, 1, 'straight', 1); put(c, 5, 'straight', 1, c === 4 ? 'red' : null); put(c, 3, 'straight', 1); }
-  put(1, 2, 'straight', 0); put(1, 4, 'straight', 0, 'blue'); put(8, 2, 'straight', 0); put(8, 4, 'straight', 0);
-  put(1, 3, 'splitR', 0); put(8, 3, 'splitL', 0);
-  return { cols: 10, rows: 7, tiles: t };
+// lay pieces one after another from an open end; a step is a type or [type, end to join (0), end to carry on from]
+export function chain(pieces, from, steps) {
+  let at = from;
+  for (const st of steps) {
+    const [t, k = 0, out = k === 0 ? 1 : 0] = Array.isArray(st) ? st : [st];
+    const pc = placeAt(t, k, at.x, at.y, at.h); pieces.push(pc);
+    at = pieceGeom(pc).ends[out];
+  }
+  return at;
 }
+// the track a new project starts with: an oval with a passing loop (a split each end), a slow-down and a speed-up on
+// the top and a "stop 2 seconds" station on the bottom — the same kind of layout as the snap-training sheets
+export function starterTrack() {
+  const pieces = [];
+  chain(pieces, { x: 0, y: 0, h: 0 }, ['straight', 'splitR', 'short', ['splitL', 1, 0], 'straight', 'curveR', 'curveR', 'curveR', 'curveR',
+    'straight', 'straight', 'short', 'straight', 'straight', 'curveR', 'curveR', 'curveR', 'curveR']);
+  chain(pieces, pieceGeom(pieces[1]).ends[2], ['curveL', 'curveL']); // the passing loop
+  pieces[0][4] = ['white', 'green', null, null, null, null];           // slow
+  pieces[4][4] = ['white', 'green', 'green', 'green', null, null];     // fast
+  pieces[10][4] = [null, 'white', 'red', null, null, null];            // stop for 2 seconds (a station)
+  return { v: 2, pieces };
+}
+export const STARTER_TRAIN = { p: 9, k: 0, rev: false }; // on the bottom, just before the station
 
 export function createSim(project, opts = {}) {
   const P = cleanProject(project);
-  const map = new Map(P.tiles.map(t => [t[0] + ',' + t[1], t]));
-  const tileAt = (c, r) => map.get(c + ',' + r) || null;
+  const geoms = P.pieces.map(pieceGeom), links = linkUp(geoms);
   const emit = (i, kind, data) => { if (opts.onEvent) opts.onEvent(i, kind, data); };
   const rnd = opts.random || Math.random;
+  let t = 0;
 
+  const pathOf = tr => geoms[tr.p].paths[tr.k];
+  const fwd = tr => pathOf(tr).a === tr.from;
   function place(tr) {
-    const st = tr.start, tile = st && tileAt(st.c, st.r);
     tr.on = false; tr.v = 0; tr.vt = 0;
-    if (!tile) return;
-    const paths = piecePaths(tile[2], tile[3]); const pth = paths[st.p]; if (!pth) return;
-    let [a, b] = pth; if (st.rev) [a, b] = [b, a];
-    tr.c = st.c; tr.r = st.r; tr.a = a; tr.b = b; tr.s = pathLen(a, b) * 0.5; tr.on = true;
+    const st = tr.start; if (!st || !geoms[st.p] || !geoms[st.p].paths[st.k]) return;
+    const pth = geoms[st.p].paths[st.k];
+    tr.p = st.p; tr.k = st.k; tr.from = st.rev ? pth.b : pth.a; tr.to = st.rev ? pth.a : pth.b; tr.s = pth.len * 0.5; tr.on = true;
   }
-  const trains = P.trains.map((t, i) => ({ i, name: t.name, color: t.color, start: t.start }));
+  const trains = P.trains.map((x, i) => ({ i, name: x.name, color: x.color, start: x.start }));
   function reset() {
+    t = 0;
     for (const tr of trains) {
       place(tr);
-      Object.assign(tr, { next: null, dflt: 'straight', cruise: 0, dist: 0, head: '#ffffff', top: null, lastColour: '', touching: new Set(), ended: false });
+      Object.assign(tr, { next: null, dflt: null, cruise: 0, dist: 0, head: '#ffffff', top: null, lastColour: '', lastCommand: '', touching: new Set(),
+        ended: false, cmd: null, pause: null, alt: 0, mag: 0, snapsOn: true });
     }
   }
   reset();
 
-  function choose(tr, opts2) { // opts2 = [{o, turn}]
-    let want = tr.next || tr.dflt || 'straight'; tr.next = null;
-    if (want === 'random') return opts2[Math.floor(rnd() * opts2.length)];
-    return opts2.find(x => x.turn === want) || opts2.find(x => x.turn === 'straight') || opts2.find(x => x.turn === 'left') || opts2[0];
+  // ── reading snaps like the real train: a command starts with white and ends at a gap, another white or the piece's end
+  const COMMANDS = {
+    'white green': ['slow', tr => setSpeed(tr, SPEEDS.slow)], 'white green green': ['medium', tr => setSpeed(tr, SPEEDS.medium)],
+    'white green green green': ['fast', tr => setSpeed(tr, SPEEDS.fast)],
+    'white red': ['stop 2 seconds', tr => stopFor(tr, 2)], 'white red red': ['stop 5 seconds', tr => stopFor(tr, 5)], 'white red red red': ['stop 10 seconds', tr => stopFor(tr, 10)],
+    'white blue': ['reverse', tr => turnAround(tr)], 'white red blue': ['end route', tr => { tr.pause = null; tr.vt = 0; tr.cruise = 0; }],
+    'white yellow': ['drop off wagon', () => {}], 'white yellow red': ['stop and drop off wagon', tr => stopFor(tr, 2)], 'white yellow blue': ['reverse drop off wagon', () => {}]
+  };
+  function finish(tr) {
+    const c = tr.cmd; tr.cmd = null;
+    if (!c || c.length < 2 || !tr.snapsOn) return;
+    const key = c.join(' ');
+    let name = null;
+    if (COMMANDS[key]) { name = COMMANDS[key][0]; COMMANDS[key][1](tr); }
+    else if (c.length === 3 && c[1] === 'magenta') name = 'custom ' + c[2];
+    if (name) { tr.lastCommand = name; emit(tr.i, 'command', name); }
   }
-  // move one train along the track by d tiles (may cross several pieces)
+  function readSlot(tr, col) {
+    if (!col) { finish(tr); return; }
+    tr.lastColour = col; emit(tr.i, 'colour', col);
+    if (col === 'white') { finish(tr); tr.cmd = ['white']; }
+    else if (tr.cmd) tr.cmd.push(col);
+  }
+  function setSpeed(tr, v) { tr.pause = null; tr.vt = v; if (v > 0) tr.cruise = v; tr.ended = false; }
+  function stopFor(tr, secs) { const back = tr.pause ? tr.pause.resume : tr.vt || tr.cruise; tr.vt = 0; tr.pause = { until: t + secs, resume: back }; }
+  function turnAround(tr) { if (!tr.on) return; tr.cmd = null; [tr.from, tr.to] = [tr.to, tr.from]; tr.s = pathOf(tr).len - tr.s; tr.ended = false; }
+
+  // ── splits: the way to go comes from (1) a block's "at the next split", (2) the snap in the split's slot, (3) a block's
+  // "at every split", or (4) a random choice — exactly what the real train does with an empty slot
+  function choose(tr, pc, opts2) {
+    const turn = opts2.find(o => o.turn !== 'straight'), straight = opts2.find(o => o.turn === 'straight');
+    const pick = w => (w === 'random' ? opts2[Math.floor(rnd() * opts2.length)] : w === 'turn' ? turn : opts2.find(o => o.turn === w)) || straight || opts2[0];
+    if (tr.next) { const w = tr.next; tr.next = null; return pick(w); }
+    const slot = tr.snapsOn && pc[4] && pc[4][0];
+    if (slot === 'green') return pick('straight');
+    if (slot === 'red') return pick('left');
+    if (slot === 'blue') return pick('right');
+    if (slot === 'yellow') { tr.alt = (tr.alt + 1) % 2; return pick(tr.alt === 1 ? 'turn' : 'straight'); }
+    if (slot === 'magenta') { const m = tr.mag; tr.mag = (tr.mag + 1) % 3; return pick(m === 0 ? 'turn' : 'straight'); }
+    return pick(tr.dflt || 'random');
+  }
+
+  // move one train along the track by d (may cross several pieces)
   function advance(tr, d) {
     let guard = 0;
-    while (d > 0 && guard++ < 50) {
-      const len = pathLen(tr.a, tr.b);
-      const before = tr.s;
+    while (d > 0 && guard++ < 60) {
+      const pth = pathOf(tr), len = pth.len, before = tr.s;
       const step = Math.min(d, len - tr.s);
       tr.s += step; d -= step; tr.dist += step;
-      const here = tileAt(tr.c, tr.r);
-      if (here && here[4]) { // snaps sit on the piece's first path; the train meets them in its own direction of travel
-        const p0 = piecePaths(here[2], here[3])[0], fwd = p0[0] === tr.a && p0[1] === tr.b, back = p0[0] === tr.b && p0[1] === tr.a;
-        if (fwd || back) {
-          const hits = [];
-          here[4].forEach((col, k) => { if (!col) return; const at = (fwd ? slotU(here[2], k) : 1 - slotU(here[2], k)) * len; if (before < at && tr.s >= at) hits.push([at, col]); });
-          hits.sort((x, y) => x[0] - y[0]);
-          for (const [, col] of hits) { tr.lastColour = col; emit(tr.i, 'colour', col); }
-        }
+      const pc = P.pieces[tr.p], def = PIECES[pc[0]];
+      if (def.slots.length && !def.marks && tr.k === 0) { // a split's slot is its steering choice, read when it decides
+        const list = def.slots.map((u, k) => [fwd(tr) ? u * len : len - u * len, k]).sort((x, y) => x[0] - y[0]);
+        for (const [at, k] of list) if (before < at && tr.s >= at) readSlot(tr, pc[4] ? pc[4][k] : null);
       }
       if (tr.s < len - 1e-9) break;
-      // at the end of this piece
-      if (tr.b < 0) { stopDead(tr); emit(tr.i, 'end', 'buffer'); return; }
-      const nc = tr.c + DX[tr.b], nr = tr.r + DY[tr.b], e = (tr.b + 2) % 4, tile = tileAt(nc, nr);
-      const opts2 = tile ? piecePaths(tile[2], tile[3]).flatMap(([x, y]) => (x === e ? [{ o: y }] : y === e ? [{ o: x }] : [])) : [];
-      if (!opts2.length) { stopDead(tr); emit(tr.i, 'end', 'track'); return; }
-      for (const x of opts2) x.turn = turnOf(e, x.o);
-      const pick = opts2.length > 1 ? choose(tr, opts2) : opts2[0];
-      tr.c = nc; tr.r = nr; tr.a = e; tr.b = pick.o; tr.s = 0;
+      finish(tr); // a command is always on one piece
+      const link = links[tr.p + ':' + tr.to];
+      if (!link) { stopDead(tr); emit(tr.i, 'end', 'track'); return; }
+      const g = geoms[link.p], e = link.e, inH = wrap(g.ends[e].h + PI);
+      const opts2 = g.paths.map((q, k) => (q.a === e ? { k, o: q.b } : q.b === e ? { k, o: q.a } : null)).filter(Boolean);
+      for (const o of opts2) { const dh = wrap(g.ends[o.o].h - inH); o.turn = Math.abs(dh) < 0.1 ? 'straight' : dh > 0 ? 'right' : 'left'; }
+      const pick = opts2.length > 1 ? choose(tr, P.pieces[link.p], opts2) : opts2[0];
+      tr.p = link.p; tr.k = pick.k; tr.from = e; tr.to = pick.o; tr.s = 0; tr.cmd = null;
       if (opts2.length > 1) emit(tr.i, 'split', pick.turn);
     }
   }
-  function stopDead(tr) { tr.s = pathLen(tr.a, tr.b); tr.cruise = tr.vt || tr.cruise; tr.v = 0; tr.vt = 0; tr.ended = true; }
+  function stopDead(tr) { tr.s = pathOf(tr).len; tr.cruise = tr.vt || tr.cruise; tr.v = 0; tr.vt = 0; tr.pause = null; tr.ended = true; }
 
   function pose(i) {
     const tr = trains[i]; if (!tr || !tr.on) return null;
-    const len = pathLen(tr.a, tr.b);
-    return pathPoint(tr.c, tr.r, tr.a, tr.b, Math.max(0, Math.min(1, tr.s / len)));
+    const pth = pathOf(tr), f = fwd(tr), u = Math.max(0, Math.min(1, tr.s / pth.len)), q = pth.at(f ? u : 1 - u);
+    return { x: q.x, y: q.y, ang: f ? q.ang : q.ang + PI };
   }
-  const gap = (i, j) => { const p = pose(i), q = pose(j); return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : Infinity; };
+  const gap = (i, j) => { const a = pose(i), b = pose(j); return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity; };
   const nearest = i => { let m = Infinity; for (const o of trains) if (o.i !== i && o.on) m = Math.min(m, gap(i, o.i)); return m; };
 
   function step(dt) {
+    t += dt;
     for (const tr of trains) {
       if (!tr.on) continue;
+      if (tr.pause && t >= tr.pause.until) { tr.vt = tr.pause.resume; tr.pause = null; }
       const dv = ACCEL * dt;
       tr.v = tr.v < tr.vt ? Math.min(tr.vt, tr.v + dv) : Math.max(tr.vt, tr.v - dv);
       if (tr.v <= 0) continue;
-      const saved = { c: tr.c, r: tr.r, a: tr.a, b: tr.b, s: tr.s, dist: tr.dist };
+      const saved = { p: tr.p, k: tr.k, from: tr.from, to: tr.to, s: tr.s, dist: tr.dist };
       const was = nearest(tr.i);
       advance(tr, tr.v * dt);
       const now = nearest(tr.i);
@@ -203,15 +264,15 @@ export function createSim(project, opts = {}) {
         }
       }
     }
-    for (const tr of trains) for (const j of [...tr.touching]) if (gap(tr.i, j) > BUMP + 0.12) tr.touching.delete(j);
+    for (const tr of trains) for (const j of [...tr.touching]) if (gap(tr.i, j) > BUMP + 0.1) tr.touching.delete(j);
   }
 
   return {
-    project: P, trains, tileAt, step, pose, reset,
-    setTarget(i, v) { const tr = trains[i]; if (tr && tr.on) { tr.vt = Math.max(0, Math.min(MAX_SPEED, Number(v) || 0)); if (tr.vt > 0) tr.ended = false; } },
-    turnAround(i) { // flip the direction of travel where the train is
-      const tr = trains[i]; if (!tr || !tr.on) return;
-      const len = pathLen(tr.a, tr.b); [tr.a, tr.b] = [tr.b, tr.a]; tr.s = len - tr.s; tr.ended = false;
-    }
+    project: P, geoms, links, trains, step, pose, reset, time: () => t,
+    // pressing Run is like pressing the button on each train: it sets off at medium speed
+    go() { for (const tr of trains) if (tr.on) setSpeed(tr, SPEEDS.medium); },
+    setTarget(i, v) { const tr = trains[i]; if (tr && tr.on) setSpeed(tr, Math.max(0, Math.min(MAX_SPEED, Number(v) || 0))); },
+    stopFor(i, secs) { const tr = trains[i]; if (tr && tr.on) stopFor(tr, secs); },
+    turnAround(i) { const tr = trains[i]; if (tr) turnAround(tr); }
   };
 }

@@ -49,6 +49,7 @@ export function createRunner(sim, io = {}) {
       case 'text_join': { let s = ''; for (let i = 0; b.getInput('ADD' + i); i++) s += String(val(input(b, 'ADD' + i), me)); return s; }
       case 'variables_get': { const v = vars[varName(b)]; return v === undefined ? 0 : v; }
       case 'tr_last_colour': return tr ? tr.lastColour : '';
+      case 'tr_last_command': return tr ? tr.lastCommand : '';
       case 'tr_saw': return !!tr && tr.lastColour === field(b, 'COL');
       case 'tr_speed': return tr ? Math.round(tr.v / MAX_SPEED * 100) : 0;
       case 'tr_moving': return !!tr && tr.v > 0.001;
@@ -74,14 +75,15 @@ export function createRunner(sim, io = {}) {
         const goal = tr.dist + Math.max(0, numOf(val(input(b, 'N'), me))), v = SPEEDS[field(b, 'SPEED')] || SPEEDS.medium;
         sim.setTarget(me, v);
         // brake in time to stop close to the goal (braking distance v²/2a)
-        while (tr.on && !tr.ended && tr.dist < goal - (tr.v * tr.v) / (2 * 2.6) - 0.01) yield;
+        while (tr.on && !tr.ended && tr.dist < goal - (tr.v * tr.v) / (2 * 3) - 0.01) yield;
         yield* brake(me); break;
       }
       case 'tr_stop': yield* brake(me); break;
-      case 'tr_stop_for': { const was = tr ? tr.vt : 0; yield* brake(me); yield* waitSecs(numOf(val(input(b, 'S'), me))); if (was > 0) sim.setTarget(me, was); break; }
+      case 'tr_stop_for': { const was = tr ? tr.vt || (tr.pause && tr.pause.resume) || 0 : 0; yield* brake(me); yield* waitSecs(numOf(val(input(b, 'S'), me))); if (was > 0) sim.setTarget(me, was); break; }
       case 'tr_turn_around': { const was = tr ? tr.vt || tr.cruise || 0 : 0; yield* brake(me); sim.turnAround(me); if (was > 0) sim.setTarget(me, was); break; }
       case 'tr_next_split': if (tr) tr.next = field(b, 'WAY'); break;
       case 'tr_every_split': if (tr) tr.dflt = field(b, 'WAY'); break;
+      case 'tr_snaps': if (tr) tr.snapsOn = field(b, 'ON') !== 'off'; break;
       // lights & sound
       case 'tr_headlight': if (tr) tr.head = field(b, 'COL'); break;
       case 'tr_toplight': if (tr) tr.top = field(b, 'COL'); break;
@@ -123,6 +125,7 @@ export function createRunner(sim, io = {}) {
       api.stop(true);
       live = true; t = 0; timerBase = 0; vars = Object.create(null); hats = []; queue.length = 0;
       sim.reset();
+      sim.go(); // like pressing each train's button: off it goes, obeying the snaps; a when-Run script can change that straight away
       (workspaces || []).forEach((ws, me) => {
         if (!ws || !sim.trains[me]) return;
         for (const v of ws.getAllVariables()) if (!(v.name in vars)) vars[v.name] = 0;
@@ -155,6 +158,7 @@ export function createRunner(sim, io = {}) {
       while (queue.length) {
         const [me, kind, data] = queue.shift();
         if (kind === 'colour') { for (const h of hatsOf('tr_when_colour', me)) { const c = h.block.getFieldValue('COL'); if (c === 'any' || c === data) spawn(h); } }
+        else if (kind === 'command') { for (const h of hatsOf('tr_when_command', me)) { const c = h.block.getFieldValue('CMD'); if (c === 'any' || c === data) spawn(h); } }
         else if (kind === 'split') hatsOf('tr_when_split', me).forEach(spawn);
         else if (kind === 'end') hatsOf('tr_when_end', me).forEach(spawn);
         else if (kind === 'bump') hatsOf('tr_when_bump', me).forEach(spawn);
@@ -165,7 +169,7 @@ export function createRunner(sim, io = {}) {
     stop(quietly) {
       const was = live;
       fibers = []; live = false; queue.length = 0;
-      for (const tr of sim.trains) { tr.vt = 0; tr.v = 0; }
+      for (const tr of sim.trains) { tr.vt = 0; tr.v = 0; tr.pause = null; }
       if (was && !quietly && io.onStop) io.onStop();
     },
     running: () => live,

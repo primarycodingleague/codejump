@@ -101,7 +101,7 @@ export function createRunner(sim, io = {}) {
       case 'stopDriving': sim.setTarget(i, 0); break;
       case 'pauseDriving': sim.stopFor(i, clamp(numOf(val(input(b, 'TIME'))), 0, 25.5)); break;
       case 'resetOdometer': tr.odo0 = tr.dist; break;
-      case 'decoupleWagon': yield* waitSecs(1.5); break;
+      case 'decoupleWagon': sim.decouple(i); yield* waitSecs(1.5); break; // like the real train, it takes a moment
       case 'setLedColorPicker': setLed(tr, numOf(field(b, 'LEDGROUP')), field(b, 'COLOR')); break;
       case 'setLedHue': setLed(tr, numOf(field(b, 'LEDGROUP')), hsv(val(input(b, 'HUE')))); break;
       case 'setLedColor': setLed(tr, numOf(field(b, 'LEDGROUP')), hex(val(input(b, 'RED')), val(input(b, 'GREEN')), val(input(b, 'BLUE')))); break;

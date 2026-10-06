@@ -51,7 +51,7 @@ const TRAIN_BLOCKS = [
   { op: 'getSpeedCmps', out: 'Number', msg: 'speed (cm/s)', args: [], tip: 'How fast the train is going.' },
   { op: 'getOdometerCm', out: 'Number', msg: 'distance (cm)', args: [], sep: true, tip: 'How far the train has driven (since Run or "reset distance").' },
   { op: 'resetOdometer', msg: 'reset distance', args: [], sep: true, tip: 'Starts counting the distance from 0 again.' },
-  { op: 'decoupleWagon', msg: 'decouple wagon', args: [], sep: true, tip: 'Lets go of a wagon. (No wagons in the Train Lab yet: it just waits a moment, like the real train.)' },
+  { op: 'decoupleWagon', msg: 'decouple wagon', args: [], sep: true, tip: 'Lets go of the wagon: it stays on the track where it is. Back into a wagon to pick it up.' },
   { op: 'setLedColorPicker', msg: 'set %1 color to %2', args: [dd('LEDGROUP', LED_MENU), { type: 'field_colour', name: 'COLOR', colour: '#00ff00' }], tip: 'Changes the colour of the top LED, the headlights or the taillights.' },
   { op: 'setLedHue', msg: 'set %1 hue to %2', args: [dd('LEDGROUP', LED_MENU), num('HUE')], tip: 'Colour from 0 to 100 around the colour wheel (0 red, 33 green, 67 blue).' },
   { op: 'setLedColor', msg: 'set %1 RGB to %2 %3 %4', args: [dd('LEDGROUP', LED_MENU), num('RED'), num('GREEN'), num('BLUE')], sep: true, tip: 'Mixes red, green and blue light, each from 0 to 255.' },

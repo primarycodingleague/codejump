@@ -46,3 +46,36 @@
   .tl .tl-left { flex: 1 1 48%; min-height: 380px; }
   .tl .tl-view { flex: 1 1 52%; min-height: 520px; }
 }
+/* challenges: the checklist on the board and the Challenges panel */
+.tl { position: relative; }
+.tl .tl-chal { border-color: var(--tl-gold); }
+.tl .tl-check { position: absolute; left: 10px; top: 10px; max-width: min(320px, 60%); background: rgba(255,255,255,0.94); color: #1f2024; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,0.25); pointer-events: none; }
+.tl .tl-check b { font-size: 14px; font-weight: 900; }
+.tl .tl-check ol { margin: 4px 0 0; padding-left: 20px; }
+.tl .tl-check li { margin: 2px 0; color: #555; }
+.tl .tl-check li.now { color: #1f2024; font-weight: 900; background: #fff2b8; border-radius: 4px; }
+.tl .tl-check li.ok { color: #23803d; text-decoration: line-through; }
+.tl .tl-check li .ic { width: 1em; height: 1em; margin-right: 3px; }
+.tl .tl-check .tl-win { margin: 6px 0 0; color: #23803d; font-weight: 900; font-size: 15px; }
+.tl .tl-modal { position: absolute; inset: 0; z-index: 30; background: rgba(0,0,0,0.55); display: flex; align-items: flex-start; justify-content: center; padding: 18px; overflow: auto; }
+.tl .tl-mbox { position: relative; width: min(760px, 100%); background: #242424; border: 2px solid var(--tl-gold); border-radius: 14px; padding: 18px 20px 20px; color: #eee; }
+.tl .tl-mbox h2 { margin: 0 40px 6px 0; font-size: 22px; font-weight: 900; color: #fff; }
+.tl .tl-mbox h3 { margin: 16px 0 8px; font-size: 16px; font-weight: 900; color: #ffd27a; }
+.tl .tl-mlede { margin: 0; font-size: 14px; color: #ccc; line-height: 1.45; }
+.tl .tl-mclose { position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--tl-line); background: var(--tl-panel); color: #fff; cursor: pointer; }
+.tl .tl-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 8px; }
+.tl .tl-ccard { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--tl-line); background: #2f2f2f; color: #ddd; cursor: pointer; font-size: 12.5px; line-height: 1.35; }
+.tl .tl-ccard b { font-size: 15px; color: #fff; }
+.tl .tl-ccard small { color: #ffd27a; font-weight: 800; }
+.tl .tl-ccard.on { border-color: var(--tl-gold); background: #3a3326; }
+.tl .tl-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 800; color: #ccc; margin: 0 0 8px; }
+.tl .tl-field input, .tl .tl-field textarea, .tl .tl-steps select { background: #151515; color: #fff; border: 2px solid var(--tl-line); border-radius: 8px; padding: 6px 8px; font-size: 14px; font-weight: 700; font-family: inherit; }
+.tl .tl-steps { margin: 0 0 8px; padding-left: 24px; }
+.tl .tl-steps li { margin: 0 0 6px; }
+.tl .tl-steps li > * { vertical-align: middle; margin-right: 4px; }
+.tl .tl-steps select { min-height: 38px; }
+.tl .tl-note { font-size: 13px; color: #ccc; margin: 8px 0; }
+.tl .tl-mrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; border-top: 1px solid #3a3a3a; padding-top: 12px; }
+.tl .tl-check-opt { font-size: 13px; font-weight: 800; color: #ccc; display: inline-flex; gap: 6px; align-items: center; width: 100%; }
+.tl .tl-go { border-color: var(--tl-green); background: #2c4a34; color: #fff; }
+.tl #tlPlace { background: #151515; color: #fff; border: 2px solid var(--tl-line); border-radius: 8px; padding: 6px 8px; font-size: 13px; font-weight: 700; min-height: 40px; }

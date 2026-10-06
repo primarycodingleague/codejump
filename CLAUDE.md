@@ -242,7 +242,19 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
 - **Host glue (mirrors AI Lab):** `trainBase/loadTrainLab/trainCurrent/startNewTrain/enterTrainUI/exitTrainUI`, `body.train-mode`, `#train-ui`,
   payload `train`, `#pt-modal` tile `data-pt="train"` (KS1 hidden), home tile `data-start="train"` (`home/train.jpg`), icon `#i-train`,
   `TRAIN_HELP` (incl. a Snap commands tab), Teacher Guide "Train Lab" section, thumbnail badge, `LS_TYPE.train`. No live collaboration.
-  Test: `tests/train.test.mjs` (rules in Node + the app). Ideas not done: wagons, real trains over Web Bluetooth.
+  Test: `tests/train.test.mjs` (rules in Node + the app). Ideas not done: real trains over Web Bluetooth.
+- **Wagons (6 Oct 2026):** a convoy trail — the engine records the segments it drives; a pulled wagon walks the trail `WGAP` behind;
+  on reverse the trail is flipped and the wagon leads (it chooses at splits). Magnet at the engine's BACK: backing within `COUPLE` of a
+  free wagon couples it ('wagon','picked up'); front-first = bump. white yellow = drop, …red = stop 2 s + drop, …blue = drop + reverse;
+  the decoupleWagon block drops it too. Project: `trains[i].wagon` (starts with one) + `wagons:[{p,k,rev}]` (free). `DECEL`=8 so
+  stops are short. App: Wagon tool (tap: place → turn → other track → remove), "Pulls a wagon" checkbox.
+- **Places + challenges (6 Oct 2026):** `dests:[{t,p,side}]` (`DESTS` 14 types, signs drawn by `drawDest` beside the piece's middle,
+  `destSpot`), Places tool + type select; `challenge:{id,title,text,steps:[{d,a}]}` (`ACTIONS` start/pass/stop/reverse/pickup/drop/end).
+  `createChecker(sim, challenge)` ticks steps off for Train 1 (checklist `#tlCheck` on the board; the view leaves room for it).
+  `train/train-challenges.js` = 4 ready-made (`CHALLENGES`, `challengeProject(id, withAnswer)`); tests prove each answer completes and the
+  bare track doesn't. Panel `#tlModal` (Challenges button): ready-made list, editor (title/text/jobs), hint, Show the answer, Print the
+  challenge card (`cardHTML(withAnswer)` → host `print` = `doPrint`): track picture (offscreen canvas), numbered jobs with icons, parts list,
+  snaps only on the answer card. Erasing a piece/sign remaps `dests`/`wagons`/step indices.
 
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate

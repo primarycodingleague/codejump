@@ -3,15 +3,16 @@
  * Lab project opens, and mounted into #train-ui. CodeJump owns saving and sharing: getProject() goes into the payload
  * (payload.train) and onChange() marks the project dirty.
  *
- *   const app = (await import('./train/train-app.js')).mount(rootEl, { project, onChange, toast, confirm });
+ *   const app = (await import('./train/train-app.js')).mount(rootEl, { project, onChange, toast, confirm, print });
  *   app.getProject() · app.setProject(p) · app.resume() · app.pause() · app.destroy()
  *
- * A project is train-model.js's { v: 2, pieces, trains: [{ name, color, start }], blocks }: ONE program, with a block category per
+ * A project is train-model.js's { v: 2, pieces, trains: [{ name, color, start, wagon }], wagons, dests, challenge, blocks }: ONE program, with a block category per
  * train (like the smart train's Scratch extension). Uses the page's Blockly 10.
  */
 import * as TM from './train-model.js';
 import * as TB from './train-blocks.js';
 import { createRunner } from './train-runner.js';
+import { CHALLENGES, challengeProject } from './train-challenges.js';
 
 const CSS_URL = new URL('./train-app.css', import.meta.url).href;
 const ic = id => '<svg class="ic"><use href="#' + id + '"></use></svg>';
@@ -30,19 +31,26 @@ const TEMPLATE = `
       <button type="button" class="tl-run" id="tlRun" title="Run every train's program">${ic('i-play')} Run</button>
       <button type="button" class="tl-stop" id="tlStop" title="Stop every train">${ic('i-stop')} Stop</button>
       <button type="button" class="tl-reset" id="tlReset" title="Put the trains back where they start">${ic('i-reset')} Reset</button>
+      <button type="button" class="tl-reset tl-chal" id="tlChal" title="Challenges: try a ready-made one, make your own, print a challenge card">${ic('i-flag')} Challenges</button>
       <span class="tl-status" id="tlStatus" role="status" aria-live="polite"></span>
     </div>
     <div class="tl-stage" id="tlStage">
       <canvas id="tlCanvas" tabindex="0" aria-label="The track. Pick a piece below and tap a blue plus at the end of the track to click it on; tap a piece to turn it."></canvas>
+      <div class="tl-check" id="tlCheck" hidden></div>
       <div class="tl-loading" id="tlLoading">Getting the Train Lab ready…</div>
     </div>
     <div class="tl-tools" id="tlTools"></div>
     <div class="tl-settings" id="tlSettings">
       <label>Name <input id="tlName" maxlength="14" autocomplete="off"></label>
       <label>Colour <input type="color" id="tlColour"></label>
+      <label title="The train starts with a wagon on its magnet"><input type="checkbox" id="tlWagon"> Pulls a wagon</label>
       <button type="button" class="tl-small" id="tlDelTrain">${ic('i-trash')} Remove train</button>
     </div>
   </div>
+  <div class="tl-modal" id="tlModal" hidden><div class="tl-mbox" role="dialog" aria-modal="true" aria-labelledby="tlMTitle">
+    <button type="button" class="tl-mclose" id="tlMClose" aria-label="Close">${ic('i-x')}</button>
+    <div id="tlMBody"></div>
+  </div></div>
 </div>`;
 
 let theme = null;
@@ -180,6 +188,59 @@ export function drawTrain(g, T, x, y, ang, tr, opt = {}) {
   }
 }
 const TRAIN_SIZE = 0.68; // the engine is about two thirds of a straight piece long
+// a wagon from above: white body, sky-blue top, windows and a white arrow on the roof pointing at the engine
+export function drawWagon(g, T, x, y, ang, color, opt = {}) {
+  g.save(); g.translate(x, y); g.rotate(ang);
+  const L = T * 0.34, W = T * 0.19, shell = () => { g.beginPath(); g.roundRect(-L, -W, 2 * L, 2 * W, W * 0.55); };
+  g.save(); g.translate(T * 0.025, T * 0.04); shell(); g.fillStyle = 'rgba(20,30,40,0.28)'; g.fill(); g.restore();
+  shell(); g.fillStyle = '#ffffff'; g.fill(); g.strokeStyle = shade(color, 0.8); g.lineWidth = Math.max(1, T * 0.02); g.stroke();
+  g.fillStyle = color; g.beginPath(); g.roundRect(-L * 0.82, -W * 0.8, L * 1.64, W * 1.6, W * 0.4); g.fill();
+  g.fillStyle = tint(color, 0.5); for (const s of [-1, 1]) { g.beginPath(); g.roundRect(-L * 0.6, s > 0 ? W * 0.48 : -W * 0.76, L * 1.2, W * 0.28, W * 0.12); g.fill(); }
+  g.fillStyle = '#fff'; g.beginPath(); g.roundRect(-L * 0.28, -W * 0.36, L * 0.56, W * 0.72, W * 0.15); g.fill();
+  g.fillStyle = '#1f2024'; g.beginPath(); g.moveTo(L * 0.2, 0); g.lineTo(-L * 0.12, -W * 0.24); g.lineTo(-L * 0.12, W * 0.24); g.closePath(); g.fill(); // arrow → engine
+  g.fillStyle = '#9aa0a8'; for (const s of [-1, 1]) { g.beginPath(); g.arc(s * L * 1.02, 0, T * 0.03, 0, Math.PI * 2); g.fill(); } // magnets
+  g.restore();
+  if (opt.ring) { g.save(); g.strokeStyle = '#1d6fe0'; g.lineWidth = 2; g.setLineDash([4, 4]); g.beginPath(); g.arc(x, y, T * 0.45, 0, Math.PI * 2); g.stroke(); g.restore(); }
+}
+// destination signs: a round badge with a little picture, and the name underneath
+const DEST_ICON = {
+  start(g, r) { g.fillStyle = '#5b5f68'; g.fillRect(-r * 0.55, -r * 0.6, r * 0.1, r * 1.25); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { g.fillStyle = (i + j) % 2 ? '#fff' : '#1f2024'; g.fillRect(-r * 0.45 + i * r * 0.25, -r * 0.6 + j * r * 0.22, r * 0.25, r * 0.22); } g.strokeStyle = '#1f2024'; g.lineWidth = r * 0.05; g.strokeRect(-r * 0.45, -r * 0.6, r, r * 0.66); },
+  station(g, r) { g.fillStyle = '#ffd21f'; g.fillRect(-r * 0.6, -r * 0.2, r * 1.2, r * 0.75); g.fillStyle = '#ef4b3c'; g.beginPath(); g.moveTo(-r * 0.75, -r * 0.18); g.lineTo(0, -r * 0.65); g.lineTo(r * 0.75, -r * 0.18); g.closePath(); g.fill(); g.fillStyle = '#1f2024'; g.beginPath(); g.arc(0, -r * 0.3, r * 0.14, 0, 7); g.fill(); g.fillStyle = '#4fc9ea'; g.fillRect(-r * 0.45, r * 0.05, r * 0.25, r * 0.35); g.fillRect(r * 0.2, r * 0.05, r * 0.25, r * 0.35); },
+  airport(g, r) { g.fillStyle = '#c9ced6'; g.fillRect(-r * 0.12, -r * 0.2, r * 0.24, r * 0.75); g.fillStyle = '#4fc9ea'; g.beginPath(); g.roundRect(-r * 0.32, -r * 0.42, r * 0.64, r * 0.26, r * 0.06); g.fill(); g.fillStyle = '#ef4b3c'; g.beginPath(); g.moveTo(-r * 0.75, -r * 0.55); g.lineTo(-r * 0.3, -r * 0.62); g.lineTo(-r * 0.2, -r * 0.7); g.lineTo(-r * 0.12, -r * 0.6); g.lineTo(-r * 0.4, -r * 0.48); g.closePath(); g.fill(); },
+  museum(g, r) { g.fillStyle = '#d6d9de'; g.beginPath(); g.moveTo(-r * 0.7, -r * 0.25); g.lineTo(0, -r * 0.65); g.lineTo(r * 0.7, -r * 0.25); g.closePath(); g.fill(); for (let i = 0; i < 4; i++) g.fillRect(-r * 0.55 + i * r * 0.33, -r * 0.18, r * 0.14, r * 0.6); g.fillRect(-r * 0.7, r * 0.42, r * 1.4, r * 0.13); g.fillStyle = '#3cb54a'; g.beginPath(); g.arc(0, -r * 0.38, r * 0.1, 0, 7); g.fill(); },
+  depot(g, r) { g.fillStyle = '#9aa0a8'; g.fillRect(-r * 0.65, -r * 0.3, r * 1.3, r * 0.85); g.fillStyle = '#ef4b3c'; g.fillRect(-r * 0.7, -r * 0.45, r * 1.4, r * 0.18); g.fillStyle = '#21b8e8'; g.beginPath(); g.moveTo(-r * 0.3, r * 0.55); g.lineTo(-r * 0.3, 0); g.arc(0, 0, r * 0.3, Math.PI, 0); g.lineTo(r * 0.3, r * 0.55); g.closePath(); g.fill(); },
+  school(g, r) { g.fillStyle = '#d9663a'; g.fillRect(-r * 0.65, -r * 0.25, r * 1.3, r * 0.8); g.fillStyle = '#7a3b22'; g.beginPath(); g.moveTo(-r * 0.25, -r * 0.25); g.lineTo(0, -r * 0.6); g.lineTo(r * 0.25, -r * 0.25); g.closePath(); g.fill(); g.fillStyle = '#ffd21f'; g.beginPath(); g.arc(0, -r * 0.3, r * 0.08, 0, 7); g.fill(); g.fillStyle = '#fff'; g.fillRect(-r * 0.12, r * 0.15, r * 0.24, r * 0.4); },
+  farm(g, r) { g.fillStyle = '#c8302a'; g.beginPath(); g.moveTo(-r * 0.6, r * 0.55); g.lineTo(-r * 0.6, -r * 0.1); g.lineTo(0, -r * 0.6); g.lineTo(r * 0.6, -r * 0.1); g.lineTo(r * 0.6, r * 0.55); g.closePath(); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = r * 0.08; g.strokeRect(-r * 0.25, r * 0.1, r * 0.5, r * 0.45); g.beginPath(); g.moveTo(-r * 0.25, r * 0.1); g.lineTo(r * 0.25, r * 0.55); g.moveTo(r * 0.25, r * 0.1); g.lineTo(-r * 0.25, r * 0.55); g.stroke(); },
+  harbour(g, r) { g.strokeStyle = '#1f4f8f'; g.lineWidth = r * 0.12; g.lineCap = 'round'; g.beginPath(); g.moveTo(0, -r * 0.45); g.lineTo(0, r * 0.5); g.moveTo(-r * 0.3, -r * 0.25); g.lineTo(r * 0.3, -r * 0.25); g.stroke(); g.beginPath(); g.arc(0, r * 0.05, r * 0.48, 0.3, Math.PI - 0.3); g.stroke(); g.beginPath(); g.arc(0, -r * 0.55, r * 0.12, 0, 7); g.stroke(); },
+  zoo(g, r) { g.fillStyle = '#e89a2c'; g.beginPath(); g.ellipse(0, r * 0.2, r * 0.32, r * 0.26, 0, 0, 7); g.fill(); for (const [x, y] of [[-0.45, -0.2], [-0.16, -0.45], [0.16, -0.45], [0.45, -0.2]]) { g.beginPath(); g.ellipse(x * r, y * r, r * 0.13, r * 0.16, 0, 0, 7); g.fill(); } },
+  castle(g, r) { g.fillStyle = '#9aa0a8'; g.fillRect(-r * 0.6, -r * 0.2, r * 1.2, r * 0.75); for (let i = 0; i < 4; i++) g.fillRect(-r * 0.6 + i * r * 0.34, -r * 0.4, r * 0.18, r * 0.22); g.fillStyle = '#5b5f68'; g.beginPath(); g.moveTo(-r * 0.18, r * 0.55); g.lineTo(-r * 0.18, r * 0.15); g.arc(0, r * 0.15, r * 0.18, Math.PI, 0); g.lineTo(r * 0.18, r * 0.55); g.closePath(); g.fill(); g.fillStyle = '#ef4b3c'; g.beginPath(); g.moveTo(0, -r * 0.75); g.lineTo(r * 0.3, -r * 0.65); g.lineTo(0, -r * 0.55); g.closePath(); g.fill(); g.fillRect(-r * 0.02, -r * 0.75, r * 0.05, r * 0.35); },
+  shops(g, r) { g.fillStyle = '#d63fb5'; g.beginPath(); g.roundRect(-r * 0.45, -r * 0.2, r * 0.9, r * 0.75, r * 0.1); g.fill(); g.strokeStyle = '#7a1f66'; g.lineWidth = r * 0.08; g.beginPath(); g.arc(0, -r * 0.2, r * 0.22, Math.PI, 0); g.stroke(); },
+  crossing(g, r) { g.lineCap = 'round'; for (const [w, c] of [[r * 0.34, '#ef4b3c'], [r * 0.18, '#ffffff']]) { g.strokeStyle = c; g.lineWidth = w; g.beginPath(); g.moveTo(-r * 0.55, -r * 0.5); g.lineTo(r * 0.55, r * 0.5); g.moveTo(r * 0.55, -r * 0.5); g.lineTo(-r * 0.55, r * 0.5); g.stroke(); } },
+  trees(g, r) { g.strokeStyle = '#7a4a25'; g.lineWidth = r * 0.16; g.lineCap = 'round'; g.beginPath(); g.moveTo(-r * 0.6, r * 0.45); g.lineTo(r * 0.3, -r * 0.05); g.stroke(); g.fillStyle = '#3cb54a'; g.beginPath(); g.arc(r * 0.3, -r * 0.15, r * 0.38, 0, 7); g.fill(); g.fillStyle = '#2b8a38'; g.beginPath(); g.arc(r * 0.45, -r * 0.3, r * 0.2, 0, 7); g.fill(); },
+  rocks(g, r) { g.fillStyle = '#9aa0a8'; g.beginPath(); g.moveTo(-r * 0.7, r * 0.45); g.lineTo(-r * 0.45, -r * 0.1); g.lineTo(-r * 0.05, -r * 0.2); g.lineTo(r * 0.15, r * 0.45); g.closePath(); g.fill(); g.fillStyle = '#7d848f'; g.beginPath(); g.moveTo(-r * 0.1, r * 0.45); g.lineTo(r * 0.2, -r * 0.45); g.lineTo(r * 0.6, -r * 0.2); g.lineTo(r * 0.7, r * 0.45); g.closePath(); g.fill(); }
+};
+export function drawDestIcon(g, type, x, y, r) {
+  g.save(); g.translate(x, y);
+  g.fillStyle = '#ffffff'; g.strokeStyle = '#1f2024'; g.lineWidth = Math.max(1.2, r * 0.09); g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); g.stroke();
+  if (DEST_ICON[type]) DEST_ICON[type](g, r * 0.78);
+  g.restore();
+}
+export function drawDest(g, T, x, y, type, label) {
+  const r = Math.max(9, T * 0.2);
+  drawDestIcon(g, type, x, y, r);
+  if (label) {
+    g.save(); g.font = '800 ' + Math.max(9, Math.round(T * 0.13)) + 'px Montserrat, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'top';
+    const w = g.measureText(label).width + 8, ty = y + r + 2;
+    g.fillStyle = 'rgba(255,255,255,0.92)'; g.beginPath(); g.roundRect(x - w / 2, ty, w, Math.max(13, T * 0.18), 5); g.fill();
+    g.fillStyle = '#1f2024'; g.fillText(label, x, ty + 2); g.restore();
+  }
+}
+// where a destination sign stands: beside the middle of its piece, on its side
+export function destSpot(geoms, d) {
+  const G = geoms[d.p]; if (!G) return null;
+  const q = G.paths[0].at(0.5), side = d.side < 0 ? -1 : 1;
+  return { x: q.x - Math.sin(q.ang) * 0.6 * side, y: q.y + Math.cos(q.ang) * 0.6 * side };
+}
 
 export function defaultProject() {
   return Object.assign(TM.starterTrack(), { trains: [{ name: 'Train 1', color: TM.TRAIN_COLOURS[0], start: Object.assign({}, TM.STARTER_TRAIN) }], blocks: TB.starterProgram() });
@@ -199,7 +260,7 @@ export function mount(root, host) {
   let proj = TM.cleanProject(host.project || defaultProject());
   if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
   let sel = 0, ws = null, sim = null, runner = null, alive = true, quiet = false, raf = 0, last = 0, changeTimer = 0;
-  let tool = 'straight', hover = null, undo = [], redo = [];
+  let tool = 'straight', hover = null, undo = [], redo = [], placeType = 'station', checker = null, checkKey = '', cheered = false;
   const keys = new Set();
 
   const status = (msg, kind) => { const s = $('tlStatus'); s.textContent = msg || ''; s.className = 'tl-status' + (kind ? ' ' + kind : ''); };
@@ -242,7 +303,7 @@ export function mount(root, host) {
     box.querySelectorAll('[data-i]').forEach(b => b.onclick = () => selectTrain(Number(b.dataset.i)));
     const add = $('tlAdd'); if (add) add.onclick = addTrain;
     const t = proj.trains[sel];
-    $('tlName').value = t ? t.name : ''; $('tlColour').value = t ? t.color : '#21b8e8';
+    $('tlName').value = t ? t.name : ''; $('tlColour').value = t ? t.color : '#21b8e8'; $('tlWagon').checked = !!(t && t.wagon);
     // like the real extension, trains are numbered: only the last one can be taken away
     $('tlDelTrain').hidden = proj.trains.length < 2 || sel !== proj.trains.length - 1;
   }
@@ -268,7 +329,7 @@ export function mount(root, host) {
   }
 
   // ── the tools under the board
-  const TOOLS = [...TM.PIECE_KEYS.map(k => ['piece', k, TM.PIECES[k].name]), ...TM.SNAP_KEYS.map(k => ['snap', k, k + ' snap']), ['train', 'train', 'Put the train on the track'], ['erase', 'erase', 'Rubber: take a piece away']];
+  const TOOLS = [...TM.PIECE_KEYS.map(k => ['piece', k, TM.PIECES[k].name]), ...TM.SNAP_KEYS.map(k => ['snap', k, k + ' snap']), ['train', 'train', 'Put the train on the track'], ['wagon', 'wagon', 'Wagon: tap the track to leave a wagon there (tap again to turn it, then to take it away)'], ['place', 'place', 'Places: tap beside the track to put up a sign'], ['erase', 'erase', 'Rubber: take a piece, a sign or a wagon away']];
   function iconFor(kind, key) {
     const cv = document.createElement('canvas'), S = 40, dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.height = S * dpr; cv.style.width = cv.style.height = S + 'px';
     const c = cv.getContext('2d'); c.scale(dpr, dpr);
@@ -281,18 +342,25 @@ export function mount(root, host) {
       drawPiece(c, T, S / 2 - (x0 + x1) / 2 * T, S / 2 - (y0 + y1) / 2 * T, geom, null);
     } else if (kind === 'snap') { drawSnap(c, S * 2.4, S / 2, S / 2, 0, key); }
     else if (kind === 'train') { drawTrain(c, S * 0.95, S / 2, S / 2, 0, { color: proj.trains[sel] ? proj.trains[sel].color : TM.TRAIN_COLOURS[0], head: null, top: null }); }
+    else if (kind === 'wagon') { drawWagon(c, S * 0.95, S / 2, S / 2, 0, TM.WAGON_COLOUR); }
+    else if (kind === 'place') { drawDestIcon(c, placeType, S / 2, S / 2, 15); }
     else { c.strokeStyle = '#ffb0b0'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, 10); c.lineTo(30, 30); c.moveTo(30, 10); c.lineTo(10, 30); c.stroke(); }
     return cv;
   }
   function renderTools() {
     const box = $('tlTools'); box.innerHTML = '';
-    const groups = [['Track', TOOLS.filter(t => t[0] === 'piece')], ['Snaps', TOOLS.filter(t => t[0] === 'snap')], ['', TOOLS.filter(t => t[0] === 'train' || t[0] === 'erase')]];
+    const groups = [['Track', TOOLS.filter(t => t[0] === 'piece')], ['Snaps', TOOLS.filter(t => t[0] === 'snap')], ['', TOOLS.filter(t => t[0] === 'train' || t[0] === 'wagon' || t[0] === 'erase')], ['Places', TOOLS.filter(t => t[0] === 'place')]];
     for (const [title, list] of groups) {
       const grp = document.createElement('div'); grp.className = 'tl-tgroup';
       if (title) { const h = document.createElement('span'); h.className = 'tl-tlabel'; h.textContent = title; grp.appendChild(h); }
       for (const [kind, key, label] of list) {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'tl-tool'; b.dataset.tool = key; b.title = label; b.setAttribute('aria-label', label);
         b.appendChild(iconFor(kind, key)); b.onclick = () => setTool(key); grp.appendChild(b);
+      }
+      if (title === 'Places') {
+        const ps = document.createElement('select'); ps.id = 'tlPlace'; ps.setAttribute('aria-label', 'Which place');
+        ps.innerHTML = TM.DEST_KEYS.map(k => `<option value="${k}"${k === placeType ? ' selected' : ''}>${esc(TM.DESTS[k])}</option>`).join('');
+        ps.onchange = () => { placeType = ps.value; setTool('place'); }; grp.appendChild(ps);
       }
       box.appendChild(grp);
     }
@@ -306,23 +374,25 @@ export function mount(root, host) {
     tool = k;
     root.querySelectorAll('.tl-tool').forEach(b => b.classList.toggle('on', b.dataset.tool === k));
     const tb = root.querySelector('.tl-tool[data-tool="train"]'); if (tb) { tb.innerHTML = ''; tb.appendChild(iconFor('train')); }
+    const pb = root.querySelector('.tl-tool[data-tool="place"]'); if (pb) { pb.innerHTML = ''; pb.appendChild(iconFor('place')); }
   }
 
   // ── editing the track: pieces click onto open ends (the blue + marks); tap a piece to turn it
-  const snapshot = () => JSON.stringify({ pieces: proj.pieces, starts: proj.trains.map(t => t.start) });
+  const snapshot = () => JSON.stringify({ pieces: proj.pieces, starts: proj.trains.map(t => t.start), wagons: proj.wagons, dests: proj.dests, challenge: proj.challenge });
   function remember() { undo.push(snapshot()); if (undo.length > 80) undo.shift(); redo = []; }
-  function restore(s) { const o = JSON.parse(s); proj.pieces = o.pieces; o.starts.forEach((st, i) => { if (proj.trains[i]) proj.trains[i].start = st; }); afterEdit(); }
+  function restore(s) { const o = JSON.parse(s); proj.pieces = o.pieces; o.starts.forEach((st, i) => { if (proj.trains[i]) proj.trains[i].start = st; }); proj.wagons = o.wagons || []; proj.dests = o.dests || []; proj.challenge = o.challenge || null; afterEdit(); }
   function doUndo() { if (running() || !undo.length) return; redo.push(snapshot()); restore(undo.pop()); }
   function doRedo() { if (running() || !redo.length) return; undo.push(snapshot()); restore(redo.pop()); }
   async function clearTrack() {
     if (running() || !proj.pieces.length) return;
     if (!(await ask('Take every piece of track away?'))) return;
-    remember(); proj.pieces = []; for (const t of proj.trains) t.start = null; afterEdit();
+    remember(); proj.pieces = []; proj.wagons = []; proj.dests = []; if (proj.challenge) proj.challenge.steps = []; for (const t of proj.trains) t.start = null; afterEdit();
   }
   function afterEdit() {
     const fixed = TM.cleanProject(proj); // a train whose piece has gone (or changed) comes off the track
     proj.pieces = fixed.pieces; proj.trains.forEach((t, i) => { t.start = fixed.trains[i] ? fixed.trains[i].start : null; });
-    rebuild(); renderTrains(); changed();
+    proj.wagons = fixed.wagons; proj.dests = fixed.dests; proj.challenge = fixed.challenge;
+    rebuild(); renderTrains(); renderCheck(); changed();
   }
   function openEnds() {
     const out = [];
@@ -351,6 +421,11 @@ export function mount(root, host) {
       const i = pieceAt(x, y); if (i >= 0) return turnPiece(i);
       proj.pieces.push([tool, Math.round(x * 2) / 2, Math.round(y * 2) / 2, 0, null]); return true; // on the empty mat: start a new bit of track
     }
+    if (tool === 'place') return placeSign(x, y);
+    if (tool === 'erase') { // a sign or a wagon first, then the piece under it
+      const d = destAt(x, y); if (d >= 0) { removeDest(d); return true; }
+      const w = wagonAt(x, y); if (w >= 0) { proj.wagons.splice(w, 1); return true; }
+    }
     const i = pieceAt(x, y);
     if (i < 0) return false;
     const pc = proj.pieces[i];
@@ -363,17 +438,57 @@ export function mount(root, host) {
     if (tool === 'erase') {
       proj.pieces.splice(i, 1);
       for (const t of proj.trains) if (t.start) { if (t.start.p === i) t.start = null; else if (t.start.p > i) t.start = Object.assign({}, t.start, { p: t.start.p - 1 }); }
+      proj.wagons = proj.wagons.filter(w => w.p !== i).map(w => (w.p > i ? Object.assign({}, w, { p: w.p - 1 }) : w));
+      for (let d = proj.dests.length - 1; d >= 0; d--) if (proj.dests[d].p === i) removeDest(d);
+      proj.dests.forEach(d => { if (d.p > i) d.p--; });
       return true;
+    }
+    if (tool === 'wagon') {
+      if (proj.trains.some(o => o.start && o.start.p === i)) { if (host.toast) host.toast('A train is standing there. Put the wagon on another piece.'); return false; }
+      const n = TM.PIECES[pc[0]].paths.length, j = proj.wagons.findIndex(w => w.p === i);
+      if (j >= 0) { // tap again: turn it round, then the other track, then take it away
+        const w = proj.wagons[j], kk = w.k * 2 + (w.rev ? 1 : 0) + 1;
+        if (kk >= n * 2) proj.wagons.splice(j, 1); else proj.wagons[j] = { p: i, k: Math.floor(kk / 2), rev: kk % 2 === 1 };
+        return true;
+      }
+      if (proj.wagons.length >= TM.MAX_WAGONS) { if (host.toast) host.toast('That’s enough wagons for one track.'); return false; }
+      proj.wagons.push({ p: i, k: 0, rev: false }); return true;
     }
     if (tool === 'train') {
       const t = proj.trains[sel]; if (!t) return false;
-      if (proj.trains.some((o, j) => j !== sel && o.start && o.start.p === i)) { if (host.toast) host.toast('There is already a train on that piece.'); return false; }
+      if (proj.trains.some((o, j) => j !== sel && o.start && o.start.p === i) || proj.wagons.some(w => w.p === i)) { if (host.toast) host.toast('There is already a train or a wagon on that piece.'); return false; }
       const n = TM.PIECES[pc[0]].paths.length;
       if (t.start && t.start.p === i) { const kk = (t.start.k * 2 + (t.start.rev ? 1 : 0) + 1) % (n * 2); t.start = { p: i, k: Math.floor(kk / 2), rev: kk % 2 === 1 }; } // tap again: turn it round, then the other track
       else t.start = { p: i, k: 0, rev: false };
       return true;
     }
     return false;
+  }
+  // ── places (destination signs beside the track) and loose wagons
+  function destAt(x, y) {
+    let best = -1, bd = 0.32;
+    proj.dests.forEach((d, j) => { const q = destSpot(sim.geoms, d); if (q) { const e = Math.hypot(q.x - x, q.y - y); if (e < bd) { bd = e; best = j; } } });
+    return best;
+  }
+  function wagonAt(x, y) {
+    let best = -1, bd = 0.35;
+    sim.freeWagons().forEach((w, j) => { const e = Math.hypot(w.x - x, w.y - y); if (e < bd) { bd = e; best = j; } });
+    return best; // free wagons are in the same order as proj.wagons
+  }
+  function removeDest(j) {
+    proj.dests.splice(j, 1);
+    if (proj.challenge) proj.challenge.steps = proj.challenge.steps.filter(s => s.d !== j).map(s => (s.d > j ? { d: s.d - 1, a: s.a } : s));
+  }
+  function placeSign(x, y) {
+    const j = destAt(x, y);
+    if (j >= 0) { if (proj.dests[j].t === placeType) removeDest(j); else proj.dests[j].t = placeType; return true; } // tap a sign: change it, or take it away
+    let best = -1, bd = 1.1, side = 1;
+    sim.geoms.forEach((G, p) => { const q = G.paths[0].at(0.5), e = Math.hypot(q.x - x, q.y - y); if (e < bd) { bd = e; best = p; side = (x - q.x) * -Math.sin(q.ang) + (y - q.y) * Math.cos(q.ang) < 0 ? -1 : 1; } });
+    if (best < 0) return false;
+    const same = proj.dests.findIndex(d => d.p === best && d.side === side);
+    if (same >= 0) { proj.dests[same].t = placeType; return true; }
+    if (proj.dests.length >= TM.MAX_DESTS) { if (host.toast) host.toast('That’s enough places for one track.'); return false; }
+    proj.dests.push({ t: placeType, p: best, side }); return true;
   }
   function tapAt(x, y) { const before = snapshot(); if (running() || !applyTool(x, y)) return false; undo.push(before); if (undo.length > 80) undo.shift(); redo = []; afterEdit(); return true; }
 
@@ -382,10 +497,12 @@ export function mount(root, host) {
     const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const G of sim.geoms) for (const pth of G.paths) for (let i = 0; i <= 4; i++) { const q = pth.at(i / 4); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+    for (const d of proj.dests) { const q = destSpot(sim.geoms, d); if (q) { x0 = Math.min(x0, q.x - 0.2); x1 = Math.max(x1, q.x + 0.2); y0 = Math.min(y0, q.y - 0.2); y1 = Math.max(y1, q.y + 0.35); } }
     if (!isFinite(x0)) { x0 = -3; x1 = 3; y0 = -2; y1 = 2; }
-    const m = 1.1, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ww = Math.max(6, x1 - x0 + 2 * m), hh = Math.max(3.6, y1 - y0 + 2 * m);
-    const T = Math.min(w / ww, h / hh, 150);
-    return { T, ox: w / 2 - cx * T, oy: h / 2 - cy * T, w, h };
+    const box = $('tlCheck'), top = box && !box.hidden ? box.offsetHeight + 14 : 0, hv = Math.max(80, h - top); // leave room for the challenge's jobs
+    const m = 0.8, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ww = Math.max(6, x1 - x0 + 2 * m), hh = Math.max(3.6, y1 - y0 + 2 * m);
+    const T = Math.min(w / ww, hv / hh, 150);
+    return { T, ox: w / 2 - cx * T, oy: top + hv / 2 - cy * T, w, h };
   }
   function worldFromEvent(e) { const r = canvas.getBoundingClientRect(), V = view(); return { x: (e.clientX - r.left - V.ox) / V.T, y: (e.clientY - r.top - V.oy) / V.T }; }
   canvas.addEventListener('pointerdown', e => {
@@ -416,6 +533,15 @@ export function mount(root, host) {
       if (tgt && !touchy) { g.save(); g.globalAlpha = 0.45; const G = TM.pieceGeom(TM.placeAt(tool, 0, tgt.ex, tgt.ey, tgt.h)); drawPiece(g, T, ox, oy, G, null, 'bed'); drawPiece(g, T, ox, oy, G, null, 'top'); g.restore(); }
       if (hover && !touchy && TM.SNAPS[tool]) { const i = pieceAt(hover.x, hover.y); if (i >= 0) { const pts = slotPoints(sim.geoms[i]); if (pts.length) { const q = near(pts, hover.x, hover.y, 9); drawSnap(g, T, ox + q.x * T, oy + q.y * T, q.ang, tool, true); } } }
     }
+    const goal = checker && running() && !checker.complete() ? checker.steps[checker.current()] : null;
+    proj.dests.forEach((d, j) => {
+      const q = destSpot(sim.geoms, d); if (!q) return;
+      if (goal && goal.d === j) { g.save(); g.strokeStyle = '#ffd23a'; g.lineWidth = 4; g.beginPath(); g.arc(ox + q.x * T, oy + q.y * T, Math.max(9, T * 0.2) + 6, 0, Math.PI * 2); g.stroke(); g.restore(); }
+      drawDest(g, T, ox + q.x * T, oy + q.y * T, d.t, TM.DESTS[d.t]);
+    });
+    if (hover && !touchy && tool === 'place' && !running()) { g.save(); g.globalAlpha = 0.5; drawDestIcon(g, placeType, ox + hover.x * T, oy + hover.y * T, Math.max(9, T * 0.2)); g.restore(); }
+    for (const w of sim.freeWagons()) drawWagon(g, T * TRAIN_SIZE, ox + w.x * T, oy + w.y * T, w.ang, w.color);
+    sim.trains.forEach((tr, i) => { const p = sim.wagonPose(i); if (p) drawWagon(g, T * TRAIN_SIZE, ox + p.x * T, oy + p.y * T, p.ang, tr.wagon.color); });
     const many = sim.trains.length > 1;
     sim.trains.forEach((tr, i) => {
       const p = sim.pose(i); if (!p) return;
@@ -429,7 +555,10 @@ export function mount(root, host) {
   function tick(now) {
     raf = requestAnimationFrame(tick);
     const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
-    if (runner && runner.running()) runner.tick(dt);
+    if (runner && runner.running()) {
+      runner.tick(dt);
+      if (checker) { checker.tick(dt); renderCheck(); if (checker.complete() && !cheered) { cheered = true; playSound('dingdong'); status('Challenge complete! Well done.', 'ok'); } }
+    }
     $('tlRun').classList.toggle('on', running());
     root.querySelector('.tl').classList.toggle('playing', running());
     draw();
@@ -440,12 +569,13 @@ export function mount(root, host) {
     if (!ws) return;
     flush(); rebuild();
     if (!sim.trains.some(t => t.on)) { status('Put a train on the track first: pick the train tool and tap a piece.', 'bad'); return; }
+    checker = proj.challenge && proj.challenge.steps.length ? TM.createChecker(sim, sim.project.challenge) : null; cheered = false; renderCheck();
     runner.start(ws);
     status('Running · trains with no blocks of their own drive by themselves and follow the snaps', 'ok');
     canvas.focus({ preventScroll: true });
   }
   function stop() { if (runner) runner.stop(); }
-  function reset() { if (runner) runner.stop(true); rebuild(); status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.'); }
+  function reset() { if (runner) runner.stop(true); rebuild(); checker = null; renderCheck(); status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.'); }
 
   function typing(e) { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
   function onKey(e) {
@@ -468,6 +598,7 @@ export function mount(root, host) {
   let tbTimer = 0; function toolboxSoon() { clearTimeout(tbTimer); tbTimer = setTimeout(refreshToolbox, 500); }
   let rtTimer = 0; function renderTrainsSoon() { clearTimeout(rtTimer); rtTimer = setTimeout(() => { const f = document.activeElement; renderTrains(); if (f && root.contains(f)) f.focus(); }, 300); }
   $('tlDelTrain').onclick = deleteTrain;
+  $('tlWagon').addEventListener('change', () => { const t = proj.trains[sel]; if (!t || running()) return; remember(); t.wagon = $('tlWagon').checked; rebuild(); changed(); });
 
 
   const ro = new ResizeObserver(() => { if (ws) Blockly.svgResize(ws); });
@@ -493,9 +624,141 @@ export function mount(root, host) {
     status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
   })().catch(e => { $('tlLoading').textContent = 'The Train Lab could not start. Check your connection and try again.'; console.error(e); });
 
+  // ── challenges: the checklist on the board, the Challenges panel and the printable challenge card
+  const STEP_WORDS = { start: 'Start at the', pass: 'Go past the', stop: 'Stop at the', reverse: 'Turn back at the', pickup: 'Pick up the wagon at the', drop: 'Drop off the wagon at the', end: 'End your route at the' };
+  const placeName = d => (d ? (d.t === 'start' ? 'start flag' : TM.DESTS[d.t].toLowerCase()) : '…');
+  const stepText = s => STEP_WORDS[s.a] + ' ' + placeName(proj.dests[s.d]);
+  const typed = (v, n) => String(v || '').replace(/[<>]/g, '').slice(0, n);
+  const readyOf = ch => (ch && ch.id ? CHALLENGES.find(c => c.id === ch.id) : null);
+  function renderCheck() {
+    const box = $('tlCheck'), ch = proj.challenge;
+    if (!ch || !ch.steps.length) { box.hidden = true; checkKey = ''; return; }
+    const live = !!checker, cur = live ? checker.current() : -1, done = live ? checker.done : [], won = live && checker.complete();
+    const key = JSON.stringify([ch.title, ch.steps, proj.dests, cur, won, live]);
+    if (key === checkKey) return; checkKey = key; box.hidden = false;
+    box.innerHTML = `<b>${esc(ch.title || 'My challenge')}</b><ol>${ch.steps.map((s, i) => `<li class="${done[i] ? 'ok' : ''}${i === cur && !won ? ' now' : ''}">${done[i] ? ic('i-check') : ''}${esc(stepText(s))}</li>`).join('')}</ol>` + (won ? `<p class="tl-win">${ic('i-flag')} Challenge complete!</p>` : '');
+  }
+  function openPanel() { if (running()) stop(); $('tlModal').hidden = false; renderPanel(); const f = $('tlModal').querySelector('button, input'); if (f) f.focus(); }
+  function closePanel() { $('tlModal').hidden = true; }
+  $('tlMClose').onclick = closePanel;
+  $('tlModal').addEventListener('pointerdown', e => { if (e.target === $('tlModal')) closePanel(); });
+  $('tlModal').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closePanel(); } });
+  function destOptions(sel) {
+    const seen = {};
+    return proj.dests.map((d, j) => { seen[d.t] = (seen[d.t] || 0) + 1; const many = proj.dests.filter(o => o.t === d.t).length > 1; return `<option value="${j}"${j === sel ? ' selected' : ''}>${esc(TM.DESTS[d.t])}${many ? ' ' + seen[d.t] : ''}</option>`; }).join('');
+  }
+  function renderPanel() {
+    const ch = proj.challenge, ready = readyOf(ch), body = $('tlMBody');
+    let mine;
+    if (!ch) mine = `<p>Make your own: put places beside your track with the <b>Places</b> tool, then give Train 1 some jobs to do there.</p><button type="button" class="tl-small tl-go" id="tlChNew">${ic('i-plus')} Make a challenge for this track</button>`;
+    else mine = `
+      <label class="tl-field">Title <input id="tlChTitle" maxlength="60" value="${esc(ch.title)}"></label>
+      <label class="tl-field">What to do <textarea id="tlChText" maxlength="400" rows="2">${esc(ch.text)}</textarea></label>
+      <div class="tl-field">Jobs for Train 1, in order</div>
+      ${proj.dests.length ? `<ol class="tl-steps">${ch.steps.map((s, i) => `<li><select data-sd="${i}" aria-label="Job ${i + 1}: what">${Object.keys(TM.ACTIONS).map(a => `<option value="${a}"${a === s.a ? ' selected' : ''}>${esc(STEP_WORDS[a])}</option>`).join('')}</select>
+        <select data-sp="${i}" aria-label="Job ${i + 1}: where">${destOptions(s.d)}</select>
+        <button type="button" class="tl-small" data-sx="${i}" aria-label="Take job ${i + 1} away">${ic('i-x')}</button></li>`).join('')}</ol>
+        ${ch.steps.length < 12 ? `<button type="button" class="tl-small" id="tlStepAdd">${ic('i-plus')} Add a job</button>` : ''}`
+      : '<p class="tl-note">There are no places beside the track yet. Pick the <b>Places</b> tool and tap beside a piece to put up a sign.</p>'}
+      ${ready ? `<p class="tl-note"><b>Hint:</b> ${esc(ready.hint)}</p>` : ''}
+      <div class="tl-mrow">
+        <label class="tl-check-opt"><input type="checkbox" id="tlCardAns"> Put the snaps on the card (an answer card)</label>
+        <button type="button" class="tl-small tl-go" id="tlCardPrint">${ic('i-print')} Print the challenge card</button>
+        ${ready ? `<button type="button" class="tl-small" id="tlChAnswer">${ic('i-bulb')} Show the answer</button>` : ''}
+        <button type="button" class="tl-small" id="tlChRemove">${ic('i-trash')} Remove the challenge</button>
+      </div>`;
+    body.innerHTML = `<h2 id="tlMTitle">${ic('i-flag')} Challenges</h2>
+      <p class="tl-mlede">A challenge is a track with places beside it and jobs for Train 1 to do. Solve it with snaps (or blocks) and press Run: the jobs tick off as the train does them. Print the card and build it with the real track too.</p>
+      <h3>Ready-made challenges</h3>
+      <div class="tl-cards">${CHALLENGES.map(c => `<button type="button" class="tl-ccard${ready && ready.id === c.id ? ' on' : ''}" data-ch="${c.id}"><b>${esc(c.title)}</b><small>Level ${c.level}</small><span>${esc(c.text)}</span></button>`).join('')}</div>
+      <h3>${ch ? 'This challenge' : 'Your own challenge'}</h3>${mine}`;
+    body.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => loadChallenge(b.dataset.ch));
+    const on = (id, f) => { const el = $(id); if (el) el.onclick = f; };
+    on('tlChNew', () => { remember(); proj.challenge = { id: '', title: 'My challenge', text: '', steps: proj.dests.length ? [{ d: 0, a: proj.dests[0].t === 'start' ? 'start' : 'stop' }] : [] }; challengeEdited(); });
+    on('tlStepAdd', () => { remember(); ch.steps.push({ d: Math.min(proj.dests.length - 1, ch.steps.length ? ch.steps[ch.steps.length - 1].d + 1 : 0), a: 'stop' }); challengeEdited(); });
+    on('tlChRemove', async () => { if (!(await ask('Take the challenge away? The track and the places stay.'))) return; remember(); proj.challenge = null; challengeEdited(); });
+    on('tlChAnswer', showAnswer);
+    on('tlCardPrint', () => printCard($('tlCardAns').checked));
+    body.querySelectorAll('[data-sx]').forEach(b => b.onclick = () => { remember(); ch.steps.splice(Number(b.dataset.sx), 1); challengeEdited(); });
+    body.querySelectorAll('[data-sd]').forEach(s => s.onchange = () => { remember(); ch.steps[Number(s.dataset.sd)].a = s.value; challengeEdited(); });
+    body.querySelectorAll('[data-sp]').forEach(s => s.onchange = () => { remember(); ch.steps[Number(s.dataset.sp)].d = Number(s.value); challengeEdited(); });
+    const ti = $('tlChTitle'), tx = $('tlChText');
+    if (ti) ti.oninput = () => { ch.title = typed(ti.value, 60); ch.id = ''; renderCheck(); changed(); };
+    if (tx) tx.oninput = () => { ch.text = typed(tx.value, 400); renderCheck(); changed(); };
+  }
+  function challengeEdited() { checker = null; renderCheck(); renderPanel(); changed(); }
+  async function loadChallenge(id) {
+    const c = CHALLENGES.find(x => x.id === id); if (!c) return;
+    if (proj.pieces.length && !(await ask('Open the “' + c.title + '” challenge? It takes the place of this track and its blocks (save first if you want to keep them).'))) return;
+    if (runner) runner.stop(true);
+    proj = TM.cleanProject(challengeProject(id)); sel = 0; undo = []; redo = []; checker = null;
+    rebuild(); renderTrains(); renderTools(); renderCheck(); loadBlocks(); changed(); renderPanel();
+    status('Challenge: ' + c.title + '. Put snaps on the track so Train 1 does every job, then press Run.');
+  }
+  async function showAnswer() {
+    const ready = readyOf(proj.challenge); if (!ready) return;
+    const fresh = challengeProject(ready.id, true);
+    if (fresh.pieces.length !== proj.pieces.length || fresh.pieces.some((pc, i) => pc[0] !== proj.pieces[i][0])) { if (host.toast) host.toast('The track has been changed, so the answer won’t fit any more. Open the challenge again to see it.'); return; }
+    if (!(await ask('Show the answer? It puts the right snaps on the track for you.'))) return;
+    remember(); fresh.pieces.forEach((pc, i) => { proj.pieces[i][4] = pc[4]; }); afterEdit(); closePanel();
+    status('Here is one answer. Press Run to watch it.', 'ok');
+  }
+  // the track as a picture for the card: places, the trains where they start, wagons; snaps only on an answer card
+  function trackPicture(withSnaps, W = 1200, H = 720) {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H);
+    const P = TM.cleanProject(Object.assign({}, proj, { pieces: proj.pieces.map(pc => [pc[0], pc[1], pc[2], pc[3], withSnaps ? pc[4] : null]) }));
+    const s2 = TM.createSim(P);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const grow = (x, y, m) => { x0 = Math.min(x0, x - m); y0 = Math.min(y0, y - m); x1 = Math.max(x1, x + m); y1 = Math.max(y1, y + m); };
+    for (const G of s2.geoms) for (const pth of G.paths) for (let i = 0; i <= 6; i++) { const q = pth.at(i / 6); grow(q.x, q.y, 0.3); }
+    for (const d of P.dests) { const q = destSpot(s2.geoms, d); if (q) { grow(q.x, q.y, 0.3); grow(q.x, q.y + 0.5, 0); grow(q.x - 0.55, q.y, 0); grow(q.x + 0.55, q.y, 0); } }
+    if (!isFinite(x0)) return cv.toDataURL('image/png');
+    const T = Math.min(W / (x1 - x0), H / (y1 - y0)) * 0.94, ox = W / 2 - (x0 + x1) / 2 * T, oy = H / 2 - (y0 + y1) / 2 * T;
+    s2.geoms.forEach((G, p) => drawPiece(c, T, ox, oy, G, P.pieces[p][4], 'bed'));
+    s2.geoms.forEach((G, p) => drawPiece(c, T, ox, oy, G, P.pieces[p][4], 'top'));
+    P.dests.forEach(d => { const q = destSpot(s2.geoms, d); if (q) drawDest(c, T, ox + q.x * T, oy + q.y * T, d.t, TM.DESTS[d.t]); });
+    for (const w of s2.freeWagons()) drawWagon(c, T * TRAIN_SIZE, ox + w.x * T, oy + w.y * T, w.ang, w.color);
+    s2.trains.forEach((tr, i) => { const p = s2.wagonPose(i); if (p) drawWagon(c, T * TRAIN_SIZE, ox + p.x * T, oy + p.y * T, p.ang, tr.wagon.color); });
+    s2.trains.forEach((tr, i) => { const p = s2.pose(i); if (p) drawTrain(c, T * TRAIN_SIZE, ox + p.x * T, oy + p.y * T, p.ang, tr, { label: s2.trains.length > 1 ? tr.name : '' }); });
+    return cv.toDataURL('image/png');
+  }
+  function iconURL(type) { const cv = document.createElement('canvas'); cv.width = cv.height = 64; drawDestIcon(cv.getContext('2d'), type, 32, 32, 28); return cv.toDataURL('image/png'); }
+  function cardHTML(withAnswer) {
+    const ch = proj.challenge || { title: 'My track', text: '', steps: [] }, ready = readyOf(ch);
+    const parts = {}, snaps = {};
+    for (const pc of proj.pieces) { parts[pc[0]] = (parts[pc[0]] || 0) + 1; for (const s of pc[4] || []) if (s) snaps[s] = (snaps[s] || 0) + 1; }
+    const li = 'margin:0 0 4px;font-size:15px;';
+    const steps = ch.steps.map((s, i) => { const d = proj.dests[s.d]; return `<li style="${li}display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="width:18px">${i + 1}.</b><img src="${d ? iconURL(d.t) : ''}" alt="" style="width:30px;height:30px">${esc(stepText(s))}</li>`; }).join('');
+    const partList = Object.keys(parts).map(k => `<li style="${li}">${parts[k]} × ${esc(TM.PIECES[k].name.toLowerCase())}</li>`).join('');
+    const snapList = Object.keys(snaps).length ? Object.keys(snaps).map(k => `<li style="${li}display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #555;background:${TM.SNAPS[k]}"></span>${snaps[k]} × ${k}</li>`).join('') : `<li style="${li}">No snaps yet.</li>`;
+    const extras = [proj.trains.some(t => t.wagon) || proj.wagons.length ? 'a wagon' : '', proj.trains.length > 1 ? proj.trains.length + ' trains' : '1 train'].filter(Boolean).join(' and ');
+    return `<div style="font-family:Montserrat,Arial,sans-serif;color:#1f2024;border:3px solid #1f2024;border-radius:18px;padding:18px 22px;max-width:760px;margin:0 auto;break-inside:avoid;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:2px solid #ddd;padding-bottom:6px">
+        <h1 style="margin:0;font-size:28px">${esc(ch.title || 'My challenge')}</h1>
+        <span style="font-size:13px;font-weight:700;color:#555;white-space:nowrap">Train Lab challenge${ready ? ' · Level ' + ready.level : ''}${withAnswer ? ' · ANSWER' : ''}</span>
+      </div>
+      ${ch.text ? `<p style="font-size:16px;margin:10px 0">${esc(ch.text)}</p>` : ''}
+      <img src="${trackPicture(withAnswer)}" alt="The track" style="width:100%;border:1px solid #ccc;border-radius:10px;margin:6px 0 10px">
+      ${steps ? `<h2 style="font-size:19px;margin:6px 0">Your mission</h2><ol style="list-style:none;padding-left:4px;margin:0 0 10px">${steps}</ol>` : ''}
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <div><h3 style="font-size:15px;margin:6px 0">Track you need</h3><ul style="padding-left:18px;margin:0">${partList}<li style="${li}">${extras}</li></ul></div>
+        <div><h3 style="font-size:15px;margin:6px 0">Snaps</h3>${withAnswer ? `<ul style="list-style:none;padding:0;margin:0">${snapList}</ul>` : `<p style="font-size:14px;margin:0;max-width:300px">Work out which snaps you need and where they go. Try it in the Train Lab, then build it with the real track.${ready ? '<br><b>Hint:</b> ' + esc(ready.hint) : ''}</p>`}</div>
+      </div>
+      <p style="font-size:11px;color:#777;margin:12px 0 0">Made with CodeJump · codejump.co.uk</p>
+    </div>`;
+  }
+  function printCard(withAnswer) {
+    const html = cardHTML(withAnswer);
+    if (host.print) { host.print(html); return; }
+    const w = window.open('', '_blank'); if (!w) return;
+    w.document.write('<!doctype html><meta charset="utf-8"><title>Challenge card</title>' + html); w.document.close(); w.focus(); w.print();
+  }
+  $('tlChal').onclick = openPanel;
+
   function getProject() {
     flush();
-    return JSON.parse(JSON.stringify({ v: 2, pieces: proj.pieces, trains: proj.trains, blocks: proj.blocks || null }));
+    return JSON.parse(JSON.stringify({ v: 2, pieces: proj.pieces, trains: proj.trains, wagons: proj.wagons, dests: proj.dests, challenge: proj.challenge, blocks: proj.blocks || null }));
   }
   return {
     ready,
@@ -503,8 +766,8 @@ export function mount(root, host) {
     setProject(p) {
       if (runner) runner.stop(true);
       proj = TM.cleanProject(p || defaultProject()); if (!proj.trains.length) proj = TM.cleanProject(defaultProject());
-      sel = 0; undo = []; redo = [];
-      rebuild(); renderTrains(); renderTools(); loadBlocks();
+      sel = 0; undo = []; redo = []; checker = null; closePanel();
+      rebuild(); renderTrains(); renderTools(); renderCheck(); loadBlocks();
       status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
       if (!raf && ws) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
     },
@@ -516,7 +779,8 @@ export function mount(root, host) {
       if (runner) runner.stop(true); if (ws) ws.dispose();
       root.innerHTML = '';
     },
-    run, stop, reset, setTool, selectTrain,
+    run, stop, reset, setTool, selectTrain, openChallenges: openPanel, cardHTML, setPlace: k => { if (TM.DESTS[k]) { placeType = k; setTool('place'); } },
+    _checker: () => checker,
     _sim: () => sim, _runner: () => runner, _ws: () => ws, _proj: () => proj, _tapWorld: tapAt, _openEnds: () => openEnds(),
   };
 }

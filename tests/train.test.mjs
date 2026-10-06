@@ -60,6 +60,29 @@ const line = (snaps, n = 4, rev = false) => ({ v: 2, pieces: Array.from({ length
   ok(bad.pieces.length === 1 && bad.pieces[0][4].join() === ',red,,,,,' && bad.trains.length === 1 && bad.trains[0].start === null && !bad.trains[0].name.includes('<'), 'a saved project with nonsense in it is tidied up');
 }
 
+
+// ---- wagons: the engine pulls one behind it, white-yellow leaves it, backing into it picks it up again
+{
+  const P = { ...TM.starterTrack(), trains: [{ name: 'A', start: TM.STARTER_TRAIN, wagon: true }] };
+  const gaps = drive(P, 20, { watch: s => { const e = s.pose(0), w = s.wagonPose(0); return e && w ? Math.hypot(e.x - w.x, e.y - w.y) : 0; } }).at;
+  ok(gaps.every(d => d > 0.45 && d < 0.6), 'a wagon follows the engine round the oval and through the passing loop at the same distance');
+  const drop = drive({ ...line([null, ['white', 'yellow']], 6), trains: [{ name: 'L', start: { p: 0, k: 0, rev: false }, wagon: true }] }, 5);
+  ok(drop.ev.includes('wagon:dropped') && !drop.sim.trains[0].wagon && drop.sim.freeWagons().length === 1, 'white yellow = drop the wagon: it stays behind on the track');
+  const pick = drive({ v: 2, pieces: Array.from({ length: 5 }, (_, i) => ['straight', i, 0, 0, i === 3 ? ['white', 'blue'] : null]), trains: [{ name: 'L', start: { p: 2, k: 0, rev: false } }], wagons: [{ p: 0, k: 0, rev: false }] }, 8);
+  ok(pick.ev.includes('wagon:picked up') && pick.sim.trains[0].wagon && pick.sim.freeWagons().length === 0, 'reversing into a wagon couples it to the engine’s magnet');
+}
+// ---- challenges: every ready-made answer really does the jobs; without snaps it doesn't
+{
+  const CH = await import(pathToFileURL(ROOT + '/train/train-challenges.js').href);
+  for (const c of CH.CHALLENGES) {
+    const res = withAnswer => { const sim = TM.createSim(CH.challengeProject(c.id, withAnswer), { random: () => 0.5 }); const chk = TM.createChecker(sim, sim.project.challenge); sim.go(); for (let i = 0; i < 60 * 90 && !chk.complete(); i++) { sim.step(1 / 60); chk.tick(1 / 60); } return chk; };
+    const yes = res(true), no = res(false);
+    ok(yes.complete() && !no.complete(), 'challenge “' + c.title + '”: the answer does every job (' + c.steps.length + '), the bare track doesn’t');
+  }
+  const P = TM.cleanProject({ ...CH.challengeProject('airport-run'), dests: [{ t: 'nowhere', p: 0 }, { t: 'zoo', p: 99 }, { t: 'zoo', p: 1, side: 7 }], challenge: { title: '<i>x</i>', steps: [{ d: 0, a: 'stop' }, { d: 5, a: 'stop' }, { d: 0, a: 'fly' }] } });
+  ok(P.dests.length === 1 && P.dests[0].side === 1 && P.challenge.steps.length === 1 && !P.challenge.title.includes('<'), 'saved places and challenges with nonsense in them are tidied up');
+}
+
 const site = await serve(), b = await browser(), errors = [];
 const N = n => ({ shadow: { type: 'math_number', fields: { NUM: n } } });
 const chainB = list => { let first = null, prev = null; for (const x of list) { if (prev) prev.next = { block: x }; else first = x; prev = x; } return first; };
@@ -170,6 +193,7 @@ try {
   ok(await page.evaluate(() => trainApp._sim().trains[1].back === true && trainApp._sim().trains[0].back === false), 'train 2 drives backward from its blocks while train 1 (no blocks) drives by itself');
   await page.click('#tlStop');
 
+
   // ---- saving and reopening
   const saved = await page.evaluate(() => JSON.stringify(buildPayload()));
   const p = JSON.parse(saved);
@@ -182,6 +206,41 @@ try {
   await page.waitForFunction(() => trainApp._sim().trains[1].dist > 0.3, null, { timeout: 10000 });
   ok(true, 'Run still works after leaving the Train Lab and reopening a project');
   await page.click('#tlStop');
+  // ---- wagons, places and challenges in the app
+  const wp = await page.evaluate(() => {
+    const A = trainApp; A.setProject(null);
+    const mid = p => A._sim().geoms[p].paths[0].at(0.5);
+    A.setTool('wagon'); let q = mid(3); A._tapWorld(q.x, q.y);
+    const wag = A._sim().freeWagons().length;
+    A.setPlace('farm'); A._tapWorld(0.5, -0.6); // beside piece 0, outside the oval
+    const signs = A._proj().dests.map(d => d.t + ':' + d.p).join();
+    A.setTool('erase'); const s = A._proj().dests[0]; const G = A._sim().geoms[s.p].paths[0].at(0.5); A._tapWorld(G.x - Math.sin(G.ang) * 0.6 * s.side, G.y + Math.cos(G.ang) * 0.6 * s.side);
+    const afterErase = A._proj().dests.length + '/' + A._proj().pieces.length;
+    return { wag, signs, afterErase };
+  });
+  ok(wp.wag === 1 && wp.signs === 'farm:0' && wp.afterErase === '0/20', 'the Wagon tool leaves a wagon on the track, the Places tool puts up a sign, the rubber takes the sign away (not the piece)');
+  await page.click('#tlChal');
+  ok(await page.evaluate(() => document.querySelectorAll('#tlModal:not([hidden]) .tl-ccard').length === 4), 'Challenges opens a panel with the ready-made challenges');
+  await page.click('.tl-ccard[data-ch="first-stop"]');
+  await page.click('#cj-dialog button >> text=Yes').catch(() => {});
+  await page.waitForFunction(() => trainApp._proj().challenge && trainApp._proj().challenge.id === 'first-stop', null, { timeout: 5000 });
+  ok(await page.evaluate(() => !document.getElementById('tlCheck').hidden && document.querySelectorAll('#tlCheck li').length === 3), 'opening one shows its jobs on the board');
+  await page.click('#tlChAnswer');
+  await page.click('#cj-dialog button >> text=Yes').catch(() => {});
+  await page.waitForFunction(() => (trainApp._proj().pieces[0][4] || [])[0] === 'white', null, { timeout: 5000 });
+  await page.click('#tlRun');
+  await page.waitForFunction(() => trainApp._checker() && trainApp._checker().complete(), null, { timeout: 40000 });
+  ok(await page.evaluate(() => /Challenge complete/.test(document.getElementById('tlCheck').textContent)), 'Show the answer + Run: every job ticks off and it says Challenge complete');
+  await page.click('#tlStop');
+  const card = await page.evaluate(() => { const h = trainApp.cardHTML(false), a = trainApp.cardHTML(true); return { h, a }; });
+  ok(/Your mission/.test(card.h) && /Stop at the train station/.test(card.h) && /data:image\/png/.test(card.h) && !/ANSWER/.test(card.h) && /ANSWER/.test(card.a) && /× white/.test(card.a), 'the challenge card has the track picture and the jobs; the answer card lists the snaps');
+  await page.evaluate(() => { window.doPrint = h => { window._printed = h; }; trainApp.openChallenges(); });
+  await page.click('#tlCardPrint');
+  ok(await page.evaluate(() => /First stop/.test(window._printed || '')), 'Print the challenge card sends the card to the printer');
+  await page.keyboard.press('Escape');
+  const saved2 = await page.evaluate(() => JSON.stringify(buildPayload().train));
+  ok(/"challenge":\{"id":"first-stop"/.test(saved2) && /"dests":\[\{"t":"start"/.test(saved2), 'the challenge and the places are saved with the project');
+
   ok(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await b.close(); site.close(); }
 done();

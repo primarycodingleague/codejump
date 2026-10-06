@@ -50,9 +50,20 @@ export const MAX_SPEED = 100 / CM; // the real train's top speed, 100 cm/s
 export const MAX_TRAINS = 3;
 export const MAX_PIECES = 200;
 export const TRAIN_COLOURS = ['#21b8e8', '#f0623c', '#f5b31b']; // blue, red, yellow, like the trains in the Scratch extension
-const ACCEL = 3; // pieces/s² when speeding up or braking
+const WGAP = 0.56; // engine centre to wagon centre
+const COUPLE = 0.6; // backing this close to a wagon picks it up
+export const WAGON_COLOUR = '#21b8e8';
+const ACCEL = 3, DECEL = 8; // pieces/s²: it speeds up gently and stops quickly, like the real train // pieces/s² when speeding up or braking
 const BUMP = 0.5; // trains closer than this have bumped
 const okColour = c => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? String(c) : null);
+export const MAX_WAGONS = 6, MAX_DESTS = 16;
+// destinations: signs beside the track, for challenges (and to copy onto a real layout)
+export const DESTS = { start: 'Start', station: 'Train station', airport: 'Airport', museum: 'Museum', depot: 'Depot', school: 'School', farm: 'Farm',
+  harbour: 'Harbour', zoo: 'Zoo', castle: 'Castle', shops: 'Shops', crossing: 'Level crossing', trees: 'Fallen trees', rocks: 'Rock fall' };
+export const DEST_KEYS = Object.keys(DESTS);
+// what a challenge asks the train to do at a destination
+export const ACTIONS = { start: 'start here', pass: 'go past', stop: 'stop here', reverse: 'turn back here', pickup: 'pick up the wagon', drop: 'drop off the wagon', end: 'end the route here' };
+const cleanText = (v, n) => String(v || '').replace(/[<>]/g, '').trim().slice(0, n);
 export const cleanName = n => String(n || '').replace(/[<>]/g, '').trim().slice(0, 14);
 const wrap = a => { while (a > PI) a -= 2 * PI; while (a <= -PI) a += 2 * PI; return a; };
 
@@ -115,9 +126,16 @@ export function cleanProject(p) {
     const i = trains.length, s = tr.start;
     let start = null;
     if (s && typeof s === 'object' && Number.isInteger(s.p) && pieces[s.p] && Number.isInteger(s.k) && s.k >= 0 && s.k < PIECES[pieces[s.p][0]].paths.length) start = { p: s.p, k: s.k, rev: !!s.rev };
-    trains.push({ name: cleanName(tr.name) || 'Train ' + (i + 1), color: okColour(tr.color) || TRAIN_COLOURS[i % TRAIN_COLOURS.length], start });
+    trains.push({ name: cleanName(tr.name) || 'Train ' + (i + 1), color: okColour(tr.color) || TRAIN_COLOURS[i % TRAIN_COLOURS.length], start, wagon: !!tr.wagon });
   }
-  return { v: 2, pieces, trains, blocks: p.blocks && typeof p.blocks === 'object' ? p.blocks : null }; // one program for all the trains
+  const onPiece = (q, paths) => q && typeof q === 'object' && Number.isInteger(q.p) && pieces[q.p] && (!paths || (Number.isInteger(q.k) && q.k >= 0 && q.k < PIECES[pieces[q.p][0]].paths.length));
+  // wagons standing on their own (to be picked up), and destinations beside the track
+  const wagons = (Array.isArray(p.wagons) ? p.wagons : []).filter(w => onPiece(w, true)).slice(0, MAX_WAGONS).map(w => ({ p: w.p, k: w.k, rev: !!w.rev }));
+  const dests = (Array.isArray(p.dests) ? p.dests : []).filter(d => onPiece(d) && DESTS[d.t]).slice(0, MAX_DESTS).map(d => ({ t: d.t, p: d.p, side: d.side < 0 ? -1 : 1 }));
+  const ch = p.challenge && typeof p.challenge === 'object' ? p.challenge : null;
+  const challenge = ch ? { id: cleanText(ch.id, 40), title: cleanText(ch.title, 60), text: cleanText(ch.text, 400),
+    steps: (Array.isArray(ch.steps) ? ch.steps : []).filter(st => st && Number.isInteger(st.d) && dests[st.d] && ACTIONS[st.a]).slice(0, 12).map(st => ({ d: st.d, a: st.a })) } : null;
+  return { v: 2, pieces, trains, wagons, dests, challenge, blocks: p.blocks && typeof p.blocks === 'object' ? p.blocks : null }; // one program for all the trains
 }
 
 // lay pieces one after another from an open end; a step is a type or [type, end to join (0), end to carry on from]
@@ -150,16 +168,59 @@ export function createSim(project, opts = {}) {
   const emit = (i, kind, data) => { if (opts.onEvent) opts.onEvent(i, kind, data); };
   const rnd = opts.random || Math.random;
   let t = 0;
+  let free = []; // wagons standing on the track on their own: { cur, color, rev }
 
+  // a cursor is a place on the track: piece p, path k, going from end `from` to end `to`, s along it
+  const lenOf = c => geoms[c.p].paths[c.k].len;
   const pathOf = tr => geoms[tr.p].paths[tr.k];
-  const fwd = tr => pathOf(tr).a === tr.from;
+  const fwdOf = c => geoms[c.p].paths[c.k].a === c.from;
+  const fwd = fwdOf;
+  const seg = c => ({ p: c.p, k: c.k, from: c.from, to: c.to });
+  const flipCur = c => { [c.from, c.to] = [c.to, c.from]; c.s = lenOf(c) - c.s; };
+  const flipSeg = g => ({ p: g.p, k: g.k, from: g.to, to: g.from });
+  function poseOf(c, backward) {
+    const pth = geoms[c.p].paths[c.k], f = fwdOf(c), u = Math.max(0, Math.min(1, c.s / pth.len)), q = pth.at(f ? u : 1 - u);
+    return { x: q.x, y: q.y, ang: (f ? q.ang : q.ang + PI) + (backward ? PI : 0) };
+  }
+  // the next piece along from a cursor's `to` end: { link, opts: [{k, o, turn}] } or null at an open end
+  function ahead(c) {
+    const link = links[c.p + ':' + c.to]; if (!link) return null;
+    const g = geoms[link.p], e = link.e, inH = wrap(g.ends[e].h + PI);
+    const o = g.paths.map((q, k) => (q.a === e ? { k, o: q.b } : q.b === e ? { k, o: q.a } : null)).filter(Boolean);
+    for (const x of o) { const dh = wrap(g.ends[x.o].h - inH); x.turn = Math.abs(dh) < 0.1 ? 'straight' : dh > 0 ? 'right' : 'left'; }
+    return { link, opts: o };
+  }
+  // walk a cursor d along the track (taking straight on at splits); returns the segments it went through
+  function walk(c, d) {
+    const segs = [seg(c)];
+    for (let guard = 0; guard < 20; guard++) {
+      const room = lenOf(c) - c.s;
+      if (d <= room) { c.s += d; break; }
+      d -= room;
+      const a = ahead(c); if (!a) { c.s = lenOf(c); break; }
+      const pick = a.opts.find(x => x.turn === 'straight') || a.opts[0];
+      Object.assign(c, { p: a.link.p, k: pick.k, from: a.link.e, to: pick.o, s: 0 }); segs.push(seg(c));
+    }
+    return segs;
+  }
+
   function place(tr) {
     tr.on = false; tr.v = 0; tr.vt = 0;
     const st = tr.start; if (!st || !geoms[st.p] || !geoms[st.p].paths[st.k]) return;
     const pth = geoms[st.p].paths[st.k];
     tr.p = st.p; tr.k = st.k; tr.from = st.rev ? pth.b : pth.a; tr.to = st.rev ? pth.a : pth.b; tr.s = pth.len * 0.5; tr.on = true;
   }
-  const trains = P.trains.map((x, i) => ({ i, name: x.name, color: x.color, start: x.start }));
+  // hitch a wagon to the engine's tail: it sits WGAP behind the engine's front, and `trail` lists the track pieces from the
+  // back car to the front car in the direction of travel (the front car chooses the way, the back car follows the trail)
+  function hitch(tr, color) {
+    const eng = { p: tr.p, k: tr.k, from: tr.from, to: tr.to, s: tr.s };
+    const c = Object.assign({}, eng);
+    if (!tr.back) flipCur(c); // the tail points against the way it is going
+    const segs = walk(c, WGAP);
+    if (!tr.back) { flipCur(c); tr.wagon = { color, cur: c, trail: segs.reverse().map(flipSeg) }; }
+    else tr.wagon = { color, cur: c, trail: segs };
+  }
+  const trains = P.trains.map((x, i) => ({ i, name: x.name, color: x.color, start: x.start, startWagon: x.wagon }));
   function reset() {
     t = 0;
     for (const tr of trains) {
@@ -167,7 +228,13 @@ export function createSim(project, opts = {}) {
       // back: driving tail first (the engine never turns round; "reverse" just drives the other way)
       Object.assign(tr, { back: false, next: null, dflt: null, cruise: 0, dist: 0, odo0: 0, head: '#ffffff', tail: '#ff2a1a', top: null, flash: null,
         sensor: 'black', sensorTill: 0, lastColour: '', lastCommand: '', lastTurn: 0, touching: new Set(), ended: false, cmd: null, pause: null,
-        alt: 0, mag: 0, snapsOn: true, feedbackSound: true, feedbackLights: true });
+        alt: 0, mag: 0, snapsOn: true, feedbackSound: true, feedbackLights: true, wagon: null });
+      if (tr.on && tr.startWagon) hitch(tr, WAGON_COLOUR);
+    }
+    free = [];
+    for (const w of P.wagons) {
+      const pth = geoms[w.p] && geoms[w.p].paths[w.k]; if (!pth) continue;
+      free.push({ cur: { p: w.p, k: w.k, from: pth.a, to: pth.b, s: pth.len / 2 }, rev: !!w.rev, color: WAGON_COLOUR });
     }
   }
   reset();
@@ -180,7 +247,9 @@ export function createSim(project, opts = {}) {
     'white green green green': ['fast', tr => setSpeed(tr, SPEEDS.fast)],
     'white red': ['stop 2 seconds', tr => stopFor(tr, 2)], 'white red red': ['stop 5 seconds', tr => stopFor(tr, 5)], 'white red red red': ['stop 10 seconds', tr => stopFor(tr, 10)],
     'white blue': ['reverse', tr => reverse(tr)], 'white red blue': ['end route', tr => { tr.pause = null; tr.vt = 0; tr.cruise = 0; }],
-    'white yellow': ['drop on the go', () => {}], 'white yellow red': ['stop and drop', tr => stopFor(tr, 2)], 'white yellow blue': ['reverse drop', tr => reverse(tr)]
+    'white yellow': ['drop on the go', tr => decouple(tr)],
+    'white yellow red': ['stop and drop', tr => { stopFor(tr, 2); decouple(tr); }],
+    'white yellow blue': ['reverse drop', tr => { if (decouple(tr)) reverse(tr); }]
   };
   const pad4 = c => [...c, 'black', 'black', 'black', 'black'].slice(0, 4);
   function feedback(tr, col) {
@@ -207,8 +276,17 @@ export function createSim(project, opts = {}) {
   }
   function setSpeed(tr, v) { tr.pause = null; tr.vt = v; if (v > 0) tr.cruise = v; tr.ended = false; }
   function stopFor(tr, secs) { const back = tr.pause ? tr.pause.resume : tr.vt || tr.cruise; tr.vt = 0; tr.pause = { until: t + secs, resume: back }; }
-  function flip(tr) { tr.cmd = null; [tr.from, tr.to] = [tr.to, tr.from]; tr.s = pathOf(tr).len - tr.s; tr.ended = false; }
-  function reverse(tr) { if (!tr.on) return; flip(tr); tr.back = !tr.back; }
+  function reverse(tr) {
+    if (!tr.on) return;
+    tr.cmd = null; flipCur(tr); tr.back = !tr.back; tr.ended = false;
+    if (tr.wagon) { flipCur(tr.wagon.cur); tr.wagon.trail = tr.wagon.trail.reverse().map(flipSeg); }
+  }
+  // let go of the wagon: it stays on the track where it is
+  function decouple(tr) {
+    if (!tr.wagon) return false;
+    free.push({ cur: Object.assign({}, tr.wagon.cur), rev: tr.back, color: tr.wagon.color });
+    tr.wagon = null; emit(tr.i, 'wagon', 'dropped'); return true;
+  }
 
   // ── splits: the way to go comes from (1) "on next split go …", (2) the snap in the split's slot, (3) a block's
   // "at every split" choice, or (4) a random choice — exactly what the real train does with an empty slot
@@ -225,7 +303,8 @@ export function createSim(project, opts = {}) {
     return pick(tr.dflt || 'random');
   }
 
-  // move one train along the track by d (may cross several pieces)
+  // move the engine along the track by d (may cross several pieces). With a wagon it either leads (front first: it chooses
+  // the way and adds to the trail) or follows the trail the wagon in front of it has made (tail first)
   function advance(tr, d) {
     let guard = 0;
     while (d > 0 && guard++ < 60) {
@@ -239,33 +318,66 @@ export function createSim(project, opts = {}) {
       }
       if (tr.s < len - 1e-9) break;
       finish(tr); // a command is always on one piece
-      const link = links[tr.p + ':' + tr.to];
-      if (!link) { stopDead(tr); emit(tr.i, 'end', 'track'); return; }
-      const g = geoms[link.p], e = link.e, inH = wrap(g.ends[e].h + PI), npc = P.pieces[link.p], ndef = PIECES[npc[0]];
-      const opts2 = g.paths.map((q, k) => (q.a === e ? { k, o: q.b } : q.b === e ? { k, o: q.a } : null)).filter(Boolean);
-      for (const o of opts2) { const dh = wrap(g.ends[o.o].h - inH); o.turn = Math.abs(dh) < 0.1 ? 'straight' : dh > 0 ? 'right' : 'left'; }
-      let pick = opts2[0];
-      if (opts2.length > 1) { // facing a split: it reads cyan, its marker and the slot, then decides
+      if (tr.wagon && tr.back) { // following the wagon's trail
+        const tl = tr.wagon.trail; tl.shift();
+        const nx = tl[0]; if (!nx) { stopDead(tr); return; }
+        Object.assign(tr, nx, { s: 0 }); tr.cmd = null; continue;
+      }
+      const a = ahead(tr);
+      if (!a) { stopDead(tr); emit(tr.i, 'end', 'track'); return; }
+      const npc = P.pieces[a.link.p], ndef = PIECES[npc[0]];
+      let pick = a.opts[0];
+      if (a.opts.length > 1) { // facing a split: it reads cyan, its marker and the slot, then decides
         const slot = (npc[4] && npc[4][0]) || 'black';
         see(tr, slot === 'black' ? ndef.marks[1] : slot);
-        pick = choose(tr, npc, opts2);
+        pick = choose(tr, npc, a.opts);
         tr.lastTurn = pick.turn;
         emit(tr.i, 'snap', ['cyan', ndef.marks[1], slot, 'black']);
         emit(tr.i, 'split', pick.turn);
       }
-      tr.p = link.p; tr.k = pick.k; tr.from = e; tr.to = pick.o; tr.s = 0; tr.cmd = null;
+      Object.assign(tr, { p: a.link.p, k: pick.k, from: a.link.e, to: pick.o, s: 0 }); tr.cmd = null;
+      if (tr.wagon) tr.wagon.trail.push(seg(tr));
     }
+  }
+  // the wagon: leads (pushed, tail first) by choosing like the train, or follows the trail (pulled)
+  function moveWagon(tr, d) {
+    const w = tr.wagon, c = w.cur;
+    for (let guard = 0; d > 0 && guard < 60; guard++) {
+      const step = Math.min(d, lenOf(c) - c.s); c.s += step; d -= step;
+      if (c.s < lenOf(c) - 1e-9) break;
+      if (!tr.back) { // pulled: follow the trail
+        w.trail.shift(); const nx = w.trail[0]; if (!nx) { c.s = lenOf(c); return false; }
+        Object.assign(c, nx, { s: 0 }); continue;
+      }
+      const a = ahead(c); // pushed in front: it goes where the train would steer it
+      if (!a) { c.s = lenOf(c); return false; }
+      const pick = a.opts.length > 1 ? choose(tr, P.pieces[a.link.p], a.opts) : a.opts[0];
+      Object.assign(c, { p: a.link.p, k: pick.k, from: a.link.e, to: pick.o, s: 0 }); w.trail.push(seg(c));
+    }
+    return true;
   }
   function stopDead(tr) { tr.s = pathOf(tr).len; tr.cruise = tr.vt || tr.cruise; tr.v = 0; tr.vt = 0; tr.pause = null; tr.ended = true; }
 
   // where a train is; ang = the way its FRONT points (it may be driving backwards)
-  function pose(i) {
-    const tr = trains[i]; if (!tr || !tr.on) return null;
-    const pth = pathOf(tr), f = fwd(tr), u = Math.max(0, Math.min(1, tr.s / pth.len)), q = pth.at(f ? u : 1 - u);
-    return { x: q.x, y: q.y, ang: (f ? q.ang : q.ang + PI) + (tr.back ? PI : 0) };
+  function pose(i) { const tr = trains[i]; return tr && tr.on ? poseOf(tr, tr.back) : null; }
+  function wagonPose(i) { const tr = trains[i]; return tr && tr.on && tr.wagon ? poseOf(tr.wagon.cur, tr.back) : null; }
+  const freePose = w => poseOf(w.cur, w.rev);
+  // every car on the track: { train, kind: 'engine'|'wagon'|'free', x, y }
+  function cars() {
+    const out = [];
+    trains.forEach((tr, i) => { if (!tr.on) return; out.push(Object.assign({ train: i, kind: 'engine' }, pose(i))); if (tr.wagon) out.push(Object.assign({ train: i, kind: 'wagon' }, wagonPose(i))); });
+    free.forEach((w, j) => out.push(Object.assign({ train: -1, kind: 'free', j }, freePose(w))));
+    return out;
   }
-  const gap = (i, j) => { const a = pose(i), b = pose(j); return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : Infinity; };
-  const nearest = i => { let m = Infinity; for (const o of trains) if (o.i !== i && o.on) m = Math.min(m, gap(i, o.i)); return m; };
+  const dist2 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  // the closest car of anything else to this train's own cars
+  function nearestOther(i) {
+    const all = cars(), mine = all.filter(c => c.train === i), others = all.filter(c => c.train !== i);
+    let m = Infinity, who = null;
+    for (const a of mine) for (const b of others) { const d = dist2(a, b); if (d < m) { m = d; who = b; } }
+    return { d: m, who };
+  }
+  const trainGap = (i, j) => { let m = Infinity; for (const a of cars().filter(c => c.train === i)) for (const b of cars().filter(c => c.train === j)) m = Math.min(m, dist2(a, b)); return m; };
 
   function step(dt) {
     t += dt;
@@ -274,28 +386,34 @@ export function createSim(project, opts = {}) {
       if (tr.pause && t >= tr.pause.until) { tr.vt = tr.pause.resume; tr.pause = null; }
       if (tr.flash && t >= tr.flash.until) tr.flash = null;
       if (tr.sensor !== 'black' && tr.dist >= tr.sensorTill) { tr.sensor = 'black'; emit(tr.i, 'colour', 'black'); }
-      const dv = ACCEL * dt;
-      tr.v = tr.v < tr.vt ? Math.min(tr.vt, tr.v + dv) : Math.max(tr.vt, tr.v - dv);
+      tr.v = tr.v < tr.vt ? Math.min(tr.vt, tr.v + ACCEL * dt) : Math.max(tr.vt, tr.v - DECEL * dt);
       if (tr.v <= 0) continue;
-      const saved = { p: tr.p, k: tr.k, from: tr.from, to: tr.to, s: tr.s, dist: tr.dist };
-      const was = nearest(tr.i);
-      advance(tr, tr.v * dt);
-      const now = nearest(tr.i);
-      if (now < BUMP && now < was) { // driving into another train: stay put and both feel the bump
-        const hit = trains.filter(o => o.i !== tr.i && o.on && gap(tr.i, o.i) < BUMP);
+      const saved = { p: tr.p, k: tr.k, from: tr.from, to: tr.to, s: tr.s, dist: tr.dist,
+        wagon: tr.wagon && { color: tr.wagon.color, cur: Object.assign({}, tr.wagon.cur), trail: tr.wagon.trail.map(g => Object.assign({}, g)) } };
+      const was = nearestOther(tr.i).d, d = tr.v * dt;
+      if (tr.wagon && tr.back) { if (!moveWagon(tr, d)) { stopDead(tr); emit(tr.i, 'end', 'track'); continue; } advance(tr, d); }
+      else { advance(tr, d); if (tr.wagon) moveWagon(tr, d); }
+      const now = nearestOther(tr.i);
+      if (now.d < COUPLE && now.who && now.who.kind === 'free' && !tr.wagon && tr.back) { // backing into a wagon: the magnet picks it up
+        const w = free[now.who.j]; free.splice(now.who.j, 1); hitch(tr, w.color); emit(tr.i, 'wagon', 'picked up'); continue;
+      }
+      if (now.d < BUMP && now.d < was) { // driving into another train or a wagon: stay put and feel the bump
         Object.assign(tr, saved); tr.cruise = tr.vt || tr.cruise; tr.v = 0; tr.vt = 0;
-        for (const o of hit) {
-          if (tr.touching.has(o.i)) continue;
+        const o = now.who && now.who.train >= 0 ? trains[now.who.train] : null;
+        if (o && !tr.touching.has(o.i)) {
           tr.touching.add(o.i); o.touching.add(tr.i); o.cruise = o.vt || o.cruise; o.v = 0; o.vt = 0;
           emit(tr.i, 'bump', o.name); emit(o.i, 'bump', tr.name);
-        }
+        } else if (!o && !tr.touching.has('w')) { tr.touching.add('w'); emit(tr.i, 'bump', 'wagon'); }
       }
     }
-    for (const tr of trains) for (const j of [...tr.touching]) if (gap(tr.i, j) > BUMP + 0.1) tr.touching.delete(j);
+    for (const tr of trains) for (const j of [...tr.touching]) {
+      const g = j === 'w' ? nearestOther(tr.i).d : trainGap(tr.i, j);
+      if (g > BUMP + 0.1) tr.touching.delete(j);
+    }
   }
 
   return {
-    project: P, geoms, links, trains, step, pose, reset, time: () => t,
+    project: P, geoms, links, trains, step, pose, wagonPose, freeWagons: () => free.map(w => Object.assign({ color: w.color }, freePose(w))), cars, reset, time: () => t,
     // pressing Run with no blocks for a train is like pressing its button: it sets off at medium speed
     go(i) { for (const tr of trains) if (tr.on && (i == null || tr.i === i)) setSpeed(tr, SPEEDS.medium); },
     // drive forward (front first) or backward at a speed (pieces/s); 0 = stop
@@ -306,6 +424,38 @@ export function createSim(project, opts = {}) {
     },
     setTarget(i, v) { const tr = trains[i]; if (tr && tr.on) setSpeed(tr, Math.max(0, Math.min(MAX_SPEED, Number(v) || 0))); },
     stopFor(i, secs) { const tr = trains[i]; if (tr && tr.on) stopFor(tr, secs); },
-    turnAround(i) { const tr = trains[i]; if (tr) reverse(tr); }
+    turnAround(i) { const tr = trains[i]; if (tr) reverse(tr); },
+    decouple(i) { const tr = trains[i]; return !!(tr && decouple(tr)); }
+  };
+}
+
+// ── challenges: a schedule of things to do at destinations, ticked off as Train 1 does them
+export function createChecker(sim, challenge) {
+  const P = sim.project, steps = (challenge && challenge.steps) || [], dests = P.dests;
+  const spot = d => { const dd = dests[d]; if (!dd || !sim.geoms[dd.p]) return null; const q = sim.geoms[dd.p].paths[0].at(0.5); return { x: q.x, y: q.y }; };
+  const done = steps.map(() => false);
+  let i = 0, still = 0, backWas = null, finished = false;
+  const near = (a, b, r = 0.8) => a && b && Math.hypot(a.x - b.x, a.y - b.y) < r;
+  return {
+    done, steps,
+    current: () => i,
+    complete: () => finished,
+    tick(dt) {
+      const tr = sim.trains[0]; if (!tr || !tr.on || i >= steps.length) return;
+      const s = steps[i], at = spot(s.d), me = sim.pose(0), here = near(me, at);
+      still = tr.v <= 0.001 ? still + dt : 0;
+      let ok = false;
+      switch (s.a) {
+        case 'start': ok = here || sim.time() < 0.5; break;
+        case 'pass': ok = here; break;
+        case 'stop': ok = here && still >= 0.8; break;
+        case 'end': ok = here && still >= 3; break;
+        case 'reverse': if (here) { if (backWas === null) backWas = tr.back; else if (tr.back !== backWas) ok = true; } else backWas = null; break;
+        case 'pickup': ok = !!tr.wagon && (here || near(sim.wagonPose(0), at)); break;
+        case 'drop': ok = sim.freeWagons().some(w => near(w, at, 0.9)); break;
+        default: ok = here;
+      }
+      if (ok) { done[i] = true; i++; still = 0; backWas = null; if (i >= steps.length) finished = true; }
+    }
   };
 }

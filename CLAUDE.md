@@ -201,7 +201,7 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
-## Train Lab project type — `projectType==='train'` — built 6 Oct 2026 on branch `claude/vibrant-cori-tho25y` (CJ_VERSION 2026.10.08), NOT on main yet
+## Train Lab project type — `projectType==='train'` — LIVE on main since 6 Oct 2026 (CJ_VERSION 2026.10.08.3; built on branch `claude/vibrant-cori-tho25y`)
 Charlie's idea: a virtual intelino-style smart-train set (**never use the intelino name or logo in the UI** — it's "Train Lab"). Charlie
 asked for the look AND the default behaviour to match intelino EXACTLY; reference = intelino's K-1 "snap training" worksheets Charlie shared
 (6 Oct 2026) + intelino's support-site command rules (found via search; the site itself is blocked from the sandbox).

@@ -1,6 +1,6 @@
 // Starter for the "stage-animate" lesson (used by lessons/make-starters.mjs).
 // Starter for "Animate a dance party" (stage-animate): a disco backdrop and three sprites.
-//  Cat   — two costumes (orange, pink); script: when green flag clicked → say "Let's dance!" for 2 secs (pupils add the repeat).
+//  Cat   — two dance costumes (pose 1, pose 2); script: when green flag clicked → say "Let's dance!" for 2 secs (pupils add the repeat).
 //  Bird  — no code yet (pupils add "when this sprite clicked" → glide → say).
 //  Robot — a jump on the space key with a bug: up 40 but only down 4, so it floats away (pupils debug it).
 const CAT_XML = `<xml xmlns="https://developers.google.com/blockly/xml">
@@ -17,7 +17,7 @@ export const build = ({ CAT_XML, ROBOT_XML }) => {
   startNewStage('ks2');
   const cat = blankSprite('Cat', 0);
   Object.assign(cat, { x: CW / 2 - 200, y: CH / 2 + 110, size: 150, xml: CAT_XML });
-  cat.costumes = [{ name: 'orange', builtin: 'cat', color: '#f59f18' }, { name: 'pink', builtin: 'cat', color: '#f06595' }]; cat.costumeIdx = 0;
+  cat.costumes = [{ name: 'dance1', builtin: 'cat', color: '#f59f18' }, { name: 'dance2', builtin: 'cat', color: '#f59f18', pose: 1 }]; cat.costumeIdx = 0;
   const bird = blankSprite('Bird', 1);
   Object.assign(bird, { x: CW / 2 - 340, y: CH / 2 - 170, size: 130, xml: '' });
   bird.costumes = [{ name: 'blue', builtin: 'bird', color: '#4dabf7' }]; bird.costumeIdx = 0;

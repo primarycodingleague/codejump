@@ -654,6 +654,7 @@ body.is-touch #pages{width:120px;min-width:120px;}
 #play-mute:active,#play-sfx:active{transform:scale(.92);}
 #app.mode-play #play-mute,#app.mode-play #play-sfx{display:flex;}
 #gc{display:block;border:2px solid var(--gold);cursor:crosshair;image-rendering:pixelated;}
+body.stage-mode #gc{image-rendering:auto;} /* the Stage is drawn smooth (vector characters), not pixel art */
 #hint{
   position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
   background:var(--dark);color:var(--white);padding:6px 16px;border-radius:2px;
@@ -878,6 +879,7 @@ body.turtle-mode #turtle-ui{display:flex;flex-direction:row;gap:10px;flex:1 1 au
 #stage-ask-in{flex:1;font-family:var(--font);font-size:14px;padding:6px 8px;border-radius:7px;border:2px solid var(--gray);}
 #stage-ask-ok{background:var(--gold);color:#111;border:none;border-radius:7px;width:34px;height:32px;font-size:15px;cursor:pointer;}
 body.stage-mode #gc{width:100%!important;height:100%!important;display:block;cursor:grab;}
+body.ks1-mode #gc{width:auto!important;height:auto!important;max-width:100%;max-height:100%;} /* KS1: keep the 5:3 stage shape (never stretched) */
 body.stage-mode #gc:active{cursor:grabbing;}
 #sprite-panel{flex:1;min-height:120px;background:#2b2b2b;border-radius:10px;border:1px solid var(--gray);padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
 #sprite-panel-head{display:flex;align-items:center;justify-content:space-between;color:#fff;font-family:var(--font);font-weight:800;font-size:14px;}
@@ -987,6 +989,9 @@ body.is-touch .blocklyTreeLabel{font-size:15px!important;}
 .cm-opt.sel{border-color:var(--gold);background:rgba(174,133,62,.18);}
 .cm-opt canvas{width:48px;height:48px;}
 .cm-opt span{font-size:11px;color:#ccc;}
+#cm-poses{display:flex;gap:8px;justify-content:center;align-items:center;margin:-6px 0 12px;color:#bbb;font-size:12px;}
+.cm-pose{position:relative;background:var(--black);border:2px solid var(--gray);border-radius:10px;padding:2px;cursor:pointer;line-height:0;}
+.cm-pose.sel{border-color:var(--gold);}.cm-pose span{position:absolute;right:3px;bottom:3px;font:700 10px/1 var(--font);color:#fff;}
 #cm-colors{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px;}
 .cm-color{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
 .cm-color.sel{border-color:#fff;box-shadow:0 0 0 2px #000;}
@@ -2902,12 +2907,12 @@ let stageSel=0;            // index of the sprite whose scripts are in the Block
 const SPRITE_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a'];
 function emptyStageXml(){return'<xml xmlns="https://developers.google.com/blockly/xml"></xml>';}
 function sid(){return 's'+Math.random().toString(36).slice(2,9);}  // stable per-sprite id for collab ops
-function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]}],costumeIdx:0,xml:'',ks1:[],say:'',sayT:0};}
+function blankSprite(name,i){i=i||0;return{id:sid(),name:name||('Sprite'+(i+1)),x:CW/2+((i%5)-2)*64,y:CH/2+Math.floor(i/5)*64,dir:90,size:100,visible:true,costumes:[{name:'costume1',builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]},{name:'costume2',builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length],pose:1}],costumeIdx:0,xml:'',ks1:[],say:'',sayT:0};}
 function stageNew(){const s0=blankSprite('Sprite1',0);s0.xml=stageDefaultXml();stageState={sprites:[s0],bg:'#bfe3ff',vars:[],lists:[],backdrops:[{name:'backdrop1',color:'#bfe3ff'}],backdropIdx:0};stageSel=0;stVars={};stVarShown={};stLists={};stListShown={};}
 // Coerce one untrusted costume object into a safe builtin-or-bitmap costume.
 function sanitizeCostume(c){if(!c||typeof c!=='object')return null;const name=(typeof c.name==='string'?c.name:'costume').slice(0,24);
   if(typeof c.img==='string'&&/^data:image\/(png|jpeg);/.test(c.img)&&c.img.length<600000)return{name,img:c.img};
-  return{name,builtin:(STAGE_COSTUMES[c.builtin]?c.builtin:'cat'),color:safeColor(c.color)||'#ff922b'};}
+  const o={name,builtin:(STAGE_COSTUMES[c.builtin]?c.builtin:'cat'),color:safeColor(c.color)||'#ff922b'};if(c.pose===1)o.pose=1;return o;}
 // Coerce an untrusted stage document into a safe one (for load/share/collab).
 function sanitizeStageSprites(arr){const num=(v,def,lo,hi)=>{v=(typeof v==='number'&&isFinite(v))?v:def;return Math.max(lo,Math.min(hi,v));};
   let sprites=Array.isArray(arr)?arr.slice(0,40):[];
@@ -4148,7 +4153,8 @@ function renderSpriteInfo(){const el=document.getElementById('sprite-info');if(!
   mk('size',Math.round(s.size||100),v=>{s.size=Math.max(10,Math.min(400,v));});
   mk('dir',Math.round(s.dir||90),v=>{s.dir=v;});}
 function renderStagePane(){const cv=document.getElementById('stage-pane-thumb');if(!cv||!stageState||typeof drawBackdropThumb!=='function')return;drawBackdropThumb(cv,curBackdrop());}
-function drawSpriteThumb(cv,s){const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.save();c.translate(cv.width/2,cv.height/2);paintSpriteCostume(c,s,40);c.restore();}
+function drawSpriteThumb(cv,s){if(!cv._hi){cv._hi=1;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';cv.width*=2;cv.height*=2;} // drawn at 2× so thumbnails stay sharp
+  const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.save();c.translate(cv.width/2,cv.height/2);c.scale(2,2);paintSpriteCostume(c,s,40);c.restore();}
 // ── Costume / character picker ──
 const CM_COLORS=['#ff922b','#4d96ff','#6bcb77','#da77ff','#ff6b6b','#26c6da','#ffd93d','#ec407a','#ffffff','#7e57c2','#8d6e63','#222222'];
 // ── Costume model helpers ──
@@ -4158,7 +4164,7 @@ function costumeImgEl(co){if(!co||!co.img)return null;if(co._el&&co._elSrc===co.
 // Paint a sprite's CURRENT costume centred at the origin (built-in vector or a painted bitmap).
 function paintSpriteCostume(c,s,box){const co=curCostume(s);if(co.img){const im=costumeImgEl(co);if(im&&im.complete&&im.naturalWidth){const b=box||110,k=b/Math.max(im.naturalWidth,im.naturalHeight);c.drawImage(im,-im.naturalWidth*k/2,-im.naturalHeight*k/2,im.naturalWidth*k,im.naturalHeight*k);return;}}
   if(co.builtin==='microbit'){paintMicrobit(c,(s&&s._mb)||MB_DEFAULT,co.color);return;} // micro:bit draws its live LED matrix
-  paintCostume(c,co.builtin||'cat',co.color||'#ff922b');}
+  paintCostume(c,co.builtin||'cat',co.color||'#ff922b',co.pose);}
 // ── Costume manager (the Costume modal) ──
 function openCostumePicker(){if(!stageState||!stageState.sprites[stageSel])return;
   document.getElementById('cm-name').value=stageState.sprites[stageSel].name;
@@ -4179,7 +4185,14 @@ function renderCostumeEdit(){const s=stageState.sprites[stageSel];const co=s.cos
   const ni=document.createElement('input');ni.value=co.name;ni.maxLength=24;ni.style.cssText='font-family:var(--font);padding:5px 8px;border-radius:6px;border:2px solid var(--gold);background:var(--black);color:#fff;';
   ni.onchange=()=>{co.name=ni.value.slice(0,24)||'costume';renderCostumeManager();markDirty();cmEmitCostumes();};row.appendChild(ni);ed.appendChild(row);
  if(co.img){const eb=document.createElement('button');eb.className='cm-editbtn';eb.textContent=' Edit drawing';eb.onclick=()=>paintCostumeEditor(co);ed.appendChild(eb);}
-  else{const grid=document.createElement('div');grid.id='cm-grid';ed.appendChild(grid);const colors=document.createElement('div');colors.id='cm-colors';ed.appendChild(colors);renderCostumeGrid();renderCostumeColors();}}
+  else{const grid=document.createElement('div');grid.id='cm-grid';ed.appendChild(grid);const poses=document.createElement('div');poses.id='cm-poses';ed.appendChild(poses);const colors=document.createElement('div');colors.id='cm-colors';ed.appendChild(colors);renderCostumeGrid();renderCostumePoses();renderCostumeColors();}}
+// Every built-in character has two poses (a step, a wave, a flap…) — two costumes in different poses make "next costume" animate.
+function renderCostumePoses(){const wrap=document.getElementById('cm-poses');if(!wrap)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];wrap.innerHTML='';
+  if(co.builtin==='microbit')return;const lab=document.createElement('span');lab.textContent='Pose:';wrap.appendChild(lab);
+  [0,1].forEach(p=>{const b=document.createElement('button');b.className='cm-pose'+((co.pose?1:0)===p?' sel':'');b.title='Pose '+(p+1);
+    const cv=document.createElement('canvas');cv.width=44;cv.height=44;const c=cv.getContext('2d');c.save();c.translate(22,24);c.scale(.8,.8);paintCostume(c,co.builtin||'cat',co.color||'#ff922b',p);c.restore();b.appendChild(cv);
+    const t=document.createElement('span');t.textContent=String(p+1);b.appendChild(t);
+    b.onclick=()=>{if(p)co.pose=1;else delete co.pose;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};wrap.appendChild(b);});}
 function renderCostumeGrid(){const grid=document.getElementById('cm-grid');if(!grid)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];grid.innerHTML='';
   pickableCostumes().forEach(k=>{const opt=document.createElement('div');opt.className='cm-opt'+(co.builtin===k?' sel':'');
     const cv=document.createElement('canvas');cv.width=48;cv.height=48;const c=cv.getContext('2d');c.save();c.translate(24,26);c.scale(0.95,0.95);paintCostume(c,k,co.color||'#ff922b');c.restore();opt.appendChild(cv);
@@ -4188,7 +4201,10 @@ function renderCostumeGrid(){const grid=document.getElementById('cm-grid');if(!g
 function renderCostumeColors(){const wrap=document.getElementById('cm-colors');if(!wrap)return;const co=stageState.sprites[stageSel].costumes[stageState.sprites[stageSel].costumeIdx||0];wrap.innerHTML='';
   CM_COLORS.forEach(col=>{const b=document.createElement('div');b.className='cm-color'+(co.color===col?' sel':'');b.style.background=col;
     b.onclick=()=>{co.color=col;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();};wrap.appendChild(b);});}
-function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length;s.costumes.push({name:'costume'+(i+1),builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]});s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
+function cmAddCharacter(){const s=stageState.sprites[stageSel];const i=s.costumes.length,cur=s.costumes[s.costumeIdx||0];
+  // a built-in character gets its OTHER pose added (so next costume makes it step/wave); otherwise the next character in the list
+  const nc=(cur&&cur.builtin&&cur.builtin!=='microbit')?{name:'costume'+(i+1),builtin:cur.builtin,color:cur.color}:{name:'costume'+(i+1),builtin:cycleCostumes()[i%cycleCostumes().length],color:SPRITE_COLORS[i%SPRITE_COLORS.length]};
+  if(nc.builtin===(cur&&cur.builtin)&&!cur.pose)nc.pose=1;s.costumes.push(nc);s.costumeIdx=i;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}
 function cmPaintNew(){const s=stageState.sprites[stageSel];openPaintEditor({w:300,h:300,name:'costume'+(s.costumes.length+1),onSave:(dataURL,name)=>{s.costumes.push({name:name||'costume',img:dataURL});s.costumeIdx=s.costumes.length-1;renderCostumeManager();renderSpritePanel();markDirty();cmEmitCostumes();}});}
 function paintCostumeEditor(co){openPaintEditor({w:300,h:300,img:co.img,name:co.name,onSave:(dataURL,name)=>{co.img=dataURL;co.name=name||co.name;delete co._el;renderCostumeManager();renderSpritePanel();markDirty();const s=stageState.sprites[stageSel],idx=s?s.costumes.indexOf(co):-1;if(idx>=0&&typeof collabCostumeImg==='function')collabCostumeImg(s,idx,dataURL,co.name);else cmEmitCostumes();}});} // editing one existing image → image-delta op
 
@@ -4629,7 +4645,7 @@ function ks1CollectHats(s){(s.ks1||[]).forEach(scr=>{if(!scr.length)return;const
   else if(trig==='tap')ks1TapHats.push({body,s});
   else if(trig==='bump')ks1BumpHats.push({body,s,was:false});
   else if(trig==='on_msg')ks1MsgHats.push({c:scr[0].c||0,body,s});});}
-function ks1BumpCheck(){if(!stageState)return;ks1BumpHats.forEach(h=>{const touch=stageState.sprites.some(o=>o!==h.s&&o.visible&&h.s.visible&&Math.hypot(o.x-h.s.x,o.y-h.s.y)<((h.s.size||100)+(o.size||100))*0.22);if(touch&&!h.was)ks1Start(h.body,h.s);h.was=touch;});}
+function ks1BumpCheck(){if(!stageState)return;ks1BumpHats.forEach(h=>{const touch=stageState.sprites.some(o=>o!==h.s&&o.visible&&h.s.visible&&Math.hypot(o.x-h.s.x,o.y-h.s.y)<((h.s.size||100)*costumeK(h.s)+(o.size||100)*costumeK(o))*0.22);if(touch&&!h.was)ks1Start(h.body,h.s);h.was=touch;});}
 
 function stageStart(){if(!stageState)return;
   stageSaveCurrent();           // capture the selected sprite's latest edits first
@@ -4692,53 +4708,124 @@ function stageFireClick(x,y){if(!stagePlaying||!stageState)return;const i=stageS
     stClickHats.forEach(h=>{if(h.s===s)stStartScript(h.first,h.s,null);});return;}
   // clones aren't in stageState.sprites — hit-test them too (topmost first) and fire the clone's source hats ON the clone
   for(let k=stClones.length-1;k>=0;k--){const c=stClones[k];if(c._deleted)continue;const sc=(c.size||100)/100,hb=costumeHalf(c);if(Math.abs(x-c.x)<(hb.hw+2)*sc&&Math.abs(y-c.y)<(hb.hh+2)*sc){stClickHats.forEach(h=>{if(h.s===c._src)stStartScript(h.first,c,null);});return;}}}
-// The cat costume, drawn centred at the current origin in the given colour.
-function paintCat(c,color){c.fillStyle=color||'#ff922b';c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.moveTo(-14,-12);c.lineTo(-7,-22);c.lineTo(-2,-12);c.closePath();c.fill();c.stroke();
-  c.beginPath();c.moveTo(14,-12);c.lineTo(7,-22);c.lineTo(2,-12);c.closePath();c.fill();c.stroke();
-  c.beginPath();c.ellipse(0,2,18,16,0,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#fff';c.beginPath();c.ellipse(-6,-1,4,5,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(6,-1,4,5,0,0,Math.PI*2);c.fill();
-  c.fillStyle='#000';c.beginPath();c.arc(-6,0,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(6,0,2,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(0,7,2,0,Math.PI*2);c.fill();}
-function paintDog(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.ellipse(-16,-3,6,12,0.35,0,Math.PI*2);c.fill();c.stroke();
-  c.beginPath();c.ellipse(16,-3,6,12,-0.35,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle=color;c.beginPath();c.ellipse(0,0,17,16,0,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#fff';c.beginPath();c.ellipse(0,7,9,7,0,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#000';c.beginPath();c.arc(0,4,2.6,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(-6,-3,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
-function paintBear(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.arc(-12,-13,6,0,Math.PI*2);c.fill();c.stroke();c.beginPath();c.arc(12,-13,6,0,Math.PI*2);c.fill();c.stroke();
-  c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#ffe0b2';c.beginPath();c.ellipse(0,6,8,6,0,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#000';c.beginPath();c.arc(0,3,2.5,0,Math.PI*2);c.fill();
-  c.beginPath();c.arc(-6,-3,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
-function paintBunny(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.ellipse(-7,-20,4,13,0.1,0,Math.PI*2);c.fill();c.stroke();
-  c.beginPath();c.ellipse(7,-20,4,13,-0.1,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle=color;c.beginPath();c.ellipse(0,2,15,15,0,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#000';c.beginPath();c.arc(-5,0,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(5,0,2,0,Math.PI*2);c.fill();
-  c.fillStyle='#e57373';c.beginPath();c.arc(0,6,2,0,Math.PI*2);c.fill();}
-function paintRobot(c,color){c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.moveTo(0,-16);c.lineTo(0,-23);c.stroke();c.fillStyle='#ff5252';c.beginPath();c.arc(0,-25,3,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle=color;c.fillRect(-15,-16,30,30);c.strokeRect(-15,-16,30,30);
-  c.fillStyle='#fff';c.fillRect(-10,-8,8,8);c.fillRect(2,-8,8,8);c.strokeRect(-10,-8,8,8);c.strokeRect(2,-8,8,8);
-  c.fillStyle='#000';c.fillRect(-8,-6,4,4);c.fillRect(4,-6,4,4);
-  c.strokeRect(-8,5,16,4);}
-function paintBall(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='rgba(255,255,255,.5)';c.beginPath();c.ellipse(-5,-6,5,4,-0.5,0,Math.PI*2);c.fill();}
-function paintGhost(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.arc(0,-2,15,Math.PI,0);c.lineTo(15,12);c.lineTo(10,8);c.lineTo(5,12);c.lineTo(0,8);c.lineTo(-5,12);c.lineTo(-10,8);c.lineTo(-15,12);c.closePath();c.fill();c.stroke();
-  c.fillStyle='#fff';c.beginPath();c.arc(-5,-2,3.5,0,Math.PI*2);c.fill();c.beginPath();c.arc(5,-2,3.5,0,Math.PI*2);c.fill();
-  c.fillStyle='#000';c.beginPath();c.arc(-5,-2,1.8,0,Math.PI*2);c.fill();c.beginPath();c.arc(5,-2,1.8,0,Math.PI*2);c.fill();}
-function paintStar(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();for(let i=0;i<10;i++){const r=i%2?8:18,a=Math.PI/5*i-Math.PI/2;c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();
-  c.fillStyle='#000';c.beginPath();c.arc(-4,-2,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(4,-2,2,0,Math.PI*2);c.fill();}
-function paintBird(c,color){c.fillStyle=color;c.strokeStyle='#000';c.lineWidth=2.5;
-  c.beginPath();c.ellipse(0,2,15,14,0,0,Math.PI*2);c.fill();c.stroke();
-  c.fillStyle='#ffb300';c.beginPath();c.moveTo(13,0);c.lineTo(22,3);c.lineTo(13,6);c.closePath();c.fill();c.stroke();
-  c.fillStyle='#fff';c.beginPath();c.arc(5,-3,4,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#000';c.beginPath();c.arc(6,-3,2,0,Math.PI*2);c.fill();}
+// ── Built-in Stage characters: soft-shaded, outlined, two poses each (pose 1 = a step / flap / wave so "next costume" animates) ──
+const CINK='#2b2240';
+function cMix(col,t){const m=/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(col||'');if(!m)return col;let h=m[1];if(h.length===3)h=h.replace(/./g,x=>x+x);
+  const n=parseInt(h,16),r=n>>16&255,g=n>>8&255,b=n&255,to=t>0?255:0,k=Math.abs(t);
+  const f=v=>Math.round(v+(to-v)*k).toString(16).padStart(2,'0');return'#'+f(r)+f(g)+f(b);}
+function cGrad(c,col,x,y,rx,ry){const g=c.createRadialGradient(x-rx*.35,y-ry*.45,Math.min(rx,ry)*.08,x,y,Math.max(rx,ry)*1.15);
+  g.addColorStop(0,cMix(col,.42));g.addColorStop(.5,col);g.addColorStop(1,cMix(col,-.28));return g;}
+function cInk(c,w){c.strokeStyle=CINK;c.lineWidth=w||2;c.lineJoin='round';c.lineCap='round';}
+function cEll(c,x,y,rx,ry,fill,rot,noStroke){c.beginPath();c.ellipse(x,y,rx,ry,rot||0,0,Math.PI*2);c.fillStyle=fill;c.fill();if(!noStroke)c.stroke();}
+function cBlob(c,col,x,y,rx,ry,rot){cEll(c,x,y,rx,ry,cGrad(c,col,x,y,rx,ry),rot);}
+function cEyes(c,x,y,gap,s,look){s=s||1;look=look||0;[-1,1].forEach(d=>{const ex=x+d*gap+look;
+  c.beginPath();c.ellipse(ex,y,3.1*s,4.2*s,0,0,Math.PI*2);c.fillStyle=CINK;c.fill();
+  c.fillStyle='#fff';c.beginPath();c.arc(ex-1*s,y-1.6*s,1.35*s,0,Math.PI*2);c.fill();c.beginPath();c.arc(ex+1.1*s,y+1.4*s,.6*s,0,Math.PI*2);c.fill();});}
+function cCheeks(c,x,y,gap,r){c.fillStyle='rgba(255,105,135,.42)';[-1,1].forEach(d=>{c.beginPath();c.ellipse(x+d*gap,y,r||3.2,(r||3.2)*.62,0,0,Math.PI*2);c.fill();});}
+function cSmile(c,x,y,w,open){cInk(c,1.6);if(open){c.beginPath();c.moveTo(x-w,y);c.quadraticCurveTo(x,y+w*1.5,x+w,y);c.closePath();c.fillStyle='#7a2e3a';c.fill();c.stroke();
+    c.save();c.clip();c.fillStyle='#ff7a8f';c.beginPath();c.ellipse(x,y+w*1.1,w*.7,w*.5,0,0,Math.PI*2);c.fill();c.restore();}
+  else{c.beginPath();c.moveTo(x-w,y);c.quadraticCurveTo(x,y+w*1.1,x+w,y);c.stroke();}}
+function cFeet(c,col,pose,y,gap,rx,ry){[-1,1].forEach(d=>{const up=pose&&d<0?-3:0,fx=d*gap+(pose?d*1.5:0);cBlob(c,col,fx,y+up,rx,ry);});}
+function cHi(c,x,y,rx,ry,rot){c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.ellipse(x,y,rx,ry,rot||-.5,0,Math.PI*2);c.fill();}
+function paintCat(c,color,pose){color=color||'#ff922b';const dk=cMix(color,-.3),cream='#fff3df';cInk(c);
+  // tail
+  c.save();c.lineCap='round';c.beginPath();if(pose){c.moveTo(8,18);c.bezierCurveTo(22,18,24,4,16,-2);}else{c.moveTo(8,18);c.bezierCurveTo(24,16,16,2,22,-4);}
+  c.lineWidth=7.5;c.strokeStyle=CINK;c.stroke();c.lineWidth=4;c.strokeStyle=color;c.stroke();c.restore();cInk(c);
+  cFeet(c,color,pose,23,6,4.6,3.2);
+  cBlob(c,color,0,13,11,10);cEll(c,0,15,6.5,6.5,cream,0,true);
+  [-1,1].forEach(d=>{const wave=pose&&d>0;cBlob(c,color,d*10,wave?7:14,3.4,4.6,d*(wave?-.9:.35));});
+  // ears
+  [-1,1].forEach(d=>{c.beginPath();c.moveTo(d*16,-12);c.quadraticCurveTo(d*16,-26,d*13,-25);c.quadraticCurveTo(d*9,-22,d*5,-18);c.closePath();c.fillStyle=cGrad(c,color,d*12,-18,6,8);c.fill();c.stroke();
+    c.beginPath();c.moveTo(d*13.5,-14);c.quadraticCurveTo(d*13.6,-21.5,d*12.6,-21.5);c.quadraticCurveTo(d*10.5,-19.5,d*8.5,-17);c.closePath();c.fillStyle='#ffb3c1';c.fill();});
+  cBlob(c,color,0,-6,17,13.5);
+  c.strokeStyle=dk;c.lineWidth=1.8;[-3,0,3].forEach(x=>{c.beginPath();c.moveTo(x,-19);c.lineTo(x*.8,-15.5);c.stroke();});
+  cEll(c,0,1.5,7,4.6,cream,0,true);
+  cEyes(c,0,-7,6.4,1);cCheeks(c,0,-1,11);
+  cInk(c,1.5);c.fillStyle='#ff7a8f';c.beginPath();c.moveTo(-1.8,-1.4);c.lineTo(1.8,-1.4);c.lineTo(0,.6);c.closePath();c.fill();c.stroke();
+  c.beginPath();c.moveTo(-3,2.4);c.quadraticCurveTo(-1.5,3.8,0,2.2);c.quadraticCurveTo(1.5,3.8,3,2.4);c.stroke();
+  c.lineWidth=1.1;[-1,1].forEach(d=>{c.beginPath();c.moveTo(d*9,-.5);c.lineTo(d*19,-2.5);c.moveTo(d*9,1.5);c.lineTo(d*19,2.5);c.stroke();});}
+function paintDog(c,color,pose){color=color||'#c08552';const dk=cMix(color,-.32),cream='#fff3df';cInk(c);
+  c.save();c.lineCap='round';c.beginPath();c.moveTo(8,16);pose?c.quadraticCurveTo(19,12,19,2):c.quadraticCurveTo(20,16,22,8);c.lineWidth=7;c.strokeStyle=CINK;c.stroke();c.lineWidth=3.6;c.strokeStyle=color;c.stroke();c.restore();cInk(c);
+  cFeet(c,cream,pose,23,6,4.8,3.3);
+  cBlob(c,color,0,13,11,10);cEll(c,0,15,6.5,6.5,cream,0,true);
+  [-1,1].forEach(d=>{const wave=pose&&d>0;cBlob(c,color,d*10,wave?7:14,3.4,4.6,d*(wave?-.9:.35));});
+  c.fillStyle='#e8394a';c.fillRect(-8,3.5,16,3.2);c.strokeRect(-8,3.5,16,3.2);cEll(c,0,8,2,2,'#ffd34d');
+  cBlob(c,color,0,-6,16,13.5);
+  c.save();c.beginPath();c.ellipse(0,-6,16,13.5,0,0,Math.PI*2);c.clip();cEll(c,6.5,-9,4.8,5,cMix(color,-.18),0,true);c.restore();
+  [-1,1].forEach(d=>{const flap=pose&&d<0;c.save();c.translate(d*13,-15);c.rotate(-d*(flap?.8:.32));cBlob(c,dk,0,7.5,4.4,9.5);c.restore();});
+  cEll(c,0,1,8.2,6,cream);
+  cEyes(c,0,-8.5,6.4,1);cCheeks(c,0,-2.5,9.2,2.6);
+  cEll(c,0,-1.4,3.2,2.3,CINK,0,true);cHi(c,-.9,-2.1,1,.6,0);
+  cInk(c,1.5);c.beginPath();c.moveTo(0,.8);c.lineTo(0,2.6);c.moveTo(-3.2,2.6);c.quadraticCurveTo(0,4.8,3.2,2.6);c.stroke();
+  if(pose){c.fillStyle='#ff7a8f';c.beginPath();c.moveTo(-1.8,3.5);c.lineTo(1.8,3.5);c.quadraticCurveTo(2,7.5,0,7.5);c.quadraticCurveTo(-2,7.5,-1.8,3.5);c.fill();c.stroke();}}
+function paintBear(c,color,pose){color=color||'#a0703c';const lt='#ffe6c4';cInk(c);
+  cFeet(c,color,pose,23,6.5,5.2,3.5);
+  cBlob(c,color,0,12.5,12.5,11);cEll(c,0,14.5,7.5,7,lt,0,true);
+  [-1,1].forEach(d=>{const wave=pose&&d>0;cBlob(c,color,d*11.5,wave?6:13.5,4,5.2,d*(wave?-.9:.35));});
+  [-1,1].forEach(d=>{cBlob(c,color,d*12.5,-17,5.6,5.6);cEll(c,d*12.5,-16.6,3,3,cMix(color,.45),0,true);});
+  cBlob(c,color,0,-6,16.5,14);
+  cEll(c,0,0,7.5,5.6,lt);
+  cEyes(c,0,-8.5,6.2,.95);cCheeks(c,0,-2.5,11.5);
+  cEll(c,0,-1.7,3,2.1,CINK,0,true);cHi(c,-.8,-2.3,.9,.55,0);
+  cInk(c,1.5);c.beginPath();c.moveTo(0,.4);c.lineTo(0,1.8);c.stroke();cSmile(c,0,1.8,3,!!pose);}
+function paintBunny(c,color,pose){color=color||'#f2f2f7';const wh=color;cInk(c);
+  cFeet(c,wh,pose,23.5,6.5,6,3.3);
+  cBlob(c,wh,0,13,10.5,10);cEll(c,0,15,6,6,cMix(color,.5),0,true);
+  [-1,1].forEach(d=>{const wave=pose&&d>0;cBlob(c,wh,d*9.5,wave?7:14,3.2,4.4,d*(wave?-.9:.35));});
+  [-1,1].forEach(d=>{const bend=pose&&d>0;c.save();c.translate(d*6,-15);c.rotate(d*.12+(bend?.7:0));cBlob(c,wh,0,-9,4.6,11);cEll(c,0,-8.5,2.2,8,'#ffb3c1',0,true);c.restore();});
+  cBlob(c,wh,0,-5,15,13);
+  cEyes(c,0,-6,6,1);cCheeks(c,0,0,10.5);
+  cInk(c,1.4);c.fillStyle='#ff7a8f';c.beginPath();c.ellipse(0,-.2,1.9,1.4,0,0,Math.PI*2);c.fill();c.stroke();
+  c.beginPath();c.moveTo(0,1.2);c.lineTo(0,2.4);c.moveTo(-2.6,2.2);c.quadraticCurveTo(0,4,2.6,2.2);c.stroke();
+  cInk(c,1);c.fillStyle='#fff';c.beginPath();c.rect(-2.2,3,4.4,3.4);c.fill();c.stroke();c.beginPath();c.moveTo(0,3);c.lineTo(0,6.4);c.stroke();}
+function paintBird(c,color,pose){color=color||'#4d96ff';cInk(c);
+  cInk(c,1.6);c.strokeStyle='#e8892b';[-1,1].forEach(d=>{c.beginPath();c.moveTo(d*4,18);c.lineTo(d*4,23);c.moveTo(d*4,23);c.lineTo(d*4-2.5,25);c.moveTo(d*4,23);c.lineTo(d*4+2.5,25);c.stroke();});cInk(c);
+  [-1,1].forEach(d=>{c.save();c.translate(d*14,2);c.rotate(d*(pose?-1.0:.35));cBlob(c,cMix(color,-.15),d*5,0,8,4.6);c.restore();});
+  c.beginPath();c.moveTo(-4,-18);c.quadraticCurveTo(-3,-26,1,-25);c.quadraticCurveTo(-1,-21,2,-18);c.quadraticCurveTo(5,-24,8,-22);c.quadraticCurveTo(5,-19,5,-15);c.closePath();c.fillStyle=cMix(color,-.15);c.fill();c.stroke();
+  cBlob(c,color,0,0,16,18);
+  cEll(c,0,7,10,9.5,cMix(color,.6),0,true);
+  cEyes(c,0,-6,6.2,1);cCheeks(c,0,-.5,11);
+  c.fillStyle='#ffb02e';c.beginPath();c.moveTo(-3.5,-2);c.quadraticCurveTo(0,-4,3.5,-2);c.lineTo(0,pose?3.5:2.5);c.closePath();c.fill();c.stroke();
+  if(pose){c.beginPath();c.moveTo(-3,-1);c.lineTo(3,-1);c.stroke();}}
+function paintBall(c,color,pose){color=color||'#ff6b6b';cInk(c);const sx=pose?1.14:1,sy=pose?.84:1;
+  c.save();c.translate(0,pose?3:0);c.scale(sx,sy);
+  cBlob(c,color,0,0,17,17);
+  c.save();c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.clip();c.fillStyle='rgba(255,255,255,.88)';
+  c.beginPath();c.ellipse(0,0,20,5.5,-.5,0,Math.PI*2);c.fill();c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.arc(6,8,17,0,Math.PI*2);c.arc(0,0,17,0,Math.PI*2,true);c.fill();c.restore();
+  c.beginPath();c.ellipse(0,0,20,5.5,-.5,0,Math.PI*2);c.save();c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.clip();cInk(c,1.3);c.beginPath();c.ellipse(0,0,20,5.5,-.5,0,Math.PI*2);c.stroke();c.restore();
+  cInk(c);c.beginPath();c.arc(0,0,17,0,Math.PI*2);c.stroke();
+  cHi(c,-7,-8,4.5,2.6,-.6);c.fillStyle='#fff';c.beginPath();c.arc(-10,-4.5,1.3,0,Math.PI*2);c.fill();c.restore();}
+function paintGhost(c,color,pose){color=color||'#e9e4ff';cInk(c);const w=pose?2.5:0;
+  [-1,1].forEach(d=>{const up=pose&&d>0;cBlob(c,color,d*15,up?-4:5,4,3,d*(up?-.9:.5));});
+  c.beginPath();c.moveTo(-15,2);c.bezierCurveTo(-15,-26,15,-26,15,2);c.lineTo(15,16);
+  for(let i=0;i<4;i++){const x0=15-i*7.5,x1=x0-7.5,yy=(i%2?14:20)+(i%2?w:-w);c.quadraticCurveTo((x0+x1)/2,yy+6,x1,16+(i%2?-w:w)*.4);}
+  c.closePath();c.fillStyle=cGrad(c,color,0,-4,16,20);c.fill();c.stroke();
+  cEyes(c,0,-6,5.8,1.05);cCheeks(c,0,0,10);
+  cInk(c,1.5);c.fillStyle=CINK;c.beginPath();c.ellipse(0,3,pose?3:2,pose?3.6:2.4,0,0,Math.PI*2);c.fill();
+  cHi(c,-8,-13,3.2,2,-.7);}
+function paintStar(c,color,pose){color=color||'#ffd93d';cInk(c);c.save();c.rotate(pose?.18:0);
+  const pts=[];for(let i=0;i<10;i++){const r=i%2?9.5:21,a=Math.PI/5*i-Math.PI/2;pts.push([Math.cos(a)*r,Math.sin(a)*r+2]);}
+  c.beginPath();for(let i=0;i<10;i++){const p=pts[i],n=pts[(i+1)%10],m=[(p[0]+n[0])/2,(p[1]+n[1])/2];if(i===0)c.moveTo(m[0],m[1]);else c.quadraticCurveTo(p[0],p[1],m[0],m[1]);}
+  c.quadraticCurveTo(pts[0][0],pts[0][1],(pts[0][0]+pts[1][0])/2,(pts[0][1]+pts[1][1])/2);c.closePath();
+  c.fillStyle=cGrad(c,color,0,2,18,18);c.fill();c.lineWidth=2.2;c.stroke();
+  cEyes(c,0,0,4.6,.85);cCheeks(c,0,4.5,8,2.6);cSmile(c,0,4.5,2.4,!!pose);cHi(c,-5,-9,2.6,1.4,-1);c.restore();
+  c.fillStyle='#fff';c.strokeStyle=CINK;c.lineWidth=1.2;const sp=(x,y,r)=>{c.beginPath();c.moveTo(x,y-r);c.quadraticCurveTo(x,y,x+r,y);c.quadraticCurveTo(x,y,x,y+r);c.quadraticCurveTo(x,y,x-r,y);c.quadraticCurveTo(x,y,x,y-r);c.fill();c.stroke();};
+  if(pose){sp(17,-15,4);sp(-18,14,3);}else sp(-17,-14,3.2);}
+function paintRobot(c,color,pose){color=color||'#9aa4b8';const dk=cMix(color,-.3);cInk(c);
+  const rr=(x,y,w,h,r,fill)=>{c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);c.fillStyle=fill;c.fill();c.stroke();};
+  [-1,1].forEach(d=>{const up=pose&&d<0?-2.5:0;rr(d*5.5-3.5,18+up,7,6,2,'#5b6377');});
+  [-1,1].forEach(d=>{const wave=pose&&d>0;c.save();c.translate(d*13,7);c.rotate(d*(wave?-2.2:.12));rr(-2.3,0,4.6,9,2.3,cGrad(c,color,0,4,3,6));cEll(c,0,10.3,3,3,'#5b6377');c.restore();});
+  rr(-10,4,20,15,4.5,cGrad(c,color,0,11,10,8));
+  rr(-5.5,7.5,11,7,2,'#3a3f52');[[-3,'#4ade80'],[0,'#ffd34d'],[3,'#ff6b6b']].forEach(([x,col])=>{c.fillStyle=col;c.beginPath();c.arc(x,11,1.4,0,Math.PI*2);c.fill();});
+  c.beginPath();c.moveTo(0,-19);c.lineTo(0,-24);c.lineWidth=2;c.stroke();cEll(c,0,-25.5,3,3,pose?'#ffd34d':'#ff6b6b');cHi(c,-.9,-26.4,1,.7,0);
+  rr(-16,-19,32,22,8,cGrad(c,color,0,-8,16,11));
+  [-1,1].forEach(d=>rr(d>0?15:-19,-11,4,7,1.5,dk));
+  rr(-12,-15,24,13,5.5,'#232838');
+  c.shadowColor='#5ff4ff';c.shadowBlur=pose?6:4;c.fillStyle='#7ff7ff';
+  if(pose){[-1,1].forEach(d=>{c.beginPath();c.lineWidth=2;c.strokeStyle='#7ff7ff';c.arc(d*5.5,-7.5,2.8,Math.PI*1.1,Math.PI*1.9);c.stroke();});}
+  else[-1,1].forEach(d=>{c.beginPath();c.ellipse(d*5.5,-8.5,2.6,3.2,0,0,Math.PI*2);c.fill();});
+  c.shadowBlur=0;cInk(c,1.5);c.strokeStyle='#7ff7ff';c.beginPath();c.moveTo(-3,-4.5);c.quadraticCurveTo(0,-2.5,3,-4.5);c.stroke();
+  cHi(c,-9,-16,4,1.2,0);}
 // ── micro:bit emulator (native, clean-room reimplementation of documented behaviour only) ──
 // A sprite wearing the 'microbit' costume shows a 5×5 red LED board. State lives on s._mb.
 const MB_DEFAULT={leds:Array(25).fill(0)};
@@ -5134,7 +5221,16 @@ const STAGE_COSTUMES={cat:{e:'🐱',f:paintCat},dog:{e:'🐶',f:paintDog},bear:{
 const COSTUME_KEYS=Object.keys(STAGE_COSTUMES);
 function pickableCostumes(){return COSTUME_KEYS.filter(k=>((MICROBIT_ON&&keyStage!=='ks1')||k!=='microbit'));} // picker grid: hide micro:bit when off; micro:bit also hidden for KS1 (too advanced)
 function cycleCostumes(){return COSTUME_KEYS.filter(k=>k!=='microbit');} // auto-assign for NEW sprites — never auto-pick a device costume
-function paintCostume(c,name,color){(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f(c,color);}
+// Built-in costumes are drawn as vectors; when they're shown big (the stage draws them ×2 and sprites can be resized) a
+// sharp copy is rendered once per character/colour/pose/scale and reused, so hundreds of clones stay cheap to draw.
+const _cosCache=new Map();
+function paintCostume(c,name,color,pose){const f=(STAGE_COSTUMES[name]||STAGE_COSTUMES.cat).f;pose=pose?1:0;
+  const m=c.getTransform?c.getTransform():null,sx=m?Math.hypot(m.a,m.b):1;
+  if(!m||sx<=1.6||name==='microbit'||typeof document==='undefined'){f(c,color,pose);return;}
+  const R=sx<=2.5?3:sx<=5?6:10,key=name+'|'+color+'|'+pose+'|'+R;let cv=_cosCache.get(key);
+  if(!cv){cv=document.createElement('canvas');cv.width=64*R;cv.height=76*R;const g=cv.getContext('2d');g.scale(R,R);g.translate(32,40);f(g,color,pose);
+    if(_cosCache.size>160)_cosCache.delete(_cosCache.keys().next().value);_cosCache.set(key,cv);}
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(cv,-32,-40,64,76);c.imageSmoothingEnabled=sm;}
 function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save();ctx.translate(s.x,s.y);
   if(!s.visible){ctx.globalAlpha=0.3;} // dim (not hidden) when stopped so kids can still find & move it
   const fx=s.fx||{};
@@ -5212,7 +5308,7 @@ function mbPointerMove(p){if(_mbSlider)mbSetPanelFromPoint(_mbSlider.desc,p);els
 // Most costumes are ~±24; the micro:bit board is much larger.
 // Built-in characters are drawn twice as big on the KS2/KS3 stage (the stage is 960×576, so at the old size they looked tiny);
 // painted pictures (110 across) and the micro:bit board are already big. KS1 keeps its own sizes.
-function costumeK(s){if(typeof keyStage!=='undefined'&&keyStage==='ks1')return 1;const co=s&&curCostume&&curCostume(s);if(!co||co.img||co.builtin==='microbit')return 1;return 2;}
+function costumeK(s){const co=s&&curCostume&&curCostume(s);if(!co||co.img||co.builtin==='microbit')return 1;return(typeof keyStage!=='undefined'&&keyStage==='ks1')?1.5:2;}
 function stUiK(){return (typeof keyStage!=='undefined'&&keyStage==='ks1')?1:1.8;} // bubbles, score and monitors drawn bigger to match
 function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};if(co&&co.img)return{hw:52,hh:52};const k=costumeK(s);return{hw:24*k,hh:26*k};}
 function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100,h=costumeHalf(s);if(Math.abs(x-s.x)<(h.hw+2)*sc&&Math.abs(y-s.y)<(h.hh+2)*sc)return i;}return -1;}
@@ -7015,7 +7111,7 @@ const STAGE_HELP=[
  <li><b> Variables</b> &amp; <b> Lists</b> — remember numbers, words and collections.</li>
  <li><b> Pen</b> — draw on the stage; <b> Score</b> — keep score.</li>
  <li><b> micro:bit</b> — give a character the micro:bit costume to use the light-up screen, buttons, sensors, music and radio.</li></ul>`],
- ['sprites',' Characters',`<p>Manage characters in the panel beside the stage.</p><ul><li><b> Add</b> a character; click one to select and code it; use to remove it.</li><li>Open <b> Costume</b> to switch costumes, pick from the character library, change colour, rename, or <b>paint your own</b>.</li><li>Drag a character on the stage to move it; the info bar sets its exact x, y, size and direction.</li><li>Tap <b> Backdrops</b> to choose or paint the stage background.</li></ul>`],
+ ['sprites',' Characters',`<p>Manage characters in the panel beside the stage.</p><ul><li><b> Add</b> a character; click one to select and code it; use to remove it.</li><li>Open <b> Costume</b> to switch costumes, pick from the character library, change colour, rename, or <b>paint your own</b>.</li><li>Every character has <b>two poses</b> (a step, a wave or a flap). New characters start with both, so <b>next costume</b> in a loop makes them move. <b>Add character</b> adds the other pose of the one you're wearing.</li><li>Drag a character on the stage to move it; the info bar sets its exact x, y, size and direction.</li><li>Tap <b> Backdrops</b> to choose or paint the stage background.</li></ul>`],
  ['play','▶ Play & Share',`<h3>Run it</h3><p>Press <b>Run</b> to start all the scripts and <b>Stop</b> to stop. Click characters or press keys to trigger their scripts.</p><h3>Save &amp; share</h3><ul><li><b> Save</b> keeps your project (and auto-saves a draft); sign in to <b>save online</b> and open it anywhere.</li><li><b> Share</b> gives a short link to your exact project.</li><li><b> Collaborate</b> — build the same Stage project together, live.</li></ul>`],
  ['cloud',' Cloud & Teamwork',_cloudHelp]
 ];
@@ -9221,7 +9317,8 @@ const CJ_VERSION='2026.10.09';
 const CJ_WHATSNEW=[
  "10 new ready-made lessons: every lab now has a lesson for Years 3–4 and one for Years 5–6 that builds on it. See them side by side under Progression in the lessons library.",
  "The Stage has a new look: a dark block editor in Scratch's colours, Run and Stop above a bigger stage, and bigger characters.",
- "Fixes: platformer code works even if you press Play before opening Code, and Logo understands setxy 50 -20.",
+ "New Stage characters: the cat, dog, bear, bunny, bird, ball, ghost, star and robot have been redrawn, and each has two poses, so next costume makes them walk, wave or flap.",
+ "Fixes: platformer code works even if you press Play before opening Code, Logo understands setxy 50 -20, and the Key Stage 1 stage keeps its shape instead of stretching.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

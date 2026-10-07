@@ -32,6 +32,14 @@ try {
   ok(errors.length === 0, 'the Stage program runs and stops' + (errors.length ? ': ' + errors.join(' | ') : ''));
   const stage = await page.evaluate(() => JSON.stringify(buildPayload()));
 
+  // every built-in character has two poses; a new sprite starts with both, a pose survives a save, and the two look different
+  const poses = await page.evaluate(() => {
+    const s = blankSprite('P', 0), two = s.costumes.length === 2 && !s.costumes[0].pose && s.costumes[1].pose === 1;
+    const kept = sanitizeCostume({ name: 'x', builtin: 'dog', color: '#123456', pose: 1 }).pose === 1 && !('pose' in sanitizeCostume({ name: 'y', builtin: 'dog', color: '#123456', pose: 7 }));
+    const pic = p => { const cv = document.createElement('canvas'); cv.width = cv.height = 120; const c = cv.getContext('2d'); c.translate(60, 64); c.scale(2, 2); paintCostume(c, 'cat', '#ff922b', p); return cv.toDataURL(); };
+    return { two, kept, differ: pic(0) !== pic(1), all: COSTUME_KEYS.every(k => { try { const c = document.createElement('canvas').getContext('2d'); c.scale(3, 3); paintCostume(c, k, '#4d96ff', 1); return true; } catch (e) { return false; } }) };
+  });
+  ok(poses.two && poses.kept && poses.differ && poses.all, 'Stage characters have two poses that save and draw ' + JSON.stringify(poses));
   await page.evaluate(() => startNewStage('ks1'));
   ok(await page.evaluate(() => document.body.classList.contains('ks1-mode') && !document.getElementById('ks1-ui').classList.contains('hide')), 'Stage (KS1, picture blocks) opens');
 

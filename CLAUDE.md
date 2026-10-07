@@ -212,6 +212,19 @@ or `startNewStage`.
 - Built-in vector costumes drawn ×2 (`costumeK(s)`: 1 for KS1, painted images and the micro:bit) — used by drawStageSprite, costumeHalf
   (hit box), stTouching, stStampSprite. Speech bubbles, score and monitors drawn ×1.8 (`stUiK()`).
 
+## Stage characters REDRAWN (7 Oct 2026, same CJ_VERSION 2026.10.09) — Charlie: "the sprites just seem rubbish"
+- All 9 built-ins (`paintCat` … `paintRobot`) redrawn in one style: ink outline `CINK` #2b2240, soft radial shading from the costume
+  colour (`cGrad`/`cMix`), big glossy eyes (`cEyes`), blush (`cCheeks`), highlights. Full chibi bodies, still centred at the origin
+  inside about ±24 × −35…+27 units, so `costumeHalf`/touching are unchanged. Each paint fn takes `(c, color, pose)`.
+- **Two poses per character** (`costume.pose` 1 = step/wave/flap/squash/twinkle; 0 or absent = standing). `sanitizeCostume` keeps
+  `pose:1`. New sprites (`blankSprite`) get costume1 + costume2 (pose 1) so next costume animates, like Scratch's cat. Costume panel:
+  `#cm-poses` (`renderCostumePoses`); **Add character** adds the other pose of the current built-in. stage-animate starter = dance1/dance2.
+- `paintCostume(c,name,color,pose)` draws vectors directly when small; when the transform scale > 1.6 it draws a cached bitmap
+  (`_cosCache`, 3×/6×/10× per name|colour|pose, ≤160 entries) with smoothing on. `body.stage-mode #gc` is `image-rendering:auto`
+  (the platformer keeps pixelated). Sprite thumbnails are drawn at 2× (`drawSpriteThumb`).
+- KS1: characters drawn ×1.5 (`costumeK`) and `ks1BumpCheck` uses the same factor; the KS1 stage keeps its 5:3 shape
+  (`body.ks1-mode #gc` width/height auto) — it used to stretch to fill the box.
+
 ## Train Lab project type — `projectType==='train'` — LIVE on main since 6 Oct 2026 (CJ_VERSION 2026.10.08.3; built on branch `claude/vibrant-cori-tho25y`)
 Charlie's idea: a virtual intelino-style smart-train set (**never use the intelino name or logo in the UI** — it's "Train Lab"). Charlie
 asked for the look AND the default behaviour to match intelino EXACTLY; reference = intelino's K-1 "snap training" worksheets Charlie shared

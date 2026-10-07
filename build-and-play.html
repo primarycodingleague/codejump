@@ -273,6 +273,21 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .ls-src a{color:inherit;}
 .ls-chip{border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;border-radius:999px;padding:6px 14px;font:700 14px var(--font);cursor:pointer;min-height:40px;}
 .ls-chip.on{background:#1b1b1f;color:#fff;}
+.ls-lab{border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;border-radius:999px;padding:6px 12px;font:700 14px var(--font);min-height:40px;cursor:pointer;}
+.ls-mapwrap{overflow-x:auto;}
+.ls-map{width:100%;border-collapse:separate;border-spacing:6px;font-family:var(--font);min-width:640px;}
+.ls-map th{text-align:left;font-weight:900;font-size:14px;color:#1b1b1f;padding:4px 6px;}
+.ls-map tbody th{white-space:nowrap;}
+.ls-map td{vertical-align:top;background:#f4f1ea;border-radius:10px;padding:6px;}
+.ls-mapl{display:block;width:100%;text-align:left;background:#fff;border:2px solid #1b1b1f;border-radius:9px;padding:8px 10px;margin:0 0 6px;cursor:pointer;font-family:var(--font);color:#1b1b1f;}
+.ls-mapl:last-child{margin-bottom:0;}
+.ls-mapl b{display:block;font-size:14px;}
+.ls-mapl span{display:block;font-size:12px;color:#555;margin-top:2px;}
+.ls-mapl:hover{border-color:#ae853e;}
+.ls-path{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 0;font-family:var(--font);font-size:14px;color:#1b1b1f;}
+.ls-pathl{background:none;border:none;padding:0;color:#7a5a1e;font:800 14px var(--font);text-decoration:underline;cursor:pointer;}
+.ls-pathl small{font-weight:600;color:#666;}
+.ls-none{color:#999;font-weight:700;padding:6px;display:block;}
 .ls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:14px;}
 .ls-card{background:#fff;border:2px solid #1b1b1f;border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;text-align:left;padding:0;font:inherit;color:inherit;}
 .ls-card:hover,.ls-card:focus-visible{box-shadow:0 8px 24px rgba(20,14,0,.18);transform:translateY(-1px);}
@@ -719,7 +734,29 @@ body.stage-mode .cp-run-bar,body.stage-mode #ks3-editor{display:none !important;
 body.stage-mode #cwrap{display:flex;flex-direction:row;align-items:stretch;justify-content:flex-start;gap:10px;padding:10px;background:#1e1e1e;}
 body.stage-mode #code-panel{display:flex !important;position:relative;inset:auto;width:auto;height:auto;flex:1 1 auto;min-width:0;min-height:0;border-radius:10px;overflow:hidden;}
 body.stage-mode #stage-right{display:flex;flex-direction:column;width:420px;min-width:0;gap:10px;}
-body.ks1-mode #code-panel,body.ks1-mode #stage-right,body.ks1-mode #cwrap{display:none !important;} /* KS1 uses its own ScratchJr UI, not the Blockly code panel */
+body.ks1-mode #code-panel,body.ks1-mode #stage-right,body.ks1-mode #cwrap{display:none !important;}
+/* KS2/KS3 Stage, restyled (Oct 2026) to match the other labs: dark editor, a Run/Stop bar over a big stage, sprites underneath */
+#stage-bar{display:none;}
+body.stage-mode:not(.ks1-mode) #btn-greenflag,body.stage-mode:not(.ks1-mode) #btn-stopall,body.stage-mode:not(.ks1-mode) #btn-backdrops,body.stage-mode:not(.ks1-mode) #btn-mbsend,
+body.stage-mode:not(.ks1-mode) #t-cave,body.stage-mode:not(.ks1-mode) #t-mute,body.stage-mode:not(.ks1-mode) #t-hand{display:none !important;}
+body.stage-mode:not(.ks1-mode) #stage-right{width:clamp(380px,46%,860px);flex:none;}
+body.stage-mode.stage-big:not(.ks1-mode) #stage-right{width:clamp(380px,62%,1200px);}
+body.stage-mode:not(.ks1-mode) #code-panel{border:2px solid #444;background:#1e1e1e;}
+body.stage-mode:not(.ks1-mode) #stage-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#stage-bar button{font-family:var(--font);font-weight:900;font-size:15px;border-radius:10px;padding:8px 16px;min-height:42px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;color:#fff;background:#2a2a2a;border:2px solid #444;}
+#stage-bar #st-run{background:#3fae5e;border-color:#3fae5e;}
+#stage-bar #st-run.on{box-shadow:0 0 0 3px rgba(63,174,94,.45);}
+#stage-bar #st-big{padding:8px 11px;margin-left:auto;}
+body.stage-big #stage-bar #st-big{border-color:var(--gold);}
+#stage-bar button:hover{filter:brightness(1.15);}
+#stage-bar button:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+#stage-status{font-family:var(--font);font-size:13px;font-weight:700;color:#bbb;flex:1 1 140px;min-width:0;}
+#stage-status.ok{color:#7bd88f;}
+body.stage-mode:not(.ks1-mode) #stage-canvas-holder{aspect-ratio:5/3;border:2px solid #444;}
+body.stage-mode:not(.ks1-mode) #sprite-panel{background:#2a2a2a;border:2px solid #444;}
+#sprite-panel-head button{font-family:var(--font);font-weight:800;font-size:13px;border-radius:8px;padding:6px 11px;min-height:36px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;color:#ddd;background:#333;border:2px solid #444;}
+#sprite-panel-head #add-sprite{background:var(--gold);color:#111;border-color:var(--gold);}
+#sprite-panel-head button:hover{filter:brightness(1.15);} /* KS1 uses its own ScratchJr UI, not the Blockly code panel */
 /* ── 3D (Babylon) build space — Blockly on the left, a 3D viewport on the right ── */
 /* ── 3D World (world/world-app.js + world/world-app.css, lazy-loaded) ── */
 #world-ui{display:none;}
@@ -777,15 +814,16 @@ body.threed-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-st
 body.threed-mode #world-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #world-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
 @media(max-width:820px){body.threed-mode #cwrap{overflow:auto;}body.threed-mode #world-ui{min-height:660px;}body.threed-mode #rotate-hint{display:none !important;}}
-@media(max-width:1100px){body.stage-mode #stage-right{width:360px;}}
-@media(max-width:900px){body.stage-mode #stage-right{width:300px;}}
+@media(max-width:1100px){body.ks1-mode #stage-right{width:360px;}}
 /* Narrow / portrait tablets & phones: stack the stage on top, blocks fill the rest */
 @media(max-width:820px){
   body.stage-mode #cwrap{flex-direction:column;gap:8px;padding:8px;}
-  body.stage-mode #stage-right{width:100%;flex-direction:row;align-items:stretch;max-height:40vh;}
-  body.stage-mode #stage-canvas-holder{width:auto;max-width:60%;}
+  body.stage-mode:not(.ks1-mode) #stage-right,body.stage-mode.stage-big:not(.ks1-mode) #stage-right{width:100%;flex-direction:column;}
+  body.stage-mode #stage-canvas-holder{width:100%;}
+  body.stage-mode #sprite-panel{min-height:150px;}
   body.stage-mode #sprite-panel{flex:1;min-height:0;}
-  body.stage-mode #code-panel{flex:1 1 auto;min-height:300px;}
+  body.stage-mode #code-panel{flex:none;height:62vh;min-height:360px;}
+  body.stage-mode:not(.ks1-mode) #cwrap{overflow:auto;}
   body.stage-mode #rotate-hint{display:none !important;}
 }
 /* ── Critter (3D creature lab: critter/critter-app.js + critter/critter-app.css, lazy-loaded) ── */
@@ -2182,11 +2220,17 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         </div>
       </div>
       <div id="stage-right" class="hide">
+        <div id="stage-bar">
+          <button type="button" id="st-run" title="Run every sprite's scripts (the green flag)"><svg class="ic"><use href="#i-play"></use></svg> Run</button>
+          <button type="button" id="st-stop" title="Stop every script and put the sprites back"><svg class="ic"><use href="#i-stop"></use></svg> Stop</button>
+          <span id="stage-status" role="status" aria-live="polite">Press Run to start.</span>
+          <button type="button" id="st-big" title="Make the stage bigger or smaller" aria-label="Bigger stage"><svg class="ic"><use href="#i-zoom"></use></svg></button>
+        </div>
         <div id="stage-canvas-holder"><!-- #gc is moved in here in Stage mode -->
  <div id="stage-ask" class="hide"><span id="stage-ask-q"></span><input id="stage-ask-in" autocomplete="off"><button id="stage-ask-ok"></button></div>
         </div>
         <div id="sprite-panel">
-          <div id="sprite-panel-head"><span><svg class="ic"><use href="#i-stage"></use></svg> Sprites</span><div style="display:flex;gap:6px;"><button id="cm-costume-btn" title="Change the selected sprite's costume"><svg class="ic"><use href="#i-palette"></use></svg> Costume</button><button id="add-sprite" title="Add a new sprite"><svg class="ic"><use href="#i-plus"></use></svg> Add</button></div></div>
+          <div id="sprite-panel-head"><span><svg class="ic"><use href="#i-stage"></use></svg> Sprites</span><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;"><button id="sp-mbsend" title="Send the selected sprite's program to a real micro:bit"><svg class="ic"><use href="#i-plug"></use></svg> micro:bit</button><button id="sp-backdrops" title="Change the stage's backdrop"><svg class="ic"><use href="#i-image"></use></svg> Backdrops</button><button id="cm-costume-btn" title="Change the selected sprite's costume"><svg class="ic"><use href="#i-palette"></use></svg> Costume</button><button id="add-sprite" title="Add a new sprite"><svg class="ic"><use href="#i-plus"></use></svg> Add</button></div></div>
           <div id="sprite-info"></div>
           <div id="sprite-cols">
             <div id="sprite-list"></div>
@@ -2928,6 +2972,9 @@ function enterStageUI(){
   // Blockly with the Stage toolbox, showing the selected sprite's scripts.
   defineStageBlocks();
   if(!blocklyWorkspace)initBlockly();else{try{blocklyWorkspace.updateToolbox(stageToolbox());}catch(e){}}
+  applyBlocklyTheme();
+  try{document.body.classList.toggle('stage-big',localStorage.getItem('cj_stage_big')==='1');}catch(e){}
+  stageSetStatus(stagePlaying?'Running… press Stop to finish.':'Press Run to start.',stagePlaying?'ok':'');
   stageSel=Math.max(0,Math.min(stageSel,stageState.sprites.length-1));
   stageLoadSpriteScripts(stageSel);
   renderSpritePanel();
@@ -2946,6 +2993,7 @@ function exitStageUI(){
   const cwrap=document.getElementById('cwrap'),gc=document.getElementById('gc');
   if(gc.parentElement!==cwrap)cwrap.insertBefore(gc,cwrap.firstChild);
   if(blocklyWorkspace&&projectType!=='stage'){try{blocklyWorkspace.updateToolbox(getToolbox());}catch(e){}}
+  applyBlocklyTheme();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -3200,7 +3248,11 @@ function applyCountryLabels(){ // the age chooser speaks the teacher's country's
 // sets `lessonActive` ({id, step}), which travels in the payload (`lesson`), so a starter handed out to a class opens
 // with the same Lesson card on every pupil's screen and remembers which step they reached.
 // ═══════════════════════════════════════════════════════════════════════
-let lessonsMod=null,_lessonsLoading=null,lessonActive=null,_lsFilter='all',_lsCurrent=null;
+let lessonsMod=null,_lessonsLoading=null,lessonActive=null,_lsFilter='all',_lsCurrent=null,_lsLab='all';
+const LS_LAB_ORDER=['platformer','stage','turtle','critter','3d','robot','ai','train'];
+// the year band a lesson belongs to: ks1 (Years 1–2), y34 (Years 3–4) or y56 (Years 5–6)
+function lsBand(l){if(l.ks==='ks1')return'ks1';const m=/(\d+)/.exec(l.years||'');return m&&+m[1]<=4?'y34':'y56';}
+const LS_BANDS=[['ks1','Years 1–2'],['y34','Years 3–4'],['y56','Years 5–6']];
 function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lessons/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/lessons/';}
 function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
 const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab',train:'Train Lab'};
@@ -3220,19 +3272,34 @@ async function openLessons(){
 function closeLessons(){document.getElementById('lessons-modal').classList.add('hide');}
 function lessonList(){
   _lsCurrent=null;document.getElementById('ls-back').hidden=true;document.getElementById('ls-title').textContent='Ready-made lessons';
-  const L=lessonsMod.LESSONS.filter(l=>_lsFilter==='all'||l.ks===_lsFilter);
+  const ord=l=>LS_BANDS.findIndex(b=>b[0]===lsBand(l))*1000+lessonsMod.LESSONS.indexOf(l);
+  const L=lessonsMod.LESSONS.filter(l=>(_lsFilter==='all'||_lsFilter==='map'||lsBand(l)===_lsFilter)&&(_lsLab==='all'||l.type===_lsLab)).slice().sort((a,b)=>ord(a)-ord(b));
   const chip=(k,t)=>`<button class="ls-chip${_lsFilter===k?' on':''}" data-f="${k}" aria-pressed="${_lsFilter===k}">${t}</button>`;
+  const labs=`<select id="ls-lab" class="ls-lab" aria-label="Which lab"><option value="all">All labs</option>${LS_LAB_ORDER.map(k=>`<option value="${k}"${_lsLab===k?' selected':''}>${lsEsc(LS_TYPE[k])}</option>`).join('')}</select>`;
   const body=document.getElementById('ls-body');
-  body.innerHTML=`<p class="ls-intro">Complete computing lessons with no preparation: a lesson plan with timings and what to say, curriculum links for your country, key words, support and stretch, and a starter project. When pupils open the starter, a <b>Lesson</b> card on their screen takes them through it step by step.</p>
-    <div class="ls-filter">${chip('all','All lessons')}${chip('ks1',cjBand('ks1'))}${chip('ks2',cjBand('ks2'))}<span class="ls-grow"></span>${cjCountrySelect('ls-country')}</div>
-    <div class="ls-grid">${L.map(l=>`<button class="ls-card" data-id="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div class="ls-cbody"><h3>${lsEsc(l.title)}</h3>
+  const card=l=>`<button class="ls-card" data-id="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div class="ls-cbody"><h3>${lsEsc(l.title)}</h3>
       <div class="ls-meta"><span class="ls-tag ${l.ks}">${lsEsc(cjYears(l.years))}</span><span class="ls-tag">${l.minutes} min</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
-      <p>${lsEsc(l.summary)}</p></div></button>`).join('')}</div>`;
+      <p>${lsEsc(l.summary)}</p></div></button>`;
+  // Progression: every lab against the year bands, so teachers can see how the lessons build on each other
+  const map=()=>`<p class="ls-intro">Each lab has a lesson for ${lsEsc(cjYears('Years 3–4'))} (sequence, repetition, events and debugging) and one for ${lsEsc(cjYears('Years 5–6'))} that builds on it (selection, variables, procedures, fair testing and data). Teach them in order across the years.</p>
+    <div class="ls-mapwrap"><table class="ls-map"><thead><tr><th>Lab</th>${LS_BANDS.map(b=>`<th>${lsEsc(cjYears(b[1]))}</th>`).join('')}</tr></thead><tbody>${LS_LAB_ORDER.filter(k=>_lsLab==='all'||k===_lsLab).map(k=>`<tr><th>${lsEsc(LS_TYPE[k])}</th>${LS_BANDS.map(b=>`<td>${lessonsMod.LESSONS.filter(l=>l.type===k&&lsBand(l)===b[0]).map(l=>`<button class="ls-mapl" data-id="${lsEsc(l.id)}"><b>${lsEsc(l.title)}</b><span>${lsEsc(l.objective.replace(/^We are learning (to |how |about )?/i,''))}</span></button>`).join('')||'<span class="ls-none">–</span>'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  body.innerHTML=`<p class="ls-intro">Complete computing lessons with no preparation: a lesson plan with timings and what to say, curriculum links for your country, key words, support and stretch, and a starter project. When pupils open the starter, a <b>Lesson</b> card on their screen takes them through it step by step.</p>
+    <div class="ls-filter">${chip('all','All lessons')}${LS_BANDS.map(b=>chip(b[0],lsEsc(cjYears(b[1])))).join('')}${chip('map','Progression')}${labs}<span class="ls-grow"></span>${cjCountrySelect('ls-country')}</div>
+    ${_lsFilter==='map'?map():`<div class="ls-grid">${L.map(l=>`<button class="ls-card" data-id="${lsEsc(l.id)}"><img alt="" loading="lazy" src="${lessonsBase()}pics/${lsEsc(l.id)}.jpg"><div class="ls-cbody"><h3>${lsEsc(l.title)}</h3>
+      <div class="ls-meta"><span class="ls-tag ${l.ks}">${lsEsc(cjYears(l.years))}</span><span class="ls-tag">${l.minutes} min</span><span class="ls-tag">${lsEsc(l.tool)}</span></div>
+      <p>${lsEsc(l.summary)}</p></div></button>`).join('')}</div>`}`;
   body.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{_lsFilter=b.dataset.f;lessonList();});
+  const lab=document.getElementById('ls-lab');if(lab)lab.onchange=()=>{_lsLab=lab.value;lessonList();};
   cjBindCountry('ls-country',lessonList);
   body.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>lessonShow(b.dataset.id));
   body.scrollTop=0;
 }
+// the same lab's lessons in the year bands before and after this one (the progression)
+function lessonPathHTML(l){const bi=LS_BANDS.findIndex(b=>b[0]===lsBand(l)),same=lessonsMod.LESSONS.filter(o=>o.type===l.type&&o.id!==l.id);
+  const prev=same.filter(o=>LS_BANDS.findIndex(b=>b[0]===lsBand(o))===bi-1),next=same.filter(o=>LS_BANDS.findIndex(b=>b[0]===lsBand(o))===bi+1);
+  if(!prev.length&&!next.length)return'';
+  const link=o=>`<button class="ls-pathl" data-go="${lsEsc(o.id)}">${lsEsc(o.title)} <small>(${lsEsc(cjYears(o.years))})</small></button>`;
+  return`<div class="ls-path">${prev.length?'<span><b>Before this:</b> '+prev.map(link).join(' ')+'</span>':''}${next.length?'<span><b>Next:</b> '+next.map(link).join(' ')+'</span>':''}</div>`;}
 function lessonShow(id){
   const l=lessonsMod.lesson(id);if(!l){lessonList();return;}
   _lsCurrent=id;document.getElementById('ls-back').hidden=false;document.getElementById('ls-title').textContent=l.title;
@@ -3243,6 +3310,7 @@ function lessonShow(id){
     <div class="ls-actions"><button class="ls-btn gold" id="ls-present-btn">${ksvg('i-present')} Present the slides</button><button class="ls-btn gold" id="ls-open">${ksvg('i-play')} Open the starter</button><button class="ls-btn" id="ls-give">${ksvg('i-people')} Give to my class</button><button class="ls-btn" id="ls-print">${ksvg('i-print')} Print lesson plan</button><button class="ls-btn" id="ls-print-slides">${ksvg('i-print')} Print slides / PDF</button></div>
     <div id="ls-give-box"></div>
     <p class="ls-obj">${lsEsc(l.objective)}</p>
+    ${lessonPathHTML(l)}
     <div class="ls-two" style="margin-top:12px"><div class="ls-note"><h3>Pupils can say</h3>${li(l.success)}</div><div class="ls-note"><h3>${lsEsc(cur.heading)}</h3>${lessonLinksHTML(cur)}</div></div>
     <div class="ls-sec"><h3>Key words</h3><div class="ls-words">${l.words.map(w=>'<b>'+lsEsc(w[0])+'</b><span>'+lsEsc(w[1])+'</span>').join('')}</div></div>
     <div class="ls-sec"><h3>You’ll need</h3>${li(l.need)}</div>
@@ -3251,6 +3319,7 @@ function lessonShow(id){
     <div class="ls-two ls-sec"><div class="ls-note"><h3>Support</h3><p style="margin:0">${lsEsc(l.support)}</p></div><div class="ls-note"><h3>Stretch</h3><p style="margin:0">${lsEsc(l.stretch)}</p></div></div>
     <div class="ls-sec"><h3>Assessment: look for pupils who…</h3>${li(l.assess)}</div>`;
   cjBindCountry('ls-country',()=>lessonShow(id));
+  body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>lessonShow(b.dataset.go));
   document.getElementById('ls-present-btn').onclick=()=>lessonPresent(id);
   document.getElementById('ls-open').onclick=()=>lessonOpenStarter(id);
   document.getElementById('ls-give').onclick=()=>lessonGiveView(id);
@@ -4238,7 +4307,7 @@ let stVarShown={};   // which variables show a monitor on the stage
 let stPenCanvas=null,stPenCtx=null;   // the pen layer (persistent marks, drawn under sprites)
 function stPen(){if(!stPenCanvas){stPenCanvas=document.createElement('canvas');stPenCanvas.width=CW;stPenCanvas.height=CH;stPenCtx=stPenCanvas.getContext('2d');}return stPenCtx;}
 function stPenClear(){stPen().clearRect(0,0,CW,CH);}
-function stStampSprite(s){const c=stPen();c.save();c.translate(s.x,s.y);const sc=(s.size||100)/100;c.scale(sc,sc);if(s.visible!==false)paintSpriteCostume(c,s);c.restore();}
+function stStampSprite(s){const c=stPen();c.save();c.translate(s.x,s.y);const sc=(s.size||100)/100*costumeK(s);c.scale(sc,sc);if(s.visible!==false)paintSpriteCostume(c,s);c.restore();}
 // ── Sound (built-in synthesized sounds via Web Audio — no asset files) ──
 let stAudio=null,stMasterGain=null,stVolume=100,stSources=[];
 function stAudioCtx(){if(!stAudio){try{stAudio=new (window.AudioContext||window.webkitAudioContext)();stMasterGain=stAudio.createGain();stMasterGain.gain.value=stVolume/100;stMasterGain.connect(stAudio.destination);}catch(e){return null;}}if(stAudio.state==='suspended'){try{stAudio.resume();}catch(e){}}return stAudio;}
@@ -4460,7 +4529,7 @@ function stEval(b,s){if(!b)return 0;const t=b.type;const inp=n=>stEval(b.getInpu
 function stTouching(s,target){if(!stageState||!target||target==='_none')return false;
   if(target==='_edge')return s.x<18||s.x>CW-18||s.y<18||s.y>CH-18;
   const o=stageState.sprites.find(o=>o!==s&&o.name===target&&o.visible);if(!o||!s.visible)return false;
-  const r1=22*(s.size||100)/100,r2=22*(o.size||100)/100;return Math.hypot(s.x-o.x,s.y-o.y)<(r1+r2);}
+  const r1=22*costumeK(s)*(s.size||100)/100,r2=22*costumeK(o)*(o.size||100)/100;return Math.hypot(s.x-o.x,s.y-o.y)<(r1+r2);}
 function stTargetPos(s,target){if(target==='_mouse')return{x:stageMouse.x,y:stageMouse.y};
   if(target==='_random')return{x:20+Math.random()*(CW-40),y:20+Math.random()*(CH-40)};
   const o=stageState&&stageState.sprites.find(o=>o!==s&&o.name===target);return o?{x:o.x,y:o.y}:{x:s.x,y:s.y};}
@@ -4586,9 +4655,12 @@ function stageStart(){if(!stageState)return;
     }catch(e){}}
   });
   const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.add('active');
+  stageSetStatus('Running… press Stop to finish.','ok');
 }
+function stageSetStatus(t,kind){const el=document.getElementById('stage-status');if(el){el.textContent=t||'';el.className=kind||'';}const r=document.getElementById('st-run');if(r)r.classList.toggle('on',!!stagePlaying);}
 function stageStop(){stagePlaying=false;stFibers=[];stKeyHats=[];stClickHats=[];stMbBtnHats=[];stMbShakeHats=[];stMbGestureHats=[];stMbLogoHats=[];stMbRadioNumHats=[];stMbRadioStrHats=[];stRadioQ=[];ks1TapHats=[];ks1BumpHats=[];ks1MsgHats=[];_mbPress=null;_mbSlider=null;_mbPanelDrag=null;if(typeof mbStopMic==='function')mbStopMic();stRecvHats=[];stCloneHats=[];stBackdropHats=[];stClones=[];if(typeof stStopSounds==='function')stStopSounds();if(typeof stFinishAsk==='function')stFinishAsk();
   const gf=document.getElementById('btn-greenflag');if(gf)gf.classList.remove('active');
+  stageSetStatus('Stopped. Press Run to start again.');
   if(stageState)stageState.sprites.forEach(s=>{if(s._sx!=null){s.x=s._sx;s.y=s._sy;s.dir=s._sdir;s.visible=(s._svis!==false);s.size=s._ssize||100;if(s._scostume!=null)s.costumeIdx=s._scostume;}s._z=0;s.fx={};s.say='';s.sayT=0;if(s._ws){try{s._ws.dispose();}catch(e){}s._ws=null;}});
 }
 function stageFrame(){if(!stagePlaying||!stageState)return;
@@ -5063,7 +5135,7 @@ function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save
   if(!s.visible){ctx.globalAlpha=0.3;} // dim (not hidden) when stopped so kids can still find & move it
   const fx=s.fx||{};
   if(fx.ghost)ctx.globalAlpha*=Math.max(0,Math.min(100,100-fx.ghost))/100;
-  const sc=(s.size||100)/100;ctx.save();ctx.scale(sc,sc);
+  const sc=(s.size||100)/100,ck=costumeK(s);ctx.save();ctx.scale(sc*ck,sc*ck);
   if(keyStage==='ks1'&&s.dir!=null)ctx.rotate((s.dir-90)*Math.PI/180); // KS1 characters visibly turn
   if(fx.brightness)ctx.filter='brightness('+(1+Math.max(-100,Math.min(100,fx.brightness))/100)+')';
   paintSpriteCostume(ctx,s);ctx.restore();
@@ -5071,10 +5143,11 @@ function drawStageSprite(s,selected){if(!s.visible&&stagePlaying)return;ctx.save
   if(stagePlaying){const co=curCostume(s);if(co&&co.builtin==='microbit'){ctx.save();ctx.scale(sc,sc);drawMbControls(ctx,s);ctx.restore();}}
   if(selected&&!stagePlaying){const h=costumeHalf(s);ctx.strokeStyle='#ae853e';ctx.lineWidth=2.5;ctx.setLineDash([5,4]);ctx.strokeRect(-h.hw*sc,-h.hh*sc,h.hw*2*sc,h.hh*2*sc);ctx.setLineDash([]);}
   ctx.restore();
-  if(s.say&&s.sayT>0){ctx.save();ctx.font='bold 16px sans-serif';const w=ctx.measureText(s.say).width+20;const bx=Math.min(CW-w-4,s.x+12),by=Math.max(4,s.y-46);
+  if(s.say&&s.sayT>0){const U=stUiK(),hh=costumeHalf(s).hh*sc;ctx.save();ctx.translate(Math.min(CW-4,s.x+10*U),Math.max(4,s.y-hh-44*U));ctx.scale(U,U);
+    ctx.font='bold 16px sans-serif';const w=ctx.measureText(s.say).width+20,maxX=(CW-Math.min(CW-4,s.x+10*U))/U-4,bx=Math.min(0,maxX-w),by=0;
     ctx.fillStyle='#fff';ctx.strokeStyle='#000';ctx.lineWidth=2;
     if(s.thinking){[[bx-2,by+34,4],[bx+4,by+40,3]].forEach(([cx,cy,r])=>{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();ctx.stroke();});}
-    else{ctx.beginPath();ctx.moveTo(bx+6,by+28);ctx.lineTo(bx+2,by+40);ctx.lineTo(bx+18,by+29);ctx.closePath();ctx.fill();ctx.stroke();}
+    else{ctx.beginPath();ctx.moveTo(6,by+28);ctx.lineTo(2,by+40);ctx.lineTo(18,by+29);ctx.closePath();ctx.fill();ctx.stroke();}
     ctx.beginPath();ctx.roundRect(bx,by,w,30,8);ctx.fill();ctx.stroke();
     ctx.fillStyle='#000';ctx.textBaseline='middle';ctx.fillText(s.say,bx+10,by+16);ctx.restore();}
 }
@@ -5089,16 +5162,18 @@ function drawStage(){ctx.save();const bd=curBackdrop();
   if(stPenCanvas)ctx.drawImage(stPenCanvas,0,0); // pen layer under the sprites
   stClones.forEach(c=>drawStageSprite(c,false));
   if(stageState){const ord=stageState.sprites.map((s,i)=>({s,i})).sort((a,b)=>((a.s._z||0)-(b.s._z||0))||(a.i-b.i));ord.forEach(o=>drawStageSprite(o.s,o.i===stageSel));}
+  const U=stUiK();ctx.save();ctx.scale(U,U);const VW=CW/U; // overlays are drawn in a scaled frame so they stay readable on the docked stage
   if(stagePlaying&&stScoreUsed){ctx.font='bold 26px sans-serif';ctx.textBaseline='top';ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.fillStyle='#ffd93d';const txt='Score: '+stScore;ctx.strokeText(txt,14,12);ctx.fillText(txt,14,12);}
   // variable monitors (top-right)
   let my=12;ctx.font='bold 15px sans-serif';ctx.textBaseline='top';
   Object.keys(stVarShown).forEach(n=>{if(!stVarShown[n])return;const val=stVars[n]??0;const txt=n+' = '+val;const w=ctx.measureText(txt).width+18;
-    ctx.fillStyle='rgba(0,0,0,.55)';ctx.beginPath();ctx.roundRect(CW-w-12,my,w,24,6);ctx.fill();
-    ctx.fillStyle='#ffd93d';ctx.fillText(txt,CW-w-3,my+5);my+=28;});
+    ctx.fillStyle='rgba(0,0,0,.55)';ctx.beginPath();ctx.roundRect(VW-w-12,my,w,24,6);ctx.fill();
+    ctx.fillStyle='#ffd93d';ctx.fillText(txt,VW-w-3,my+5);my+=28;});
   // list monitors (top-right, under the variables)
-  Object.keys(stListShown).forEach(n=>{if(!stListShown[n])return;const a=stLists[n]||[];const txt=n+': '+(a.length?a.slice(0,12).join(', ')+(a.length>12?' …':''):'(empty)');const w=Math.min(CW-24,ctx.measureText(txt).width+18);
-    ctx.fillStyle='rgba(0,0,0,.6)';ctx.beginPath();ctx.roundRect(CW-w-12,my,w,24,6);ctx.fill();
-    ctx.fillStyle='#9be7ff';ctx.fillText(txt,CW-w-3,my+5);my+=28;});
+  Object.keys(stListShown).forEach(n=>{if(!stListShown[n])return;const a=stLists[n]||[];const txt=n+': '+(a.length?a.slice(0,12).join(', ')+(a.length>12?' …':''):'(empty)');const w=Math.min(VW-24,ctx.measureText(txt).width+18);
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.beginPath();ctx.roundRect(VW-w-12,my,w,24,6);ctx.fill();
+    ctx.fillStyle='#9be7ff';ctx.fillText(txt,VW-w-3,my+5);my+=28;});
+  ctx.restore();
   // live collaborators' pointers (Google-Docs-style cursors)
   if(typeof collabActive!=='undefined'&&collabActive){for(const uid in collabRemoteCursors){const cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.sx==null)continue;drawRemotePointer(cu.cell.sx,cu.cell.sy,cu.color||'#fff',cu.name||'');}}
   mbDrawPanel(ctx); // micro:bit sensor panel (drag light/temp/tilt… while playing)
@@ -5131,7 +5206,11 @@ function mbPointerUp(){if(_mbPress){const o=mbState(_mbPress.s);o._A=false;o._B=
 function mbPointerMove(p){if(_mbSlider)mbSetPanelFromPoint(_mbSlider.desc,p);else if(_mbPanelDrag)stMbPanelPos={x:p.x-_mbPanelDrag.dx,y:p.y-_mbPanelDrag.dy};}
 // Half-extent (hw,hh) of a sprite's costume, for the selection box + drag hit test.
 // Most costumes are ~±24; the micro:bit board is much larger.
-function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};return{hw:24,hh:26};}
+// Built-in characters are drawn twice as big on the KS2/KS3 stage (the stage is 960×576, so at the old size they looked tiny);
+// painted pictures (110 across) and the micro:bit board are already big. KS1 keeps its own sizes.
+function costumeK(s){if(typeof keyStage!=='undefined'&&keyStage==='ks1')return 1;const co=s&&curCostume&&curCostume(s);if(!co||co.img||co.builtin==='microbit')return 1;return 2;}
+function stUiK(){return (typeof keyStage!=='undefined'&&keyStage==='ks1')?1:1.8;} // bubbles, score and monitors drawn bigger to match
+function costumeHalf(s){const co=s&&curCostume&&curCostume(s);if(co&&co.builtin==='microbit')return{hw:95,hh:80};if(co&&co.img)return{hw:52,hh:52};const k=costumeK(s);return{hw:24*k,hh:26*k};}
 function stageSpriteAt(x,y){if(!stageState)return -1;for(let i=stageState.sprites.length-1;i>=0;i--){const s=stageState.sprites[i],sc=(s.size||100)/100,h=costumeHalf(s);if(Math.abs(x-s.x)<(h.hw+2)*sc&&Math.abs(y-s.y)<(h.hh+2)*sc)return i;}return -1;}
 function stageDragStart(e){if(projectType!=='stage')return;const p=stagePtr(e);const i=stageSpriteAt(p.x,p.y);if(i<0)return;const sp=stageState.sprites[i];
   if(stagePlaying){if(!sp.draggable)return;}else if(i!==stageSel)stageSelectSprite(i); // during play only draggable sprites move
@@ -5159,6 +5238,11 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   const gf=document.getElementById('btn-greenflag');if(gf)gf.onclick=()=>stageStart();
   const st=document.getElementById('btn-stopall');if(st)st.onclick=()=>stageStop();
   const mbb=document.getElementById('btn-mbsend');if(mbb){mbb.onclick=mbSendOpen;mbb.style.display=(MB_FLASH_ON&&keyStage!=='ks1')?'':'none';}
+  const smb=document.getElementById('sp-mbsend');if(smb){smb.onclick=mbSendOpen;smb.style.display=(MB_FLASH_ON&&keyStage!=='ks1')?'':'none';}
+  const srun=document.getElementById('st-run');if(srun)srun.onclick=()=>{stageStart();try{document.getElementById('gc').focus({preventScroll:true});}catch(e){}};
+  const sstop=document.getElementById('st-stop');if(sstop)sstop.onclick=()=>stageStop();
+  const sbig=document.getElementById('st-big');if(sbig)sbig.onclick=()=>{const on=document.body.classList.toggle('stage-big');try{localStorage.setItem('cj_stage_big',on?'1':'0');}catch(e){}setTimeout(()=>{try{Blockly.svgResize(blocklyWorkspace);}catch(e){}stageNeedsDraw=true;},60);};
+  const sbd=document.getElementById('sp-backdrops');if(sbd)sbd.onclick=()=>openBackdropManager();
   const as=document.getElementById('add-sprite');if(as)as.onclick=()=>stageAddSprite();
   const cb=document.getElementById('cm-costume-btn');if(cb)cb.onclick=()=>openCostumePicker();
   const cd=document.getElementById('cm-done');if(cd)cd.onclick=()=>document.getElementById('costume-modal').classList.add('hide');
@@ -5858,6 +5942,7 @@ function defineStageBlocks(){
   // Control
   Blockly.Blocks['mb_run_background']={init:function(){this.appendStatementInput('DO').appendField('run in background');stmt(this);this.setColour(MB_COL);}};
   stApplyTooltips(); // hover descriptions on every stage block (KS2/KS3)
+  stApplyScratchColours(); // Scratch's colours for each category
 }
 // Plain-English description shown when you hover a Stage block (KS2/KS3 Blockly tooltips).
 const ST_BLOCK_DESC={
@@ -5896,7 +5981,14 @@ function stPointTargets(){const opts=[[' mouse-pointer','_mouse']];if(typeof sta
 //  when the script is loaded into a per-sprite headless workspace at play time —
 //  Blockly resets a dropdown to its first option if the stored value isn't listed.)
 function stTouchOptions(){const opts=[];if(typeof stageState!=='undefined'&&stageState)stageState.sprites.forEach(s=>opts.push([s.name,s.name]));opts.push(['the edge','_edge']);if(!opts.length)opts.push(['(a sprite)','_edge']);return opts;}
-function stageToolbox(){const blk=t=>({kind:'block',type:t});
+function stageToolbox(){const tb=stageToolboxRaw();(tb.contents||[]).forEach(c=>{if(ST_CAT_COLOURS[c.name])c.colour=ST_CAT_COLOURS[c.name];});return tb;}
+// every st_* block takes its category's Scratch colour (the definitions still say hues; this wraps their init once)
+function stApplyScratchColours(){if(stApplyScratchColours.done)return;stApplyScratchColours.done=true;
+  for(const c of stageToolboxRaw().contents||[]){const col=ST_CAT_COLOURS[c.name];if(!col)continue;
+    for(const b of c.contents||[]){const t=b.type;if(!t||!/^st_/.test(t)||!Blockly.Blocks[t]||Blockly.Blocks[t]._stCol)continue;
+      const def=Blockly.Blocks[t],init=def.init;def._stCol=true;def.init=function(){init.call(this);try{this.setColour(col);}catch(e){}};}}
+}
+function stageToolboxRaw(){const blk=t=>({kind:'block',type:t});
   const N=v=>({shadow:{type:'math_number',fields:{NUM:v}}});
   return{kind:'categoryToolbox',contents:[
   {kind:'category',name:'Motion',colour:'210',contents:[blk('st_move'),blk('st_turn_r'),blk('st_turn_l'),blk('st_point'),blk('st_point_towards'),blk('st_goto'),blk('st_goto_xy'),blk('st_goto_center'),blk('st_glide_xy'),blk('st_glide_to'),blk('st_change_x'),blk('st_set_x'),blk('st_change_y'),blk('st_set_y'),blk('st_edge_bounce'),blk('st_xpos'),blk('st_ypos'),blk('st_direction')]},
@@ -6079,6 +6171,23 @@ function getDefaultXml(){
 </xml>`;
 }
 
+// The Stage gets a dark editor with Scratch's category colours (like the other labs); the platformer keeps its own look.
+let _cjBaseTheme=null,_cjStageTheme=null;
+const ST_CAT_COLOURS={Motion:'#4c97ff',Looks:'#9966ff',Sound:'#cf63cf',Events:'#ffbf00',Control:'#ffab19',Sensing:'#5cb1d6',Operators:'#59c059',Variables:'#ff8c1a',Lists:'#ff661a',Pen:'#0fbd8c',Score:'#ff6680'};
+function stageTheme(){
+  if(_cjStageTheme)return _cjStageTheme;
+  const st=(p,s,t)=>({colourPrimary:p,colourSecondary:s,colourTertiary:t});
+  _cjStageTheme=Blockly.Theme.defineTheme('codejumpStage',{
+    base:Blockly.Themes.Zelos||Blockly.Themes.Classic,
+    fontStyle:{family:"'Montserrat', sans-serif",weight:'600',size:11},
+    blockStyles:{logic_blocks:st('#59c059','#46b946','#389438'),math_blocks:st('#59c059','#46b946','#389438'),text_blocks:st('#59c059','#46b946','#389438'),
+      variable_blocks:st('#ff8c1a','#ff8000','#db6e00'),variable_dynamic_blocks:st('#ff8c1a','#ff8000','#db6e00'),loop_blocks:st('#ffab19','#ec9c13','#cf8b17'),list_blocks:st('#ff661a','#ff5500','#e64d00')},
+    componentStyles:{workspaceBackgroundColour:'#1e1e1e',toolboxBackgroundColour:'#2a2a2a',toolboxForegroundColour:'#fff',flyoutBackgroundColour:'#252526',
+      flyoutForegroundColour:'#ccc',flyoutOpacity:1,scrollbarColour:'#797979',insertionMarkerColour:'#fff',insertionMarkerOpacity:0.3,scrollbarOpacity:0.4,cursorColour:'#d0d0d0'}
+  });
+  return _cjStageTheme;}
+function applyBlocklyTheme(){if(!blocklyWorkspace||!_cjBaseTheme)return;const want=(projectType==='stage'&&keyStage!=='ks1')?stageTheme():_cjBaseTheme;
+  try{if(blocklyWorkspace.getTheme()!==want)blocklyWorkspace.setTheme(want);}catch(e){}}
 function initBlockly(){
   if(blocklyWorkspace)return;
   defineBlocks();defineStageBlocks();
@@ -6096,7 +6205,9 @@ function initBlockly(){
     grid:{spacing:24,length:3,colour:'rgba(255,255,255,0.08)',snap:true},
     theme:cjTheme,
     renderer:'zelos',
+    media:'https://unpkg.com/blockly@10.4.3/media/',
   });
+  _cjBaseTheme=cjTheme;applyBlocklyTheme();
   // Relax type-checking so any value/reporter block can plug into any value
   // input (e.g. a number into an "if", a reporter into "and"). The interpreter
   // coerces types at runtime, so this is friendlier for young coders.
@@ -6888,7 +6999,7 @@ const HELP_TABS=[
 // Stage help — KS2/KS3 (Blockly) and KS1 (ScratchJr). Cloud/Teamwork content is shared with the platformer.
 const _cloudHelp=(HELP_TABS.find(t=>t[0]==='cloud')||[])[2]||'';
 const STAGE_HELP=[
- ['start',' Start',`<h3>Welcome to the Stage!</h3><p>The Stage is a Scratch-style world where your <b>characters (sprites)</b> follow code you build with snap-together blocks. Press <b> Go</b> to run everything and <b>⏹ Stop</b> to stop.</p><h3>Make something in 3 steps</h3><ul><li>Pick a character (or tap <b></b> to add one).</li><li>Drag blocks from the coloured categories and snap them under a <b> when green flag clicked</b> block.</li><li>Press <b> Go</b> and watch it happen!</li></ul><p style="opacity:.7">Tip: hover over any block to see what it does.</p>`],
+ ['start',' Start',`<h3>Welcome to the Stage!</h3><p>The Stage is a Scratch-style world where your <b>characters (sprites)</b> follow code you build with snap-together blocks. Press <b>Run</b> (above the stage) to run everything and <b>Stop</b> to stop. The <b>magnifier</b> button next to them makes the stage bigger.</p><h3>Make something in 3 steps</h3><ul><li>Pick a character (or tap <b></b> to add one).</li><li>Drag blocks from the coloured categories and snap them under a <b> when green flag clicked</b> block.</li><li>Press <b>Run</b> and watch it happen!</li></ul><p style="opacity:.7">Tip: hover over any block to see what it does.</p>`],
  ['blocks',' Blocks',`<p>Blocks are grouped by colour — drag them out and snap them together. Each character has its <b>own</b> blocks, so click a character first.</p><ul>
  <li><b> Motion</b> — move, turn, glide, point, go to x/y, bounce on the edge.</li>
  <li><b> Looks</b> — say/think, costumes, backdrops, size, show/hide, effects, layers.</li>
@@ -6901,7 +7012,7 @@ const STAGE_HELP=[
  <li><b> Pen</b> — draw on the stage; <b> Score</b> — keep score.</li>
  <li><b> micro:bit</b> — give a character the micro:bit costume to use the light-up screen, buttons, sensors, music and radio.</li></ul>`],
  ['sprites',' Characters',`<p>Manage characters in the panel beside the stage.</p><ul><li><b> Add</b> a character; click one to select and code it; use to remove it.</li><li>Open <b> Costume</b> to switch costumes, pick from the character library, change colour, rename, or <b>paint your own</b>.</li><li>Drag a character on the stage to move it; the info bar sets its exact x, y, size and direction.</li><li>Tap <b> Backdrops</b> to choose or paint the stage background.</li></ul>`],
- ['play','▶ Play & Share',`<h3>Run it</h3><p>Press <b> Go</b> to start all the scripts and <b>⏹ Stop</b> to stop. Click characters or press keys to trigger their scripts.</p><h3>Save &amp; share</h3><ul><li><b> Save</b> keeps your project (and auto-saves a draft); sign in to <b>save online</b> and open it anywhere.</li><li><b> Share</b> gives a short link to your exact project.</li><li><b> Collaborate</b> — build the same Stage project together, live.</li></ul>`],
+ ['play','▶ Play & Share',`<h3>Run it</h3><p>Press <b>Run</b> to start all the scripts and <b>Stop</b> to stop. Click characters or press keys to trigger their scripts.</p><h3>Save &amp; share</h3><ul><li><b> Save</b> keeps your project (and auto-saves a draft); sign in to <b>save online</b> and open it anywhere.</li><li><b> Share</b> gives a short link to your exact project.</li><li><b> Collaborate</b> — build the same Stage project together, live.</li></ul>`],
  ['cloud',' Cloud & Teamwork',_cloudHelp]
 ];
 const STAGE_HELP_KS1=[

@@ -132,7 +132,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'catch-the-stars', title: 'Catch the stars', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'stage', tool: 'Stage (Scratch-style blocks)',
+    id: 'catch-the-stars', title: 'Catch the stars', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'stage', tool: 'Stage (Scratch-style blocks)',
     summary: 'Pupils finish a catching game: an “if touching” check adds to the score and sends the star back to the top.',
     objective: 'We are learning to use selection (if … then) and a score variable in a game.',
     success: ['I can explain what my program does when the star touches the catcher.', 'I can use an if block with a condition.', 'I can change the score.'],
@@ -140,9 +140,9 @@ export const LESSONS = [
     words: [['selection', 'choosing what to do with if … then'], ['condition', 'a question that is true or false'], ['variable', 'a named value that can change, like the score'], ['forever loop', 'repeats until the game stops']],
     need: ['A device per pupil or pair'],
     plan: [
-      { min: 5, title: 'Play the unfinished game', html: '<p>Open the starter on the board and press <b>GO</b>. The catcher moves with the arrow keys and a star falls — but catching it does nothing. <b>Ask:</b> what should happen when the star touches the catcher? Write it as a sentence: “<b>If</b> the star is touching the catcher, <b>then</b> add 1 to the score and go back to the top.”</p>' },
+      { min: 5, title: 'Play the unfinished game', html: '<p>Open the starter on the board and press <b>Run</b>. The catcher moves with the arrow keys and a star falls — but catching it does nothing. <b>Ask:</b> what should happen when the star touches the catcher? Write it as a sentence: “<b>If</b> the star is touching the catcher, <b>then</b> add 1 to the score and go back to the top.”</p>' },
       { min: 10, title: 'Read the code', html: '<p>Click the <b>Star</b> sprite and read its blocks together: a forever loop moves it down, and an <b>if</b> sends it back to the top when it reaches the bottom. That if is selection! The <b>Catcher</b> moves with two “when key pressed” scripts.</p>' },
-      { min: 25, title: 'Finish the game', html: '<p>Pupils follow the Lesson card to add the second if block inside the Star’s forever loop: <b>if touching Catcher then change score by 1, go to random position, set y to 170</b>. Then they reset the score when GO is pressed.</p><p>Common bug: putting the if outside the forever loop, so it only checks once. Ask “how often does the computer check?”</p>' },
+      { min: 25, title: 'Finish the game', html: '<p>Pupils follow the Lesson card to add the second if block inside the Star’s forever loop: <b>if touching Catcher then change score by 1, go to random position, set y to 170</b>. Then they reset the score when Run is pressed.</p><p>Common bug: putting the if outside the forever loop, so it only checks once. Ask “how often does the computer check?”</p>' },
       { min: 15, title: 'Make it your own', html: '<p>Stretch ideas on the card: make the star fall faster as the score goes up, or add a rock that loses points.</p>' },
       { min: 5, title: 'Plenary', html: '<p>Pupils explain their if block to a partner using the words <b>condition</b> and <b>selection</b>.</p>' }
     ],
@@ -150,12 +150,12 @@ export const LESSONS = [
     stretch: 'Speed up: replace “change y by -4” with a speed variable that grows by 1 every 5 points. Add a second sprite to avoid.',
     assess: ['Places an if … then with a touching condition inside the forever loop', 'Changes the score when the condition is true', 'Explains why the check must be inside the loop'],
     steps: [
-      { t: 'Play it', d: 'Press GO. Move the catcher with the left and right arrow keys. What happens when you catch the star? (Nothing yet!)' },
+      { t: 'Play it', d: 'Press Run. Move the catcher with the left and right arrow keys. What happens when you catch the star? (Nothing yet!)' },
       { t: 'Read the Star’s code', d: 'Click the Star in the sprite list. Find the forever loop and the if block. What does each part do?' },
       { t: 'Add an if', d: 'From Control, drag an “if then” block inside the forever loop, under the other if.' },
       { t: 'The condition', d: 'From Sensing, drag “touching … ?” into the if’s gap and choose Catcher.' },
       { t: 'Score!', d: 'From Score, put “change score by 1” inside your new if. Then add “go to random position” and “set y to 170” (Motion) so the star starts again at the top.' },
-      { t: 'Test it', d: 'Press GO and catch some stars. Does the score go up by 1 each time?' },
+      { t: 'Test it', d: 'Press Run and catch some stars. Does the score go up by 1 each time?' },
       { t: 'Start at zero', d: 'Put “set score to 0” under “when green flag clicked”, so every game starts from 0.' },
       { t: 'Challenge', d: 'Make the star fall faster (a bigger minus number), or add a rock sprite that takes a point away!' }
     ]
@@ -170,7 +170,7 @@ export const LESSONS = [
     need: ['A device per pupil or pair', 'Optional: real micro:bits (V2) and USB cables to try it for real'],
     plan: [
       { min: 5, title: 'Play the game', html: '<p>Play rock, paper, scissors with the class. <b>Ask:</b> how could a computer choose fairly? Introduce <b>random</b>.</p>' },
-      { min: 10, title: 'Read the starter', html: '<p>Open the starter on the board. Press <b>GO</b>, then press the <b>Shake</b> button under the micro:bit. Read the code: <b>on shake</b> sets <b>hand</b> to a random number from 1 to 3, and <b>if hand = 1</b> shows a rock. Shake a few times — sometimes nothing shows. <b>Ask:</b> why? (2 and 3 have no pictures yet.)</p>' },
+      { min: 10, title: 'Read the starter', html: '<p>Open the starter on the board. Press <b>Run</b>, then press the <b>Shake</b> button under the micro:bit. Read the code: <b>on shake</b> sets <b>hand</b> to a random number from 1 to 3, and <b>if hand = 1</b> shows a rock. Shake a few times — sometimes nothing shows. <b>Ask:</b> why? (2 and 3 have no pictures yet.)</p>' },
       { min: 25, title: 'Finish the game', html: '<p>Pupils follow the Lesson card: duplicate the if block twice, change the numbers to 2 and 3, and draw paper and scissors in the <b>show leds</b> grid by clicking the squares.</p><p>Check understanding: “What is in the variable <b>hand</b> right now?”</p>' },
       { min: 15, title: 'Real micro:bits (optional)', html: '<p>If you have micro:bit V2s, press the <b>micro:bit</b> button in the toolbar and choose <b>Flash over USB</b> (Chrome/Edge) or <b>Download .hex</b> and drag the file onto the MICROBIT drive. Pupils play against each other for real.</p>' },
       { min: 5, title: 'Plenary', html: '<p>Pupils label their code with the words <b>input</b>, <b>variable</b>, <b>random</b>, <b>selection</b> and <b>output</b>.</p>' }
@@ -179,12 +179,12 @@ export const LESSONS = [
     stretch: 'Use button A to keep score of wins, or show “R”, “P” or “S” with show string before the picture.',
     assess: ['Explains that the shake is an input and the LEDs are an output', 'Completes three if blocks for 1, 2 and 3', 'Explains why the variable makes the choice random'],
     steps: [
-      { t: 'Try it', d: 'Press GO, then press the Shake button under the micro:bit. Do it a few times. Why does nothing show sometimes?' },
+      { t: 'Try it', d: 'Press Run, then press the Shake button under the micro:bit. Do it a few times. Why does nothing show sometimes?' },
       { t: 'Read the code', d: 'on shake sets hand to a random number from 1 to 3. If hand is 1, it shows a rock. 2 and 3 have no pictures yet!' },
       { t: 'Paper', d: 'Right-click the if block and choose Duplicate. Put the copy under the first if, and change its 1 to 2.' },
       { t: 'Draw paper', d: 'Click the squares in the copy’s show leds grid to draw paper (a big rectangle).' },
       { t: 'Scissors', d: 'Make one more copy for 3 and draw scissors.' },
-      { t: 'Test it', d: 'Press GO and Shake again and again. Do you see all three pictures?' },
+      { t: 'Test it', d: 'Press Run and Shake again and again. Do you see all three pictures?' },
       { t: 'Challenge', d: 'If you have a real micro:bit, press the micro:bit button at the top to send your game to it!' }
     ]
   },
@@ -245,7 +245,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'smart-trains', title: 'Smart trains: sense, react, decide', ks: 'ks2', years: 'Years 4–6', minutes: 60, type: 'train', tool: 'Train Lab (blocks)',
+    id: 'smart-trains', title: 'Smart trains: sense, react, decide', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'train', tool: 'Train Lab (blocks)',
     summary: 'Pupils find out how a smart train senses the coloured snaps on its track, write an event script that reacts to what its sensor sees, count laps with a variable, then use if … else so the train decides which way to go at a split: round the oval three times, then off to the depot.',
     objective: 'We are learning how a computer senses the world, reacts to events and uses selection (if … else) to make decisions.',
     success: ['I can explain how the train senses the coloured snaps (an input).', 'I can use an event block to make the train react to a colour.', 'I can count with a variable.', 'I can use if … else with a condition to choose which way the train goes.'],
@@ -342,7 +342,7 @@ const SLIDES = {
     { t: 'Think', q: 'How would you draw a 10-sided shape?', b: ['Why are loops useful?'], notes: 'Answer: repeat 10 [fd 50 rt 36] — 360 ÷ 10 = 36.' }
   ],
   'catch-the-stars': [
-    { t: 'Play the game', pic: true, q: 'What should happen when the star touches the catcher?', notes: 'Open the starter and press GO. The catcher moves with the arrow keys, but catching the star does nothing.' },
+    { t: 'Play the game', pic: true, q: 'What should happen when the star touches the catcher?', notes: 'Open the starter and press Run. The catcher moves with the arrow keys, but catching the star does nothing.' },
     { t: 'If … then', lead: 'If the star is touching the catcher, then add 1 to the score and go back to the top.', b: ['Choosing what to do is called selection.', '“touching Catcher?” is the condition: true or false.'], notes: 'Write the sentence on the board too.' },
     { t: 'Read the Star’s code', b: ['A forever loop moves it down.', 'An if sends it back to the top when it reaches the bottom.'], q: 'Where should our new if go?', notes: 'Click the Star sprite and read its blocks together. That first if is selection already!' },
     { use: 'steps' },
@@ -352,7 +352,7 @@ const SLIDES = {
   'microbit-rps': [
     { t: 'Rock, paper, scissors', q: 'How could a computer choose fairly?', notes: 'Play a round or two with the class first.' },
     { t: 'Random', lead: 'Random means it cannot be predicted.', b: ['Like rolling a dice.'], notes: 'Ask for other random things: shuffling cards, picking a name from a hat.' },
-    { t: 'Read the starter', pic: true, b: ['on shake: the input', 'set hand to random 1 to 3: a variable', 'if hand = 1: selection', 'show leds: the output'], q: 'Why does nothing show sometimes?', notes: 'Open the starter, press GO, then the Shake button a few times. 2 and 3 have no pictures yet.' },
+    { t: 'Read the starter', pic: true, b: ['on shake: the input', 'set hand to random 1 to 3: a variable', 'if hand = 1: selection', 'show leds: the output'], q: 'Why does nothing show sometimes?', notes: 'Open the starter, press Run, then the Shake button a few times. 2 and 3 have no pictures yet.' },
     { use: 'steps' },
     { t: 'Real micro:bits', b: ['Press the micro:bit button at the top.', 'Flash over USB (Chrome or Edge),', 'or Download .hex and drag it onto the MICROBIT drive.'], notes: 'Optional: needs micro:bit V2 boards and USB cables.' },
     { t: 'Label your code', b: ['input', 'variable', 'random', 'selection', 'output'], q: 'Which part of your code is each one?', notes: 'Pupils point to or label each part of their program.' }

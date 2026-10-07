@@ -401,6 +401,11 @@ export function createMakerUI(app) {
       applyRules(); renderLesson(); markers();
       if (lessonActive() && !finished && !(opts && opts.comp)) setTimeout(welcome, 50);
     },
+    liveSet(m) { // a live partner changed the World Maker setup: take theirs, keep our own ticks and where we are
+      maker = M.cleanMaker(m); const done = checker ? [...checker.done] : [];
+      checker = maker ? M.createChecker(maker) : null; if (checker) checker.restore(done.filter(id => maker.tasks.some(t => t.id === id)));
+      applyRules(); renderLesson(); markers();
+    },
     save() { return { maker: maker ? Object.assign({}, maker) : null, progress: maker ? { done: checker ? [...checker.done] : [], best: progress.best } : null }; },
     viewReady() { markers(); applyRules(); },
     editing: () => editing, active: lessonActive, canEdit,

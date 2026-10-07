@@ -888,6 +888,22 @@ export function mount(root, host) {
     },
     run, stop, reset, setTool, selectTrain, zoomAt, panBy, fitView, _cam: () => cam, openChallenges: openPanel, cardHTML, setPlace: k => { if (TM.DESTS[k]) { placeType = k; setTool('place'); } },
     _checker: () => checker,
+    // live collaboration (Share → Collaborate): the track (pieces, snaps, trains, wagons, places, challenge) and the blocks go
+    // separately; a partner's copy replaces ours, but not while our trains are running (CodeJump tries again shortly)
+    liveParts() { flush(); return JSON.parse(JSON.stringify({ layout: { pieces: proj.pieces, trains: proj.trains, wagons: proj.wagons, dests: proj.dests, challenge: proj.challenge }, blocks: { blocks: proj.blocks || null } })); },
+    liveSet(part, v) {
+      if (!v || typeof v !== 'object') return;
+      if (part === 'layout') {
+        const c = TM.cleanProject(Object.assign({ v: 2 }, v, { blocks: proj.blocks })); if (!c.trains.length) return;
+        proj.pieces = c.pieces; proj.trains = c.trains; proj.wagons = c.wagons; proj.dests = c.dests; proj.challenge = c.challenge;
+        if (sel >= proj.trains.length) sel = 0; checker = null;
+        rebuild(); renderTrains(); renderTools(); renderCheck(); refreshToolbox();
+      } else if (part === 'blocks') {
+        flush(); if (JSON.stringify(proj.blocks || null) === JSON.stringify(v.blocks || null)) return;
+        proj.blocks = v.blocks || null; loadBlocks();
+      }
+    },
+    liveBusy() { return running() || !!(ws && ws.isDragging && ws.isDragging()); },
     _sim: () => sim, _runner: () => runner, _ws: () => ws, _proj: () => proj, _tapWorld: tapAt, _openEnds: () => openEnds(),
   };
 }

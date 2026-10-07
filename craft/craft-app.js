@@ -257,6 +257,62 @@ export function mount(root, host) {
     busyEditing: () => !!(ws && ws.isDragging && ws.isDragging()) || document.activeElement === src,
     compRules(r) { $('crHot').hidden = !!r && (r.ro || r.kind === 'code'); if (r && r.ro) status(r.kind === 'code' ? 'You’re watching — this is the team’s code.' : 'You’re watching — you can walk round but not build.'); }
   });
+  // ── live collaboration (Share → Collaborate; the host passes host.live = {active, send, me, members}) ──
+  // Block changes go in batches; the cloud numbers them and sends them to everyone (us too), so every screen applies them
+  // in the same order and ends up the same. A world loaded by hand (Undo, New world, Restart) goes as a whole world. The
+  // code, the World Maker setup and the time of day are kept in step by the host (liveParts / liveSet).
+  const live = { seq: 0, pending: [], t: 0, reset: 0, lastPos: '', mates: {} };
+  const liveOn = () => !!(host.live && host.live.active() && !comp.inRoom());
+  world.onChange((x, y, z, id, old, remote) => {
+    if (remote || quiet || !liveOn()) return;
+    if (x < 0) { clearTimeout(live.reset); live.reset = setTimeout(() => { if (!liveOn()) return; live.pending = []; clearTimeout(live.t); live.t = 0; host.live.send({ k: 'cr_world', world: world.save() }); }, 60); return; }
+    live.pending.push([x, y, z, id]); if (!live.t) live.t = setTimeout(liveFlush, 120);
+  });
+  function liveFlush() { live.t = 0; if (!liveOn()) { live.pending = []; return; } while (live.pending.length) host.live.send({ k: 'cr_sets', sets: live.pending.splice(0, 2000) }); }
+  function remoteSets(sets) { world.remote = true; try { for (const q of sets) if (Array.isArray(q) && q.length === 4) world.set(q[0], q[1], q[2], q[3]); } finally { world.remote = false; } }
+  function liveOp(op, from) {
+    if (!op || comp.inRoom()) return;
+    if (op.k === 'cr_sets' && Array.isArray(op.sets)) { remoteSets(op.sets); if (op.seq) live.seq = Math.max(live.seq, op.seq); return; }
+    if (op.k === 'cr_world' && typeof op.world === 'string') {
+      world.remote = true; try { world.load(op.world); } finally { world.remote = false; }
+      remoteSets(live.pending); // our own changes that haven't gone yet stay on top
+      if (op.seq) live.seq = Math.max(live.seq, op.seq); player.unstick(); return;
+    }
+    if (op.k === 'cr_need') { if (liveOn()) host.live.send({ k: 'cr_snap', world: world.save(), seq: live.seq }); return; }
+    if (op.k === 'cr_pos' && from && op.p) { live.mates[from] = op.p; showMates(); }
+  }
+  function showMates() {
+    if (!view) return; const ms = liveOn() && host.live.members ? host.live.members() : {}, me = host.live && host.live.me ? host.live.me() : null;
+    for (const u of Object.keys(live.mates)) if (!ms[u] || u === me) delete live.mates[u];
+    if (!comp.inRoom()) view.setMates(Object.keys(live.mates).map(u => ({ uid: u, name: ms[u].name, color: ms[u].color, ...live.mates[u] })));
+  }
+  setInterval(() => {
+    if (!alive) return;
+    if (!liveOn()) { if (Object.keys(live.mates).length) { live.mates = {}; if (view && !comp.inRoom()) view.setMates([]); } return; }
+    const p = { x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2), yaw: +player.yaw.toFixed(2) }, k = JSON.stringify(p);
+    if (k !== live.lastPos) { live.lastPos = k; host.live.send({ k: 'cr_pos', p }); }
+  }, 400);
+  let lastCode = null;
+  const liveApi = {
+    liveInit(doc) { // just joined: the room's world is in the project already; replay the changes made since it was saved
+      live.seq = 0; live.pending = []; live.mates = {}; live.lastPos = '';
+      if (!doc) return;
+      for (const o of Array.isArray(doc.crLog) ? doc.crLog : []) if (o && o.seq > (doc.crWseq | 0) && Array.isArray(o.sets)) remoteSets(o.sets);
+      live.seq = doc.crSeq | 0; player.unstick();
+    },
+    liveOp, liveMembers: showMates,
+    liveParts() {
+      const st = programState(true); if (st) lastCode = st;
+      return { code: { blocks: lastCode || programState(true) }, maker: { maker: mk.save().maker }, time: { time: view ? view.time() : 'DAY' } };
+    },
+    liveSet(part, v) {
+      if (!v || typeof v !== 'object') return;
+      if (part === 'code' && v.blocks && typeof v.blocks === 'object') { lastCode = v.blocks; const cur = programState(true); if (!cur || JSON.stringify(cur) !== JSON.stringify(v.blocks)) { if (mode === 'python') { pyText = L.toPython(v.blocks); src.value = pyText; renderPy(); hidePyError(); } loadBlocks(v.blocks); } }
+      else if (part === 'maker') mk.liveSet(v.maker);
+      else if (part === 'time' && view && ['DAY', 'SUNSET', 'NIGHT'].includes(v.time)) view.setTime(v.time);
+    },
+    liveBusy: () => !!(ws && ws.isDragging && ws.isDragging()) || document.activeElement === src || comp.inRoom()
+  };
   function sendCodeSoon() { if (!comp.canCode()) return; clearTimeout(codeSendT); codeSendT = setTimeout(() => { const st = programState(true); if (st) comp.codeChanged(st); }, 900); }
   let drag = null, hover = null, wasBusy = false;
   function camPose() {
@@ -392,7 +448,7 @@ export function mount(root, host) {
   })().catch(e => { console.error(e); $('crLoading').textContent = 'The Build Lab needs the internet the first time it opens. Check your connection and try again.'; });
 
   return {
-    ready, getProject,
+    ready, getProject, ...liveApi,
     setProject(p) { if (!ws) { pending = p; return; } comp.leave(true); setProject(p); mk.viewReady(); if (!raf && view) raf = requestAnimationFrame(tick); },
     resume() { if (view) view.resize(); if (ws) Blockly.svgResize(ws); if (!raf && view) raf = requestAnimationFrame(tick); },
     pause() { comp.leave(true); runner.stop(); keys.clear(); pad.clear(); cancelAnimationFrame(raf); raf = 0; },

@@ -2228,6 +2228,16 @@ return {
   openShowdown: function (roomId) { sdOpen(roomId, null); },
   showdownRoom: function () { return sd ? sd.roomId : null; },
   _select: function (id) { state.selected = id; setMode('build'); renderInspector(); }, // for tests
+  // live collaboration (Share → Collaborate): CodeJump sends the whole Critter when it changes; a partner's copy replaces
+  // ours (keeping what we had selected), but not while we're holding, dragging or testing (CodeJump tries again shortly)
+  liveParts: function () { return { all: JSON.parse(JSON.stringify(state.critter)) }; },
+  liveSet: function (part, v) {
+    if (part !== 'all' || !v || typeof v !== 'object') return;
+    var sel = state.selected; state.critter = Z.normalise(v);
+    if (!(sel && Z.block(state.critter, sel))) { state.selected = null; state.pathPoint = null; }
+    changed({ inspector: true });
+  },
+  liveBusy: function () { return !!(state.held || state.drag || state.moving || state.mode !== 'build' || sd); },
   hostShowdown: function (code, name) { sdSetup(code, name); },
   // the video guides dialog
   showGuides: function () { showGuides(); },

@@ -320,6 +320,25 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   so deciding in the red event is in time. tests/lessons.test.mjs follows it to the depot after lap 3. The app now shows the program's
   variables top-right of the board (`#tlVars`, `renderVars`, from `runner._vars()`; cleared on Reset). Lesson card sits bottom-left in train-mode.
 
+## Live collaboration for the Build, Critter, AI and Train Labs (7 Oct 2026, on branch; needs cloud worker v18) — Charlie: "add it to all of them"
+- Share → Collaborate is now offered for every project type. Host glue in build-and-play.html: `LIVE_LABS` (projectType → app), `labLive*`.
+  Each lab app has `liveParts()` (its shared parts as plain data), `liveSet(part, v)` and `liveBusy()`: Critter `all` (whole Critter);
+  AI `data` {kind, labels} + `blocks`; Train `layout` {pieces, trains, wagons, dests, challenge} + `blocks`; Build Lab `code` {blocks},
+  `maker` {maker}, `time` {time}. A changed part goes as op `lp {lab, part, v, t, cid}` (Lamport-ish `labTick`); the newest stamp wins on
+  every screen and in the room's copy (worker keeps `doc[lab]` + `doc._lp` stamps, so late joiners get it in `init`). Before taking a
+  partner's part the host sends its own unsent change (`labLiveCheck`) so stamps decide fairly. A partner's copy waits (retry 400 ms)
+  while a pointer is down, a text box in the lab is focused, or the app says busy (dragging blocks, holding a part, testing, running).
+- **Build Lab world:** `craft-app.js` sends `cr_sets` batches (≤2000, every 120 ms) and `cr_world` (any load/reset by hand: Undo, New world,
+  Restart) — the cloud numbers them (`crSeq`), sends them to EVERYONE incl. the sender, and logs them (`crLog` after `crWseq`); every
+  screen re-applies in server order → identical worlds. `cr_need` → `cr_snap` refreshes the room's world when the log grows (>400 / 40k
+  sets). Joiners: `labLiveJoin(doc)` waits for the lab (`ready`, `_ws()`), then `craftApp.liveInit(doc)` replays the log; ops that came
+  earlier are queued (`labCrQueue`). `cr_pos` (every 400 ms) shows partners as figures in the world (`view.setMates`). Ignored while in
+  a competition team room (that has its own sync).
+- The presence bar sits in the header for the labs (bottom-left ≤900 px). The Critter Lab used to leave any live room when its screen
+  opened (`enterCritterUI`) — removed. Full `snapshot` messages are ignored for these labs (only the room's first copy uses one).
+- Tests: tests/labs-collab.test.mjs (stand-in room = worker v18; all four labs, both directions, same-moment change, late joiner);
+  end to end against `wrangler dev` with 3 browsers (script in the session scratchpad); codejump-cloud tests cover v18 ops.
+
 ## Build Lab project type — `projectType==='craft'` — on branch `claude/vibrant-cori-tho25y` (7 Oct 2026, CJ_VERSION 2026.10.11 with World Maker + competitions), NOT live yet
 Charlie: "Minecraft Education has a brilliant way of doing coding… could we replicate something like that?" → a new lab (chosen over a
 Stage/3D add-on) with: robot helper, walk around + chat, builder commands, Blocks ↔ Python. **Never use the Minecraft name, look, textures,
@@ -360,7 +379,7 @@ characters (Steve, creepers) or "Agent" branding** — our own art and words ("B
 - **Host glue (mirrors Train Lab):** `craftBase/loadCraftLab/craftData/craftApp/craftCurrent/startNewCraft/enterCraftUI/exitCraftUI`,
   `body.craft-mode`, `#craft-ui`, payload `craft`, `#pt-modal` tile `data-pt="craft"` (KS1 hidden), home tile `data-start="craft"`
   (`home/craft.jpg`, a real screenshot), icon `#i-craft`, `CRAFT_HELP`, Teacher Guide "Build Lab" section, thumbnail badge, `LS_TYPE.craft`,
-  `LS_LAB_ORDER`. No live collaboration. Test: `tests/craft.test.mjs` (world, translator + errors, runner, walking in Node; the app end to end).
+  `LS_LAB_ORDER`. Live collaboration: see the section above. Test: `tests/craft.test.mjs` (world, translator + errors, runner, walking in Node; the app end to end).
 - **World Maker (7 Oct 2026; Charlie: "teachers create resources… NPCs that give instructions and pop-ups… just like Minecraft Education"):**
   `craft/craft-maker.js` (no DOM; the data shape is documented at its top) + `craft/craft-maker-ui.js` (`createMakerUI(app)`). Project gains
   `maker` (title, intro, `lock` = 8-hex hash of the unlock word, start, helper, `startWorld`, `npcs` ≤20 {name,colour,x,y,z,f,lines,task,done},

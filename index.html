@@ -1375,6 +1375,9 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
 /* Live collaboration presence bar */
 #collab-bar{position:fixed;top:64px;right:14px;z-index:55;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);border:1px solid var(--gold);border-radius:22px;padding:5px 8px 5px 12px;font-family:var(--font);}
 #collab-bar.hide{display:none;}
+/* the labs have their own buttons where the bar normally sits: put it in the header (small screens: bottom left) */
+:is(body.craft-mode,body.critter-mode,body.ai-mode,body.train-mode,body.robot-mode,body.threed-mode) #collab-bar{top:8px;padding:3px 6px 3px 10px;}
+@media (max-width:900px){:is(body.craft-mode,body.critter-mode,body.ai-mode,body.train-mode,body.robot-mode,body.threed-mode) #collab-bar{top:auto;bottom:10px;right:auto;left:10px;}}
 #collab-bar .cb-label{color:var(--gold);font-weight:800;font-size:12px;margin-right:2px;}
 #collab-bar .cb-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-weight:800;font-size:13px;border:2px solid rgba(255,255,255,.5);}
 #collab-bar #cb-leave{margin-left:6px;border:none;background:rgba(255,255,255,.12);color:#fff;border-radius:14px;padding:5px 10px;font-family:var(--font);font-weight:700;font-size:12px;cursor:pointer;}
@@ -2643,6 +2646,7 @@ function markDirty(){dirty=true;if(typeof collabActive!=='undefined'&&collabActi
   if(projectType==='stage'){if(keyStage==='ks1'&&typeof collabSnapshotSoon==='function')collabSnapshotSoon();} // KS1 Stage syncs via snapshots (small data); KS2/3 Stage uses granular ops
   else if(projectType==='platformer'&&typeof collabSyncConfigs==='function')collabSyncConfigs(); // platformer: granular config/theme ops — NO full snapshot (that clobbered other pages)
   else if(projectType==='turtle'&&typeof collabTurtleSoon==='function')collabTurtleSoon(); // turtle: sync the Logo code as a small text op
+  else if(typeof LIVE_LABS!=='undefined'&&LIVE_LABS[projectType])labLiveSoon(); // Build / Critter / AI / Train Labs: send the parts that changed
 }}
 function clearDirty(){dirty=false;}
 function autoSaveDraft(){if(!dirty)return;try{commitLevel();const link={save:curSaveId,cloud:(typeof cloudProjectId!=='undefined'?cloudProjectId:null),title:(typeof cloudProjectTitle!=='undefined'?cloudProjectTitle:''),cls:(typeof cloudProjectClass!=='undefined'?cloudProjectClass:null)};localStorage.setItem('bap_autosave',JSON.stringify({ts:Date.now(),payload:buildPayload(),link}));}catch(e){}}
@@ -3178,7 +3182,6 @@ function startNewCritter(ks){clearDirty();leaveLiveRoom();lessonActive=null;proj
   critterData=null;hideHome();enterCritterUI(); // a fresh body to build on
 }
 function enterCritterUI(){
-  leaveLiveRoom(); // the Critter Lab has no live collaboration (Showdowns use their own connection)
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
@@ -3726,7 +3729,7 @@ function exitRobotUI(){
 // AI LAB — teach a computer to recognise drawings, train it, test it, then code with it (projectType==='ai').
 // ai/ai-model.js is the brain (a small neural network trained on the pupil's own drawings, in the browser — no camera,
 // nothing sent anywhere), ai-app.js the three steps (Teach / Train & test / Code it). Lazy-loaded like the Robot Lab.
-// Payload field ai = {labels:[{name,color,ex:[drawing]}], blocks, trained}. No live collaboration (Share hides it).
+// Payload field ai = {labels:[{name,color,ex:[drawing]}], blocks, trained}. Live collaboration: liveParts data/blocks (see LIVE_LABS).
 // ═══════════════════════════════════════════════════════════════════════
 let aiData=null,aiApp=null,_aiLoading=null,_aiQuiet=false,_aiLoad=false;
 function aiBase(){return /^https?:/.test(location.protocol)?new URL('ai/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/ai/';}
@@ -3770,7 +3773,7 @@ function exitAIUI(){
 // TRAIN LAB — build a train track from pieces, put up to 3 trains on it and code each one with blocks
 // (projectType==='train'). train/train-model.js = the track + simulator (no DOM), train-blocks.js the tr_* blocks,
 // train-runner.js the generator fibers, train-app.js the board, tools and Blockly. Lazy-loaded like the Robot Lab.
-// Payload field train = {cols, rows, tiles:[[c,r,piece,rot,snap]], trains:[{name,color,start,blocks}]}. No live collaboration.
+// Payload field train = {cols, rows, tiles:[[c,r,piece,rot,snap]], trains:[{name,color,start,blocks}]}. Live collaboration: liveParts layout/blocks (see LIVE_LABS).
 // ═══════════════════════════════════════════════════════════════════════
 let trainData=null,trainApp=null,_trainLoading=null,_trainQuiet=false,_trainLoad=false;
 function trainBase(){return /^https?:/.test(location.protocol)?new URL('train/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/train/';}
@@ -3815,7 +3818,7 @@ function exitTrainUI(){
 // in blocks or Python (the same program both ways) and chat commands (projectType==='craft'). craft/craft-world.js =
 // the voxel world (no DOM), craft-lang.js the blocks + Python, craft-runner.js the fibers, craft-player.js walking,
 // craft-view.js the Three.js view, craft-app.js the UI. Lazy-loaded like the Robot Lab. Payload field craft =
-// {v, mode, blocks, py, world (run-length text), player, helper, time, hot}. No live collaboration.
+// {v, mode, blocks, py, world (run-length text), player, helper, time, hot}. Live collaboration: the world as numbered cr_* ops + liveParts code/maker/time (see LIVE_LABS).
 // ═══════════════════════════════════════════════════════════════════════
 let craftData=null,craftApp=null,_craftLoading=null,_craftQuiet=false,_craftLoad=false;
 function craftBase(){return /^https?:/.test(location.protocol)?new URL('craft/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/craft/';}
@@ -3847,7 +3850,8 @@ function enterCraftUI(){
     if(craftApp){_craftQuiet=true;try{craftApp.setProject(craftData);}finally{_craftQuiet=false;}return;}
     _craftQuiet=true;
     try{craftApp=mod.mount(holder,{project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
-      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'}),cloud:cloudOn()?critterCloud:null});}finally{_craftQuiet=false;}
+      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'}),cloud:cloudOn()?critterCloud:null,
+      live:{active:()=>collabActive&&projectType==='craft',send:op=>collabSend({type:'op',op}),me:()=>collabMe&&collabMe.uid,members:()=>collabMembers}});}finally{_craftQuiet=false;}
   }).catch(()=>{holder.innerHTML='<div id="craft-loading">The Build Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
 function exitCraftUI(){
@@ -6036,7 +6040,7 @@ function stageDragEnd(){if(_stageDrag){const s=stageState&&stageState.sprites[_s
   gc.addEventListener('touchmove',e=>{if((_mbSlider||_mbPanelDrag)&&e.touches[0]){mbPointerMove(stagePtr(e.touches[0]));e.preventDefault();}},{passive:false});
   gc.addEventListener('mousemove',e=>{if(projectType==='stage'){const p=stagePtr(e);stageMouse.x=p.x;stageMouse.y=p.y;}});
   // whole-editor collab cursor (blocks + canvas), so partners see each other while building, not just over the canvas
-  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&((projectType==='stage'&&document.body.classList.contains('stage-mode'))||(projectType==='3d'&&document.body.classList.contains('threed-mode'))||(projectType==='robot'&&document.body.classList.contains('robot-mode'))))collabStageCursor(e.clientX,e.clientY);}); // Stage + 3D World: whole-editor pointers
+  window.addEventListener('mousemove',e=>{if(typeof collabStageCursor==='function'&&typeof collabActive!=='undefined'&&collabActive&&((projectType==='stage'&&document.body.classList.contains('stage-mode'))||(projectType==='3d'&&document.body.classList.contains('threed-mode'))||(projectType==='robot'&&document.body.classList.contains('robot-mode'))||(typeof LIVE_LABS!=='undefined'&&LIVE_LABS[projectType]&&document.body.classList.contains(projectType+'-mode'))))collabStageCursor(e.clientX,e.clientY);}); // Stage + 3D World: whole-editor pointers
   window.addEventListener('blur',()=>{if(typeof collabStageCursorGone==='function')collabStageCursorGone();});
   window.addEventListener('resize',()=>{if(typeof renderCollabStageCursors==='function')renderCollabStageCursors();});
   gc.addEventListener('mousedown',e=>{if(projectType!=='stage')return;stageMouse.down=true;if(stagePlaying){const p=stagePtr(e);if(mbPointerDown(p))return;stageFireClick(p.x,p.y);}});
@@ -7876,7 +7880,7 @@ const CRITTER_HELP=[
  ['motion',' Motion',`<p>Tap a part, then its <b>Motion</b> tab. Every part hangs from a <b>joint</b>, which can:</p><ul><li><b>Still</b> — hold its angle.</li><li><b>Swing</b> — rock to and fro. Pick the <b>hinge</b> (Swing, Sweep or Twist), how far it swings, and its <b>movement cycle</b> (the timing dial). Opposite beats take turns.</li><li><b>Motion path</b> — the tip of the limb follows a loop of white <b>IK points</b>, and the limb bends itself to follow it. Drag the points in the 3D view; tap a blue dot to add one. The square point is the start; arrows show the way round.</li></ul><p><b>Lean</b> and <b>Splay</b> tip a part. <b>Bend towards the target</b> makes a joint turn to look at the red target (part targeting).</p><h3>The body's Motion tab</h3><ul><li><b>Cycle speed</b> — how fast every part does its move.</li><li><b>Turning sharpness</b> — a wide arc, or pivot on the spot.</li><li><b>Turning smoothness</b> — snap round, or ease round gently.</li><li><b>Muscle power</b> — how hard every joint pushes.</li></ul>`],
  ['contests',' Contests',`<ul><li><b>Sprint</b> — how far towards the target in 15 seconds.</li><li><b>Hurdles</b> — a sprint over humps that get steeper.</li><li><b>Block Push</b> — shove ten blocks in 13 seconds.</li><li><b>High Jump</b> — how high can it get?</li><li><b>Lap</b> — follow the target round eight flags.</li><li><b>Head-to-head</b> — race another Critter in the next lane.</li><li><b>Super Sumo</b> — push the other Critter off the platform!</li><li><b>Free roam</b> — tap the ground to move the target and watch it steer.</li></ul><p>Your best score in each contest is saved with your Critter.</p><h3>Showdown (with your class)</h3><p>Your teacher can start a <b>Showdown</b> and pick up to four of you. If you’re signed in, a message pops up on your screen: press <b>Join</b> (if you’re in the middle of something, it saves your work first). You can also open the Critter Lab and press <b>Showdown</b>, or find it under Cloud → Collaborations. Then send in one of your saved Critters. When your teacher presses Start, everyone watches the race live and sees who came 1st, 2nd, 3rd and 4th. Showdowns use Sprint, Hurdles, High Jump, Lap or Super Sumo. In the races every Critter gets its own lane and scores exactly what it scores in Test it!; in Super Sumo all four share one platform and push each other.</p>`],
  ['keys',' Keys',`<p>Press <b>?</b> (or the <b>Keys</b> button) any time to see these.</p><h3>Building</h3><ul><li><b>Ctrl+Z / Ctrl+Y</b> — undo / redo</li><li><b>Ctrl+C / Ctrl+X</b> — copy / cut the chosen part (with everything on it)</li><li><b>Ctrl+V</b> — paste it onto the chosen part · <b>Ctrl+D</b> — duplicate</li><li><b>Delete</b> — remove the chosen part (and its twin)</li><li><b>Esc</b> — stop choosing a part</li><li><b>N / Shift+N</b> — choose the next / previous part · <b>P</b> — choose the part it hangs from</li><li><b>Arrow keys</b> — slide the chosen part around the side it's on (hold Shift for big steps)</li><li><b>[ ]</b> lean · <b>, .</b> splay · <b>+ −</b> bigger / smaller</li><li><b>W</b> wiggle preview · <b>M</b> add in pairs · <b>F</b> fit the Critter in view</li><li><b>Enter</b> or <b>T</b> — Test it!</li></ul><h3>Testing</h3><ul><li><b>Space</b> — Go / Stop · <b>1–8</b> — pick a contest · <b>T</b> — Turbo · <b>B</b> or <b>Esc</b> — back to Build</li></ul>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Critter Lab needs the internet the first time it opens.</p><h3>3D print it</h3><p>Press <b>3D print</b> to download your Critter for a 3D printer. Pick a size (8, 12 or 16 cm long) and keep the <b>base plate</b> on so it stands up. <b>STL</b> works with any printer in one colour; <b>3MF</b> keeps your Critter’s colours for printers with more than one filament. Ask a grown-up to print it!</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The Critter Lab needs the internet the first time it opens.</p><h3>3D print it</h3><p>Press <b>3D print</b> to download your Critter for a 3D printer. Pick a size (8, 12 or 16 cm long) and keep the <b>base plate</b> on so it stands up. <b>STL</b> works with any printer in one colour; <b>3MF</b> keeps your Critter’s colours for printers with more than one filament. Ask a grown-up to print it!</p><h3>Build together, live</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to 5 classmates. Your whole Critter is shared: a change one of you makes appears on everyone's screen. <b>Test it!</b> runs on your own screen. Changes wait a moment while you're dragging or typing, so nothing jumps under your fingers.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
 const ROBOT_HELP=[
@@ -7893,7 +7897,7 @@ const AI_HELP=[
  ['train',' Train & test',`<ul><li><b>Train</b> makes the computer practise on every drawing many times, each time slightly turned and stretched. The green line shows how often it was right while it practised.</li><li>If every label has 4 or more drawings, the AI is also <b>checked</b> on 1 in 4 of your drawings that it didn’t practise with — that’s the fair way to see how good it really is. It shows you the ones it got wrong.</li><li>Draw on the test pad: the bars show <b>how sure</b> it is about each label, and you can see which of your drawings it thinks yours looks most like.</li><li><b>Look inside your AI</b> shows the <i>average</i> drawing of each label (or the words that matter most) and a <b>mix-ups</b> table: what it really was, and what the AI said.</li><li>A words AI tells you which of your words it has never seen — it can only guess from the rest.</li><li>Changed your examples? Press <b>Train</b> again.</li></ul>`],
  ['code',' Code it',`<ul><li><b>when the AI makes a guess</b> runs each time someone finishes a drawing (press <b>Done</b>, or just stop drawing for a moment) — or types something and presses <b>Enter</b>.</li><li><b>when the AI thinks it’s …</b> only runs for that label.</li><li><b>AI’s guess</b>, <b>how sure the AI is</b>, <b>AI thinks it’s … ?</b> and <b>how sure it’s …</b> tell your program what the AI thinks.</li><li><b>a random label</b> and <b>wait for the next guess</b> are great for “Draw a …!” games. <b>clear the pad</b> wipes it.</li><li><b>show</b>, <b>say … out loud</b>, <b>play sound</b>, <b>set the pad colour</b> and <b>Score</b> make it a game.</li></ul>`],
  ['ideas',' Ideas',`<ul><li><b>Draw it!</b> <i>when Run is clicked: forever: set word to a random label, say join(“Draw a ”, word) out loud, wait for the next guess, if AI’s guess = word… change score by 1</i>.</li><li><b>Weather reporter:</b> teach it words about sunny, rainy and snowy days, then make the pad turn yellow, grey or white.</li><li><b>Magic spells:</b> labels like <i>star</i>, <i>lightning</i> and <i>heart</i>, each with its own sound and colour.</li><li><b>Mood reader:</b> use the <i>Happy or sad faces</i> examples and make the pad turn yellow or blue.</li><li><b>Trick it!</b> Try to find drawings that fool your AI. Why does it get them wrong? What examples would fix it?</li></ul><p><b>Talk about it:</b> if everyone in your class only ever drew cats facing left, what would happen with a cat facing right? Try the <b>Kind or unkind messages</b> examples: does it think “I love your drawing” is unkind? That’s how real AI can be unfair (<b>bias</b>) — it only learns from the examples people give it.</p>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your labels, drawings and blocks are saved; the AI trains itself again when the project opens. The AI Lab works in your browser — it never uses a camera or microphone and doesn’t send your drawings or words anywhere.</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your labels, drawings and blocks are saved; the AI trains itself again when the project opens. The AI Lab works in your browser — it never uses a camera or microphone and doesn’t send your drawings or words anywhere.</p><h3>Build together, live</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to 5 classmates. The drawings (or words) and the blocks are shared, so one of you can teach while another codes. Each screen trains its own copy, and the same examples always give the same brain. Changes wait a moment while you're dragging or typing, so nothing jumps under your fingers.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
 const TRAIN_HELP=[
@@ -7903,7 +7907,7 @@ const TRAIN_HELP=[
  ['code',' Blocks',`<p>The blocks are the same as the smart train's own Scratch extension, so what you learn here works on real trains. There is <b>one program</b> for all the trains, and a block category for each train (<b>Train 1</b>, <b>Train 2</b>, <b>Train 3</b>) with the same blocks. A train with no blocks of its own just drives by itself when you press Run, like pressing its button.</p><ul><li><b>Driving:</b> <i>drive forward/backward at … cm/s</i> (10–100), <i>drive forward … cm at … cm/s</i>, <i>stop driving</i>, <i>pause driving for … seconds</i>, and <i>direction</i>, <i>speed (cm/s)</i>, <i>distance (cm)</i>, <i>reset distance</i>.</li><li><b>Hats:</b> <i>when movement</i> forward/backward/paused/stopped, <i>when distance >= … cm</i>, <i>when on a split track</i>, <i>when white magenta … seen</i>, <i>when … … … … seen</i> (a row of snaps), <i>when train sees</i> a colour.</li><li><b>Lights:</b> set the top LED, headlights or taillights by colour, hue (0–100) or RGB.</li><li><b>Splits:</b> <i>on next split go</i> left/right/straight/default, <i>next decision</i>, <i>last decision</i> (1 left, 2 right, 3 straight, 0 default).</li><li><b>Snaps:</b> <i>action snap commands on/off</i> (off = the train only reports snaps to your blocks), <i>feedback sounds/lights</i>, <i>sensor color</i> (0 black … 7 white).</li><li>Plus Scratch's <b>Events</b> (when Run is clicked, keys, broadcast), <b>Control</b>, <b>Sensing</b>, <b>Operators</b> and <b>Variables</b>.</li></ul>`],
  ['challenge',' Challenges',`<p>A <b>challenge</b> is a track with places beside it and a list of jobs for Train 1, like “stop at the station” or “drop off the wagon at the depot”. Press <b>Challenges</b> above the track.</p><ul><li><b>Ready-made challenges:</b> First stop, Airport run, Museum trip and Wagon delivery. Open one, put snaps on the track (or use blocks) and press <b>Run</b>: the jobs tick off on the board as the train does them, and it says <b>Challenge complete!</b> when they're all done. Stuck? There's a hint, and <b>Show the answer</b>.</li><li><b>Put the places in order (if you want to):</b> pick the <b>Order</b> tool (next to Places) and tap the signs in the order the train should visit them — each gets a gold number and becomes the next job. Tap the last one again to take its number off, or use <b>Clear the order</b>. In the Challenges panel you can change what to do at each one and move jobs up or down.</li><li><b>Make your own:</b> put places beside your track with the Places tool, then <b>Make a challenge</b>: give it a title and add jobs (start at, go past, stop at, turn back at, pick up the wagon at, drop off the wagon at, end your route at).</li><li><b>Print the challenge card:</b> a card with a picture of the track, the places, the jobs and the pieces you need, to build with the real track. Tick <b>Put the snaps on the card</b> for an answer card.</li></ul><p><b>Wagons:</b> the engine's magnet is at its back, so it has to <b>reverse into a wagon</b> to pick it up. <b>white yellow</b> drops the wagon, <b>white yellow red</b> stops 2 seconds and drops it, <b>white yellow blue</b> drops it and drives back the other way.</p>`],
  ['ideas',' Ideas',`<ul><li><b>Station:</b> white red red = a 5-second stop. Add <i>when white red red none seen: set top LED color to red</i>.</li><li><b>Choose the way:</b> put a snap in a split's slot, or use <i>on next split go right</i> inside <i>when on a split track</i>.</li><li><b>Count the laps:</b> a green snap on the loop: <i>when train sees green (2): change laps by 1</i>.</li><li><b>Exact distance:</b> <i>drive forward 100 cm at 30 cm/s</i>, then <i>pause driving for 2 seconds</i>.</li><li><b>Shuttle:</b> <i>when movement stopped</i> at the end of a line: <i>drive backward at 40 cm/s</i>.</li><li><b>Two trains:</b> use a passing loop, or <i>broadcast</i> a message when one train has passed.</li></ul>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your track, snaps, trains and every train's blocks are saved together.</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your track, snaps, trains and every train's blocks are saved together.</p><h3>Build together, live</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to 5 classmates. The track, snaps, trains, places, challenge and blocks are shared. <b>Run</b> plays on your own screen. Changes wait a moment while you're dragging or typing, so nothing jumps under your fingers.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
 const CRAFT_HELP=[
@@ -7912,7 +7916,7 @@ const CRAFT_HELP=[
  ['code',' Blocks',`<ul><li><b>Events:</b> <i>when Run is clicked</i>, and <i>when I type … in the chat</i> — type the word in the chat box, and a number after it (like <i>tower 6</i>) goes into the <i>n</i> variable.</li><li><b>Helper:</b> move, turn, place a block, dig, leave a trail as it moves, come to me, say. It can also <b>sense</b>: <i>helper sees a block …?</i> and <i>block the helper sees …</i>.</li><li><b>Builder:</b> builds round <b>you</b>. Positions are <b>right</b>, <b>up</b> and <b>ahead</b> of where you stand, so a build always appears in front of you. <i>place</i>, <i>fill</i> (solid, hollow or just the outline), <i>line</i> and <i>ball</i>.</li><li><b>Player and world:</b> say, move me to, block at …, make it day / sunset / night.</li><li>Plus <b>Control</b> (repeat, for, forever, if, wait), <b>Operators</b> (maths, random, compare) and <b>Variables</b>.</li></ul>`],
  ['python',' Python',`<p>Press the <b>Python</b> tab to see your blocks as Python — it is the <b>same program</b>, so you can switch back and forth. Change the Python and go back to <b>Blocks</b> to see your change as blocks.</p><ul><li><code>helper.move(FORWARD, 3)</code>, <code>helper.place(GOLD, DOWN)</code>, <code>builder.fill(BRICKS, -2, 0, 3, 2, 3, 7, HOLLOW)</code></li><li>Chat commands: <code>@on_chat("tower")</code> then <code>def tower(n):</code> with the code indented under it.</li><li><code>for i in range(5):</code>, <code>while …:</code>, <code>if … elif … else</code>, <code>random(1, 6)</code>.</li><li>A mistake shows as a <b>red line</b> with a hint, like “This line needs a : at the end”. <b>Commands</b> lists everything you can type.</li></ul>`],
  ['ideas',' Ideas',`<ul><li><b>Bridge:</b> <i>helper leave a trail of planks</i>, then move it forward over the pond.</li><li><b>Staircase:</b> a <i>for</i> loop that places a block at right 0, up i, ahead i.</li><li><b>Snowman:</b> three balls of snow, one on top of another.</li><li><b>Tunnel digger:</b> repeat: helper dig forward, helper move forward.</li><li><b>Gem hunter:</b> if the block the helper sees down is a gem, say “Found one!”.</li><li><b>Night light:</b> make it night, then build with lamps.</li></ul>`],
- ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your world, where you are standing, your helper and your code (blocks or Python) are saved together.</p>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your world, where you are standing, your helper and your code (blocks or Python) are saved together.</p><h3>Build together, live</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to 5 classmates. You share one world: blocks anyone places or breaks (by hand or with code) appear for everyone, and you can see each other walking about. The code, the World Maker setup and the time of day are shared too. Changes wait a moment while you're dragging or typing, so nothing jumps under your fingers.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
 function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='ai')return AI_HELP;if(projectType==='train')return TRAIN_HELP;if(projectType==='craft')return CRAFT_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
@@ -8044,7 +8048,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>Managing your classes</h3>
  <p>In <b>Teacher Hub My classes &amp; pupils' work</b> you can <b>make a class</b> (share its code so pupils self-join), <b>rename</b> or <b>delete</b> a class, <b>remove</b> a pupil, open any child's <b>handed-in work</b>, and <b> send the game you're building straight to a whole class</b> (it lands in every pupil's class work — handy for starters/templates). Pupils show by <b>real name + display name</b>.</p>
  <h3> Live collaboration</h3>
- <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game <b>Share Collaborate</b> invites classmates by display name; everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b> Cloud Collaborations</b>. Great for pair-programming and group projects. <i>(Needs the optional cloud backend — including its Durable Object “rooms” setup; see <code>cloud/COLLAB.md</code>.)</i></p>
+ <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game <b>Share Collaborate</b> invites classmates by display name; everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b> Cloud Collaborations</b>. This works in the <b>Build Lab</b>, <b>Critter Lab</b>, <b>AI Lab</b>, <b>Train Lab</b>, <b>Robot Lab</b> and <b>3D World</b> too: everyone sees the same project, while Run (or Test it!) plays on each pupil's own screen. In the Build Lab, pupils share one world and can see each other walking round it. Great for pair-programming and group projects. <i>(Needs the optional cloud backend — including its Durable Object “rooms” setup; see <code>cloud/COLLAB.md</code>.)</i></p>
   <h3>Saving, sharing &amp; safety</h3>
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
  <h3> Accessibility</h3>
@@ -8616,7 +8620,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(projectType!=='critter'&&projectType!=='ai'&&projectType!=='train'&&projectType!=='craft'&&typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -8905,7 +8909,7 @@ let collabWS=null,collabRoomId=null,collabActive=false,collabApplyingRemote=fals
 let collabMe=null,collabMembers={},collabRemoteCursors={},_collabSnapT=null,_collabCurT=0;
 function collabWsUrl(roomId){return CLOUD_URL.replace(/^http/,'ws').replace(/\/$/,'')+'/room/'+roomId+'?token='+encodeURIComponent(cloudToken||'');}
 function collabSend(o){if(collabWS&&collabWS.readyState===1){try{collabWS.send(JSON.stringify(o));}catch(e){}}}
-function collabDisconnect(silent){const ws=collabWS;collabWS=null;collabActive=false;collabMembers={};collabRemoteCursors={};if(ws){try{ws.close();}catch(e){}}updateCollabBar();var ccl=document.getElementById('collab-cursors');if(ccl)ccl.innerHTML='';if(!silent)toast('You left the live room','#585555');}
+function collabDisconnect(silent){if(typeof labLive!=='undefined'){labLive.gen++;labLive.base=false;labCrQueue=[];}const ws=collabWS;collabWS=null;collabActive=false;collabMembers={};collabRemoteCursors={};if(ws){try{ws.close();}catch(e){}}updateCollabBar();var ccl=document.getElementById('collab-cursors');if(ccl)ccl.innerHTML='';if(!silent)toast('You left the live room','#585555');}
 // A live room belongs to the project you opened it with: starting or opening a different one leaves it, so your new work
 // isn't sent into the room (and your partner's edits don't land on it).
 function leaveLiveRoom(){try{if(collabApplyingRemote)return;if(collabActive||collabWS)collabDisconnect();}catch(e){/* collab code not set up yet */}}
@@ -8921,17 +8925,68 @@ function collabOnMessage(m){
       if(projectType==='stage'){if(typeof enterStageUI==='function')enterStageUI();} // a Stage collab must enter the Stage view on join (switchMode('build') wouldn't fire if already in build)
       else if(mode!=='build')switchMode('build');}
     else{collabSnapshotNow();}
+    if(LIVE_LABS[projectType])labLiveJoin(m.doc&&m.doc.levels?m.doc:null);
  updateCollabBar();toast("You're in the live room! ",'#10b981');}
  else if(m.type==='join'){collabMembers[m.member.uid]=m.member;updateCollabBar();toast(cesc(m.member.name)+' joined ',m.member.color);
-    if(projectType==='3d'||projectType==='robot')collabSnapshotSoon();} // 3D: make sure the newcomer gets the latest blocks (an older cloud server doesn't keep 3D edits)
-  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage'||projectType==='3d'||projectType==='robot')renderCollabStageCursors();if(g)toast(cesc(g.name)+' left','#585555');}
-  else if(m.type==='op'){collabApplyRemote(()=>collabApplyOp(m.op));}
+    if(projectType==='3d'||projectType==='robot')collabSnapshotSoon();
+    if(projectType==='craft'&&craftApp&&craftApp.liveMembers)craftApp.liveMembers();} // 3D: make sure the newcomer gets the latest blocks (an older cloud server doesn't keep 3D edits)
+  else if(m.type==='leave'){const g=collabMembers[m.uid];delete collabMembers[m.uid];delete collabRemoteCursors[m.uid];updateCollabBar();if(projectType==='stage'||projectType==='3d'||projectType==='robot'||LIVE_LABS[projectType])renderCollabStageCursors();if(projectType==='craft'&&craftApp&&craftApp.liveMembers)craftApp.liveMembers();if(g)toast(cesc(g.name)+' left','#585555');}
+  else if(m.type==='op'){if(m.op&&(m.op.k==='lp'||/^cr_/.test(m.op.k||''))){labLiveIncoming(m.op,m.from);}else collabApplyRemote(()=>collabApplyOp(m.op));}
   else if(m.type==='snapshot'){
+    if(LIVE_LABS[projectType])return; // these labs keep in step with their own ops (the room keeps its copy current)
     if(projectType==='3d'&&m.doc&&m.doc.projectType==='3d'&&m.doc.world&&worldApp&&document.body.classList.contains('threed-mode'))worldApp.applyRemote({k:'w3_doc',blocks:m.doc.world.blocks}); // only swaps blocks if they differ
     else if(projectType==='robot'&&m.doc&&m.doc.projectType==='robot'&&m.doc.robot&&robotApp&&document.body.classList.contains('robot-mode'))robotApp.applyRemote(Object.assign({k:'rb_doc'},m.doc.robot)); // swaps blocks/name/colours only if they differ
     else collabApplyRemote(()=>collabApplyDoc(m.doc));}
-  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage'||projectType==='3d'||projectType==='robot')renderCollabStageCursors();}
+  else if(m.type==='cursor'){if(m.cell)collabRemoteCursors[m.uid]={cell:m.cell,color:m.color,name:(collabMembers[m.uid]||{}).name||''};else delete collabRemoteCursors[m.uid];if(projectType==='stage'||projectType==='3d'||projectType==='robot'||LIVE_LABS[projectType])renderCollabStageCursors();}
   else if(m.type==='full'){toast('That live room is full (max 6 people)','#ef4444');collabDisconnect(true);}}
+// ── LIVE COLLABORATION for the Build, Critter, AI and Train Labs (cloud worker v18) ──
+// Each lab app gives liveParts() (its shared parts as plain data), liveSet(part, value) and liveBusy(). A part that changed
+// goes to the room as {k:'lp', lab, part, v, t, cid}; the newest stamp (t, then cid) wins on every screen and in the room's
+// copy, so everyone settles on the same version. A partner's copy waits while you're dragging, typing or running something.
+// The Build Lab's world goes separately as numbered block changes (craft-app.js: cr_sets / cr_world / cr_snap / cr_pos).
+const LIVE_LABS={critter:()=>critterApp,ai:()=>aiApp,train:()=>trainApp,craft:()=>craftApp};
+let labLive={last:{},st:{},pend:{},t:0,retry:0,base:false,gen:0},labClock=0,labPointer=false,labCrQueue=[];
+window.addEventListener('pointerdown',()=>{labPointer=true;},true);
+window.addEventListener('pointerup',()=>{labPointer=false;},true);
+window.addEventListener('pointercancel',()=>{labPointer=false;},true);
+function labLiveApp(){const f=LIVE_LABS[projectType],a=f&&f();return a&&a.liveParts?a:null;}
+function labLiveOn(){return collabActive&&!!LIVE_LABS[projectType];}
+function labTick(){labClock=Math.max(Date.now(),labClock+1);return labClock;}
+function labTyping(){const e=document.activeElement;return !!(e&&(e.tagName==='TEXTAREA'||(e.tagName==='INPUT'&&/^(text|search|number|)$/i.test(e.type||'')))&&e.closest('#critter-ui,#ai-ui,#train-ui,#craft-ui'));}
+async function labLiveWhenReady(gen){ // the lab may still be loading (it's lazy-loaded); wait for it and its blocks editor
+  for(let i=0;i<300;i++){if(gen!==labLive.gen)return null;const a=labLiveApp();if(a){if(a.ready)try{await a.ready;}catch(e){} if(!a._ws||a._ws())return gen===labLive.gen?a:null;}await new Promise(r=>setTimeout(r,100));}
+  return null;}
+// just connected (doc = the room's copy when joining someone else's room; null when we started it)
+async function labLiveJoin(doc){
+  const st={},pre=projectType+'.';if(doc&&doc._lp&&typeof doc._lp==='object')for(const k of Object.keys(doc._lp))if(k.indexOf(pre)===0&&Array.isArray(doc._lp[k]))st[k.slice(pre.length)]=doc._lp[k];
+  const gen=++labLive.gen;labLive={last:{},st,pend:{},t:0,retry:0,base:false,gen};
+  const a=await labLiveWhenReady(gen);if(!a)return;
+  if(projectType==='craft'&&a.liveInit){a.liveInit(doc);const q=labCrQueue;labCrQueue=[];for(const x of q)a.liveOp(x.op,x.from);}
+  const parts=a.liveParts();for(const k of Object.keys(parts))labLive.last[k]=JSON.stringify(parts[k]);
+  labLive.base=true;if(Object.keys(labLive.pend).length)labLiveApply();}
+function labLiveSoon(){if(!labLiveOn()||collabApplyingRemote)return;clearTimeout(labLive.t);labLive.t=setTimeout(labLiveCheck,250);}
+function labLiveCheck(){clearTimeout(labLive.t);if(!labLiveOn()||!labLive.base)return;const a=labLiveApp();if(!a)return;
+  let parts;try{parts=a.liveParts();}catch(e){return;}
+  for(const part of Object.keys(parts)){const v=parts[part];if(v==null)continue;const j=JSON.stringify(v);if(j===labLive.last[part])continue;
+    labLive.last[part]=j;delete labLive.pend[part];const t=labTick(),cid=(collabMe&&collabMe.uid)||'';labLive.st[part]=[t,cid];
+    collabSend({type:'op',op:{k:'lp',lab:projectType,part,v,t,cid}});}}
+function labLiveIncoming(op,from){
+  if(op.k!=='lp'){ // Build Lab world changes
+    if(projectType!=='craft')return;
+    if(craftApp&&craftApp.liveOp&&labLive.base)craftApp.liveOp(op,from);else labCrQueue.push({op,from});
+    return;}
+  if(op.lab!==projectType||!/^[a-z]{1,12}$/.test(op.part||''))return;
+  labLiveCheck(); // send our own unsent change first, so the stamps decide fairly
+  const cur=labLive.st[op.part],t=Number(op.t)||0,cid=String(op.cid||'');
+  if(cur&&(t<cur[0]||(t===cur[0]&&cid<=String(cur[1]))))return; // ours is newer: theirs loses (and ours is on its way to them)
+  labLive.st[op.part]=[t,cid];labClock=Math.max(labClock,t);labLive.pend[op.part]=op.v;labLiveApply();}
+function labLiveApply(){clearTimeout(labLive.retry);if(!labLiveOn()||!Object.keys(labLive.pend).length)return;
+  const a=labLiveApp();
+  if(!a||!labLive.base||labPointer||labTyping()||(a.liveBusy&&a.liveBusy())){labLive.retry=setTimeout(labLiveApply,400);return;}
+  for(const part of Object.keys(labLive.pend)){const v=labLive.pend[part];delete labLive.pend[part];
+    collabApplyingRemote=true;try{a.liveSet(part,v);}catch(e){console.error(e);}finally{collabApplyingRemote=false;}
+    try{labLive.last[part]=JSON.stringify(a.liveParts()[part]);}catch(e){}}
+  dirty=true;}
 function collabApplyOp(op){if(!op)return;
   if(op.k==='cell'){const lvl=op.lvl||0;
     if(lvl===curLevel){const g=op.layer==='water'?waterGrid:grid;if(g[op.r])g[op.r][op.c]=op.t;}
@@ -8968,7 +9023,7 @@ function collabVars(){if(stageState)collabStageOp({k:'st_var',vars:stageState.va
 function collabStageCursor(clientX,clientY){if(!collabActive)return;const w=window.innerWidth,h=window.innerHeight;if(!w||!h)return;const ex=clientX/w,ey=clientY/h;const now=Date.now();if(now-_collabCurT<55)return;_collabCurT=now;collabSend({type:'cursor',cell:{ex:Math.round(ex*1000)/1000,ey:Math.round(ey*1000)/1000}});}
 function collabStageCursorGone(){if(collabActive)collabSend({type:'cursor'});} // no cell remote clears your pointer
 function renderCollabStageCursors(){var layer=document.getElementById('collab-cursors');
-  if(typeof collabActive==='undefined'||!collabActive||!(document.body.classList.contains('stage-mode')||document.body.classList.contains('threed-mode')||document.body.classList.contains('robot-mode'))){if(layer)layer.innerHTML='';return;}
+  if(typeof collabActive==='undefined'||!collabActive||!(document.body.classList.contains('stage-mode')||document.body.classList.contains('threed-mode')||document.body.classList.contains('robot-mode')||(LIVE_LABS[projectType]&&document.body.classList.contains(projectType+'-mode')))){if(layer)layer.innerHTML='';return;}
   if(!layer){layer=document.createElement('div');layer.id='collab-cursors';document.body.appendChild(layer);}
   var w=window.innerWidth,h=window.innerHeight,seen={};
   for(var uid in collabRemoteCursors){var cu=collabRemoteCursors[uid];if(!cu.cell||cu.cell.ex==null)continue;seen[uid]=1;
@@ -10054,6 +10109,7 @@ const CJ_WHATSNEW=[
  "Chat commands: make a block like “when I type tower in the chat”, then type “tower 6” and watch it happen.",
  "Worlds: ready-made worlds with characters to talk to and tasks that tick themselves, including a timed maze challenge where fewer blocks earn more stars.",
  "Teachers: press Make to build your own lesson worlds, with characters, areas, tasks, rules and challenges. Then share them or give them to your class.",
+ "Build together live in the Build, Critter, AI and Train Labs too: Share → Collaborate, pick up to 5 classmates, and everyone works on the same project at once.",
  "Compete: run build competitions and coding contests. Teams of up to 6 build together live, even across schools, and you choose judges, a pupil vote or automatic checks.",
 ];
 function showWhatsNew(){

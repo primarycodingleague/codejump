@@ -140,7 +140,7 @@ try {
   await page.waitForFunction(() => aiApp._brain() && aiApp._brain().kind === 'text' && !aiApp._training(), null, { timeout: 30000 });
   ok(await page.evaluate(() => JSON.parse(JSON.stringify(aiApp.getProject())).kind === 'text' && aiApp._labels()[2].ex.length === 15), 'a words AI saves and reopens as words');
   await page.evaluate(() => openShareModal());
-  ok(await page.evaluate(() => document.getElementById('sh-collab').style.display === 'none'), 'live collaboration isn’t offered for the AI Lab');
+  ok(await page.evaluate(() => document.getElementById('sh-collab').style.display === 'none'), 'Collaborate needs you to be signed in');
   ok(errors.length === 0, 'no errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await br.close(); site.close(); }
 done();

@@ -592,6 +592,23 @@ export function mount(root, host) {
     pause() { if (runner) runner.stop(true); cancelAnimationFrame(raf); raf = 0; clearTimeout(idleTimer); },
     destroy() { alive = false; ro.disconnect(); cancelAnimationFrame(raf); if (training) training.cancel = true; if (runner) runner.stop(true); if (ws) ws.dispose(); root.innerHTML = ''; },
     show, run, stop, setKind,
+    // live collaboration (Share → Collaborate): the examples and the blocks go separately, so one person can draw while
+    // another codes. A partner's examples replace ours; the brain then needs training again on each screen.
+    liveParts() { return { data: { kind, labels: labels.map(l => ({ name: l.name, color: l.color, ex: l.ex })) }, blocks: { blocks: ws ? Blockly.serialization.workspaces.save(ws) : savedBlocks } }; },
+    liveSet(part, v) {
+      if (!v || typeof v !== 'object') return;
+      if (part === 'data') {
+        const k = v.kind === 'text' ? 'text' : 'draw', newKind = k !== kind; kind = k;
+        const ls = M.cleanLabels(v.labels, kind); if (ls.length < M.MIN_LABELS) return; labels = ls;
+        target = Math.min(target, labels.length - 1); syncNames();
+        if (newKind) { brain = null; teachPad.clear(); testPad.clear(); showKind(); }
+        renderLabels(); showTrainState();
+      } else if (part === 'blocks' && v.blocks && typeof v.blocks === 'object') {
+        if (ws && JSON.stringify(Blockly.serialization.workspaces.save(ws)) === JSON.stringify(v.blocks)) return;
+        savedBlocks = v.blocks; syncNames(); if (ws) loadBlocks();
+      }
+    },
+    liveBusy() { return !!training || !!(ws && ws.isDragging && ws.isDragging()); },
     _brain: () => brain, _labels: () => labels, _ws: () => ws, _runner: () => runner, _training: () => !!training,
     _pads: { teach: teachPad, test: testPad, play: playPad }, _playGuess: playGuess, _testGuess: testGuess, _addExample: addExample
   };

@@ -320,7 +320,7 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   so deciding in the red event is in time. tests/lessons.test.mjs follows it to the depot after lap 3. The app now shows the program's
   variables top-right of the board (`#tlVars`, `renderVars`, from `runner._vars()`; cleared on Reset). Lesson card sits bottom-left in train-mode.
 
-## Live collaboration for the Build, Critter, AI and Train Labs (7 Oct 2026, on branch; needs cloud worker v18) — Charlie: "add it to all of them"
+## Live collaboration for the Build, Critter, AI and Train Labs (7 Oct 2026, LIVE on main since 7 Oct 2026; cloud worker v18 live) — Charlie: "add it to all of them"
 - Share → Collaborate is now offered for every project type. Host glue in build-and-play.html: `LIVE_LABS` (projectType → app), `labLive*`.
   Each lab app has `liveParts()` (its shared parts as plain data), `liveSet(part, v)` and `liveBusy()`: Critter `all` (whole Critter);
   AI `data` {kind, labels} + `blocks`; Train `layout` {pieces, trains, wagons, dests, challenge} + `blocks`; Build Lab `code` {blocks},
@@ -339,7 +339,7 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
 - Tests: tests/labs-collab.test.mjs (stand-in room = worker v18; all four labs, both directions, same-moment change, late joiner);
   end to end against `wrangler dev` with 3 browsers (script in the session scratchpad); codejump-cloud tests cover v18 ops.
 
-## Build Lab project type — `projectType==='craft'` — on branch `claude/vibrant-cori-tho25y` (7 Oct 2026, CJ_VERSION 2026.10.11 with World Maker + competitions), NOT live yet
+## Build Lab project type — `projectType==='craft'` — LIVE on main since 7 Oct 2026 (CJ_VERSION 2026.10.11, with World Maker, competitions, 74 blocks; built on branch `claude/vibrant-cori-tho25y`)
 Charlie: "Minecraft Education has a brilliant way of doing coding… could we replicate something like that?" → a new lab (chosen over a
 Stage/3D add-on) with: robot helper, walk around + chat, builder commands, Blocks ↔ Python. **Never use the Minecraft name, look, textures,
 characters (Steve, creepers) or "Agent" branding** — our own art and words ("Build Lab", "robot helper"), same rule as intelino/Ohbot/Flock/BBC.
@@ -391,7 +391,7 @@ characters (Steve, creepers) or "Agent" branding** — our own art and words ("B
   `#crLesson` checklist (+ challenge timer, Start/Restart), `#crNear` "press E", `#crTalk` dialogue, `#crPop` welcome/finish. NPCs are
   figures in the view (`setMarkers`, name tags, a "!" while they want to talk, `pickNpc`). Rules: allowed hotbar blocks (`savedHot`),
   `mk.canEdit` in `act()`, protected areas via `world.guard`, `runner.setAllow(fn)` (fn.why = the message) + `L.toolbox(code)`.
-- **Competitions (7 Oct 2026; needs cloud worker v17, on the codejump-cloud branch — NOT deployed until that branch reaches its main):**
+- **Competitions (7 Oct 2026; cloud worker v17+, live):**
   `craft/craft-comp.js` (`createComp(app)`, button `#crCompBtn` "Compete", banner `#crComp`). Organiser (teacher) sets up: title, brief,
   build|code, map (arena/flat/maze/current), maxTeams/teamSize ≤6, perSchool, minutes, criteria+points, judging {judges,vote,auto}+weights
   → 6-char code. Teachers with the code enter a team + pick pupils from their OWN classes (pupils get an inbox notice kind 'comp' →

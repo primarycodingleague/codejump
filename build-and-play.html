@@ -3731,14 +3731,16 @@ function turtleDrawTurtle(c){const cx=TW/2+turtle.x,cy=TH/2-turtle.y;c.save();c.
   c.beginPath();c.moveTo(0,-13);c.lineTo(9,9);c.lineTo(0,4);c.lineTo(-9,9);c.closePath();
   c.fillStyle='#2e7d32';c.fill();c.strokeStyle='#1b5e20';c.lineWidth=2;c.stroke();c.restore();}
 // ── tokeniser ──
-function turtleTokenize(src){src=src.replace(/;[^\n]*/g,' ');const toks=[];const re=/(<=|>=|<>|[\[\]()<>=+\-*/])|("[^\s\[\]()]+)|(:[A-Za-z_]\w*)|(\d+\.?\d*)|([A-Za-z_]\w*)/g;let m;while((m=re.exec(src)))toks.push(m[0]);return toks;}
+function turtleTokenize(src){src=src.replace(/;[^\n]*/g,' ');const toks=[];const re=/(<=|>=|<>|[\[\]()<>=+\-*/])|("[^\s\[\]()]+)|(:[A-Za-z_]\w*)|(\d+\.?\d*)|([A-Za-z_]\w*)/g;let m;
+  // Logo's rule: a minus with a space before it and none after ("setxy 50 -20") is a negative number, not a subtraction
+  while((m=re.exec(src))){let t=m[0];if(t==='-'){const before=m.index?src[m.index-1]:' ',after=src[m.index+1]||' ';if(/[\s\[(]/.test(before)&&/[\d.:(A-Za-z]/.test(after))t='u-';}toks.push(t);}return toks;}
 function turtleErr(msg){throw{turtleErr:true,msg};}
 // ── expression evaluator (numbers + comparisons) ──
 function turtleExpr(cur){let a=turtleSum(cur);const op=cur.toks[cur.i];if(op==='<'||op==='>'||op==='='||op==='<='||op==='>='||op==='<>'){cur.i++;const b=turtleSum(cur);switch(op){case'<':return a<b;case'>':return a>b;case'=':return a===b;case'<=':return a<=b;case'>=':return a>=b;case'<>':return a!==b;}}return a;}
 function turtleSum(cur){let a=turtleTerm(cur);while(cur.toks[cur.i]==='+'||cur.toks[cur.i]==='-'){const op=cur.toks[cur.i++];const b=turtleTerm(cur);a=(op==='+')?a+b:a-b;}return a;}
 function turtleTerm(cur){let a=turtleFactor(cur);while(cur.toks[cur.i]==='*'||cur.toks[cur.i]==='/'){const op=cur.toks[cur.i++];const b=turtleFactor(cur);if(op==='/'&&b===0)turtleErr('you can’t divide by zero');a=(op==='*')?a*b:a/b;}return a;}
 function turtleFactor(cur){let t=cur.toks[cur.i];if(t===undefined)turtleErr('I expected a number here');
-  if(t==='-'){cur.i++;return -turtleFactor(cur);}
+  if(t==='-'||t==='u-'){cur.i++;return -turtleFactor(cur);}
   if(t==='('){cur.i++;const v=turtleExpr(cur);if(cur.toks[cur.i]===')')cur.i++;return v;}
   if(t[0]===':'){cur.i++;const n=t.slice(1).toLowerCase();if(!(n in turtleVars))turtleErr('I don\'t know the variable '+t);return turtleVars[n];}
   if(/^\d/.test(t)){cur.i++;return parseFloat(t);}

@@ -201,7 +201,7 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
-## Stage REDESIGN (7 Oct 2026, CJ_VERSION 2026.10.09) — Charlie: the Stage didn't match the other labs' UI/UX
+## Stage REDESIGN (7 Oct 2026, CJ_VERSION 2026.10.09; LIVE on main since 7 Oct 2026) — Charlie: the Stage didn't match the other labs' UI/UX
 - KS2/KS3 only (`body.stage-mode:not(.ks1-mode)`; KS1's ScratchJr UI unchanged). Header GO/STOP/Backdrops/micro:bit/Cave/mute/hand hidden;
   a `#stage-bar` above the stage: `#st-run` (Run) / `#st-stop` / `#stage-status` (`stageSetStatus`) / `#st-big` (body.stage-big, wider stage,
   remembered in localStorage `cj_stage_big`). Sprite panel head gained `#sp-mbsend` + `#sp-backdrops`. Stage column `clamp(380px,46%,860px)`,
@@ -212,7 +212,7 @@ or `startNewStage`.
 - Built-in vector costumes drawn ×2 (`costumeK(s)`: 1 for KS1, painted images and the micro:bit) — used by drawStageSprite, costumeHalf
   (hit box), stTouching, stStampSprite. Speech bubbles, score and monitors drawn ×1.8 (`stUiK()`).
 
-## Stage characters REDRAWN (7 Oct 2026, same CJ_VERSION 2026.10.09) — Charlie: "the sprites just seem rubbish"
+## Stage characters REDRAWN (7 Oct 2026, same CJ_VERSION 2026.10.09; LIVE) — Charlie: "the sprites just seem rubbish"
 - All 9 built-ins (`paintCat` … `paintRobot`) redrawn in one style: ink outline `CINK` #2b2240, soft radial shading from the costume
   colour (`cGrad`/`cMix`), big glossy eyes (`cEyes`), blush (`cCheeks`), highlights. Full chibi bodies, still centred at the origin
   inside about ±24 × −35…+27 units, so `costumeHalf`/touching are unchanged. Each paint fn takes `(c, color, pose)`.
@@ -225,7 +225,7 @@ or `startNewStage`.
 - KS1: characters drawn ×1.5 (`costumeK`) and `ks1BumpCheck` uses the same factor; the KS1 stage keeps its 5:3 shape
   (`body.ks1-mode #gc` width/height auto) — it used to stretch to fill the box.
 
-## Stage PAINT EDITOR rebuilt, Scratch-style (7 Oct 2026, same CJ_VERSION 2026.10.09) — Charlie: "proper editing… colour wheels… not just the whole colour"
+## Stage PAINT EDITOR rebuilt, Scratch-style (7 Oct 2026, same CJ_VERSION 2026.10.09; LIVE) — Charlie: "proper editing… colour wheels… not just the whole colour"
 - Replaces the old bitmap-only editor (whose tool icons had been lost in the emoji strip). `openPaintEditor({kind:'costume'|'backdrop', name,
   vec|img(+res,cx,cy)|color, tool, onSave(result,name)})` → result `{vec}` (vector) or `{img,res,cx,cy}` (bitmap costume, cropped, res 2, cx/cy =
   rotation centre in px) or `{img}` (bitmap backdrop, 960×576). State in `PE`; everything `pe*`; markup `#paint-modal .pe`, CSS `.pe-*`.
@@ -1298,7 +1298,7 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
   CSTA released new 2026 PK–12 standards (July 2026); the app cites the 2017 codes. NZ's Technology curriculum is being replaced
   (required Years 0–8 from 2029). Tests: tests/lessons.test.mjs (every country links every lesson; switching country in the UI).
 
-## Lesson PROGRESSION (7 Oct 2026, CJ_VERSION 2026.10.09) — Charlie: a lesson for EVERY lab for Years 3–4 AND Years 5–6, progressive
+## Lesson PROGRESSION (7 Oct 2026, CJ_VERSION 2026.10.09; LIVE) — Charlie: a lesson for EVERY lab for Years 3–4 AND Years 5–6, progressive
 - 20 lessons. Years 3–4 = sequence, repetition, events, debugging; Years 5–6 builds on the same lab's Years 3–4 lesson with selection,
   variables, procedures, fair testing, data. Never the same skill twice (objectives were checked side by side).
   | Lab | Years 3–4 | Years 5–6 |

@@ -320,6 +320,42 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   so deciding in the red event is in time. tests/lessons.test.mjs follows it to the depot after lap 3. The app now shows the program's
   variables top-right of the board (`#tlVars`, `renderVars`, from `runner._vars()`; cleared on Reset). Lesson card sits bottom-left in train-mode.
 
+## Build Lab project type — `projectType==='craft'` — on branch `claude/vibrant-cori-tho25y` (7 Oct 2026, CJ_VERSION 2026.10.10), NOT live yet
+Charlie: "Minecraft Education has a brilliant way of doing coding… could we replicate something like that?" → a new lab (chosen over a
+Stage/3D add-on) with: robot helper, walk around + chat, builder commands, Blocks ↔ Python. **Never use the Minecraft name, look, textures,
+characters (Steve, creepers) or "Agent" branding** — our own art and words ("Build Lab", "robot helper"), same rule as intelino/Ohbot/Flock/BBC.
+- **World (`craft/craft-world.js`, no DOM):** 64×40×64 Uint8Array (`W,H,D`, grass at `GROUND`=12), 25 block types in `BLOCKS`
+  (`[id, PYNAME, label, colour, solid, clear]`: AIR GRASS DIRT STONE COBBLE PLANKS LOG LEAVES SAND WATER GLASS BRICKS RED ORANGE YELLOW
+  LIME BLUE PURPLE PINK WHITE BLACK GOLD GEM SNOW LAMP). Facing 0 north (−z) … 3 west; `rel(origin, facing, right, up, ahead)`.
+  `fill(id,a,b,mode SOLID|HOLLOW|OUTLINE)` / `line` / `ball` (throw a friendly error over `MAX_BUILD`=40000), y=0 can't be dug,
+  `save()` = run-length base64 (~4 KB for the starter world), `load()` validates. Starter: pond + sand, five trees.
+- **Language (`craft/craft-lang.js`):** ONE table `API` (`[type, cat, pyName, text with %ARG and | = new row, args, returns]`) drives the
+  Blockly defs (`defineBlocks`, JSON, `input_end_row` for "|"), the toolbox, the Python names and the Commands pop-up. Blocks: `cr_on_run`,
+  `cr_on_chat` (WORD + variable n), helper move/turn/place/dig/trail/detect?/inspect/come_here/say, builder place/fill/line/ball, player
+  say/teleport, world block_at/time, wait, forever, + Blockly loops/logic/maths/text/variables. **Program = Blockly JSON state;**
+  `toPython(state)` and `fromPython(src)` → `{state}` | `{error:{line,msg}}` (friendly messages: missing “:”, = vs ==, stray indent, unknown
+  command/constant, wrong number of arguments). Python form: top level = when Run; `@on_chat("w")\ndef w(n):`; `for _ in range(n)` = repeat;
+  `for i in range(a, b)`; `while`/`while not`; `random(a,b)`. Round trip is stable (tested). `STARTER_PY` = house (hollow PLANKS ahead 5–11,
+  door, 2 glass windows) + "tower" chat command; `starterProgram()` = its blocks.
+- **Runner (`craft/craft-runner.js`, no DOM):** generator fibers on the JSON (yield 0 = next frame, n = wait n s); helper `{x,y,z,f,from,t,trail}`
+  moves 0.18 s a step and stops when blocked; `createRunner(world, io{player,teleport,say,time,error,placed})` → `load/start/chat(word,args)/
+  has/words/tick/stop/running`. Builder positions are relative to the PLAYER's block + facing at the moment the command runs.
+- **Player (`craft-player.js`):** 0.6×1.75 box, axis-by-axis collisions, steps up one block, jump, fly (F; Space up/Shift down); `raycast`
+  (Amanatides & Woo, through water). **View (`craft-view.js`):** Three.js (Critter bundle), 16³ chunks meshed with face culling + baked
+  shading/corner AO, a procedural 16 px atlas (`makeAtlas`, `blockIcon` for hotbar icons), see-through/cut-out/glow materials, day/sunset/night,
+  sun/moon, highlight box, our own hovering robot helper (rounded cube, screen face, teal band, orange antenna tip).
+- **App (`craft/craft-app.js` + `.css`, scoped `.cr`, ids `cr*`):** left = Blocks/Python tabs, Run/Stop/Undo/New world, Blockly (zelos, dark) or
+  the Python editor (highlight overlay, line numbers, auto-indent, live error line after 700 ms; can't go back to Blocks until it parses);
+  right = the world: first-person (drag to look, WASD/arrows, click = place hotbar block, right-click / long-press / slot 0 = break, 1–9 slots,
+  More = block picker), camera Me/Helper, Fly, chat box (T/Enter/"/" focus it; unknown word → lists the words it knows), touch pads on touch
+  devices. Undo = world snapshots (20). Project `{v:1, mode, blocks, py, world, player, helper, time, hot}`. Test hooks `_world/_player/_runner/
+  _ws/_view/_act/_pick/_slot`.
+- **Host glue (mirrors Train Lab):** `craftBase/loadCraftLab/craftData/craftApp/craftCurrent/startNewCraft/enterCraftUI/exitCraftUI`,
+  `body.craft-mode`, `#craft-ui`, payload `craft`, `#pt-modal` tile `data-pt="craft"` (KS1 hidden), home tile `data-start="craft"`
+  (`home/craft.jpg`, a real screenshot), icon `#i-craft`, `CRAFT_HELP`, Teacher Guide "Build Lab" section, thumbnail badge, `LS_TYPE.craft`,
+  `LS_LAB_ORDER`. No live collaboration. Test: `tests/craft.test.mjs` (world, translator + errors, runner, walking in Node; the app end to end).
+- **Ideas not done:** a lesson (Years 3–4 + 5–6), mobs/creatures, saving more than one world, a bigger world, multiplayer.
+
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate
 safeguarding choice; nothing leaves the device except inside their saved/shared project), train it, test it, then code with it.

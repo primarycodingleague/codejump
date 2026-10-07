@@ -714,7 +714,7 @@ export function mount(root, host) {
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
-    loadBlocks();
+    loadBlocks(); renderCheck(); // a challenge opened as the first project shows its jobs straight away
     ws.addChangeListener(e => {
       if (quiet || e.isUiEvent || String(e.group || '').startsWith(LOAD)) return;
       changed();

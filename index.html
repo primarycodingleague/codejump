@@ -3210,6 +3210,7 @@ const critterCloud={
   me:()=>isSignedIn()?{uid:cloudMe.uid,name:cloudMe.displayName,realName:cloudMe.realName,teacher:isTeacher(),classes:(cloudMe.classes||[]).slice()}:null,
   api:(path,body)=>cloudApi(path,Object.assign({token:cloudToken},body||{})),
   wsUrl:roomId=>collabWsUrl(roomId),
+  ws:path=>CLOUD_URL.replace(/^http/,'ws').replace(/\/$/,'')+path+(path.indexOf('?')<0?'?':'&')+'token='+encodeURIComponent(cloudToken), // Build Lab competition rooms
   // a pupil's saved games (device + cloud); the Critter Lab opens each to find the Critters
   saves:async()=>{await cloudRefresh();const out=[];
     getSaves().forEach(s=>{if(s&&s.projectType==='critter'&&s.critter)out.push({key:'d:'+s.id,title:s.name||'My Critter',where:'This device'});});
@@ -3239,13 +3240,19 @@ function inboxOnMessage(m){
   else if(m.type==='notify'&&m.notice)inboxAdd(m.notice);
   else if(m.type==='clear'){_inboxQueue=_inboxQueue.filter(n=>n.id!==m.id);
     if(_inboxOpen&&_inboxOpen.id===m.id&&!_inboxOpen.answered){_inboxOpen.gone=true;const d=document.getElementById('cj-dialog');if(d)d.classList.add('hide');}}}
-function inboxAdd(n){if(!n||n.kind!=='showdown'||!n.id)return;
+function inboxAdd(n){if(!n||(n.kind!=='showdown'&&n.kind!=='comp')||!n.id)return;
   if(critterApp&&critterApp.showdownRoom&&critterApp.showdownRoom()===n.id){inboxAck(n.id);return;} // already in it
   if((_inboxOpen&&_inboxOpen.id===n.id)||_inboxQueue.some(q=>q.id===n.id))return;
   _inboxQueue.push(n);inboxNext();}
 async function inboxNext(){if(_inboxOpen||!_inboxQueue.length)return;
   const n=_inboxQueue.shift(),cur={id:n.id,gone:false,answered:false};_inboxOpen=cur;
   try{
+    if(n.kind==='comp'){ // a teacher put this pupil in a Build Lab competition team (worker v17)
+      const yes=await cjConfirm((n.from||'Your teacher')+' has put you in team '+(n.team||'')+' for “'+(n.title||'a competition')+'”!'+(dirty?' Let’s save what you’re working on first.':' Open it now?')+' (You can also find it later: Build Lab → Compete.)',{title:'Build Lab competition',okLabel:dirty?'Save my work and open it':'Open it',cancelLabel:'Not now'});
+      cur.answered=true;inboxAck(n.id);if(!yes)return;
+      if(dirty&&!await inboxSaveWork()){toast('Your work isn’t saved yet. Open the competition later from Build Lab → Compete.','#ef4444');return;}
+      withCraftLab(app=>app.openComp(n.code));return;
+    }
     const who=n.from||'Your teacher',busy=!!dirty; // cjConfirm escapes the text itself
     const msg=who+' has picked you for a Critter Showdown'+(n.title&&n.title.indexOf(' · ')>0?' ('+n.title.split(' · ').slice(1).join(' · ')+')':'')+'!'+
       (busy?' Let’s save what you’re working on first, then you can join.':' Join now to send in one of your Critters.')+' (Not now? You can join later from Cloud → Collaborations.)';
@@ -3264,6 +3271,14 @@ async function inboxSaveWork(){
     await cloudApi('/project/save',{token:cloudToken,id:cloudProjectId,title:cloudProjectTitle||'My Game',class:null,payload:buildPayload()});
     clearDirty();toast('Saved to the Cloud','#10b981');return true;}catch(e){toast('Couldn’t save to the Cloud, so saving on this device instead','#ef4444');}}
   await saveCurrentLevel();return !dirty;}
+// Open the Build Lab (a fresh one if another project is open) and then do fn(craftApp)
+async function withCraftLab(fn){
+  if(typeof closeCloud==='function')closeCloud();
+  if(projectType!=='craft'){startNewCraft(keyStage==='ks1'?'ks2':keyStage);}
+  else{hideHome();enterCraftUI();}
+  for(let i=0;i<200&&!(craftApp&&craftApp._ws&&craftApp._ws());i++)await new Promise(r=>setTimeout(r,100));
+  if(craftApp)fn(craftApp);
+}
 function isCritterShowdown(title){return String(title||'').indexOf('Critter Showdown')===0;}
 // Open the Critter Lab (if it isn't already) and then do fn(critterApp)
 async function withCritterLab(fn){
@@ -3832,7 +3847,7 @@ function enterCraftUI(){
     if(craftApp){_craftQuiet=true;try{craftApp.setProject(craftData);}finally{_craftQuiet=false;}return;}
     _craftQuiet=true;
     try{craftApp=mod.mount(holder,{project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
-      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'})});}finally{_craftQuiet=false;}
+      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'}),cloud:cloudOn()?critterCloud:null});}finally{_craftQuiet=false;}
   }).catch(()=>{holder.innerHTML='<div id="craft-loading">The Build Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
 function exitCraftUI(){
@@ -7849,6 +7864,9 @@ const WORLD_HELP=[
  ['blocks',' Blocks',`<ul><li><b>Scene</b> — sky and ground colours, fog, brightness, gravity.</li><li><b>Shapes</b> — make a box, ball, cylinder, cone or capsule. Each one goes in a <b>variable</b> (like <i>box1</i>), so other blocks can use it.</li><li><b>Characters</b> and <b>Models</b> — people, animals, trees, huts, gems and more (see the next page).</li><li><b>Events</b> — <i>when Run is clicked</i>, when a thing is clicked, when a key is pressed, when two things touch, and messages.</li><li><b>Motion</b> and <b>Looks</b> — move, glide, turn, resize, colour, show, hide, speech bubbles and words on the screen.</li><li><b>Sound</b> — sounds, notes and reading words out loud.</li><li><b>Physics</b> — <i>fall and bump</i> things drop and knock into each other; <i>solid but still</i> things never move. Bounciness, grip, weight, push.</li><li><b>Game</b> and <b>Camera</b> — control a player with the arrow keys, and make the camera follow it.</li><li><b>Control</b>, <b>Sensing</b>, <b>Operators</b>, <b>Variables</b> — wait, repeat, forever, if, touching, distance, timer, maths and joining words.</li></ul><p>Only blocks inside an <b>event</b> block (like <i>when Run is clicked</i>) do anything.</p>`],
  ['models',' Characters',`<h3>Characters</h3><p><b>make character</b> adds a person or animal. Pick one from the pictures. Characters can <b>play animations</b>: walk, run, wave, dance, clap, flip, swim and many more, <i>over and over</i>, <i>once</i>, or <i>once and wait</i>. Use <b>set hair / skin / eyes / T-shirt / shorts / sleeves colour</b> to dress them.</p><p>A character you <b>control</b> walks, runs and jumps by itself as you move it.</p><h3>Models</h3><p><b>make</b> in the Models group adds trees, rocks, huts, a pond, boats, aeroplanes, stars, gems, coins and more. They work just like shapes: move them, give them physics, check if they're touching.</p><p>The Blocky characters are the quickest. The Ponytail and Spiky hair characters have lots of detail, so use them one at a time on slower computers.</p>`],
  ['game',' Make a game',`<ol><li>Make a <b>character</b> called <i>player</i>, make it <b>fall and bump</b>, and add <b>control player with the arrow keys</b>.</li><li>Add <b>camera follows player</b> (or <i>from behind</i>).</li><li>Make some <b>solid but still</b> boxes to jump on.</li><li>Make a <b>Star</b> called <i>prize</i>, and add <b>when player touches prize</b> → <b>hide prize</b>, <b>change score by 1</b> and <b>show "Score: " + score on the screen</b>.</li><li>Add <b>play sound coin</b> and a <b>wave</b> animation to celebrate!</li></ol><p>Keys: <b>arrow keys</b> or <b>WASD</b> to move, <b>Space</b> to jump. On a tablet, buttons appear on the world.</p>`],
+ ['worlds',' Worlds & tasks',`<p><b>Worlds</b> (top right) opens ready-made worlds with characters and tasks: <i>Helper’s first steps</i>, <i>Build a bridge</i>, the <i>Maze run challenge</i>, <i>Design a garden</i> and a <i>Build competition arena</i>.</p><ul><li>Walk up to a <b>character</b> (the ones with a <b>!</b> want to talk) and press <b>E</b> or click them to hear what they say.</li><li>The <b>task list</b> shows what to do. Each task ticks itself when you've done it — building in an area, getting the helper somewhere, using a loop, typing a chat command…</li><li>In a <b>challenge</b>, press <b>Start</b> and beat the clock. Fewer blocks earn more stars. <b>Restart</b> puts the world back as it was.</li><li>Some worlds have rules: only some blocks, no flying, or only the helper's commands. Some areas are protected, so you can't change them.</li></ul>`],
+ ['make',' Make a world',`<p><b>Make</b> turns on the World Maker, so you (or your teacher) can make a world for others to play:</p><ul><li><b>Character:</b> click the ground to put one there. Give them a name, a colour, what they say, and what they say once their task is done.</li><li><b>Area:</b> click two corners to mark an area: a place to build in, a goal for the helper, a message when someone walks in, or a protected area. <b>Turn it into a maze</b> grows a hedge maze inside.</li><li><b>Tasks:</b> the checklist — go to an area, get the helper to an area, talk to someone, put N blocks in an area, fill an area, clear it, build a tower, type a chat word, or use a loop / if / variable in the code.</li><li><b>Settings:</b> title, welcome message, rules (blocks allowed, building, breaking, flying, Python, which commands), a timed <b>challenge</b> with a target number of blocks for 3 stars, and an <b>unlock word</b> so only you can change the world.</li><li><b>Set start</b> saves where players begin and how the world looks now. <b>Test</b> plays it as a pupil. <b>Done</b> finishes. Save and share it like any project, or give it to your class.</li></ul>`],
+ ['compete',' Competitions',`<p><b>Compete</b> runs a build competition or a coding contest between teams, in your class or across schools (you need to be signed in).</p><ul><li>A <b>teacher sets it up</b>: title, brief, building or coding, the map, how many teams and pupils per team (up to 6 each), minutes to build, the criteria and how it's judged: <b>judges' scorecards</b>, a <b>pupil vote</b> and/or <b>automatic checks</b>, mixed by the weights you choose. You get a 6-letter code.</li><li><b>Other teachers</b> (in any school) open it with the code, enter a team and pick pupils from their own classes. Pupils get a message to join.</li><li>A team builds <b>together live</b> in its own copy of the map. Building opens when the organiser presses <b>Start</b> and stops when the time is up.</li><li>Then <b>judging</b>: judges fill in scorecards, pupils can vote for another team's build, and the automatic checks count the tasks each team's world (or code) meets. <b>Results</b> shows the winners. Pupils only ever see each other's usernames, never real names.</li></ul>`],
  ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class.</p><h3>Build together</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to five classmates. Everyone sees the same blocks and the same world, and every change (even dragging a tree with the arrows) shows up on everyone's screen. You can see where your friends are pointing. <b>Run</b> only plays on your own screen, so each of you can test the game.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
@@ -7998,6 +8016,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p>The <b>Build Lab</b> is a world made of blocks that pupils walk round in first person and build in by hand (pick a block from the hotbar, click to place, right-click or press-and-hold to break; fly with F). Their code drives a <b>robot helper</b> (move, turn, place, dig, leave a trail, sense the block in front or below) and <b>builder commands</b> that fill, outline, draw lines and make balls of blocks at positions <b>right / up / ahead</b> of where the pupil is standing, so a build always appears in front of them. <b>Chat commands</b> are events: <i>when I type tower in the chat</i> runs when a pupil types “tower 6”, with the 6 in a variable.</p>
  <p><b>Blocks and Python, the same program:</b> the Python tab shows the blocks as real Python (<code>helper.move(FORWARD, 3)</code>, <code>@on_chat("tower")</code>, <code>for i in range(n):</code>) and turns edited Python back into blocks, with friendly line-by-line error messages. It is a good bridge from blocks to text: pupils can build in blocks, read the Python, change a number, and switch back.</p>
  <p><b>Big ideas to draw out:</b> <b>sequence</b> (the helper's moves), <b>repetition</b> (towers, walls and staircases are loops), <b>variables</b> (the number typed after a chat command; the loop counter in a staircase), <b>selection</b> with sensing (dig until the helper finds gold), <b>3D coordinates</b> (right, up, ahead) and the move from <b>blocks to text</b>. Undo build takes back any build, and New world starts again without losing the code.</p>
+ <p><b>Make your own worlds (World Maker):</b> press <b>Make</b> to add characters who talk to pupils, marked areas (with a message, as a goal or protected so pupils can't change them; any area can become a hedge maze), and a checklist of tasks that tick themselves (go somewhere, get the helper to a place, talk to a character, build N blocks or fill an area, clear it, build a tower, type a chat word, or use a loop, an <i>if</i> or a variable). In Settings you choose the welcome message and the rules: which blocks pupils may use, whether they can build, break or fly, Python on or off, and which commands (helper only, builder only or all). Turn on a <b>timed challenge</b> with a target number of blocks for three stars, and set an <b>unlock word</b> so pupils can't change your world. Then save it, share the link or give it to your class like any project. <b>Worlds</b> has five ready-made ones to start from: Helper's first steps, Build a bridge, Maze run challenge, Design a garden and a competition arena.</p>
+ <p><b>Competitions (build competitions and coding contests):</b> signed-in teachers press <b>Compete → Set up a competition</b> and choose a building or coding contest, the map (the arena, a flat world, a maze or the world they have open), up to 6 teams of up to 6 pupils, how many teams each school may enter, the time, the criteria with their points, and the judging: <b>judges' scorecards</b>, a <b>pupil vote</b> and/or <b>automatic checks</b> (the map's tasks; for coding contests each team's program is run on the map and fewer blocks score more), mixed by the weights you set. Share the 6-letter code with other teachers, including in other schools. They enter a team and pick pupils from their own classes, and those pupils get a message inviting them to join. Each team builds together live in its own copy of the map. As the organiser you press Start, watch any team, add judges, then move on to judging and publish the results. Teachers from other schools only see pupils' usernames, never their real names.</p>
  <h3> Robot Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>Robot Lab</b> is a robot to code with blocks: a 3D robot head and shoulders on a plinth, with eight motors from 0 to 10 (head turn, nod and tilt, eyes left/right and up/down, eyelids, eyebrows and mouth), lights in its eyes, ears, chest and antenna, and a voice (the browser's own speech, so no recordings are made or sent). Pupils name it and choose its colours. Blocks cover events (Run, tapping the robot, keys, messages), moves (move and wait, start moving, change by, move over time, speed, look), faces (happy, sad, surprised, angry, sleepy, thinking), lights, speech (say, say until done, voices, ask and answer), sensing (motor positions, keys, mouse position, timer), loops, if, maths, text and variables. It covers sequence, repetition, selection, variables and input/output, and works well for conversations, quizzes and short robot plays. Saving, sharing and handing in work as usual, and pupils can build a robot together live (Share → Collaborate): blocks, name and colours stay in step on every screen, while Run plays on each pupil's own screen.</p>
  <h3> Turtle (Logo)</h3>
@@ -10028,13 +10048,13 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.10';
+const CJ_VERSION='2026.10.11';
 const CJ_WHATSNEW=[
- "New: the Build Lab! Walk round a world made of blocks and build in it by hand — pick a block from the bar at the bottom, click to put it down, right-click to break it, and press F to fly.",
- "Code a robot helper to build for you: move, turn, place, dig and leave a trail. It can sense blocks too, so it can dig until it finds a gem.",
- "Builder commands make big things fast: walls, rooms, lines and balls of blocks, always built in front of wherever you stand.",
+ "New: the Build Lab! Walk round a world made of blocks, build in it by hand, and code a robot helper and builder commands in blocks or Python (it’s the same program).",
  "Chat commands: make a block like “when I type tower in the chat”, then type “tower 6” and watch it happen.",
- "Blocks or Python — it’s the same program. Switch to the Python tab to see your blocks as real Python, change it, and switch back.",
+ "Worlds: ready-made worlds with characters to talk to and tasks that tick themselves, including a timed maze challenge where fewer blocks earn more stars.",
+ "Teachers: press Make to build your own lesson worlds, with characters, areas, tasks, rules and challenges. Then share them or give them to your class.",
+ "Compete: run build competitions and coding contests. Teams of up to 6 build together live, even across schools, and you choose judges, a pupil vote or automatic checks.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

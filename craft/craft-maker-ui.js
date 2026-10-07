@@ -27,7 +27,7 @@ const fmtTime = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60)
 export function createMakerUI(app) {
   const { $, world, player, runner } = app;
   let maker = null, progress = null, editing = false, testing = null, tool = null, pendingCorner = null, moveNpc = null;
-  let checker = null, checkT = 0, inZones = new Set(), talking = null, nearNpc = null, finished = false;
+  let compMode = false, checker = null, checkT = 0, inZones = new Set(), talking = null, nearNpc = null, finished = false;
   let chal = null; // {t0, elapsed, running, over}
   const view = () => app.view();
 
@@ -95,7 +95,7 @@ export function createMakerUI(app) {
   function lessonActive() { return !!maker && !editing && (maker.tasks.length > 0 || maker.npcs.length > 0 || !!maker.intro); }
   function renderLesson() {
     const on = lessonActive(); $('crLesson').hidden = !on; $('crTip').hidden = on || editing; $('crMkBar').hidden = !editing;
-    $('crMakeBtn').hidden = editing || !!testing; $('crWorldsBtn').hidden = editing || !!testing;
+    $('crMakeBtn').hidden = editing || !!testing || compMode; $('crWorldsBtn').hidden = editing || !!testing || compMode;
     $('crMakeBtn').innerHTML = (maker && maker.lock ? IC.lock : IC.wand) + '<span>Make</span>';
     if (!on) return;
     $('crLTitle').textContent = maker.title;
@@ -392,13 +392,14 @@ export function createMakerUI(app) {
 
   // ── hooks for craft-app.js ──
   return {
-    load(m, p) {
+    load(m, p, opts) {
       editing = false; testing = null; tool = null; chal = null; talking = null; finished = false; inZones = new Set(); talkedOnce.clear();
       $('crTalk').hidden = true; hidePop();
       maker = M.cleanMaker(m); progress = M.cleanProgress(p, maker) || { done: [], best: null };
+      compMode = !!(opts && opts.comp); if (maker && compMode) { maker.challenge.on = false; maker.intro = ''; } // in a competition the organiser runs the clock
       checker = maker ? M.createChecker(maker) : null; if (checker) { checker.restore(progress.done); finished = checker.complete(); }
       applyRules(); renderLesson(); markers();
-      if (lessonActive() && !finished) setTimeout(welcome, 50);
+      if (lessonActive() && !finished && !(opts && opts.comp)) setTimeout(welcome, 50);
     },
     save() { return { maker: maker ? Object.assign({}, maker) : null, progress: maker ? { done: checker ? [...checker.done] : [], best: progress.best } : null }; },
     viewReady() { markers(); applyRules(); },

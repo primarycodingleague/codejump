@@ -320,7 +320,7 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   so deciding in the red event is in time. tests/lessons.test.mjs follows it to the depot after lap 3. The app now shows the program's
   variables top-right of the board (`#tlVars`, `renderVars`, from `runner._vars()`; cleared on Reset). Lesson card sits bottom-left in train-mode.
 
-## Build Lab project type — `projectType==='craft'` — on branch `claude/vibrant-cori-tho25y` (7 Oct 2026, CJ_VERSION 2026.10.10), NOT live yet
+## Build Lab project type — `projectType==='craft'` — on branch `claude/vibrant-cori-tho25y` (7 Oct 2026, CJ_VERSION 2026.10.11 with World Maker + competitions), NOT live yet
 Charlie: "Minecraft Education has a brilliant way of doing coding… could we replicate something like that?" → a new lab (chosen over a
 Stage/3D add-on) with: robot helper, walk around + chat, builder commands, Blocks ↔ Python. **Never use the Minecraft name, look, textures,
 characters (Steve, creepers) or "Agent" branding** — our own art and words ("Build Lab", "robot helper"), same rule as intelino/Ohbot/Flock/BBC.
@@ -361,7 +361,30 @@ characters (Steve, creepers) or "Agent" branding** — our own art and words ("B
   `body.craft-mode`, `#craft-ui`, payload `craft`, `#pt-modal` tile `data-pt="craft"` (KS1 hidden), home tile `data-start="craft"`
   (`home/craft.jpg`, a real screenshot), icon `#i-craft`, `CRAFT_HELP`, Teacher Guide "Build Lab" section, thumbnail badge, `LS_TYPE.craft`,
   `LS_LAB_ORDER`. No live collaboration. Test: `tests/craft.test.mjs` (world, translator + errors, runner, walking in Node; the app end to end).
-- **Ideas not done:** a lesson (Years 3–4 + 5–6), mobs/creatures, saving more than one world, a bigger world, multiplayer.
+- **World Maker (7 Oct 2026; Charlie: "teachers create resources… NPCs that give instructions and pop-ups… just like Minecraft Education"):**
+  `craft/craft-maker.js` (no DOM; the data shape is documented at its top) + `craft/craft-maker-ui.js` (`createMakerUI(app)`). Project gains
+  `maker` (title, intro, `lock` = 8-hex hash of the unlock word, start, helper, `startWorld`, `npcs` ≤20 {name,colour,x,y,z,f,lines,task,done},
+  `zones` ≤30 (≤32768 blocks) {name,a,b,msg,show,colour}, `tasks` ≤30 of `TASK_TYPES` visit/helper/talk/count/fill/clear/tower/chat/uses,
+  `rules` {build,break,fly,python,blocks,code 'all'|'helper'|'builder'|'none',protect:[zone ids]}, `challenge` {on,time,par}) and `progress`
+  {done, best{time,blocks,stars}}. `cleanMaker`/`cleanProgress` sanitise everything. `createChecker(maker).check(ctx)` ticks tasks;
+  `makeMaze(world, zone, {seed})`; `EXAMPLES`/`exampleProject(id)` = first-steps, bridge, maze (challenge 600 s, par 14), garden, arena.
+  UI: top-right `#crWorldsBtn` (gallery) + `#crMakeBtn` → `#crMkBar` tools Character/Area/Tasks/Settings/Set start/Test/Done; play side =
+  `#crLesson` checklist (+ challenge timer, Start/Restart), `#crNear` "press E", `#crTalk` dialogue, `#crPop` welcome/finish. NPCs are
+  figures in the view (`setMarkers`, name tags, a "!" while they want to talk, `pickNpc`). Rules: allowed hotbar blocks (`savedHot`),
+  `mk.canEdit` in `act()`, protected areas via `world.guard`, `runner.setAllow(fn)` (fn.why = the message) + `L.toolbox(code)`.
+- **Competitions (7 Oct 2026; needs cloud worker v17, on the codejump-cloud branch — NOT deployed until that branch reaches its main):**
+  `craft/craft-comp.js` (`createComp(app)`, button `#crCompBtn` "Compete", banner `#crComp`). Organiser (teacher) sets up: title, brief,
+  build|code, map (arena/flat/maze/current), maxTeams/teamSize ≤6, perSchool, minutes, criteria+points, judging {judges,vote,auto}+weights
+  → 6-char code. Teachers with the code enter a team + pick pupils from their OWN classes (pupils get an inbox notice kind 'comp' →
+  `inboxNext` → `withCraftLab(app=>app.openComp(code))`). Team room = WebSocket `/comproom/<code>/<team>` (Room DO comp mode): ops are
+  numbered by the server and echoed to everyone; clients apply locally at once and re-apply echoes with `world.remote=true` (skips guards).
+  `world.guards.comp` refuses building outside the building phase/time. Coding contests sync the code (newest wins); each pupil's Run is
+  local. Phases lobby → building (timer) → judging (scorecards, votes, `checkTeam` auto scores: tasks met; code = run headless, par
+  stars) → results. Cross-school views show usernames only, never real names. Tested end to end against `wrangler dev` (3 browser
+  windows; script kept in the session scratchpad, not the repo) + Node/app checks in tests/craft.test.mjs.
+- **Gotcha (fixed):** Blockly fires events after a timeout, so a fresh Build Lab marked itself unsaved (the starter load + `cleanUp`
+  moves). Loads now run in an event group `crload…` and cleanup moves are ignored by the change listener.
+- **Ideas not done:** a lesson (Years 3–4 + 5–6), mobs/creatures, saving more than one world, a bigger world.
 
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)
 Machine learning for KS2/KS3: pupils teach a computer to recognise their own DRAWINGS (no camera / no microphone — a deliberate

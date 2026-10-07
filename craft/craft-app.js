@@ -15,6 +15,7 @@ import { createRunner } from './craft-runner.js';
 import { createPlayer, raycast } from './craft-player.js';
 import { createView, blockIcon } from './craft-view.js';
 import { createMakerUI } from './craft-maker-ui.js';
+import { createComp } from './craft-comp.js';
 
 const CSS_URL = new URL('./craft-app.css', import.meta.url).href;
 const ic = id => '<svg class="ic"><use href="#' + id + '"></use></svg>';
@@ -101,7 +102,7 @@ export function mount(root, host) {
   let mode = 'blocks', pyText = '', hot = HOT_DEFAULT.slice(), slot = 1, cam = 'me', undo = [], savedHot = null, allowed = null, codeRule = 'all', flyOk = true;
   const keys = new Set(), pad = new Set();
   const status = (msg, kind) => { const s = $('crStatus'); s.textContent = msg || ''; s.className = 'cr-status' + (kind ? ' ' + kind : ''); };
-  const changed = () => { if (quiet) return; clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 300); };
+  const changed = () => { if (quiet) return;  clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 300); };
   const toast = (m, c) => { if (host.toast) host.toast(m, c); };
 
   // ── chat log ──
@@ -179,7 +180,7 @@ export function mount(root, host) {
   let errLine = 0, pyTimer = 0;
   function showPyError(e) { errLine = e.line; const el = $('crErr'); el.hidden = false; el.textContent = 'Line ' + e.line + ': ' + e.msg; renderPy(); }
   function hidePyError() { errLine = 0; $('crErr').hidden = true; }
-  src.addEventListener('input', () => { pyText = src.value; renderPy(); changed(); clearTimeout(pyTimer); pyTimer = setTimeout(() => { const r = L.fromPython(pyText); if (r.error) showPyError(r.error); else { hidePyError(); renderPy(); } }, 700); });
+  src.addEventListener('input', () => { pyText = src.value; renderPy(); changed(); sendCodeSoon(); clearTimeout(pyTimer); pyTimer = setTimeout(() => { const r = L.fromPython(pyText); if (r.error) showPyError(r.error); else { hidePyError(); renderPy(); } }, 700); });
   src.addEventListener('scroll', syncScroll);
   src.addEventListener('keydown', e => {
     e.stopPropagation();
@@ -242,8 +243,21 @@ export function mount(root, host) {
     clearUndo: () => { undo = []; }, snapshotUndo: snapshot,
     snapshot: () => ({ world: world.save(), player: { x: player.x, y: player.y, z: player.z, yaw: player.yaw, pitch: player.pitch }, helper: { ...runner.helper } }),
     restore(sn) { runner.stop(); world.load(sn.world); Object.assign(player, sn.player); player.vy = 0; Object.assign(runner.helper, sn.helper, { from: null, t: 1 }); },
-    openProject(p) { setProject(p); mk.viewReady(); changed(); }
+    openProject(p) { comp.leave(true); setProject(p); mk.viewReady(); changed(); }
   });
+  // ── competitions (craft-comp.js; the cloud comes from the host) ──
+  let codeSendT = 0;
+  const comp = createComp({ $, world, player, runner, view: () => view, log, status, toast, modal, closeModal,
+    cloud: () => host.cloud || null,
+    confirm: msg => (host.confirm ? host.confirm(msg) : Promise.resolve(window.confirm(msg))),
+    prompt: (msg, d) => (host.prompt ? host.prompt(msg, d) : Promise.resolve(window.prompt(msg, d))),
+    openProject(p, opts) { setProject(p, opts); mk.viewReady(); },
+    currentProject: () => getProject(),
+    loadProgram(blocks) { if (mode === 'python') { pyText = L.toPython(blocks); src.value = pyText; renderPy(); } loadBlocks(blocks); },
+    busyEditing: () => !!(ws && ws.isDragging && ws.isDragging()) || document.activeElement === src,
+    compRules(r) { $('crHot').hidden = !!r && (r.ro || r.kind === 'code'); if (r && r.ro) status(r.kind === 'code' ? 'You’re watching — this is the team’s code.' : 'You’re watching — you can walk round but not build.'); }
+  });
+  function sendCodeSoon() { if (!comp.canCode()) return; clearTimeout(codeSendT); codeSendT = setTimeout(() => { const st = programState(true); if (st) comp.codeChanged(st); }, 900); }
   let drag = null, hover = null, wasBusy = false;
   function camPose() {
     if (cam === 'helper') {
@@ -330,14 +344,15 @@ export function mount(root, host) {
   const num = (v, lo, hi, d) => { v = Number(v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
   function loadBlocks(state, cleanUp) {
     if (!ws) return; quiet = true;
+    Blockly.Events.setGroup('crload' + Date.now()); // Blockly fires events after a timeout, so quiet alone can't hide them
     try { ws.clear(); Blockly.serialization.workspaces.load(state || L.starterProgram(), ws); if (cleanUp) ws.cleanUp(); }
     catch (e) { ws.clear(); Blockly.serialization.workspaces.load(L.starterProgram(), ws); toast('Some blocks couldn’t be loaded, so the example is back.'); }
-    finally { quiet = false; }
+    finally { quiet = false; Blockly.Events.setGroup(false); }
     try { ws.scroll(20, 20); } catch (e) { /* hidden */ }
   }
   let pending = host.project || null;
-  function setProject(p) {
-    p = p && typeof p === 'object' ? p : {};
+  function setProject(p, opts) {
+    p = p && typeof p === 'object' ? p : {}; opts = opts || {};
     runner.stop(); undo = [];
     quiet = true;
     try {
@@ -353,7 +368,7 @@ export function mount(root, host) {
       mode = 'blocks'; $('crBlocks').hidden = false; $('crPy').hidden = true; root.querySelectorAll('.cr-tab').forEach(t => t.classList.toggle('on', t.dataset.m === 'blocks'));
       if (p.mode === 'python' && typeof p.py === 'string') { pyText = p.py.slice(0, 50000); src.value = pyText; mode = 'python'; $('crBlocks').hidden = true; $('crPy').hidden = false; root.querySelectorAll('.cr-tab').forEach(t => t.classList.toggle('on', t.dataset.m === 'python')); renderPy(); const r = L.fromPython(pyText); if (r.error) showPyError(r.error); else hidePyError(); }
       $('crFly').classList.toggle('on', player.fly); root.querySelector('#crPad2 [data-k="d"]').hidden = !player.fly;
-      savedHot = null; mk.load(p.maker, p.progress);
+      savedHot = null; mk.load(p.maker, p.progress, opts);
     } finally { quiet = false; }
     renderHot();
     status('Press Run, or type a chat command. Click the world, then W A S D to walk.');
@@ -370,7 +385,7 @@ export function mount(root, host) {
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
-    ws.addChangeListener(e => { if (quiet || e.isUiEvent) return; changed(); });
+    ws.addChangeListener(e => { if (quiet || e.isUiEvent || String(e.group || '').startsWith('crload') || (e.reason && e.reason.includes('cleanup'))) return; changed(); sendCodeSoon(); });
     view = createView(THREE, cv, world);
     setProject(pending); pending = null; mk.viewReady();
     $('crLoading').hidden = true; view.resize(); raf = requestAnimationFrame(tick);
@@ -378,11 +393,11 @@ export function mount(root, host) {
 
   return {
     ready, getProject,
-    setProject(p) { if (!ws) { pending = p; return; } setProject(p); if (!raf && view) raf = requestAnimationFrame(tick); },
+    setProject(p) { if (!ws) { pending = p; return; } comp.leave(true); setProject(p); mk.viewReady(); if (!raf && view) raf = requestAnimationFrame(tick); },
     resume() { if (view) view.resize(); if (ws) Blockly.svgResize(ws); if (!raf && view) raf = requestAnimationFrame(tick); },
-    pause() { runner.stop(); keys.clear(); pad.clear(); cancelAnimationFrame(raf); raf = 0; },
-    destroy() { alive = false; ro.disconnect(); cancelAnimationFrame(raf); runner.stop(); if (view) view.dispose(); if (ws) ws.dispose(); root.innerHTML = ''; },
-    run, chat, setMode,
+    pause() { comp.leave(true); runner.stop(); keys.clear(); pad.clear(); cancelAnimationFrame(raf); raf = 0; },
+    destroy() { comp.leave(true); alive = false; ro.disconnect(); cancelAnimationFrame(raf); runner.stop(); if (view) view.dispose(); if (ws) ws.dispose(); root.innerHTML = ''; },
+    run, chat, setMode, openComp: code => comp.open(code), compPanel: () => comp.panel(), _comp: () => comp,
     _mk: () => mk, _world: () => world, _player: () => player, _runner: () => runner, _ws: () => ws, _view: () => view, _act: act, _pick: pick, _slot: n => { slot = n; renderHot(); }
   };
 }

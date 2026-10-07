@@ -99,8 +99,11 @@ export function createWorld() {
       if (!inside(x, y, z) || id < 0 || id >= NBLOCKS) return false;
       if (y === 0 && id === 0) return false; // the bottom layer can't be dug away (you'd fall out of the world)
       const i = idx(x, y, z); if (cells[i] === id) return false;
-      if (w.guard && !w.guard(x, y, z, id)) return false; // a protected area (World Maker) stays as it is
-      const old = cells[i]; cells[i] = id; for (const f of listeners) f(x, y, z, id, old); return true;
+      if (!w.remote) { // a teammate's change (competition room) is applied as it is
+        if (w.guard && !w.guard(x, y, z, id)) return false; // a protected area (World Maker) stays as it is
+        for (const k in w.guards) if (!w.guards[k](x, y, z, id)) return false; // e.g. a competition outside its build time
+      }
+      const old = cells[i]; cells[i] = id; for (const f of listeners) f(x, y, z, id, old, w.remote); return true;
     },
     onChange(f) { listeners.push(f); },
     // a box between two corners. mode: 'SOLID' fills it, 'HOLLOW' = walls, floor and roof with air inside,
@@ -157,7 +160,7 @@ export function createWorld() {
       cells.set(tmp); for (const f of listeners) f(-1, -1, -1); return true;
     },
     reset(kind) { starter(w, kind); for (const f of listeners) f(-1, -1, -1); },
-    guard: null
+    guard: null, guards: {}, remote: false
   };
   starter(w);
   return w;

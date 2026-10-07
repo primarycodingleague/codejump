@@ -7,6 +7,8 @@ const L = await import(pathToFileURL(ROOT + '/craft/craft-lang.js').href);
 const { createRunner } = await import(pathToFileURL(ROOT + '/craft/craft-runner.js').href);
 const { createPlayer, raycast } = await import(pathToFileURL(ROOT + '/craft/craft-player.js').href);
 const { BY_NAME: B, GROUND } = CW;
+const M = await import(pathToFileURL(ROOT + '/craft/craft-maker.js').href);
+const { checkTeam } = await import(pathToFileURL(ROOT + '/craft/craft-comp.js').href);
 
 // run a program to the end, standing at (x, GROUND+1, z) facing north
 function play(py, { chat, x = 32, z = 40, secs = 30, setup } = {}) {
@@ -72,6 +74,72 @@ function play(py, { chat, x = 32, z = 40, secs = 30, setup } = {}) {
   ok(hit && hit.y === GROUND && hit.ny === 1, 'looking down picks the grass under you (for building)');
 }
 
+// ── World Maker (teacher-made worlds) ──
+const runTo = (w, maker, py, max = 6000) => { // runs a program on a world the way the app does; returns the helper + checker
+  const st = maker.start, me = { x: st.x, y: st.y, z: st.z, facing: 0 }, r = createRunner(w, { player: () => me }); Object.assign(r.helper, maker.helper);
+  const prog = L.fromPython(py).state, c = M.createChecker(maker); r.load(prog); r.start();
+  for (let i = 0; i < max && r.running(); i++) { r.tick(1 / 60); if (i % 20 === 0) c.check({ world: w, player: me, helper: r.helper, program: prog }); }
+  c.check({ world: w, player: me, helper: r.helper, program: prog }); return { r, c, prog };
+};
+const mazePath = (w, maker) => { // the shortest way through the maze, as Python
+  const h = maker.helper, g = maker.zones[1].a, b = M.box(maker.zones[0]), prev = new Map([[h.x + ',' + h.z, null]]), q = [[h.x, h.z]];
+  while (q.length) { const [x, z] = q.shift(); if (x === g[0] && z === g[2]) break; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (x + dx) + ',' + (z + dz); if (!prev.has(k) && w.get(x + dx, h.y, z + dz) === 0 && x + dx >= b.x0 && x + dx <= b.x1 && z + dz >= b.z0 && z + dz <= b.z1) { prev.set(k, [x, z]); q.push([x + dx, z + dz]); } } }
+  const path = []; for (let c = [g[0], g[2]]; c; c = prev.get(c[0] + ',' + c[1])) path.unshift(c);
+  const F = [[0, -1], [1, 0], [0, 1], [-1, 0]], out = []; let f = h.f;
+  for (let i = 1; i < path.length; i++) { const nf = F.findIndex(v => v[0] === path[i][0] - path[i - 1][0] && v[1] === path[i][1] - path[i - 1][1]), t = (nf - f + 4) % 4;
+    if (t === 1) out.push('helper.turn(RIGHT)'); else if (t === 3) out.push('helper.turn(LEFT)'); else if (t === 2) out.push('helper.turn(RIGHT)', 'helper.turn(RIGHT)'); f = nf;
+    const m = /^helper\.move\(FORWARD, (\d+)\)$/.exec(out[out.length - 1] || ''); if (m) out[out.length - 1] = 'helper.move(FORWARD, ' + (+m[1] + 1) + ')'; else out.push('helper.move(FORWARD, 1)'); }
+  return { py: out.join('\n') + '\n', found: path.length > 1 && path[0][0] === h.x && path[0][1] === h.z };
+};
+{
+  for (const e of M.EXAMPLES) { const p = M.exampleProject(e.id); ok(p.maker && JSON.stringify(M.cleanMaker(p.maker)) === JSON.stringify(p.maker) && CW.createWorld().load(p.world), 'ready-made world “' + e.title + '” loads and is already clean'); }
+  const fs = M.exampleProject('first-steps'), w = CW.createWorld(); w.load(fs.world);
+  const a = runTo(w, fs.maker, 'helper.move(FORWARD, 10)\nhelper.turn(RIGHT)\nhelper.move(FORWARD, 7)\n');
+  ok(a.c.done.has('tGoal') && !a.c.done.has('tLoop') && !a.c.complete(), 'first steps: the helper reaches the gold, but there’s no loop yet');
+  w.load(fs.world); const a2 = runTo(w, fs.maker, 'for _ in range(10):\n    helper.move(FORWARD, 1)\nhelper.turn(RIGHT)\nhelper.move(FORWARD, 7)\n'); a2.c.talk('npcRo'); a2.c.check({ world: w, player: {}, helper: a2.r.helper, program: a2.prog });
+  ok(a2.c.complete(), '…with a loop and a chat with Ro, every task is ticked');
+  const br = M.exampleProject('bridge'); w.load(br.world); const cb = M.createChecker(br.maker);
+  cb.check({ world: w, player: { x: 33.5, y: GROUND + 1, z: 42.5 }, helper: {}, program: null });
+  ok(!cb.done.has('tBridge') && !cb.done.has('tCross'), 'bridge: nothing is ticked at the start');
+  w.fill(B.PLANKS, [31, GROUND, 29], [33, GROUND, 32], 'SOLID'); cb.check({ world: w, player: { x: 32.5, y: GROUND + 1, z: 24.5 }, helper: {}, program: null });
+  ok(cb.done.has('tBridge') && cb.done.has('tCross'), '…filling the spot with planks and walking across ticks both');
+  const ga = M.exampleProject('garden'); w.load(ga.world); const cg = M.createChecker(ga.maker);
+  for (let i = 0; i < 8; i++) w.set(27 + i, GROUND + 1, 28, B.RED); for (let y = 1; y <= 5; y++) w.set(33, GROUND + y, 33, B.LOG);
+  cg.check({ world: w, player: {}, helper: {}, program: null }); ok(cg.done.has('tFlowers') && cg.done.has('tTower'), 'garden: 8 flowers and a 5-high tower are counted');
+  const mz = M.exampleProject('maze'); w.load(mz.world); const mp = mazePath(w, mz.maker);
+  ok(mp.found, 'the maze can be solved');
+  const am = runTo(w, mz.maker, mp.py, 60 * 120); ok(am.c.complete(), 'the shortest route takes the helper to the gold');
+  w.load(mz.world); const cheat = runTo(w, mz.maker, 'helper.move(FORWARD, 30)\n', 600);
+  const ch = cheat.r.helper; ok(!cheat.c.complete() && ch.z - mz.maker.helper.z < 30 && w.get(ch.x, ch.y, ch.z + 1) === B.LEAVES, 'the helper can’t walk through the hedges (it stops at one)');
+  ok(M.stars(10, 14) === 3 && M.stars(20, 14) === 2 && M.stars(40, 14) === 1, 'fewer blocks earn more stars (3 / 2 / 1)');
+  const junk = M.cleanMaker({ tasks: [{ type: 'evil' }, { type: 'visit', zone: 'nope' }, { type: 'talk', npc: 'x' }], npcs: Array.from({ length: 40 }, (_, i) => ({ id: 'n' + i, name: 'N' })), zones: [{ id: 'zz', a: [0, 1, 0], b: [63, 39, 63] }], lock: 'pass' });
+  ok(junk.tasks.length === 0 && junk.npcs.length === 20 && M.box(junk.zones[0]).x1 - M.box(junk.zones[0]).x0 <= 31 && junk.lock === '', 'cleanMaker drops bad tasks and caps characters, area size and the lock');
+  // protected areas + remote changes
+  const gw = CW.createWorld(); gw.guard = (x) => x !== 5;
+  ok(!gw.set(5, GROUND + 1, 5, B.STONE) && gw.set(6, GROUND + 1, 5, B.STONE), 'a protected area refuses changes');
+  gw.remote = true; ok(gw.set(5, GROUND + 1, 5, B.STONE), '…but a teammate’s change (sent from the room) still lands'); gw.remote = false;
+  // rules: which commands a world allows
+  const tb = JSON.stringify(L.toolbox('helper')); ok(/Helper/.test(tb) && !/"Builder"/.test(tb), 'a helper-only world hides the Builder blocks');
+  const rr = createRunner(CW.createWorld(), { player: () => ({ x: 32, y: GROUND + 1, z: 40, facing: 0 }), error: m => (rr.err = m) });
+  const deny = t => !/^cr_b_/.test(t); deny.why = 'Builder blocks are switched off in this world.'; rr.setAllow(deny);
+  rr.load(L.fromPython('builder.place(STONE, 0, 0, 2)\n').state); rr.start(); for (let i = 0; i < 30 && rr.running(); i++) rr.tick(1 / 60);
+  ok(/switched off/.test(rr.err || ''), 'a switched-off command stops with a friendly message');
+}
+// ── competitions: automatic checks ──
+{
+  const ar = M.exampleProject('arena'), map = { world: ar.world }, maker = M.cleanMaker({ ...ar.maker, tasks: [{ id: 'tT', type: 'tower', zone: 'zPlot', n: 6 }, { id: 'tC', type: 'count', zone: 'zPlot', block: 'GLASS', n: 4 }] });
+  const sets = []; for (let y = 1; y <= 6; y++) sets.push([30, GROUND + y, 30, B.STONE]);
+  const half = await checkTeam(map, maker, { doc: null, log: [{ seq: 1, sets }] }, 'build');
+  ok(half.score === 50, 'a build contest scores the tasks a team’s world meets (1 of 2 = 50)');
+  for (let x = 0; x < 4; x++) sets.push([25 + x, GROUND + 1, 25, B.GLASS]);
+  ok((await checkTeam(map, maker, { doc: null, log: [{ seq: 1, sets }] }, 'build')).score === 100, '…and both = 100');
+  const mz = M.exampleProject('maze'), w = CW.createWorld(); w.load(mz.world); const mp = mazePath(w, mz.maker);
+  const good = await checkTeam({ world: mz.world }, mz.maker, { doc: { code: { blocks: L.fromPython(mp.py).state } } }, 'code');
+  ok(good.score >= 80 && /1 of 1 tasks/.test(good.detail), 'a coding contest runs the team’s code: reaching the gold scores at least 80 (' + good.score + ')');
+  const bad = await checkTeam({ world: mz.world }, mz.maker, { doc: { code: { blocks: L.fromPython('helper.move(FORWARD, 3)\n').state } } }, 'code');
+  ok(bad.score === 0, '…and code that doesn’t get there scores 0');
+}
+
 // ── the app ──
 const site = await serve(); const b = await browser(); const errors = [];
 try {
@@ -127,6 +195,29 @@ try {
     return { mode: document.body.classList.contains('craft-mode'), tower: n, says: craftApp._ws().getAllBlocks(false).filter(b => b.type === 'cr_h_say').length };
   });
   ok(back.mode && back.tower === 4 && back.says === 2, (back.mode && back.tower === 4 && back.says === 2 ? '' : JSON.stringify(back) + ' ') + 'reopening the project brings back the world (the tower) and the code');
+
+  // ── World Maker in the app ──
+  await page.click('#crWorldsBtn'); await page.click('[data-ex="bridge"]'); await page.click('#cj-dialog .cj-dlg-btn.ok');
+  await page.waitForSelector('#crGo', { timeout: 10000 });
+  ok(await page.evaluate(() => /river/.test(document.getElementById('crPop').textContent)), 'opening a ready-made world shows its welcome');
+  await page.click('#crGo');
+  ok(await page.evaluate(() => !document.getElementById('crLesson').hidden && document.querySelectorAll('#crLTasks li').length === 3), 'the task list shows its 3 tasks');
+  await page.evaluate(() => craftApp._mk()._talk('npcBea')); await sleep(300);
+  ok(await page.evaluate(() => /river is too wide/.test(document.getElementById('crTalk').textContent)), 'talking to Bea shows what she says');
+  await page.evaluate(async () => { for (let i = 0; i < 4; i++) { document.getElementById('crTalkNext').click(); await new Promise(r => setTimeout(r, 80)); } });
+  await page.waitForFunction(() => document.querySelector('#crLTasks li.ok'), null, { timeout: 5000 });
+  ok(true, '…and ticks “talk to Bea”');
+  await page.evaluate(() => { const w = craftApp._world(); w.fill(5, [31, 12, 29], [33, 12, 32], 'SOLID'); });
+  await page.waitForFunction(() => document.querySelectorAll('#crLTasks li.ok').length === 2, null, { timeout: 5000 });
+  ok(true, 'building the bridge ticks the second task');
+  await page.evaluate(() => craftApp._mk()._enter()); await sleep(200);
+  ok(await page.evaluate(() => !document.getElementById('crMkBar').hidden && document.getElementById('crLesson').hidden), 'Make opens the World Maker tools');
+  await page.evaluate(() => craftApp._mk()._leave()); await sleep(200);
+  const mk = await page.evaluate(() => { const p = buildPayload().craft; return { npcs: p.maker.npcs.length, tasks: p.maker.tasks.length, done: p.progress && p.progress.done.length }; });
+  ok(mk.npcs === 1 && mk.tasks === 3, 'the world’s characters and tasks save with the project');
+  await page.click('#crCompBtn'); await sleep(200);
+  ok(await page.evaluate(() => /Sign in to take part/.test(document.getElementById('crModal').textContent)), 'Compete asks you to sign in when you aren’t');
+  await page.click('#crModalX');
   ok(await page.evaluate(() => typeof helpTabs === 'function' && helpTabs() === CRAFT_HELP), 'Help shows the Build Lab help');
   ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await b.close(); site.close(); }

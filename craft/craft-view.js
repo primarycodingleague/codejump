@@ -338,6 +338,17 @@ export function createView(THREE, canvas, world) {
     }
   }
   function setAttention(set) { for (const [id, G] of npcObjs) G.userData.mark.visible = !!(set && set.has(id)); }
+  // teammates in a competition room: a figure in their colour with their name, gliding to where they are
+  const mates = new Map();
+  function setMates(list) {
+    const seen = new Set();
+    for (const m of list || []) {
+      seen.add(m.uid); let G = mates.get(m.uid);
+      if (!G) { G = npcModel({ id: 'mate:' + m.uid, name: m.name, colour: m.color || '#ffd166', f: 0, x: m.x - 0.5, y: m.y, z: m.z - 0.5 }); G.userData.mate = true; markG.parent.add(G); mates.set(m.uid, G); G.position.set(m.x, m.y, m.z); }
+      G.userData.to = { x: m.x, y: m.y, z: m.z, yaw: m.yaw };
+    }
+    for (const [uid, G] of mates) if (!seen.has(uid)) { scene.remove(G); G.traverse(q => { if (q.geometry) q.geometry.dispose(); }); mates.delete(uid); }
+  }
   const rc = new THREE.Raycaster();
   function pickNpc(px, py) {
     if (!npcObjs.size) return null;
@@ -403,6 +414,7 @@ export function createView(THREE, canvas, world) {
         const dx = opts.me.x - G.position.x, dz = opts.me.z - G.position.z, near = dx * dx + dz * dz < 36;
         let want = near ? Math.atan2(-dx, -dz) : -G.userData.f * Math.PI / 2, cur = G.rotation.y; while (want - cur > Math.PI) want -= Math.PI * 2; while (cur - want > Math.PI) want += Math.PI * 2;
         G.rotation.y = cur + (want - cur) * Math.min(1, dt * 6); G.userData.mark.position.y = 2.5 + Math.sin(now / 300) * 0.06; } }
+    for (const G of mates.values()) { const to = G.userData.to; if (!to) continue; const k = Math.min(1, dt * 8); G.position.x += (to.x - G.position.x) * k; G.position.y += (to.y - G.position.y) * k; G.position.z += (to.z - G.position.z) * k; G.rotation.y = to.yaw; }
     // puffs
     let live = false;
     for (let i = 0; i < PN; i++) { const p = parts[i]; if (p.life <= 0) continue; live = true; p.life -= dt; p.vy -= 12 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
@@ -426,6 +438,6 @@ export function createView(THREE, canvas, world) {
     return { o: [camera.position.x, camera.position.y, camera.position.z], d: [v.x, v.y, v.z] };
   }
   world.onChange((x, y, z, id, old) => { dirty(x, y, z); if (x >= 0 && builtFirst) puff(x, y, z, id || old); });
-  return { render, dirty, dirtyAll, setTime, time: () => timeName, highlight, resize, screenRay, atlas, renderer, camera, scene, setMarkers, setAttention, pickNpc,
+  return { render, dirty, dirtyAll, setTime, time: () => timeName, highlight, resize, screenRay, atlas, renderer, camera, scene, setMarkers, setAttention, pickNpc, setMates,
     dispose() { renderer.dispose(); tex.dispose(); pmrem.dispose(); for (const ms of chunks.values()) for (const m of ms) m.geometry.dispose(); }, _chunks: chunks };
 }

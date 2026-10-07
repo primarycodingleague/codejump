@@ -192,3 +192,36 @@
 .cr .cr-wcard b { color: #fff; font-size: 15px; } .cr .cr-wcard small { color: var(--cr-gold); font-weight: 800; font-size: 11.5px; } .cr .cr-wcard span { font-size: 13px; line-height: 1.4; color: #bbb; }
 .cr .cr-msg.ok { background: rgba(30, 110, 55, 0.78); }
 @media (max-width: 820px) { .cr .cr-tip { display: none; } .cr .cr-mkbar { right: 10px; top: 56px; } .cr .cr-lesson { top: 56px; } }
+
+/* ── competitions ── */
+.cr .cr-comp { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 20px); z-index: 3;
+  color: #fff; font-weight: 800; font-size: 13px; padding: 5px 6px 5px 14px; border-radius: 999px; background: rgba(20,22,30,.8); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid rgba(255,209,102,.45); box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.cr .cr-cteam { color: #ffd98a; }
+.cr .cr-cphase { padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.12); font-variant-numeric: tabular-nums; }
+.cr .cr-cphase.building { background: #2e8b57; } .cr .cr-cphase.building.low { background: #c0392b; } .cr .cr-cphase.judging { background: #7c5cff; } .cr .cr-cphase.results { background: var(--cr-gold); }
+.cr .cr-cwho { color: rgba(255,255,255,.75); font-weight: 600; font-size: 12px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr .cr-comp button { border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 800; font-size: 12.5px; padding: 6px 12px; cursor: pointer; }
+.cr .cr-comp #crCVote { background: var(--cr-gold); }
+.cr .cr-codebox { background: rgba(174,133,62,.18); border: 2px dashed var(--cr-gold); border-radius: 14px; padding: 12px; text-align: center; font-weight: 700; margin: 8px 0; }
+.cr .cr-codebox b { display: block; font-size: 40px; letter-spacing: .18em; color: #ffd98a; font-family: ui-monospace, Menlo, Consolas, monospace; margin-top: 4px; user-select: all; }
+.cr .cr-steps { list-style: none; display: flex; gap: 4px; padding: 0; margin: 10px 0; counter-reset: s; }
+.cr .cr-steps li { flex: 1; text-align: center; font-size: 12px; font-weight: 800; padding: 6px 4px; border-radius: 8px; background: #1b1b1f; color: #888; }
+.cr .cr-steps li.done { color: #7bd88f; } .cr .cr-steps li.on { background: var(--cr-gold); color: #fff; }
+.cr .cr-big { text-align: center; font-size: 30px; font-weight: 900; margin: 4px 0; font-variant-numeric: tabular-nums; color: #ffd98a; }
+.cr .cr-brief { background: #1b1b1f; border-left: 4px solid var(--cr-gold); border-radius: 8px; padding: 8px 12px; font-weight: 600; }
+.cr .cr-board { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-direction: column; gap: 6px; }
+.cr .cr-board li { display: flex; align-items: center; gap: 12px; background: #1b1b1f; border-radius: 12px; padding: 8px 14px; }
+.cr .cr-board li b { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #333; font-size: 15px; }
+.cr .cr-board li.p1 b { background: #ffc23c; color: #2b2240; } .cr .cr-board li.p2 b { background: #c9d1d9; color: #2b2240; } .cr .cr-board li.p3 b { background: #cd7f32; color: #fff; }
+.cr .cr-board li span { flex: 1; font-weight: 800; } .cr .cr-board li small { display: block; color: #999; font-weight: 600; }
+.cr .cr-board li em { font-style: normal; font-weight: 900; font-size: 18px; color: #ffd98a; }
+.cr .cr-crit { display: flex; gap: 6px; align-items: center; margin: 5px 0; }
+.cr .cr-crit input { font: inherit; padding: 7px 9px; border-radius: 8px; border: 1px solid #555; background: #1b1b1f; color: #fff; }
+.cr .cr-crit input[type=text] { flex: 1; min-width: 0; } .cr .cr-crit input[type=number] { width: 70px; }
+.cr .cr-crit button { border: 0; background: #5a1e1e; color: #fff; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 18px; }
+.cr .cr-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.cr .cr-w { width: 64px; margin-left: auto; font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid #555; background: #1b1b1f; color: #fff; }
+.cr .cr-row { display: flex; gap: 6px; margin-top: 4px; } .cr .cr-row input { flex: 1; margin: 0 !important; }
+.cr .cr-row button { border: 1px solid #555; background: #333; color: #fff; font-weight: 800; border-radius: 8px; padding: 0 16px; cursor: pointer; }
+.cr .cr-pick2 { max-height: 280px; overflow: auto; background: #1b1b1f; border-radius: 10px; padding: 4px 10px; }
+.cr .cr-mkbtns #crCompBtn { background: rgba(174,133,62,.55); }

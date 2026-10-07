@@ -225,6 +225,34 @@ or `startNewStage`.
 - KS1: characters drawn ×1.5 (`costumeK`) and `ks1BumpCheck` uses the same factor; the KS1 stage keeps its 5:3 shape
   (`body.ks1-mode #gc` width/height auto) — it used to stretch to fill the box.
 
+## Stage PAINT EDITOR rebuilt, Scratch-style (7 Oct 2026, same CJ_VERSION 2026.10.09) — Charlie: "proper editing… colour wheels… not just the whole colour"
+- Replaces the old bitmap-only editor (whose tool icons had been lost in the emoji strip). `openPaintEditor({kind:'costume'|'backdrop', name,
+  vec|img(+res,cx,cy)|color, tool, onSave(result,name)})` → result `{vec}` (vector) or `{img,res,cx,cy}` (bitmap costume, cropped, res 2, cx/cy =
+  rotation centre in px) or `{img}` (bitmap backdrop, 960×576). State in `PE`; everything `pe*`; markup `#paint-modal .pe`, CSS `.pe-*`.
+- **Drawing format (`vec`)** `{w,h,shapes}`, (0,0) = artboard centre = costume rotation centre (costume artboard 480×360, backdrop 960×576 =
+  stage px). Shapes back→front: `{k:'path', d:[['M',x,y],['L'…],['Q'…],['C'…],['Z']], f, s, w, gt (0 solid,1 shaded=cGrad look,2 down,3 across,
+  4 glow) + f2, lc, m:[a,b,c,d,e,f], cl (clip, local), gl/gb (glow), g (group id)}`, `{k:'text',t,z,fo (VEC_FONTS),f,m}`, `{k:'img',src,iw,ih,m}`.
+  Caches (Path2D, boxes, images, stage bitmaps) are WeakMaps, so drawings stay plain JSON. `sanitizeVec` (whitelists commands/colours, clamps,
+  caps 1500/3000 shapes, 60k commands, 2.5 MB images) is used by `sanitizeCostume`/`sanitizeBackdrop` (load, share, collab).
+- **Built-ins → parts:** `vecRecord(fn, baseMatrix)` is a fake 2D context that records any canvas drawing as shapes (arcs → béziers,
+  transforms baked in, radial gradient → shaded, linear → down/across, clip and shadow kept). `vecFromBuiltin(name,color,pose)` records the
+  character ×2 (stage size) → ~7–29 parts. Ready-made backdrops `BD_LIBRARY` (meadow, night, sea, space, beach, room, city; plain canvas paint fns
+  in 960×576) → `vecFromBackdrop(key)`; picker `#bd-lib` (`bdToggleLibrary`, button `#bd-add-lib`).
+- **Stage:** `paintSpriteCostume` draws `co.vec` (thumbnails fit `box`; stage via `vecDrawCached`, a bitmap per scale bucket) and new bitmaps
+  with `res/cx/cy`; `costumeK` vec = 1 (0.75 KS1); `costumeHalf` from `vecBounds` / image size; touching uses `stHitRadius` (built-ins keep 22·k).
+  `drawStage`/`drawBackdropThumb` draw `bd.vec`. Old 300×300 `img` costumes keep their old 110-box behaviour until re-saved.
+- **Tools (vector):** Select (click/shift/marquee, move, 8 scale handles — corners keep shape, Shift free — rotate handle, arrows nudge),
+  Reshape (drag anchor/control points; first+last of a closed loop move together; Delete removes a point), Brush (RDP + quadratic smoothing,
+  stroke in Fill colour), Fill (one part; open paths get their outline), Text (textarea overlay `#pe-text`), Line/Circle/Rectangle (Shift).
+  Top bar: Undo/Redo (JSON snapshots), Group/Ungroup, Forward/Backward/Front/Back, Copy/Paste/Delete, Flip. **Bitmap:** Brush, Eraser, Fill
+  (flood, tolerance), Text, Line, Circle, Rectangle, Select (lift → move → drop). Convert to Bitmap / Vector (vector of a bitmap = one img part).
+- **Colour pop-up `#pe-pop`:** fill styles, two-colour gradients (Colour 1/2 + swap), HSV wheel + Bright slider, hex, 20 swatches, eyedropper
+  (samples the editor canvas), none. Changes apply live to the picked parts.
+- Keys only while open (`peKey`, capture phase); the editor blurs the button behind it and focuses `#pe-cv` (Enter used to re-press "Edit"
+  and reopen the editor). Cancel with changes → `cjConfirm`. Help: STAGE_HELP 'paint' tab; Teacher Guide Stage bullet.
+- Test: tests/paint.test.mjs (parts, recolour one part, move/undo/scale/rotate/group/front/delete, square, text, brush, reshape, wheel, hex,
+  eyedropper, save → payload round-trip, sanitize, bitmap crop + centre, library, backdrop recolour reaches the stage, cancel asks).
+
 ## Train Lab project type — `projectType==='train'` — LIVE on main since 6 Oct 2026 (CJ_VERSION 2026.10.08.3; built on branch `claude/vibrant-cori-tho25y`)
 Charlie's idea: a virtual intelino-style smart-train set (**never use the intelino name or logo in the UI** — it's "Train Lab"). Charlie
 asked for the look AND the default behaviour to match intelino EXACTLY; reference = intelino's K-1 "snap training" worksheets Charlie shared

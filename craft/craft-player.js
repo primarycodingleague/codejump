@@ -2,9 +2,10 @@
  *   const p = createPlayer(world, x, y, z) · p.step(dt, {fwd, side, jump, down}) · p.yaw/p.pitch · p.fly · p.facing()
  * The player is a 0.6 × 1.75 box; it collides with solid blocks one axis at a time, so it slides along walls.
  */
-import { isSolid } from './craft-world.js';
+import { isSolid, BY_NAME } from './craft-world.js';
 
-const HALF = 0.3, TALL = 1.75, GRAV = 28, JUMP = 8.6, WALK = 4.4, FLY = 9;
+const HALF = 0.3, TALL = 1.75, GRAV = 28, JUMP = 8.6, WALK = 4.4, FLY = 9, BOUNCE_UP = 15;
+const ICE = BY_NAME.ICE, BOUNCE = BY_NAME.BOUNCE;
 
 export function createPlayer(world, x, y, z) {
   const p = { x, y, z, vx: 0, vy: 0, vz: 0, yaw: 0, pitch: -0.15, fly: false, onGround: false };
@@ -22,7 +23,9 @@ export function createPlayer(world, x, y, z) {
     const s = p.fly ? FLY : WALK, fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
     let mx = (fx * (inp.fwd || 0) - fz * (inp.side || 0)), mz = (fz * (inp.fwd || 0) + fx * (inp.side || 0));
     const m = Math.hypot(mx, mz); if (m > 1) { mx /= m; mz /= m; }
-    p.vx = mx * s; p.vz = mz * s;
+    const under = p.onGround && !p.fly ? world.get(Math.floor(p.x), Math.floor(p.y - 0.05), Math.floor(p.z)) : 0;
+    if (under === ICE) { const k = Math.min(1, dt * 1.6); p.vx += (mx * s * 1.15 - p.vx) * k; p.vz += (mz * s * 1.15 - p.vz) * k; } // ice: you slide
+    else { p.vx = mx * s; p.vz = mz * s; }
     if (p.fly) p.vy = ((inp.jump ? 1 : 0) - (inp.down ? 1 : 0)) * FLY * 0.8;
     else { p.vy -= GRAV * dt; if (inp.jump && p.onGround) p.vy = JUMP; if (p.vy < -40) p.vy = -40; }
     // move one axis at a time
@@ -32,7 +35,11 @@ export function createPlayer(world, x, y, z) {
     else if (!p.fly && p.onGround && !hits(p.x, p.y + 1.01, nz) && !hits(p.x, p.y + 1.01, p.z)) { p.y += 1.01; p.z = nz; }
     const ny = p.y + p.vy * dt;
     if (!hits(p.x, ny, p.z)) { p.y = ny; p.onGround = false; }
-    else { if (p.vy < 0) { p.onGround = true; p.y = Math.floor(ny) + 1; if (hits(p.x, p.y, p.z)) p.y = Math.ceil(p.y); } p.vy = 0; }
+    else {
+      const falling = p.vy < 0, speed = -p.vy; p.vy = 0;
+      if (falling) { p.onGround = true; p.y = Math.floor(ny) + 1; if (hits(p.x, p.y, p.z)) p.y = Math.ceil(p.y);
+        if (!p.fly && world.get(Math.floor(p.x), Math.floor(p.y - 0.05), Math.floor(p.z)) === BOUNCE) { p.vy = Math.max(BOUNCE_UP, speed * 0.9); p.onGround = false; p.bounced = (p.bounced || 0) + 1; } } // bounce pad: up you go
+    }
     if (p.fly && p.onGround && inp.down) p.onGround = true;
     // stay inside the world
     p.x = Math.max(0.4, Math.min(world.W - 0.4, p.x)); p.z = Math.max(0.4, Math.min(world.D - 0.4, p.z));

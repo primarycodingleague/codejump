@@ -7,13 +7,13 @@
  *
  * Positions pupils type are (right, up, ahead) from where the player stands, so code builds in front of them.
  */
-import { BLOCKS, DIRS } from './craft-world.js';
+import { BLOCKS, DIRS, BLOCK_ORDER } from './craft-world.js';
 
 export const COLOURS = { events: '#ffbf00', helper: '#20b2aa', builder: '#9966ff', player: '#4c97ff', world: '#5cb1d6', control: '#ffab19', ops: '#59c059', vars: '#ff8c1a' };
 const BLOCK_NAMES = BLOCKS.map(b => b[1]);
 export const ENUMS = {
-  block: BLOCKS.filter(b => b[0] > 0).map(b => [b[2], b[1]]),
-  blockAir: BLOCKS.map(b => [b[2], b[1]]),
+  block: BLOCK_ORDER.map(id => [BLOCKS[id][2], BLOCKS[id][1]]),
+  blockAir: [[BLOCKS[0][2], BLOCKS[0][1]]].concat(BLOCK_ORDER.map(id => [BLOCKS[id][2], BLOCKS[id][1]])),
   dir: [['forward', 'FORWARD'], ['back', 'BACK'], ['left', 'LEFT'], ['right', 'RIGHT'], ['up', 'UP'], ['down', 'DOWN']],
   turn: [['left', 'LEFT'], ['right', 'RIGHT']],
   mode: [['solid', 'SOLID'], ['hollow (empty inside)', 'HOLLOW'], ['outline (keep inside)', 'OUTLINE']],

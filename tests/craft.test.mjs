@@ -74,6 +74,25 @@ function play(py, { chat, x = 32, z = 40, secs = 30, setup } = {}) {
   ok(hit && hit.y === GROUND && hit.ny === 1, 'looking down picks the grass under you (for building)');
 }
 
+// ── the block set (added to in Oct 2026: new ids go on the end so saved worlds still open) ──
+{
+  const { BLOCKS, NBLOCKS, BLOCK_ORDER, GROUPS } = CW;
+  ok(BLOCKS.every((b, i) => b[0] === i) && new Set(BLOCKS.map(b => b[1])).size === NBLOCKS && NBLOCKS >= 70, 'every block has its own id and Python name (' + NBLOCKS + ' blocks)');
+  ok(BLOCKS.slice(0, 25).map(b => b[1]).join() === 'AIR,GRASS,DIRT,STONE,COBBLE,PLANKS,LOG,LEAVES,SAND,WATER,GLASS,BRICKS,RED,ORANGE,YELLOW,LIME,BLUE,PURPLE,PINK,WHITE,BLACK,GOLD,GEM,SNOW,LAMP', 'the original 25 blocks keep their ids');
+  ok(BLOCK_ORDER.length === NBLOCKS - 1 && BLOCKS.slice(1).every(b => GROUPS.some(g => g[0] === b[6])), 'every block is in a picker group');
+  const w = CW.createWorld(); w.reset('flat'); for (let i = 1; i < NBLOCKS; i++) w.set(i % 60, 20 + Math.floor(i / 60), 30, i);
+  const w2 = CW.createWorld(); ok(w2.load(w.save()) && Array.from({ length: NBLOCKS - 1 }, (_, k) => k + 1).every(i => w2.get(i % 60, 20 + Math.floor(i / 60), 30) === i), 'a world with every block saves and opens again');
+  const py = BLOCKS.slice(1).map((b, i) => 'builder.place(' + b[1] + ', 0, ' + (i % 20) + ', 2)').join('\n') + '\n';
+  ok(!L.fromPython(py).error, 'every block name works in Python');
+  const bw = CW.createWorld(); bw.reset('flat'); bw.set(32, GROUND, 40, B.BOUNCE); const bp = createPlayer(bw, 32.5, GROUND + 3, 40.5); let top = 0;
+  for (let i = 0; i < 120; i++) { bp.step(1 / 60, {}); if (i > 30) top = Math.max(top, bp.y); }
+  ok(top > GROUND + 4, 'landing on a bounce pad throws you up (to ' + top.toFixed(1) + ')');
+  const iw = CW.createWorld(); iw.reset('flat'); for (let x = 20; x < 50; x++) for (let z = 30; z < 50; z++) iw.set(x, GROUND, z, B.ICE);
+  const ip = createPlayer(iw, 32.5, GROUND + 1, 45.5); for (let i = 0; i < 60; i++) ip.step(1 / 60, { fwd: 1 }); const z0 = ip.z; for (let i = 0; i < 30; i++) ip.step(1 / 60, {});
+  const gw = CW.createWorld(), gp = createPlayer(gw, 32.5, GROUND + 1, 45.5); for (let i = 0; i < 60; i++) gp.step(1 / 60, { fwd: 1 }); const g0 = gp.z; for (let i = 0; i < 30; i++) gp.step(1 / 60, {});
+  ok(z0 - ip.z > 0.5 && Math.abs(g0 - gp.z) < 0.01, 'on ice you keep sliding after you let go (on grass you stop)');
+  ok(!CW.isSolid(B.LAVA) && !CW.isSolid(B.WATER) && CW.isSolid(B.ICE), 'water and lava aren’t solid; ice is');
+}
 // ── World Maker (teacher-made worlds) ──
 const runTo = (w, maker, py, max = 6000) => { // runs a program on a world the way the app does; returns the helper + checker
   const st = maker.start, me = { x: st.x, y: st.y, z: st.z, facing: 0 }, r = createRunner(w, { player: () => me }); Object.assign(r.helper, maker.helper);
@@ -196,6 +215,9 @@ try {
   });
   ok(back.mode && back.tower === 4 && back.says === 2, (back.mode && back.tower === 4 && back.says === 2 ? '' : JSON.stringify(back) + ' ') + 'reopening the project brings back the world (the tower) and the code');
 
+  // the block picker shows every block, in groups
+  const pk = await page.evaluate(() => { document.querySelector('.cr-more').click(); const p = document.getElementById('crPick'); const r = { n: p.querySelectorAll('button').length, g: [...p.querySelectorAll('.cr-pickg')].map(x => x.textContent) }; document.querySelector('.cr-more').click(); return r; });
+  ok(pk.n >= 70 && pk.g.length === 8 && /nature/i.test(pk.g[0]), 'the block picker lists every block under 8 headings');
   // ── World Maker in the app ──
   await page.click('#crWorldsBtn'); await page.click('[data-ex="bridge"]'); await page.click('#cj-dialog .cj-dlg-btn.ok');
   await page.waitForSelector('#crGo', { timeout: 10000 });

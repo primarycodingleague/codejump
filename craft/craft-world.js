@@ -13,32 +13,85 @@
 export const W = 64, H = 40, D = 64, GROUND = 12;
 
 // id, Python name, label, colour (for the map / dropdown swatches), solid?, see-through?
+// [id, PYTHON NAME, label, colour, solid, clear (light passes / see-through), group]. Ids never change once released (saved worlds
+// store them), so new blocks always go on the end; GROUPS orders them in the block picker and the dropdowns.
+export const GROUPS = [['nature', 'Nature'], ['wood', 'Wood and plants'], ['stone', 'Stone and building'], ['ores', 'Ores and metals'], ['colours', 'Colours'], ['glass', 'Glass'], ['light', 'Lights'], ['special', 'Special']];
 export const BLOCKS = [
-  [0, 'AIR', 'air (nothing)', '#000000', false, true],
-  [1, 'GRASS', 'grass', '#62b13a', true, false],
-  [2, 'DIRT', 'dirt', '#8a5a33', true, false],
-  [3, 'STONE', 'stone', '#8d9096', true, false],
-  [4, 'COBBLE', 'cobblestone', '#7a7d84', true, false],
-  [5, 'PLANKS', 'wood planks', '#c08a4b', true, false],
-  [6, 'LOG', 'tree trunk', '#7a5530', true, false],
-  [7, 'LEAVES', 'leaves', '#3f9a3a', true, true],
-  [8, 'SAND', 'sand', '#e8d395', true, false],
-  [9, 'WATER', 'water', '#3b84e0', false, true],
-  [10, 'GLASS', 'glass', '#cfeefa', true, true],
-  [11, 'BRICKS', 'bricks', '#b4533d', true, false],
-  [12, 'RED', 'red block', '#e53935', true, false],
-  [13, 'ORANGE', 'orange block', '#fb8c00', true, false],
-  [14, 'YELLOW', 'yellow block', '#fdd835', true, false],
-  [15, 'LIME', 'lime block', '#7cd332', true, false],
-  [16, 'BLUE', 'blue block', '#1e6fe0', true, false],
-  [17, 'PURPLE', 'purple block', '#8e3fd0', true, false],
-  [18, 'PINK', 'pink block', '#f48fb1', true, false],
-  [19, 'WHITE', 'white block', '#f2f2f2', true, false],
-  [20, 'BLACK', 'black block', '#26262b', true, false],
-  [21, 'GOLD', 'gold block', '#f4c531', true, false],
-  [22, 'GEM', 'gem block', '#35d6c9', true, false],
-  [23, 'SNOW', 'snow', '#f7fbff', true, false],
-  [24, 'LAMP', 'lamp', '#ffe08a', true, false]
+  [0, 'AIR', 'air (nothing)', '#000000', false, true, 'special'],
+  [1, 'GRASS', 'grass', '#62b13a', true, false, 'nature'],
+  [2, 'DIRT', 'dirt', '#8a5a33', true, false, 'nature'],
+  [3, 'STONE', 'stone', '#8d9096', true, false, 'stone'],
+  [4, 'COBBLE', 'cobblestone', '#7a7d84', true, false, 'stone'],
+  [5, 'PLANKS', 'wood planks', '#c08a4b', true, false, 'wood'],
+  [6, 'LOG', 'tree trunk', '#7a5530', true, false, 'wood'],
+  [7, 'LEAVES', 'leaves', '#3f9a3a', true, true, 'wood'],
+  [8, 'SAND', 'sand', '#e8d395', true, false, 'nature'],
+  [9, 'WATER', 'water', '#3b84e0', false, true, 'nature'],
+  [10, 'GLASS', 'glass', '#cfeefa', true, true, 'glass'],
+  [11, 'BRICKS', 'bricks', '#b4533d', true, false, 'stone'],
+  [12, 'RED', 'red block', '#e53935', true, false, 'colours'],
+  [13, 'ORANGE', 'orange block', '#fb8c00', true, false, 'colours'],
+  [14, 'YELLOW', 'yellow block', '#fdd835', true, false, 'colours'],
+  [15, 'LIME', 'lime block', '#7cd332', true, false, 'colours'],
+  [16, 'BLUE', 'blue block', '#1e6fe0', true, false, 'colours'],
+  [17, 'PURPLE', 'purple block', '#8e3fd0', true, false, 'colours'],
+  [18, 'PINK', 'pink block', '#f48fb1', true, false, 'colours'],
+  [19, 'WHITE', 'white block', '#f2f2f2', true, false, 'colours'],
+  [20, 'BLACK', 'black block', '#26262b', true, false, 'colours'],
+  [21, 'GOLD', 'gold block', '#f4c531', true, false, 'ores'],
+  [22, 'GEM', 'gem block', '#35d6c9', true, false, 'ores'],
+  [23, 'SNOW', 'snow', '#f7fbff', true, false, 'nature'],
+  [24, 'LAMP', 'lamp', '#ffe08a', true, false, 'light'],
+  // ── added Oct 2026 ──
+  [25, 'GRAVEL', 'gravel', '#8b8682', true, false, 'nature'],
+  [26, 'CLAY', 'clay', '#a3aebf', true, false, 'nature'],
+  [27, 'MUD', 'mud', '#4e3b2e', true, false, 'nature'],
+  [28, 'ICE', 'ice (slippery)', '#a8d8f5', true, true, 'nature'],
+  [29, 'MOSS', 'moss', '#5f8f2e', true, false, 'nature'],
+  [30, 'LAVA', 'lava (hot!)', '#ff6a1a', false, false, 'nature'],
+  [31, 'PUMPKIN', 'pumpkin', '#e8892a', true, false, 'wood'],
+  [32, 'MELON', 'melon', '#5aa13a', true, false, 'wood'],
+  [33, 'HAY', 'hay bale', '#d9b44a', true, false, 'wood'],
+  [34, 'CACTUS', 'cactus', '#4c9a3b', true, false, 'wood'],
+  [35, 'DARK_PLANKS', 'dark wood planks', '#6b4529', true, false, 'wood'],
+  [36, 'LIGHT_PLANKS', 'light wood planks', '#e3cc97', true, false, 'wood'],
+  [37, 'BIRCH_LOG', 'white tree trunk', '#e6e2d8', true, false, 'wood'],
+  [38, 'DARK_LOG', 'dark tree trunk', '#3f2c1d', true, false, 'wood'],
+  [39, 'PINE_LEAVES', 'pine needles', '#2d6a3a', true, true, 'wood'],
+  [40, 'BLOSSOM', 'pink blossom', '#f2a7c3', true, true, 'wood'],
+  [41, 'BOOKSHELF', 'bookshelf', '#8a5a33', true, false, 'wood'],
+  [42, 'CRATE', 'wooden crate', '#b07a42', true, false, 'wood'],
+  [43, 'STONE_BRICKS', 'stone bricks', '#8f949b', true, false, 'stone'],
+  [44, 'MOSSY_BRICKS', 'mossy stone bricks', '#7f8f6f', true, false, 'stone'],
+  [45, 'SMOOTH_STONE', 'smooth stone', '#a9adb3', true, false, 'stone'],
+  [46, 'SANDSTONE', 'sandstone', '#dcc489', true, false, 'stone'],
+  [47, 'GRANITE', 'granite', '#b07a6a', true, false, 'stone'],
+  [48, 'MARBLE', 'marble', '#eeeae4', true, false, 'stone'],
+  [49, 'SLATE', 'slate', '#4a4e57', true, false, 'stone'],
+  [50, 'ROOF', 'roof tiles', '#a8452f', true, false, 'stone'],
+  [51, 'TILES', 'floor tiles', '#e9eef2', true, false, 'stone'],
+  [52, 'CHECKER', 'checked floor', '#7f7f7f', true, false, 'stone'],
+  [53, 'COAL_ORE', 'coal in stone', '#5d6066', true, false, 'ores'],
+  [54, 'IRON_ORE', 'iron in stone', '#9a8a80', true, false, 'ores'],
+  [55, 'GOLD_ORE', 'gold in stone', '#a49a70', true, false, 'ores'],
+  [56, 'GEM_ORE', 'gems in stone', '#6fa6a2', true, false, 'ores'],
+  [57, 'IRON', 'iron block', '#cfd3d8', true, false, 'ores'],
+  [58, 'COPPER', 'copper block', '#c9774a', true, false, 'ores'],
+  [59, 'COAL', 'coal block', '#26272b', true, false, 'ores'],
+  [60, 'CYAN', 'cyan block', '#13b5c4', true, false, 'colours'],
+  [61, 'LIGHT_BLUE', 'light blue block', '#6cc1f0', true, false, 'colours'],
+  [62, 'GREEN', 'green block', '#2e8b3e', true, false, 'colours'],
+  [63, 'BROWN', 'brown block', '#7b4f2c', true, false, 'colours'],
+  [64, 'GREY', 'grey block', '#6e7179', true, false, 'colours'],
+  [65, 'LIGHT_GREY', 'light grey block', '#b9bcc2', true, false, 'colours'],
+  [66, 'MAGENTA', 'magenta block', '#c43bb5', true, false, 'colours'],
+  [67, 'RED_GLASS', 'red glass', '#ff6b6b', true, true, 'glass'],
+  [68, 'BLUE_GLASS', 'blue glass', '#5aa6ff', true, true, 'glass'],
+  [69, 'GREEN_GLASS', 'green glass', '#6ee07a', true, true, 'glass'],
+  [70, 'YELLOW_GLASS', 'yellow glass', '#ffe066', true, true, 'glass'],
+  [71, 'LANTERN', 'lantern', '#ffc061', true, false, 'light'],
+  [72, 'GLOW', 'glow crystal', '#7ff3ff', true, false, 'light'],
+  [73, 'BOUNCE', 'bounce pad', '#58d36e', true, false, 'special']
 ];
 export const NBLOCKS = BLOCKS.length;
 export const BY_NAME = Object.fromEntries(BLOCKS.map(b => [b[1], b[0]]));
@@ -46,6 +99,10 @@ export const NAME_OF = id => (BLOCKS[id] ? BLOCKS[id][1] : 'AIR');
 export const LABEL_OF = id => (BLOCKS[id] ? BLOCKS[id][2] : 'air');
 export const isSolid = id => !!(BLOCKS[id] && BLOCKS[id][4]);
 export const isClear = id => !BLOCKS[id] || BLOCKS[id][5];
+export const isLiquid = id => id === 9 || id === 30;
+export const GROUP_OF = id => (BLOCKS[id] ? BLOCKS[id][6] : 'special');
+// every block except air, in picker order (by group, then id)
+export const BLOCK_ORDER = GROUPS.flatMap(([g]) => BLOCKS.filter(b => b[0] > 0 && b[6] === g).map(b => b[0]));
 
 // facing: 0 = north (−z), 1 = east (+x), 2 = south (+z), 3 = west (−x)
 export const FACE = [[0, -1], [1, 0], [0, 1], [-1, 0]];

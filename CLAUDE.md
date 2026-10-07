@@ -403,6 +403,13 @@ characters (Steve, creepers) or "Agent" branding** — our own art and words ("B
   windows; script kept in the session scratchpad, not the repo) + Node/app checks in tests/craft.test.mjs.
 - **Gotcha (fixed):** Blockly fires events after a timeout, so a fresh Build Lab marked itself unsaved (the starter load + `cleanUp`
   moves). Loads now run in an event group `crload…` and cleanup moves are ignored by the change listener.
+- **More blocks (7 Oct 2026; Charlie: "add more blocks… look at Minecraft's blocks"):** 74 blocks now (ids 25–73 appended — NEVER renumber,
+  saves store ids). Rows gained a 7th field = group (`GROUPS`: nature, wood, stone, ores, colours, glass, light, special); `BLOCK_ORDER`
+  (picker / dropdown / maker grids / Python Commands order), `GROUP_OF`, `isLiquid` (water, lava). Inspired by that game's categories but
+  our own names and painted art (no game-specific blocks/names). Textures: `PAINT[name]` in craft-view.js (helpers planks/logTile/leafTile/
+  brickGrid/flecks/glassTile/metal); the original 25 still use `paintOld`. Render kinds via `KIND` table (cut-out leaves ×3, see-through
+  water/glass/ice/tinted glass, glowing lamp/lava/lantern/glow). Physics (craft-player.js): ICE = you slide (velocity eases), BOUNCE = landing
+  throws you up (≥15). Picker shows group headings (`.cr-pickg`). Tests in craft.test.mjs (ids kept, groups, save/load, Python names, bounce, ice).
 - **Ideas not done:** a lesson (Years 3–4 + 5–6), mobs/creatures, saving more than one world, a bigger world.
 
 ## AI Lab project type — `projectType==='ai'` — LIVE on main since 5 Oct 2026 (CJ_VERSION 2026.10.06; built on branch `claude/vibrant-cori-tho25y`)

@@ -3,7 +3,7 @@
  * The data and the checks live in craft-maker.js (no DOM). craft-app.js creates this with createMakerUI(app) and calls its hooks.
  */
 import * as M from './craft-maker.js';
-import { BLOCKS, NBLOCKS, LABEL_OF, BY_NAME, GROUND } from './craft-world.js';
+import { BLOCKS, NBLOCKS, LABEL_OF, BY_NAME, GROUND, BLOCK_ORDER } from './craft-world.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const svg = p => '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' + p + '</svg>';
@@ -71,7 +71,7 @@ export function createMakerUI(app) {
   }
   function hidePop() { $('crPop').hidden = true; }
   $('crPop').addEventListener('click', e => { if (e.target === $('crPop') && $('crPop').classList.contains('small')) hidePop(); });
-  const blockOptions = (sel, any) => (any ? '<option value="ANY"' + (sel === 'ANY' ? ' selected' : '') + '>any blocks</option>' : '') + BLOCKS.slice(1).map(b => '<option value="' + b[1] + '"' + (b[1] === sel ? ' selected' : '') + '>' + esc(b[2]) + '</option>').join('');
+  const blockOptions = (sel, any) => (any ? '<option value="ANY"' + (sel === 'ANY' ? ' selected' : '') + '>any blocks</option>' : '') + BLOCK_ORDER.map(id => BLOCKS[id]).map(b => '<option value="' + b[1] + '"' + (b[1] === sel ? ' selected' : '') + '>' + esc(b[2]) + '</option>').join('');
   const swatches = (cur, name) => '<div class="cr-sw">' + M.NPC_COLOURS.concat(['#ffd166', '#7bd88f']).map(c => '<label style="--c:' + c + '"><input type="radio" name="' + name + '" value="' + c + '"' + (c === cur ? ' checked' : '') + '><span></span></label>').join('') + '</div>';
   const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const chk = id => { const e = document.getElementById(id); return !!(e && e.checked); };
@@ -353,7 +353,7 @@ export function createMakerUI(app) {
       <label class="cr-chk"><input type="checkbox" id="mkSFly" ${r.fly ? 'checked' : ''}> Fly</label>
       <label class="cr-chk"><input type="checkbox" id="mkSPy" ${r.python ? 'checked' : ''}> Use the Python tab</label>
       <label class="cr-f">Code <select id="mkSCode"><option value="all"${r.code === 'all' ? ' selected' : ''}>All the blocks</option><option value="helper"${r.code === 'helper' ? ' selected' : ''}>Robot helper only (no builder commands)</option><option value="builder"${r.code === 'builder' ? ' selected' : ''}>Builder commands only (no helper)</option><option value="none"${r.code === 'none' ? ' selected' : ''}>No code — building by hand only</option></select></label>
-      <div class="cr-f">Blocks pupils can build with (none ticked = all of them)<div class="cr-bgrid">${BLOCKS.slice(1).map(b => '<label><input type="checkbox" data-blk="' + b[0] + '"' + (allowed.has(b[0]) ? ' checked' : '') + '><span>' + esc(b[2]) + '</span></label>').join('')}</div></div>
+      <div class="cr-f">Blocks pupils can build with (none ticked = all of them)<div class="cr-bgrid">${BLOCK_ORDER.map(id => BLOCKS[id]).map(b => '<label><input type="checkbox" data-blk="' + b[0] + '"' + (allowed.has(b[0]) ? ' checked' : '') + '><span>' + esc(b[2]) + '</span></label>').join('')}</div></div>
       <h4>Coding challenge</h4>
       <label class="cr-chk"><input type="checkbox" id="mkSChal" ${c.on ? 'checked' : ''}> Make it a timed challenge (Start button, a clock, stars for short code)</label>
       <label class="cr-f">Time limit in minutes (0 = no limit, just a stopwatch) <input id="mkSTime" type="number" min="0" max="60" value="${Math.round(c.time / 60)}"></label>

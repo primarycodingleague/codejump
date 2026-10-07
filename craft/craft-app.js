@@ -9,7 +9,8 @@
  * (maker/progress: a World Maker lesson or challenge — see craft-maker.js).
  */
 import * as THREE from '../critter/vendor/three-0.186.1-critter.min.js';
-import { createWorld, BLOCKS, NBLOCKS, BY_NAME, LABEL_OF, GROUND, rel, isSolid } from './craft-world.js';
+import { createWorld, BLOCKS, NBLOCKS, BY_NAME, LABEL_OF, GROUND, rel, isSolid, GROUPS, GROUP_OF, BLOCK_ORDER } from './craft-world.js';
+const GROUP_NAME = Object.fromEntries(GROUPS);
 import * as L from './craft-lang.js';
 import { createRunner } from './craft-runner.js';
 import { createPlayer, raycast } from './craft-player.js';
@@ -193,8 +194,7 @@ export function mount(root, host) {
   });
   $('crCmds').onclick = () => {
     const rows = L.API.map(a => '<tr><td><code>' + esc(a[2]) + '(' + a[4].map(x => x[0].toLowerCase()).join(', ') + ')</code></td><td>' + esc(a[3].replace(/\s*\|/g, '').replace(/%([A-Z0-9]+)/g, (m, n) => n.toLowerCase())) + '</td></tr>').join('');
-    modal('<h3>Python commands</h3><p>Positions are <b>right, up, ahead</b> from where you stand. Use these names for blocks: ' + BLOCKS.map(b => '<code>' + b[1] + '</code>').join(' ') +
-      '. Directions: <code>FORWARD BACK LEFT RIGHT UP DOWN</code>.</p><table class="cr-cmds">' + rows +
+    modal('<h3>Python commands</h3><p>Positions are <b>right, up, ahead</b> from where you stand. Use these names for blocks:</p>' + GROUPS.map(([g, n]) => '<p><b>' + n + ':</b> ' + BLOCK_ORDER.filter(id => GROUP_OF(id) === g).map(id => '<code title="' + BLOCKS[id][2] + '">' + BLOCKS[id][1] + '</code>').join(' ') + '</p>').join('') + '<p><code>AIR</code> = nothing (dig a hole). Directions: <code>FORWARD BACK LEFT RIGHT UP DOWN</code>.</p><table class="cr-cmds">' + rows +
       '<tr><td><code>@on_chat("word")<br>def word(n):</code></td><td>runs when you type the word in the chat (n = a number typed after it)</td></tr><tr><td><code>for i in range(5):</code> · <code>while …:</code> · <code>if … elif … else</code></td><td>loops and choices</td></tr><tr><td><code>random(1, 6)</code></td><td>a random whole number</td></tr></table>');
   };
   function modal(html) { $('crModalBody').innerHTML = html; $('crModal').hidden = false; const f = $('crModalBody').querySelector('input,select,textarea,button'); if (f) setTimeout(() => f.focus(), 30); }
@@ -212,8 +212,12 @@ export function mount(root, host) {
   }
   function togglePick() {
     const p = $('crPick'); if (!p.hidden) { p.hidden = true; return; }
+    $('crTip').classList.add('gone'); // it would cover the picker's title
     p.innerHTML = '<div class="cr-pickh">Pick a block for slot ' + (slot || 1) + '</div>';
-    for (let id = 1; id < NBLOCKS; id++) { if (allowed && !allowed.includes(id)) continue; const b = document.createElement('button'); b.type = 'button'; b.title = LABEL_OF(id); b.appendChild(blockIcon(document, view.atlas, id, 36)); const s = document.createElement('span'); s.textContent = LABEL_OF(id); b.appendChild(s);
+    let grp = '';
+    for (const id of BLOCK_ORDER) { if (allowed && !allowed.includes(id)) continue;
+      if (GROUP_OF(id) !== grp) { grp = GROUP_OF(id); const h = document.createElement('div'); h.className = 'cr-pickg'; h.textContent = GROUP_NAME[grp] || grp; p.appendChild(h); }
+      const b = document.createElement('button'); b.type = 'button'; b.title = LABEL_OF(id); b.appendChild(blockIcon(document, view.atlas, id, 36)); const s = document.createElement('span'); s.textContent = LABEL_OF(id); b.appendChild(s);
       b.onclick = () => { if (!slot) slot = 1; hot[slot - 1] = id; p.hidden = true; renderHot(); changed(); }; p.appendChild(b); }
     p.hidden = false;
   }

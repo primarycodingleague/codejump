@@ -99,7 +99,7 @@ export function createWorld() {
       if (!inside(x, y, z) || id < 0 || id >= NBLOCKS) return false;
       if (y === 0 && id === 0) return false; // the bottom layer can't be dug away (you'd fall out of the world)
       const i = idx(x, y, z); if (cells[i] === id) return false;
-      cells[i] = id; for (const f of listeners) f(x, y, z); return true;
+      const old = cells[i]; cells[i] = id; for (const f of listeners) f(x, y, z, id, old); return true;
     },
     onChange(f) { listeners.push(f); },
     // a box between two corners. mode: 'SOLID' fills it, 'HOLLOW' = walls, floor and roof with air inside,

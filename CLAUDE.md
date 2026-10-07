@@ -341,9 +341,16 @@ characters (Steve, creepers) or "Agent" branding** — our own art and words ("B
   moves 0.18 s a step and stops when blocked; `createRunner(world, io{player,teleport,say,time,error,placed})` → `load/start/chat(word,args)/
   has/words/tick/stop/running`. Builder positions are relative to the PLAYER's block + facing at the moment the command runs.
 - **Player (`craft-player.js`):** 0.6×1.75 box, axis-by-axis collisions, steps up one block, jump, fly (F; Space up/Shift down); `raycast`
-  (Amanatides & Woo, through water). **View (`craft-view.js`):** Three.js (Critter bundle), 16³ chunks meshed with face culling + baked
-  shading/corner AO, a procedural 16 px atlas (`makeAtlas`, `blockIcon` for hotbar icons), see-through/cut-out/glow materials, day/sunset/night,
-  sun/moon, highlight box, our own hovering robot helper (rounded cube, screen face, teal band, orange antenna tip).
+  (Amanatides & Woo, through water). **View (`craft-view.js`) — "toy block" look, NOT pixel art** (Charlie, 7 Oct: the first pixel-art
+  version "looks really outdated"): 64 px tiles painted with the 2D canvas (gradients, soft bevels, rounded bricks/stones, planks with grain;
+  `paintTile`), atlas with 8 px gutters + mipmaps/anisotropy; Lambert materials lit by a hemisphere light + a sun with PCF soft shadows (shadow
+  box follows the camera; `sc.updateProjectionMatrix()` is needed after setting its bounds), corner AO in vertex colours, Neutral tone mapping,
+  gradient sky dome + stars + glowing sun/moon disc, puffy sphere clouds drifting, a meadow plane round the world edge (no floating island), white
+  highlight box, block "puffs" (InstancedMesh particles; `world.onChange` now passes `(x,y,z,id,old)`). **GOTCHA:** `scene.environment` lights
+  Lambert materials too in r186 (sunset/night stopped darkening the blocks) — the PMREM env map is set only on the helper/avatar Standard
+  materials. Helper = glossy MeshPhysical rounded body, dark glass visor with glowing capsule eyes (blink) + smile, teal side pods with neon
+  rings, back panel, antenna with blinking tip, hover ring; leans into each move. App overlays = dark glass (`--glass`, backdrop blur):
+  crosshair `.cr-cross` (hidden in Helper cam), key-hint pill `#crTip` with `<kbd>`, our own SVG pickaxe slot and chevron touch pads.
 - **App (`craft/craft-app.js` + `.css`, scoped `.cr`, ids `cr*`):** left = Blocks/Python tabs, Run/Stop/Undo/New world, Blockly (zelos, dark) or
   the Python editor (highlight overlay, line numbers, auto-indent, live error line after 700 ms; can't go back to Blocks until it parses);
   right = the world: first-person (drag to look, WASD/arrows, click = place hotbar block, right-click / long-press / slot 0 = break, 1–9 slots,

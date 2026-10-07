@@ -17,6 +17,10 @@ import { createView, blockIcon } from './craft-view.js';
 const CSS_URL = new URL('./craft-app.css', import.meta.url).href;
 const ic = id => '<svg class="ic"><use href="#' + id + '"></use></svg>';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const chev = deg => '<svg viewBox="0 0 24 24" width="22" height="22" style="transform:rotate(' + deg + 'deg)"><path d="M6 15l6-6 6 6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// our own pickaxe: the "break blocks" slot
+const PICK = '<svg class="cr-dig" viewBox="0 0 32 32" width="30" height="30"><path d="M9 25L21 13" stroke="#8a5a33" stroke-width="3.6" stroke-linecap="round"/><path d="M9 25L21 13" stroke="#c08a4b" stroke-width="1.6" stroke-linecap="round"/><path d="M10 7c6-1.5 11 0 15 4l-2 2c-3-3-7-4.3-11.6-3.6z" fill="#b8c2cc" stroke="#3a4250" stroke-width="1.2" stroke-linejoin="round"/><path d="M25 11c1.5 4 1.2 8-.4 11.5l-2.4-1.2c1.2-3 1.3-5.8.4-8.3z" fill="#d6dde4" stroke="#3a4250" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+const GRID = '<svg viewBox="0 0 24 24" width="18" height="18"><g fill="#fff"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></g></svg>';
 const HOT_DEFAULT = [5, 3, 11, 10, 6, 7, 12, 14, 16];
 const START = { x: 32.5, z: 40.5 };
 
@@ -46,9 +50,10 @@ const TEMPLATE = `
       <form class="cr-chatin" id="crChatForm"><input id="crChat" maxlength="60" autocomplete="off" placeholder="Type a chat command, like: tower 6" aria-label="Chat"><button type="submit" title="Send">${ic('i-send')}</button></form></div>
     <div class="cr-hot" id="crHot" role="toolbar" aria-label="Blocks to build with"></div>
     <div class="cr-pick" id="crPick" hidden></div>
-    <div class="cr-pad" id="crPad" aria-hidden="true"><button data-k="f">▲</button><button data-k="l">◀</button><button data-k="b">▼</button><button data-k="r">▶</button></div>
+    <div class="cr-cross" aria-hidden="true"></div>
+    <div class="cr-pad" id="crPad" aria-hidden="true"><button data-k="f">${chev(0)}</button><button data-k="l">${chev(270)}</button><button data-k="b">${chev(180)}</button><button data-k="r">${chev(90)}</button></div>
     <div class="cr-pad2" id="crPad2" aria-hidden="true"><button data-k="j">Jump</button><button data-k="d">Down</button></div>
-    <div class="cr-tip" id="crTip">Drag to look round · W A S D to walk · click to build · right-click to break</div>
+    <div class="cr-tip" id="crTip"><span><b>Drag</b> to look</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</span><span><kbd>Space</kbd> jump</span><span><b>Click</b> build</span><span><b>Right-click</b> break</span><span><kbd>F</kbd> fly</span></div>
   </div>
   <div class="cr-modal" id="crModal" hidden><div class="cr-modalbox"><button type="button" class="cr-x" id="crModalX" aria-label="Close">×</button><div id="crModalBody"></div></div></div>
 </div>`;
@@ -195,9 +200,9 @@ export function mount(root, host) {
   function renderHot() {
     const h = $('crHot'); h.innerHTML = '';
     const mk = (i, inner, title) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'cr-slot' + (i === slot ? ' on' : ''); b.title = title; b.innerHTML = inner; b.onclick = () => { slot = i; renderHot(); }; return b; };
-    h.appendChild(mk(0, '<span class="cr-dig">⛏</span><i>0</i>', 'Break blocks (or right-click)'));
+    h.appendChild(mk(0, PICK + '<i>0</i>', 'Break blocks (or right-click)'));
     hot.forEach((id, k) => { const b = mk(k + 1, '<i>' + (k + 1) + '</i>', LABEL_OF(id)); if (view) b.prepend(blockIcon(document, view.atlas, id, 34)); h.appendChild(b); });
-    const more = document.createElement('button'); more.type = 'button'; more.className = 'cr-slot cr-more'; more.textContent = 'More'; more.title = 'Choose a different block for this slot'; more.onclick = togglePick; h.appendChild(more);
+    const more = document.createElement('button'); more.type = 'button'; more.className = 'cr-slot cr-more'; more.innerHTML = GRID + '<span>More</span>'; more.title = 'Choose a different block for this slot'; more.onclick = togglePick; h.appendChild(more);
   }
   function togglePick() {
     const p = $('crPick'); if (!p.hidden) { p.hidden = true; return; }
@@ -258,7 +263,7 @@ export function mount(root, host) {
   cv.addEventListener('blur', () => keys.clear());
   function toggleFly() { player.fly = !player.fly; $('crFly').classList.toggle('on', player.fly); root.querySelector('#crPad2 [data-k="d"]').hidden = !player.fly; changed(); }
   $('crFly').onclick = toggleFly;
-  root.querySelectorAll('.cr-cam[data-cam]').forEach(b => b.onclick = () => { cam = b.dataset.cam; root.querySelectorAll('.cr-cam[data-cam]').forEach(x => x.classList.toggle('on', x === b)); });
+  root.querySelectorAll('.cr-cam[data-cam]').forEach(b => b.onclick = () => { cam = b.dataset.cam; root.querySelectorAll('.cr-cam[data-cam]').forEach(x => x.classList.toggle('on', x === b)); $('crView').classList.toggle('cam-helper', cam === 'helper'); });
   root.querySelectorAll('#crPad button, #crPad2 button').forEach(b => {
     const k = b.dataset.k;
     b.addEventListener('pointerdown', e => { e.preventDefault(); pad.add(k); b.setPointerCapture(e.pointerId); });

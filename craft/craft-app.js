@@ -5,7 +5,8 @@
  *   const app = (await import('./craft/craft-app.js')).mount(rootEl, { project, onChange, toast, confirm });
  *   app.getProject() · app.setProject(p) · app.resume() · app.pause() · app.destroy()
  *
- * A project is { v:1, mode:'blocks'|'python', blocks, py, world (run-length text), player, helper, time, hot }.
+ * A project is { v:1, mode:'blocks'|'python', blocks, py, world (run-length text), player, helper, time, hot, maker?, progress? }
+ * (maker/progress: a World Maker lesson or challenge — see craft-maker.js).
  */
 import * as THREE from '../critter/vendor/three-0.186.1-critter.min.js';
 import { createWorld, BLOCKS, NBLOCKS, BY_NAME, LABEL_OF, GROUND, rel, isSolid } from './craft-world.js';
@@ -13,6 +14,7 @@ import * as L from './craft-lang.js';
 import { createRunner } from './craft-runner.js';
 import { createPlayer, raycast } from './craft-player.js';
 import { createView, blockIcon } from './craft-view.js';
+import { createMakerUI } from './craft-maker-ui.js';
 
 const CSS_URL = new URL('./craft-app.css', import.meta.url).href;
 const ic = id => '<svg class="ic"><use href="#' + id + '"></use></svg>';
@@ -45,7 +47,7 @@ const TEMPLATE = `
   <div class="cr-view" id="crView">
     <canvas id="crCanvas" tabindex="0" aria-label="The block world. Drag to look round. W A S D or the arrows to walk, Space to jump. Click to place a block, right-click to break one."></canvas>
     <div class="cr-loading" id="crLoading">Building the world…</div>
-    <div class="cr-cams" role="group" aria-label="Camera"><button type="button" class="cr-cam on" data-cam="me" title="See through your own eyes">Me</button><button type="button" class="cr-cam" data-cam="helper" title="Follow the robot helper">Helper</button><button type="button" class="cr-cam" id="crFly" title="Fly (F). Space goes up, Shift goes down.">Fly</button></div>
+    <div class="cr-topr"><div class="cr-mkbtns" id="crMkBtns"></div><div class="cr-cams" role="group" aria-label="Camera"><button type="button" class="cr-cam on" data-cam="me" title="See through your own eyes">Me</button><button type="button" class="cr-cam" data-cam="helper" title="Follow the robot helper">Helper</button><button type="button" class="cr-cam" id="crFly" title="Fly (F). Space goes up, Shift goes down.">Fly</button></div></div>
     <div class="cr-chat"><div class="cr-log" id="crLog" aria-live="polite"></div>
       <form class="cr-chatin" id="crChatForm"><input id="crChat" maxlength="60" autocomplete="off" placeholder="Type a chat command, like: tower 6" aria-label="Chat"><button type="submit" title="Send">${ic('i-send')}</button></form></div>
     <div class="cr-hot" id="crHot" role="toolbar" aria-label="Blocks to build with"></div>
@@ -96,7 +98,7 @@ export function mount(root, host) {
   const world = createWorld();
   const player = createPlayer(world, START.x, GROUND + 1, START.z);
   let ws = null, view = null, alive = true, raf = 0, last = 0, quiet = false, changeTimer = 0;
-  let mode = 'blocks', pyText = '', hot = HOT_DEFAULT.slice(), slot = 1, cam = 'me', undo = [];
+  let mode = 'blocks', pyText = '', hot = HOT_DEFAULT.slice(), slot = 1, cam = 'me', undo = [], savedHot = null, allowed = null, codeRule = 'all', flyOk = true;
   const keys = new Set(), pad = new Set();
   const status = (msg, kind) => { const s = $('crStatus'); s.textContent = msg || ''; s.className = 'cr-status' + (kind ? ' ' + kind : ''); };
   const changed = () => { if (quiet) return; clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 300); };
@@ -121,19 +123,20 @@ export function mount(root, host) {
   function placeHelperNearPlayer() { const c = rel([Math.floor(player.x), Math.floor(player.y), Math.floor(player.z)], player.facing(), 3, 1, 2); Object.assign(runner.helper, { x: c[0], y: c[1], z: c[2], f: player.facing(), from: null, t: 1 }); }
 
   // ── the program: blocks or Python → JSON state ──
-  function programState() {
-    if (mode === 'python') { const r = L.fromPython(pyText); if (r.error) { showPyError(r.error); return null; } hidePyError(); return r.state; }
+  function programState(silent) {
+    if (mode === 'python') { const r = L.fromPython(pyText); if (r.error) { if (!silent) showPyError(r.error); return null; } if (!silent) hidePyError(); return r.state; }
     return ws ? Blockly.serialization.workspaces.save(ws) : L.starterProgram();
   }
   function snapshot() { undo.push(world.save()); if (undo.length > 20) undo.shift(); }
   function run() {
+    mk.onRun();
     const st = programState(); if (!st) { status('Fix the Python first (see the red line).', 'bad'); return; }
     snapshot(); runner.load(st); runner.start(); status(runner.running() ? 'Running… type a chat command too.' : 'Done. Type a chat command, or press Run again.', 'ok');
     $('crCanvas').focus({ preventScroll: true });
   }
   function chat(text) {
     const parts = String(text).trim().split(/\s+/); const word = (parts[0] || '').toLowerCase().replace(/^\//, ''); if (!word) return;
-    log(text, 'me');
+    log(text, 'me'); mk.onChat(word);
     const st = programState(); if (!st) { log('Your Python has a mistake, so nothing ran. Fix the red line first.', 'err'); return; }
     runner.load(st);
     const nums = parts.slice(1).map(Number).filter(n => isFinite(n));
@@ -193,8 +196,10 @@ export function mount(root, host) {
       '. Directions: <code>FORWARD BACK LEFT RIGHT UP DOWN</code>.</p><table class="cr-cmds">' + rows +
       '<tr><td><code>@on_chat("word")<br>def word(n):</code></td><td>runs when you type the word in the chat (n = a number typed after it)</td></tr><tr><td><code>for i in range(5):</code> · <code>while …:</code> · <code>if … elif … else</code></td><td>loops and choices</td></tr><tr><td><code>random(1, 6)</code></td><td>a random whole number</td></tr></table>');
   };
-  function modal(html) { $('crModalBody').innerHTML = html; $('crModal').hidden = false; }
-  $('crModalX').onclick = () => { $('crModal').hidden = true; };
+  function modal(html) { $('crModalBody').innerHTML = html; $('crModal').hidden = false; const f = $('crModalBody').querySelector('input,select,textarea,button'); if (f) setTimeout(() => f.focus(), 30); }
+  const closeModal = () => { $('crModal').hidden = true; cv.focus({ preventScroll: true }); };
+  $('crModalX').onclick = closeModal;
+  $('crModal').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') closeModal(); });
 
   // ── hotbar + block picker ──
   function renderHot() {
@@ -207,13 +212,38 @@ export function mount(root, host) {
   function togglePick() {
     const p = $('crPick'); if (!p.hidden) { p.hidden = true; return; }
     p.innerHTML = '<div class="cr-pickh">Pick a block for slot ' + (slot || 1) + '</div>';
-    for (let id = 1; id < NBLOCKS; id++) { const b = document.createElement('button'); b.type = 'button'; b.title = LABEL_OF(id); b.appendChild(blockIcon(document, view.atlas, id, 36)); const s = document.createElement('span'); s.textContent = LABEL_OF(id); b.appendChild(s);
+    for (let id = 1; id < NBLOCKS; id++) { if (allowed && !allowed.includes(id)) continue; const b = document.createElement('button'); b.type = 'button'; b.title = LABEL_OF(id); b.appendChild(blockIcon(document, view.atlas, id, 36)); const s = document.createElement('span'); s.textContent = LABEL_OF(id); b.appendChild(s);
       b.onclick = () => { if (!slot) slot = 1; hot[slot - 1] = id; p.hidden = true; renderHot(); changed(); }; p.appendChild(b); }
     p.hidden = false;
   }
 
   // ── looking, walking, building by hand ──
   const cv = $('crCanvas');
+  // ── World Maker (craft-maker-ui.js) ──
+  function applyRules(r) {
+    allowed = r && r.blocks ? r.blocks.slice() : null;
+    if (allowed) { if (!savedHot) savedHot = hot.slice(); hot = allowed.slice(0, 9); slot = Math.min(Math.max(1, slot), hot.length); }
+    else if (savedHot) { hot = savedHot; savedHot = null; }
+    renderHot(); $('crHot').hidden = !!r && !r.build && !r.break; // nothing to build with by hand: no block bar
+    flyOk = !r || r.fly; if (!flyOk && player.fly) toggleFly(); $('crFly').hidden = !flyOk;
+    $('crTabP').hidden = !!r && !r.python; if (r && !r.python && mode === 'python') setMode('blocks');
+    const code = r ? r.code : 'all'; root.querySelector('.cr').classList.toggle('nocode', code === 'none');
+    if (code !== codeRule) { codeRule = code; if (ws) { try { ws.updateToolbox(L.toolbox(code === 'none' ? 'all' : code)); } catch (e) { /* older Blockly */ } } }
+    if (view) setTimeout(() => view.resize(), 0);
+  }
+  const mk = createMakerUI({ $, root, world, player, runner, view: () => view, changed, log, status, toast, programState,
+    confirm: msg => (host.confirm ? host.confirm(msg) : Promise.resolve(window.confirm(msg))),
+    prompt: (msg, d) => (host.prompt ? host.prompt(msg, d) : Promise.resolve(window.prompt(msg, d))),
+    modal, closeModal, applyRules, focus: () => cv.focus({ preventScroll: true }),
+    placeAt(st, hp) {
+      if (st) { player.x = st.x; player.y = st.y; player.z = st.z; player.yaw = st.yaw || 0; player.pitch = -0.2; player.vy = 0; player.unstick(); }
+      if (hp) Object.assign(runner.helper, { x: hp.x, y: hp.y, z: hp.z, f: hp.f || 0, from: null, t: 1, trail: 0 });
+    },
+    clearUndo: () => { undo = []; }, snapshotUndo: snapshot,
+    snapshot: () => ({ world: world.save(), player: { x: player.x, y: player.y, z: player.z, yaw: player.yaw, pitch: player.pitch }, helper: { ...runner.helper } }),
+    restore(sn) { runner.stop(); world.load(sn.world); Object.assign(player, sn.player); player.vy = 0; Object.assign(runner.helper, sn.helper, { from: null, t: 1 }); },
+    openProject(p) { setProject(p); mk.viewReady(); changed(); }
+  });
   let drag = null, hover = null, wasBusy = false;
   function camPose() {
     if (cam === 'helper') {
@@ -225,14 +255,18 @@ export function mount(root, host) {
   }
   function pick(px, py) { if (!view) return null; const r = view.screenRay(px, py); return raycast(world, r.o, r.d, cam === 'me' ? 7 : 30); }
   function act(px, py, breakIt) {
-    const h = pick(px, py); if (!h) return;
+    const h = pick(px, py);
+    if (mk.click(h, px, py)) return; // Make-mode tools, or talking to a character
+    if (!h) return;
+    const breaking = breakIt || slot === 0;
+    if (!mk.canEdit(breaking ? 'break' : 'build')) { status(breaking ? 'Breaking blocks by hand is switched off in this world.' : 'Building by hand is switched off in this world — use code!', 'bad'); return; }
     snapshot();
-    if (breakIt || slot === 0) { if (h.y > 0) world.set(h.x, h.y, h.z, 0); }
+    if (breaking) { if (h.y > 0 && !world.set(h.x, h.y, h.z, 0)) { undo.pop(); if (world.guard) status('That area is protected — it can’t be changed.', 'bad'); } }
     else {
       const x = h.x + h.nx, y = h.y + h.ny, z = h.z + h.nz, id = hot[slot - 1];
       if (y < 1 || !world.inside(x, y, z)) { undo.pop(); return; }
       if (isSolid(id) && Math.abs(x + 0.5 - player.x) < 0.8 && Math.abs(z + 0.5 - player.z) < 0.8 && y >= Math.floor(player.y) - 0 && y <= Math.floor(player.y + 1.7)) { undo.pop(); return; } // not inside you
-      world.set(x, y, z, id);
+      if (!world.set(x, y, z, id)) { undo.pop(); if (world.guard) status('That area is protected — it can’t be changed.', 'bad'); }
     }
   }
   cv.addEventListener('contextmenu', e => e.preventDefault());
@@ -254,6 +288,7 @@ export function mount(root, host) {
   });
   const KEYMAP = { KeyW: 'f', ArrowUp: 'f', KeyS: 'b', ArrowDown: 'b', KeyA: 'l', ArrowLeft: 'l', KeyD: 'r', ArrowRight: 'r', Space: 'j', ShiftLeft: 'd', ShiftRight: 'd' };
   cv.addEventListener('keydown', e => {
+    if (mk.key(e)) { e.preventDefault(); return; }
     if (e.code === 'KeyT' || e.code === 'Enter' || e.code === 'Slash') { e.preventDefault(); $('crChat').focus(); return; }
     if (e.code === 'KeyF') { toggleFly(); return; }
     if (/^Digit[0-9]$/.test(e.code)) { slot = Math.min(hot.length, +e.code.slice(5)); renderHot(); return; }
@@ -261,7 +296,7 @@ export function mount(root, host) {
   });
   window.addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) keys.delete(k); });
   cv.addEventListener('blur', () => keys.clear());
-  function toggleFly() { player.fly = !player.fly; $('crFly').classList.toggle('on', player.fly); root.querySelector('#crPad2 [data-k="d"]').hidden = !player.fly; changed(); }
+  function toggleFly() { if (!flyOk && !player.fly) { status('Flying is switched off in this world.'); return; } player.fly = !player.fly; $('crFly').classList.toggle('on', player.fly); root.querySelector('#crPad2 [data-k="d"]').hidden = !player.fly; changed(); }
   $('crFly').onclick = toggleFly;
   root.querySelectorAll('.cr-cam[data-cam]').forEach(b => b.onclick = () => { cam = b.dataset.cam; root.querySelectorAll('.cr-cam[data-cam]').forEach(x => x.classList.toggle('on', x === b)); $('crView').classList.toggle('cam-helper', cam === 'helper'); });
   root.querySelectorAll('#crPad button, #crPad2 button').forEach(b => {
@@ -276,7 +311,7 @@ export function mount(root, host) {
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     const on = k => keys.has(k) || pad.has(k);
     player.step(dt, { fwd: (on('f') ? 1 : 0) - (on('b') ? 1 : 0), side: (on('r') ? 1 : 0) - (on('l') ? 1 : 0), jump: on('j'), down: on('d') });
-    runner.tick(dt);
+    runner.tick(dt); mk.tick(dt);
     const busy = runner.running(); $('crRun').classList.toggle('on', busy);
     if (wasBusy && !busy && /^Running/.test($('crStatus').textContent)) status('Done. Type a chat command, or press Run again.', 'ok');
     wasBusy = busy;
@@ -290,7 +325,7 @@ export function mount(root, host) {
     const st = ws ? Blockly.serialization.workspaces.save(ws) : null;
     return { v: 1, mode, blocks: st, py: mode === 'python' ? src.value : undefined, world: world.save(),
       player: { x: +player.x.toFixed(2), y: +player.y.toFixed(2), z: +player.z.toFixed(2), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3), fly: !!player.fly },
-      helper: { x: runner.helper.x, y: runner.helper.y, z: runner.helper.z, f: runner.helper.f }, time: view ? view.time() : 'DAY', hot: hot.slice() };
+      helper: { x: runner.helper.x, y: runner.helper.y, z: runner.helper.z, f: runner.helper.f }, time: view ? view.time() : 'DAY', hot: (savedHot || hot).slice(), ...mk.save() };
   }
   const num = (v, lo, hi, d) => { v = Number(v); return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
   function loadBlocks(state, cleanUp) {
@@ -318,6 +353,7 @@ export function mount(root, host) {
       mode = 'blocks'; $('crBlocks').hidden = false; $('crPy').hidden = true; root.querySelectorAll('.cr-tab').forEach(t => t.classList.toggle('on', t.dataset.m === 'blocks'));
       if (p.mode === 'python' && typeof p.py === 'string') { pyText = p.py.slice(0, 50000); src.value = pyText; mode = 'python'; $('crBlocks').hidden = true; $('crPy').hidden = false; root.querySelectorAll('.cr-tab').forEach(t => t.classList.toggle('on', t.dataset.m === 'python')); renderPy(); const r = L.fromPython(pyText); if (r.error) showPyError(r.error); else hidePyError(); }
       $('crFly').classList.toggle('on', player.fly); root.querySelector('#crPad2 [data-k="d"]').hidden = !player.fly;
+      savedHot = null; mk.load(p.maker, p.progress);
     } finally { quiet = false; }
     renderHot();
     status('Press Run, or type a chat command. Click the world, then W A S D to walk.');
@@ -336,7 +372,7 @@ export function mount(root, host) {
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
     ws.addChangeListener(e => { if (quiet || e.isUiEvent) return; changed(); });
     view = createView(THREE, cv, world);
-    setProject(pending); pending = null;
+    setProject(pending); pending = null; mk.viewReady();
     $('crLoading').hidden = true; view.resize(); raf = requestAnimationFrame(tick);
   })().catch(e => { console.error(e); $('crLoading').textContent = 'The Build Lab needs the internet the first time it opens. Check your connection and try again.'; });
 
@@ -347,6 +383,6 @@ export function mount(root, host) {
     pause() { runner.stop(); keys.clear(); pad.clear(); cancelAnimationFrame(raf); raf = 0; },
     destroy() { alive = false; ro.disconnect(); cancelAnimationFrame(raf); runner.stop(); if (view) view.dispose(); if (ws) ws.dispose(); root.innerHTML = ''; },
     run, chat, setMode,
-    _world: () => world, _player: () => player, _runner: () => runner, _ws: () => ws, _view: () => view, _act: act, _pick: pick, _slot: n => { slot = n; renderHot(); }
+    _mk: () => mk, _world: () => world, _player: () => player, _runner: () => runner, _ws: () => ws, _view: () => view, _act: act, _pick: pick, _slot: n => { slot = n; renderHot(); }
   };
 }

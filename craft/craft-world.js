@@ -99,6 +99,7 @@ export function createWorld() {
       if (!inside(x, y, z) || id < 0 || id >= NBLOCKS) return false;
       if (y === 0 && id === 0) return false; // the bottom layer can't be dug away (you'd fall out of the world)
       const i = idx(x, y, z); if (cells[i] === id) return false;
+      if (w.guard && !w.guard(x, y, z, id)) return false; // a protected area (World Maker) stays as it is
       const old = cells[i]; cells[i] = id; for (const f of listeners) f(x, y, z, id, old); return true;
     },
     onChange(f) { listeners.push(f); },
@@ -155,14 +156,15 @@ export function createWorld() {
       if (p !== tmp.length) return false; // a damaged save: keep what we have
       cells.set(tmp); for (const f of listeners) f(-1, -1, -1); return true;
     },
-    reset() { starter(w); for (const f of listeners) f(-1, -1, -1); }
+    reset(kind) { starter(w, kind); for (const f of listeners) f(-1, -1, -1); },
+    guard: null
   };
   starter(w);
   return w;
 }
 
 // the starter world: three layers of dirt under grass, stone below, a pond, some sand, trees and flowers of colour
-function starter(w) {
+function starter(w, kind) {
   const c = w.cells; c.fill(0);
   const put = (x, y, z, id) => { if (w.inside(x, y, z)) c[(y * D + z) * W + x] = id; };
   for (let z = 0; z < D; z++) for (let x = 0; x < W; x++) {
@@ -170,6 +172,7 @@ function starter(w) {
     for (let y = GROUND - 3; y < GROUND; y++) put(x, y, z, 2);
     put(x, GROUND, z, 1);
   }
+  if (kind === 'flat') return; // just grass: for making lessons and arenas
   // a pond to the west, with a sandy edge
   for (let z = 24; z < 36; z++) for (let x = 8; x < 20; x++) {
     const d = Math.hypot((x - 13.5) / 6, (z - 29.5) / 5.5);

@@ -95,14 +95,14 @@ function apiBlockXml(a) { // toolbox entry with default shadows
   for (const [name, kind, def] of a[4]) { if (ENUM_KINDS.has(kind)) b.fields[name] = def; else if (kind !== 'bool') b.inputs[name] = sh(kind, def); }
   return b;
 }
-export function toolbox() {
+export function toolbox(code = 'all') { // code: 'all' | 'helper' (no builder commands) | 'builder' (no helper) — set by a World Maker world
   const cat = (name, colour, contents) => ({ kind: 'category', name, colour, contents });
   const api = c => API.filter(a => a[1] === c && a[0] !== 'cr_wait').map(apiBlockXml);
   const num = v => ({ shadow: { type: 'math_number', fields: { NUM: v } } });
   return { kind: 'categoryToolbox', contents: [
     cat('Events', COLOURS.events, [{ kind: 'block', type: 'cr_on_run' }, { kind: 'block', type: 'cr_on_chat' }]),
-    cat('Helper', COLOURS.helper, api('helper')),
-    cat('Builder', COLOURS.builder, api('builder')),
+    code === 'builder' ? null : cat('Helper', COLOURS.helper, api('helper')),
+    code === 'helper' ? null : cat('Builder', COLOURS.builder, api('builder')),
     cat('Player', COLOURS.player, api('player')),
     cat('World', COLOURS.world, [...api('world'), { kind: 'block', type: 'cr_block' },
       { kind: 'block', type: 'logic_compare', inputs: { A: { block: apiBlockXml(API_BY_TYPE.cr_h_inspect) }, B: { block: { type: 'cr_block', fields: { B: 'WATER' } } } } }]),
@@ -116,7 +116,7 @@ export function toolbox() {
       { kind: 'block', type: 'math_random_int', inputs: { FROM: num(1), TO: num(10) } }, { kind: 'block', type: 'math_modulo', inputs: { DIVIDEND: num(10), DIVISOR: num(3) } },
       { kind: 'block', type: 'text' }, { kind: 'block', type: 'text_join' }]),
     { kind: 'category', name: 'Variables', colour: COLOURS.vars, custom: 'VARIABLE' }
-  ] };
+  ].filter(Boolean) };
 }
 // "type tower 5 in the chat": a tower of gold as tall as the number, and Run builds a little house
 export function starterProgram() {

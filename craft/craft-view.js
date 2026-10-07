@@ -288,6 +288,64 @@ export function createView(THREE, canvas, world) {
   for (const x of [-0.08, 0.08]) part(new THREE.SphereGeometry(0.035, 10, 8), mm(0x1b1b22), x, 1.35, -0.225);
   meG.visible = false; useEnv(meG); scene.add(meG);
 
+  // ── World Maker: characters, areas, the start spot ──
+  const markG = new THREE.Group(); scene.add(markG);
+  const npcObjs = new Map(); let lastMarkers = null;
+  function label(text, bg, fg, scale) { // a rounded name tag (always faces you)
+    const c = document.createElement('canvas'), g = c.getContext('2d'); g.font = '700 44px Montserrat, Arial, sans-serif';
+    const w = Math.min(1000, Math.ceil(g.measureText(text).width) + 48); c.width = w; c.height = 72;
+    g.font = '700 44px Montserrat, Arial, sans-serif'; g.fillStyle = bg; g.beginPath(); g.roundRect ? g.roundRect(2, 2, w - 4, 68, 30) : g.rect(2, 2, w - 4, 68); g.fill();
+    g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, 38);
+    const t = new THREE.CanvasTexture(c); if ('colorSpace' in t) t.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, fog: false })); sp.scale.set(scale * w / 72, scale, 1); sp.renderOrder = 5; return sp;
+  }
+  function npcModel(n) {
+    const G = new THREE.Group(), shirt = new THREE.MeshStandardMaterial({ color: n.colour, roughness: 0.55 }), skin = new THREE.MeshStandardMaterial({ color: 0xf0c49c, roughness: 0.6 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x2b2240, roughness: 0.5 });
+    const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; o.userData.npc = n.id; G.add(o); return o; };
+    add(new THREE.CapsuleGeometry(0.27, 0.5, 6, 16), shirt, 0, 0.62, 0);
+    add(new THREE.SphereGeometry(0.25, 24, 16), skin, 0, 1.33, 0);
+    add(new THREE.SphereGeometry(0.262, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2.2), dark, 0, 1.37, 0.01);
+    for (const x of [-0.085, 0.085]) add(new THREE.SphereGeometry(0.036, 10, 8), dark, x, 1.34, -0.225);
+    const smile = add(new THREE.TorusGeometry(0.06, 0.012, 6, 14, Math.PI), dark, 0, 1.27, -0.235); smile.rotation.z = Math.PI;
+    G.traverse(o => { if (o.material && o.material.isMeshStandardMaterial) { o.material.envMap = envTex; o.material.envMapIntensity = 0.7; } });
+    const tag = label(n.name, 'rgba(20,22,30,0.78)', '#ffffff', 0.32); tag.position.set(0, 2.05, 0); G.add(tag);
+    const mark = label('!', '#ffb000', '#2b2240', 0.42); mark.position.set(0, 2.5, 0); mark.visible = false; G.add(mark);
+    G.userData = { id: n.id, mark, f: n.f || 0 };
+    G.position.set(n.x + 0.5, n.y, n.z + 0.5); G.rotation.y = -(n.f || 0) * Math.PI / 2;
+    return G;
+  }
+  function setMarkers(m) {
+    lastMarkers = m;
+    for (const o of [...markG.children]) { markG.remove(o); o.traverse(q => { if (q.geometry) q.geometry.dispose(); if (q.material) { if (q.material.map) q.material.map.dispose(); q.material.dispose(); } }); }
+    npcObjs.clear();
+    if (!m) return;
+    for (const n of m.npcs || []) { const G = npcModel(n); G.userData.mark.visible = !!(m.attention && m.attention.has(n.id)); markG.add(G); npcObjs.set(n.id, G); }
+    for (const z of m.zones || []) {
+      if (!m.editing && !z.show) continue;
+      const x0 = Math.min(z.a[0], z.b[0]), x1 = Math.max(z.a[0], z.b[0]) + 1, y0 = Math.min(z.a[1], z.b[1]), y1 = Math.max(z.a[1], z.b[1]) + 1, z0 = Math.min(z.a[2], z.b[2]), z1 = Math.max(z.a[2], z.b[2]) + 1;
+      const geo = new THREE.BoxGeometry(x1 - x0 + 0.02, y1 - y0 + 0.02, z1 - z0 + 0.02), c = new THREE.Color(z.colour || '#ffd166');
+      const fill = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: m.editing ? 0.14 : 0.08, depthWrite: false, side: THREE.DoubleSide }));
+      const edge = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.95 }));
+      const G = new THREE.Group(); G.add(fill); G.add(edge); fill.renderOrder = 3; edge.renderOrder = 4; G.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      if (m.editing || m.labels) { const t = label(z.name, 'rgba(20,22,30,0.72)', z.colour || '#ffd166', 0.3); t.position.set(0, (y1 - y0) / 2 + 0.35, 0); G.add(t); }
+      markG.add(G);
+    }
+    if (m.editing && m.start) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.05, 8, 32), new THREE.MeshBasicMaterial({ color: 0xffd166, toneMapped: false }));
+      ring.rotation.x = Math.PI / 2; ring.position.set(m.start.x, m.start.y + 0.05, m.start.z); markG.add(ring);
+      const t = label('Start', 'rgba(20,22,30,0.72)', '#ffd166', 0.28); t.position.set(m.start.x, m.start.y + 0.6, m.start.z); markG.add(t);
+    }
+  }
+  function setAttention(set) { for (const [id, G] of npcObjs) G.userData.mark.visible = !!(set && set.has(id)); }
+  const rc = new THREE.Raycaster();
+  function pickNpc(px, py) {
+    if (!npcObjs.size) return null;
+    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1; rc.setFromCamera(new THREE.Vector2((px / w) * 2 - 1, -(py / h) * 2 + 1), camera);
+    const hits = rc.intersectObjects([...npcObjs.values()], true).filter(i => i.object.userData.npc);
+    return hits.length ? { id: hits[0].object.userData.npc, dist: hits[0].distance } : null;
+  }
+
   // ── the block you point at ──
   const hl = new THREE.Group();
   hl.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.006, 1.006, 1.006)), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 })));
@@ -340,7 +398,11 @@ export function createView(THREE, canvas, world) {
     let gy = Math.floor(hy); while (gy > 0 && !world.get(Math.floor(hx), gy - 1, Math.floor(hz))) gy--;
     shadowM.position.set(hx, gy + 0.015, hz); shadowM.visible = hy - gy < 6; shadowM.scale.setScalar(1 - Math.min(0.5, Math.max(0, hy - gy - 0.4) * 0.1));
     tip.material.color.set(Math.sin(now / 260) > 0 ? 0xff7a2f : 0xffc23c);
-    if (opts.me) { meG.visible = !!opts.showMe; meG.position.set(opts.me.x, opts.me.y, opts.me.z); meG.rotation.y = opts.me.yaw; }
+    if (opts.me) { meG.visible = !!opts.showMe; meG.position.set(opts.me.x, opts.me.y, opts.me.z); meG.rotation.y = opts.me.yaw;
+      for (const G of npcObjs.values()) { // characters turn to look at you when you come close
+        const dx = opts.me.x - G.position.x, dz = opts.me.z - G.position.z, near = dx * dx + dz * dz < 36;
+        let want = near ? Math.atan2(-dx, -dz) : -G.userData.f * Math.PI / 2, cur = G.rotation.y; while (want - cur > Math.PI) want -= Math.PI * 2; while (cur - want > Math.PI) want += Math.PI * 2;
+        G.rotation.y = cur + (want - cur) * Math.min(1, dt * 6); G.userData.mark.position.y = 2.5 + Math.sin(now / 300) * 0.06; } }
     // puffs
     let live = false;
     for (let i = 0; i < PN; i++) { const p = parts[i]; if (p.life <= 0) continue; live = true; p.life -= dt; p.vy -= 12 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
@@ -364,6 +426,6 @@ export function createView(THREE, canvas, world) {
     return { o: [camera.position.x, camera.position.y, camera.position.z], d: [v.x, v.y, v.z] };
   }
   world.onChange((x, y, z, id, old) => { dirty(x, y, z); if (x >= 0 && builtFirst) puff(x, y, z, id || old); });
-  return { render, dirty, dirtyAll, setTime, time: () => timeName, highlight, resize, screenRay, atlas, renderer, camera, scene,
+  return { render, dirty, dirtyAll, setTime, time: () => timeName, highlight, resize, screenRay, atlas, renderer, camera, scene, setMarkers, setAttention, pickNpc,
     dispose() { renderer.dispose(); tex.dispose(); pmrem.dispose(); for (const ms of chunks.values()) for (const m of ms) m.geometry.dispose(); }, _chunks: chunks };
 }

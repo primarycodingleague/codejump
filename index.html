@@ -3832,7 +3832,7 @@ function enterCraftUI(){
     if(craftApp){_craftQuiet=true;try{craftApp.setProject(craftData);}finally{_craftQuiet=false;}return;}
     _craftQuiet=true;
     try{craftApp=mod.mount(holder,{project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
-      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'})});}finally{_craftQuiet=false;}
+      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'})});}finally{_craftQuiet=false;}
   }).catch(()=>{holder.innerHTML='<div id="craft-loading">The Build Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
 function exitCraftUI(){

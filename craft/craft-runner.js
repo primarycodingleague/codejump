@@ -15,7 +15,7 @@ const STEP = 0.18, ACT = 0.1; // seconds per helper move / place / dig
 const numOf = v => { const n = Number(v); return isFinite(n) ? n : 0; };
 
 export function createRunner(world, io = {}) {
-  let tops = [], fibers = [], vars = Object.create(null), live = false;
+  let tops = [], fibers = [], vars = Object.create(null), live = false, allow = null, steps = 0;
   const helper = { x: 32, y: 13, z: 30, f: 0, from: null, t: 1, trail: 0 };
 
   const field = (b, n) => (b && b.fields ? b.fields[n] : undefined);
@@ -69,12 +69,13 @@ export function createRunner(world, io = {}) {
       if (isSolid(world.get(nx, ny, nz)) || nx < 0 || nz < 0 || nx >= W || nz >= D || ny < 1 || ny >= H) { yield ACT; return; } // blocked: it stays put
       const old = [helper.x, helper.y, helper.z];
       helper.from = { x: helper.x, y: helper.y, z: helper.z, f: helper.f }; helper.t = 0;
-      helper.x = nx; helper.y = ny; helper.z = nz;
+      helper.x = nx; helper.y = ny; helper.z = nz; steps++;
       if (helper.trail) world.set(old[0], old[1], old[2], helper.trail);
       yield STEP;
     }
   }
   function* runOne(b) {
+    if (allow && b.type && !allow(b.type)) throw new Error(allow.why || 'This world doesn’t allow that block.');
     switch (b.type) {
       case 'controls_repeat_ext': { const n = Math.max(0, Math.min(100000, Math.round(numOf(val(input(b, 'TIMES')))))); for (let i = 0; i < n; i++) { yield* runSeq(input(b, 'DO')); yield 0; } return; }
       case 'controls_for': {
@@ -160,6 +161,7 @@ export function createRunner(world, io = {}) {
       live = fibers.length > 0;
     },
     stop() { fibers = []; live = false; },
+    setAllow(fn) { allow = fn || null; }, steps: () => steps, resetSteps() { steps = 0; },
     running() { return live && fibers.length > 0; },
     _vars: () => vars
   };

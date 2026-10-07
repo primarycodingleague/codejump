@@ -39,6 +39,9 @@ try {
   await page.evaluate(() => { document.getElementById('turtle-code').value = 'repeat 4 [fd 80 rt 90]'; turtleSpeed = 10; turtleRun(); });
   await page.waitForFunction(() => /Done/.test(document.getElementById('turtle-status').textContent), null, { timeout: 10000 }).catch(() => {});
   ok(await page.evaluate(() => /Done/.test(document.getElementById('turtle-status').textContent)), 'Turtle draws a square (' + await page.evaluate(() => document.getElementById('turtle-status').textContent.trim()) + ')');
+  await page.evaluate(() => { document.getElementById('turtle-code').value = 'pu setxy 50 -20 pd fd 10 - 5'; turtleSpeed = 10; turtleRun(); });
+  await page.waitForFunction(() => /Done|expected|understand/.test(document.getElementById('turtle-status').textContent), null, { timeout: 10000 }).catch(() => {});
+  ok(await page.evaluate(() => /Done/.test(document.getElementById('turtle-status').textContent) && Math.round(turtle.x) === 50 && Math.round(turtle.y) === -15), 'Turtle: setxy 50 -20 is a negative number, and fd 10 - 5 still subtracts');
 
   await page.evaluate(() => startNewCritter('ks2'));
   await page.waitForFunction(() => critterApp && document.getElementById('buildCanvas') && document.getElementById('buildCanvas').clientWidth > 0, null, { timeout: 30000 });

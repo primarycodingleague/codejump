@@ -201,6 +201,17 @@ or `startNewStage`.
     caches hard — bust with `?b=`+Date.now() and restart the preview server after edits. `stageStart` calls
     `stageSaveCurrent()` first, so to test an injected `sprites[0].xml` set `stageSel=99` so it isn't clobbered.
 
+## Stage REDESIGN (7 Oct 2026, CJ_VERSION 2026.10.09) — Charlie: the Stage didn't match the other labs' UI/UX
+- KS2/KS3 only (`body.stage-mode:not(.ks1-mode)`; KS1's ScratchJr UI unchanged). Header GO/STOP/Backdrops/micro:bit/Cave/mute/hand hidden;
+  a `#stage-bar` above the stage: `#st-run` (Run) / `#st-stop` / `#stage-status` (`stageSetStatus`) / `#st-big` (body.stage-big, wider stage,
+  remembered in localStorage `cj_stage_big`). Sprite panel head gained `#sp-mbsend` + `#sp-backdrops`. Stage column `clamp(380px,46%,860px)`,
+  holder aspect 5/3 (the canvas is 960×576). Stacks ≤820px.
+- Blockly: `media` set (zoom/bin icons were broken), and `applyBlocklyTheme()` switches the SHARED workspace between `_cjBaseTheme`
+  (platformer, Classic base) and `stageTheme()` (dark, Zelos base, Scratch block styles) on enter/exit; `ST_CAT_COLOURS` recolours the
+  stage categories (`stageToolbox()` wraps `stageToolboxRaw()`) and every `st_*` block (`stApplyScratchColours`, wraps init once).
+- Built-in vector costumes drawn ×2 (`costumeK(s)`: 1 for KS1, painted images and the micro:bit) — used by drawStageSprite, costumeHalf
+  (hit box), stTouching, stStampSprite. Speech bubbles, score and monitors drawn ×1.8 (`stUiK()`).
+
 ## Train Lab project type — `projectType==='train'` — LIVE on main since 6 Oct 2026 (CJ_VERSION 2026.10.08.3; built on branch `claude/vibrant-cori-tho25y`)
 Charlie's idea: a virtual intelino-style smart-train set (**never use the intelino name or logo in the UI** — it's "Train Lab"). Charlie
 asked for the look AND the default behaviour to match intelino EXACTLY; reference = intelino's K-1 "snap training" worksheets Charlie shared
@@ -1245,6 +1256,26 @@ Students can pick **up to 5 classmates** (across one or more of their classes) t
   were unreachable from the sandbox; from-memory wording was left out). Check each against the source PDF before it goes live.
   CSTA released new 2026 PK–12 standards (July 2026); the app cites the 2017 codes. NZ's Technology curriculum is being replaced
   (required Years 0–8 from 2029). Tests: tests/lessons.test.mjs (every country links every lesson; switching country in the UI).
+
+## Lesson PROGRESSION (7 Oct 2026, CJ_VERSION 2026.10.09) — Charlie: a lesson for EVERY lab for Years 3–4 AND Years 5–6, progressive
+- 20 lessons. Years 3–4 = sequence, repetition, events, debugging; Years 5–6 builds on the same lab's Years 3–4 lesson with selection,
+  variables, procedures, fair testing, data. Never the same skill twice (objectives were checked side by side).
+  | Lab | Years 3–4 | Years 5–6 |
+  | Platformer | level-designers | code-the-rules |  · Stage | stage-animate | catch-the-stars (+ microbit-rps) |
+  | Turtle | turtle-shapes | turtle-procedures |  · Critter | critter-builders | critter-engineers (fair test + results table) |
+  | 3D | world-builders | obstacle-course |  · Robot | robot-storyteller | robot-quiz |  · AI | ai-happy-sad | teach-the-computer |
+  | Train | train-snaps | smart-trains |  (+ KS1: cat-to-star, fix-the-dance, level-for-a-friend)
+- New starters are built from **`lessons/builds/<id>.mjs`** (`makeArgs(ROOT)` in Node + `build(args)` in the page), loaded by
+  make-starters.mjs automatically. Each new lesson's promised result is followed in tests/lessons.test.mjs (wrapped in its own block).
+  Lesson tests open starters with `lessonOpenStarter(id)` NOT returned to Playwright (a big starter's promise can be garbage collected)
+  then wait for `lessonActive.id`. tests/lib.mjs also hides `#promo-modal` (it pops up after a platformer game ends).
+- Library: chips All / Years 1–2 / 3–4 / 5–6 (`lsBand`, country names via `cjYears`) / **Progression** (a lab × band table), a lab
+  `<select id="ls-lab">`; sorted by band → `LS_LAB_ORDER` → file order; each lesson page has Before this / Next links (`lessonPathHTML`).
+- Written by parallel agents (scratch folders, verified in the real app), merged + re-verified. Bugs they found, fixed: platformer KS2 code
+  ignored if Play was pressed before Code (switchMode('play') now runs initBlockly when `_pendingXml`); platformer starter after a Stage
+  kept the old picture (lessonOpenStarter → switchMode('build')); platformer Logic blocks black (base theme was the non-existent
+  Themes.Dark → Classic); ⏰ emoji on "every N seconds"; Logo `setxy 50 -20` read as a subtraction (tokenizer `u-`); Train Lab challenge
+  jobs hidden when it was the first project opened; Robot Lab Lesson card covered the answer box (now bottom-left).
 
 ## Ready-made lessons (5 Oct 2026, CJ_VERSION 2026.10.05.3)
 - **What:** 8 complete, no-preparation computing lessons (KS1: Get the cat to the star, Fix the dance, Make a level for a friend;

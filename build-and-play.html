@@ -3272,7 +3272,7 @@ async function openLessons(){
 function closeLessons(){document.getElementById('lessons-modal').classList.add('hide');}
 function lessonList(){
   _lsCurrent=null;document.getElementById('ls-back').hidden=true;document.getElementById('ls-title').textContent='Ready-made lessons';
-  const ord=l=>LS_BANDS.findIndex(b=>b[0]===lsBand(l))*1000+lessonsMod.LESSONS.indexOf(l);
+  const ord=l=>LS_BANDS.findIndex(b=>b[0]===lsBand(l))*10000+LS_LAB_ORDER.indexOf(l.type)*100+lessonsMod.LESSONS.indexOf(l);
   const L=lessonsMod.LESSONS.filter(l=>(_lsFilter==='all'||_lsFilter==='map'||lsBand(l)===_lsFilter)&&(_lsLab==='all'||l.type===_lsLab)).slice().sort((a,b)=>ord(a)-ord(b));
   const chip=(k,t)=>`<button class="ls-chip${_lsFilter===k?' on':''}" data-f="${k}" aria-pressed="${_lsFilter===k}">${t}</button>`;
   const labs=`<select id="ls-lab" class="ls-lab" aria-label="Which lab"><option value="all">All labs</option>${LS_LAB_ORDER.map(k=>`<option value="${k}"${_lsLab===k?' selected':''}>${lsEsc(LS_TYPE[k])}</option>`).join('')}</select>`;
@@ -3335,7 +3335,9 @@ async function lessonOpenStarter(id){
   if(dirty){autoSaveDraft();if(!await cjConfirm('Open this lesson’s starter project? Your current work is saved as a draft you can resume from the home screen.',{title:'Open the starter',okLabel:'Open it',cancelLabel:'Stay'}))return;}
   let p;try{p=await lessonStarterPayload(id);}catch(e){toast('Couldn’t load the starter. Check your internet connection.','#ef4444');return;}
   closeLessons();hideTeacher();hideHome();
-  applyPayload(p);clearDirty();
+  applyPayload(p);
+  if(projectType==='platformer')switchMode('build'); // after a Stage/other lab the grid view must be shown again
+  clearDirty();
   const tut=document.getElementById('tutorial');if(tut)tut.classList.add('hide'); // the lesson card replaces the first-time tutorial
   toast('Lesson starter opened. Follow the Lesson card in the corner.','#10b981');
 }
@@ -5509,7 +5511,7 @@ function bf(key,alt){return new Blockly.FieldImage('data:image/svg+xml,'+encodeU
 function symSvg(id){var s=document.getElementById(id);if(!s)return null;return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(s.getAttribute('viewBox')||'0 0 24 24')+'">'+s.innerHTML+'</svg>';}
 function symField(id){var svg=symSvg(id);if(!svg)return null;try{return new Blockly.FieldImage('data:image/svg+xml,'+encodeURIComponent(svg),18,18,'');}catch(e){return null;}}
 // Map the leading emoji used on blocks/dropdowns a designed icon symbol id.
-const EMOJI_ICON={'🔊':'i-volume','🔇':'i-volume-off','🏆':'i-target','🎯':'i-target','📃':'i-list','🖊':'i-pen','📻':'i-radio','📟':'i-chip','💬':'i-bubble','💭':'i-bubble','🖼':'i-image','❤':'i-heart','💎':'i-gem','👁':'i-eye','🙈':'i-eye-off','📏':'i-ruler','🎭':'i-stage','🖱':'i-mouse','🧬':'i-clone','🎚':'i-slider','⭐':'i-spark','👾':'i-enemy','🦘':'i-jump2','🏃':'i-runner','🧭':'i-compass','↔':'i-arr-lr','↕':'i-arr-ud','🔁':'i-loop','🔀':'i-shuffle','📍':'i-pin','🛝':'i-slide','📣':'i-megaphone','🗂':'i-folder','📅':'i-calendar','🌍':'i-globe','🍄':'i-mushroom','➡':'i-arr-r','🏁':'i-flag2','🎵':'i-music','➕':'i-plus','📄':'i-page','🚩':'i-flag','🚪':'i-door','💀':'i-skull','🟢':'i-flag','👇':'i-finger','👆':'i-finger','🙋':'i-finger','🚫':'i-no','🔍':'i-zoom','🔎':'i-zoom','♾':'i-infinity','🤚':'i-hand','🖐':'i-hand','🛑':'i-handstop','📩':'i-mail','📨':'i-mail','📤':'i-send','❓':'i-help','🔤':'i-font','🪃':'i-boomerang','🐛':'i-bug','🦶':'i-foot','↻':'i-redo','↺':'i-undo','⬅':'i-arr-l','⬆':'i-arr-u','⬇':'i-arr-d','🔼':'i-grow','🔽':'i-shrink','🐢':'i-turtle','🐇':'i-rabbit','⏳':'i-clock','⏱':'i-clock','🎨':'i-palette'};
+const EMOJI_ICON={'⏰':'i-clock','🔊':'i-volume','🔇':'i-volume-off','🏆':'i-target','🎯':'i-target','📃':'i-list','🖊':'i-pen','📻':'i-radio','📟':'i-chip','💬':'i-bubble','💭':'i-bubble','🖼':'i-image','❤':'i-heart','💎':'i-gem','👁':'i-eye','🙈':'i-eye-off','📏':'i-ruler','🎭':'i-stage','🖱':'i-mouse','🧬':'i-clone','🎚':'i-slider','⭐':'i-spark','👾':'i-enemy','🦘':'i-jump2','🏃':'i-runner','🧭':'i-compass','↔':'i-arr-lr','↕':'i-arr-ud','🔁':'i-loop','🔀':'i-shuffle','📍':'i-pin','🛝':'i-slide','📣':'i-megaphone','🗂':'i-folder','📅':'i-calendar','🌍':'i-globe','🍄':'i-mushroom','➡':'i-arr-r','🏁':'i-flag2','🎵':'i-music','➕':'i-plus','📄':'i-page','🚩':'i-flag','🚪':'i-door','💀':'i-skull','🟢':'i-flag','👇':'i-finger','👆':'i-finger','🙋':'i-finger','🚫':'i-no','🔍':'i-zoom','🔎':'i-zoom','♾':'i-infinity','🤚':'i-hand','🖐':'i-hand','🛑':'i-handstop','📩':'i-mail','📨':'i-mail','📤':'i-send','❓':'i-help','🔤':'i-font','🪃':'i-boomerang','🐛':'i-bug','🦶':'i-foot','↻':'i-redo','↺':'i-undo','⬅':'i-arr-l','⬆':'i-arr-u','⬇':'i-arr-d','🔼':'i-grow','🔽':'i-shrink','🐢':'i-turtle','🐇':'i-rabbit','⏳':'i-clock','⏱':'i-clock','🎨':'i-palette'};
 const ER_BLK=/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{1F1E6}-\u{1F1FF}\u{FE0F}\u{20E3}]/gu;
 function stripEmoji(t){return t.replace(ER_BLK,'').replace(/\s{2,}/g,' ').trim();}
 // Patch Blockly so EVERY block's leading emoji becomes a designed icon and all other emoji are stripped to clean text.
@@ -6197,7 +6199,7 @@ function initBlockly(){
   // real font (Montserrat). Doing it via CSS instead desyncs measurement from
   // rendering and makes the text sit off-centre.
   const cjTheme=Blockly.Theme.defineTheme('codejump',{
-    base:Blockly.Themes.Dark,
+    base:Blockly.Themes.Classic, // (Blockly 10 has no Themes.Dark: an undefined base left style-based blocks like 'if' black)
     fontStyle:{family:"'Montserrat', sans-serif",weight:'600',size:11},
   });
   blocklyWorkspace=Blockly.inject('blockly-div',{
@@ -7202,7 +7204,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>Game size</h3>
   <p>Key Stage 2 &amp; 3 games can be created at different grid sizes (Standard 20×12, Wide, Large, or Huge 48×24) for bigger projects. The build view scales to show the whole level; play uses a camera that follows the player in both directions. Key Stage 1 stays at the standard size.</p>
   <h3>Running a lesson</h3>
- <ul><li>Collect pupils' work two ways: have them <b>hand it in to your class</b> (cloud), or <b>open a level file</b> (.codejump / .html) they share.</li><li><b>Send a starter</b> to a class in one tap (My classes a class Send the game I'm building), or use the in-app guided activities in <b> Help</b>.</li><li>Suggested flow: <i>predict place a few blocks play improve</i>.</li><li>Ready-made <b>lesson plans &amp; worksheets are coming soon</b> — for now the guided activities and starter games ( Help) give pupils a head start.</li></ul>
+ <ul><li>Collect pupils' work two ways: have them <b>hand it in to your class</b> (cloud), or <b>open a level file</b> (.codejump / .html) they share.</li><li><b>Send a starter</b> to a class in one tap (My classes a class Send the game I'm building), or use the in-app guided activities in <b> Help</b>.</li><li>Suggested flow: <i>predict place a few blocks play improve</i>.</li><li><b>Ready-made lessons</b> (home page → For teachers, or the Teacher Hub): 20 complete 60-minute lessons with a plan, slides, curriculum links for your country, a starter project and a Lesson card that guides pupils step by step. Every lab has a lesson for Years 3–4 (sequence, repetition, events, debugging) and one for Years 5–6 that builds on it (selection, variables, procedures, fair testing, data), plus three for Years 1–2. Choose <b>Progression</b> in the lessons library to see them all side by side.</li></ul>
   <h3>Every block &amp; tile</h3>
   `+guideTileRef()+`
   <h3>Coding blocks (Key Stage 2)</h3>
@@ -7556,7 +7558,7 @@ function switchMode(m){
   if(m==='code'){cp.classList.add('show');if(isKS3()&&projectType!=='stage'){showKs3Editor();}else{updateCodeModeUI();setTimeout(()=>{initBlockly();Blockly.svgResize(blocklyWorkspace);if(blocklyWorkspace&&blocklyWorkspace.setScale)blocklyWorkspace.setScale(keyStage==='ks1'?1.25:0.85);},50);}}
   else cp.classList.remove('show');
   ['t-paint','t-fill','t-erase','t-undo','t-redo','t-clear','t-testpage'].forEach(id=>document.getElementById(id).style.display=m==='build'?'':'none');
-  if(m==='play'){commitLevel();readBlocklyConfig();startPlay();if(!musicMuted)startMusic();}
+  if(m==='play'){commitLevel();if(window._pendingXml&&!isKS3())initBlockly(); /* a project opened but Code never shown: build its blocks so its events and rules count */readBlocklyConfig();startPlay();if(!musicMuted)startMusic();}
   else{stopPlay();stopMusic();if(typeof clearTouchKeys==='function')clearTouchKeys();}
 }
 
@@ -9215,17 +9217,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.08.3';
+const CJ_VERSION='2026.10.09';
 const CJ_WHATSNEW=[
- "New: the Train Lab! Click a smart-train track together from straights, curves, splits and crossings, then press Run.",
- "Trains obey snap commands just like the real thing: white green = slow, white red = stop 2 seconds, white blue = reverse, and a snap in a split's slot picks the way.",
- "Code them with the same blocks as the smart train's Scratch extension: drive at cm/s, pause, lights, split decisions and snap events, with a block category for each train.",
- "Wagons: pull one, drop it with white yellow, and reverse into it to pick it up again.",
- "Challenges: put places beside the track (station, airport, farm …), try four ready-made challenges or make your own, and print a challenge card to build with real track.",
- "Put the places in order: tap them with the Order tool and each gets a number for the train to follow.",
- "Zoom in and out and move round the track: drag it, pinch it, use the mouse wheel or the + and − buttons.",
- "New ready-made lesson, Smart trains: sense, react, decide. It teaches events, selection and sensing with slides, a starter and a Lesson card.",
- "Variables now show on the Train Lab board while your program runs, so you can watch a count go up.",
+ "10 new ready-made lessons: every lab now has a lesson for Years 3–4 and one for Years 5–6 that builds on it. See them side by side under Progression in the lessons library.",
+ "The Stage has a new look: a dark block editor in Scratch's colours, Run and Stop above a bigger stage, and bigger characters.",
+ "Fixes: platformer code works even if you press Play before opening Code, and Logo understands setxy 50 -20.",
 ];
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');

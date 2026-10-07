@@ -1,7 +1,8 @@
 // Builds every lesson's starter project inside the real app and saves it as lessons/starters/<id>.json, plus a
 // screenshot of it for the lesson card (lessons/pics/<id>.jpg). Run after changing a starter or the payload format:
 //   cd tests && npm ci && cd .. && node lessons/make-starters.mjs        (or: node lessons/make-starters.mjs <id>)
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import { ROOT, serve, browser, openApp, sleep } from '../tests/lib.mjs';
 
@@ -133,6 +134,13 @@ const BUILD = {
 };
 const ARGS = { CATCHER_XML, STAR_XML, MICROBIT_XML, critter: wobbly(), world: course(), aiLabels: aiShapes(), train: trainLesson() };
 
+// More starters live one per file in lessons/builds/<id>.mjs: `makeArgs(ROOT)` runs here in Node, `build(args)` runs in the page.
+const BUILD_ARGS = {};
+for (const f of readdirSync(join(OUT, 'builds')).filter(f => f.endsWith('.mjs')).sort()) {
+  const id = f.slice(0, -4), m = await import(pathToFileURL(join(OUT, 'builds', f)).href);
+  BUILD[id] = m.build; BUILD_ARGS[id] = m.makeArgs ? await m.makeArgs(ROOT) : {};
+}
+
 const site = await serve();
 const b = await browser();
 const errors = [];
@@ -140,7 +148,7 @@ for (const id of Object.keys(BUILD)) {
   if (only && id !== only) continue;
   const { ctx, page } = await openApp(b, site.url, { errors }); // a fresh page each time, so nothing carries over
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.evaluate(([src, args]) => (0, eval)('(' + src + ')')(args), [BUILD[id].toString(), ARGS]);
+  await page.evaluate(([src, args]) => (0, eval)('(' + src + ')')(args), [BUILD[id].toString(), BUILD_ARGS[id] || ARGS]);
   if (id === 'obstacle-course') await page.waitForFunction(() => worldApp._world().editing() && worldApp._world().objects().some(o => o.id === 'finish'), null, { timeout: 60000 });
   await sleep(800);
   const payload = await page.evaluate(() => { const p = buildPayload(); delete p.lesson; return p; });
@@ -148,9 +156,9 @@ for (const id of Object.keys(BUILD)) {
   // the card picture: the starter as a pupil first sees it, with its Lesson card
   await page.evaluate(id => { clearDirty(); return lessonOpenStarter(id); }, id);
   await page.waitForFunction(() => !document.getElementById('lesson-guide').classList.contains('hide'), null, { timeout: 30000 });
-  if (id === 'turtle-shapes') await page.evaluate(() => { turtleSpeed = 10; turtleRun(); });
+  if (id === 'turtle-shapes' || id === 'turtle-procedures') await page.evaluate(() => { turtleSpeed = 10; turtleRun(); });
   if (id === 'obstacle-course') await page.waitForFunction(() => worldApp._world().editing() && worldApp._world().objects().some(o => o.id === 'finish'), null, { timeout: 60000 });
-  await sleep(id === 'critter-engineers' || id === 'obstacle-course' ? 3500 : 1200);
+  await sleep(/critter|obstacle|world-builders/.test(id) ? 3500 : 1200);
   await page.screenshot({ path: join(OUT, 'pics', id + '.jpg'), type: 'jpeg', quality: 72 });
   console.log('made', id, JSON.stringify(payload).length + ' bytes');
   await ctx.close();

@@ -56,8 +56,8 @@ export async function openApp(b, base, { page: pagePath = '/build-and-play.html'
     }
     return route.abort();
   });
-  // the What's New popup can appear at any time; keep it out of the way
-  await page.addInitScript(() => { setInterval(() => { const w = document.getElementById('whatsnew'); if (w) w.classList.add('hide'); }, 50); });
+  // the What's New and promotion popups can appear at any time; keep them out of the way
+  await page.addInitScript(() => { setInterval(() => { const w = document.getElementById('whatsnew'); if (w) w.classList.add('hide'); const pm = document.getElementById('promo-modal'); if (pm) pm.classList.add('hide'); }, 50); });
   if (init) await page.addInitScript(init);
   await page.goto(base + pagePath);
   await page.waitForFunction(() => typeof startNewProject === 'function' && typeof buildPayload === 'function');

@@ -32,4 +32,9 @@ for (const m of mods) {
   catch (e) { badMods++; console.log('  ' + m + ': ' + String(e.stderr).split('\n').slice(0, 4).join(' ')); }
 }
 ok(badMods === 0, `all ${mods.length} engine modules parse (${mods.join(', ')})`);
+
+// the iPad offline copy: offline.json lists the files as they are now, and the offline helper parses
+const { makeList, text } = await import('../offline/make-list.mjs');
+ok(readFileSync(join(ROOT, 'offline.json'), 'utf8') === text(makeList()), 'offline.json is up to date (if not: node offline/make-list.mjs)');
+try { new vm.Script(readFileSync(join(ROOT, 'sw.js'), 'utf8')); ok(true, 'sw.js parses'); } catch (e) { ok(false, 'sw.js parses: ' + e.message); }
 done();

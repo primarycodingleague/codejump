@@ -1,0 +1,16 @@
+{
+  "name": "CodeJump",
+  "short_name": "CodeJump",
+  "description": "Coding labs for primary children, by Primary Coding League",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "home/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "home/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "home/icon-180.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

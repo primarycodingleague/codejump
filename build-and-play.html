@@ -8,6 +8,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CodeJump">
 <title>CodeJump</title>
+<script>
+// iPads only: CodeJump can go on the Home Screen and work with no internet (see "OFFLINE (iPad)" in the main script).
+// Other devices get none of this: no app manifest, no Home Screen tags, no offline helper.
+var CJ_IPAD=(function(){try{var u=navigator.userAgent||'';return /iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);}catch(e){return false;}})();
+if(CJ_IPAD&&/^https?:$/.test(location.protocol))(function(h){function add(t,a){var e=document.createElement(t);for(var k in a)e.setAttribute(k,a[k]);h.appendChild(e);}
+  add('link',{rel:'manifest',href:'app.webmanifest'});add('link',{rel:'apple-touch-icon',href:'home/icon-180.png'});
+  add('meta',{name:'apple-mobile-web-app-capable',content:'yes'});add('meta',{name:'mobile-web-app-capable',content:'yes'});
+  add('meta',{name:'apple-mobile-web-app-title',content:'CodeJump'});add('meta',{name:'apple-mobile-web-app-status-bar-style',content:'black'});})(document.head);
+</script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMTUyIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwNCIgcm9sZT0iaW1nIj4KICA8dGl0bGU+Q29kZUp1bXAgYnkgUHJpbWFyeSBDb2RpbmcgTGVhZ3VlPC90aXRsZT4KICA8ZGVzYz5SZXRybyBiYWRnZSBsb2dvIGZvciBDb2RlSnVtcCwgYSBnYW1lLWJhc2VkIGNvZGluZyB0b29sIGJ5IFByaW1hcnkgQ29kaW5nIExlYWd1ZTwvZGVzYz4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgQGltcG9ydCB1cmwoJ2h0dHBzOi8vZm9udHMuZ29vZ2xlYXBpcy5jb20vY3NzMj9mYW1pbHk9TW9udHNlcnJhdDp3Z2h0QDQwMDs3MDA7OTAwJmFtcDtkaXNwbGF5PXN3YXAnKTsKICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDwhLS0gQmFkZ2UgdG9wIC0tPgogIDxyZWN0IHg9IjY2IiB5PSI4IiAgd2lkdGg9IjY4IiBoZWlnaHQ9IjEwIiByeD0iMiIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjU0IiB5PSIxOSIgd2lkdGg9IjkyIiBoZWlnaHQ9IjEwIiAgICAgICAgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjQ2IiB5PSIzMCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSI4IiAgICAgICAgZmlsbD0iI2FlODUzZSIvPgogIDwhLS0gQ09ERSBsYWJlbCAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjI3IiBmb250LWZhbWlseT0iTW9udHNlcnJhdCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjExIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMyI+Q09ERTwvdGV4dD4KICA8IS0tIEpVTVAgLS0+CiAgPHRleHQgeD0iMTAwIiB5PSI4OCIgZm9udC1mYW1pbHk9Ik1vbnRzZXJyYXQsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1NiIgZmlsbD0iI2FlODUzZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgbGV0dGVyLXNwYWNpbmc9Ii0yIj5KVU1QPC90ZXh0PgogIDwhLS0gUGl4ZWwgcm93IC0tPgogIDxyZWN0IHg9IjgiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjI0IiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSI0MCIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPHJlY3QgeD0iNTYiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjcyIiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSI4OCIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPHJlY3QgeD0iMTA0IiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSIxMjAiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjEzNiIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPHJlY3QgeD0iMTUyIiB5PSI5OCIgd2lkdGg9IjEyIiBoZWlnaHQ9IjciIGZpbGw9IiNhZTg1M2UiLz4KICA8cmVjdCB4PSIxNjgiIHk9Ijk4IiB3aWR0aD0iMTIiIGhlaWdodD0iNyIgZmlsbD0iI2FlODUzZSIvPgogIDxyZWN0IHg9IjE4NCIgeT0iOTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI3IiBmaWxsPSIjYWU4NTNlIi8+CiAgPCEtLSBCeSBsaW5lIC0tPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTIwIiBmb250LWZhbWlseT0iTW9udHNlcnJhdCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iNzAwIiBmb250LXNpemU9IjgiIGZpbGw9IiNhZTg1M2UiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGxldHRlci1zcGFjaW5nPSIxLjUiIG9wYWNpdHk9IjAuNjUiPkJZIFBSSU1BUlkgQ09ESU5HIExFQUdVRTwvdGV4dD4KICA8IS0tIFVSTCAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjEzNiIgZm9udC1mYW1pbHk9Ik1vbnRzZXJyYXQsc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjQwMCIgZm9udC1zaXplPSI3LjUiIGZpbGw9IiNhZTg1M2UiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGxldHRlci1zcGFjaW5nPSIwLjUiIG9wYWNpdHk9IjAuNDUiPnByaW1hcnljb2RpbmdsZWFndWUuY28udWs8L3RleHQ+Cjwvc3ZnPg==">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1302,6 +1311,27 @@ body.a11y-bigtext{zoom:1.12;}
 body.a11y-contrast .ks1-sb,body.a11y-contrast .ks1-block,body.a11y-contrast .ks1-cat,body.a11y-contrast .ks1-sprite,body.a11y-contrast .ks1-page{outline:2px solid rgba(0,0,0,.6);}
 body.a11y-contrast .ks1-hint,body.a11y-contrast .ks1-modal-sub,body.a11y-contrast .a11y-row .a11y-rt small{color:#222!important;}
 body.a11y-reduce *{animation:none!important;transition:none!important;scroll-behavior:auto!important;}
+/* OFFLINE (iPad only) */
+.hm-offline{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--gray);background:rgba(57,57,57,.7);color:#f4ead6;font:700 14px var(--font);cursor:pointer;white-space:nowrap;}
+.hm-offline:hover{border-color:var(--gold);}
+.hm-offline.ready{border-color:#16a34a;}
+.hm-offline.hide{display:none;}
+#cj-offpill{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:3000;background:rgba(17,17,17,.92);color:#fff;border:1px solid #38b6ff;border-radius:999px;padding:6px 14px;font:700 13px var(--font);pointer-events:none;display:flex;align-items:center;gap:8px;}
+#cj-offpill.hide{display:none;}
+#cj-offpill i{display:block;width:90px;height:6px;border-radius:3px;background:#333;overflow:hidden;}
+#cj-offpill i b{display:block;height:100%;background:#38b6ff;}
+.off-box{text-align:left!important;max-width:520px!important;}
+.off-box h3{text-align:center;}
+.off-steps{margin:10px 0 14px;padding-left:22px;color:#2b3a4a;line-height:1.5;}
+.off-steps li{margin:6px 0;}
+.off-note{font-size:13px;color:#4a5866;background:#f2f5f8;border-radius:10px;padding:8px 12px;margin:8px 0;line-height:1.45;}
+.off-state{font-weight:800;font-size:16px;color:#2b3a4a;margin:10px 0 4px;}
+.off-state.ok{color:#15803d;}
+.off-bar{height:10px;border-radius:5px;background:#e3e8ee;overflow:hidden;margin:8px 0;}
+.off-bar b{display:block;height:100%;background:#38b6ff;width:0;transition:width .2s;}
+.off-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+.off-btns button{min-height:44px;padding:0 18px;border-radius:12px;border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;font:800 15px var(--font);cursor:pointer;}
+.off-btns button.go{background:#1b1b1f;color:#fff;}
 .ks1-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--font);}
 .ks1-modal.hide{display:none;}
 .ks1-modal-box{background:#fff;border-radius:20px;padding:22px;max-width:560px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4);}
@@ -1711,6 +1741,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <symbol id="i-critter" viewBox="0 0 24 24"><path d="M6.5 15.5l-2.5 5M10 16l-1 5M14 16l1 5M17.5 15.5l2.5 5" stroke="#f59f18" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="9.5" ry="6" fill="#38b6ff"/><circle cx="15.5" cy="10" r="2.3" fill="#fff"/><circle cx="19" cy="10.3" r="1.9" fill="#fff"/><circle cx="16.2" cy="10.2" r="1.1" fill="#111"/><circle cx="19.5" cy="10.4" r=".9" fill="#111"/></symbol>
   <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5 3.5 16.7V7.3z" fill="#7f77dd"/><path d="M3.7 7.2L12 12l8.3-4.8M12 12v9.3" fill="none" stroke="#fff" stroke-width="1.3"/><path d="M12 2.5L3.5 7.3 12 12l8.5-4.7z" fill="#a59bf0"/></symbol>
   <symbol id="i-key2" viewBox="0 0 24 24"><circle cx="8" cy="9" r="4.5" fill="none" stroke="#ffd24a" stroke-width="2.4"/><path d="M11 12l8 8M16.5 17.5l2-2M19.5 20.5l1.5-1.5" stroke="#ffd24a" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-offline" viewBox="0 0 24 24"><rect x="4" y="2.5" width="16" height="19" rx="2.6" fill="#38b6ff"/><rect x="6" y="4.5" width="12" height="13.5" rx="1" fill="#0d2a3d"/><path d="M12 6.5v7m-3-3l3 3 3-3" fill="none" stroke="#7ee2a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="8.5" y="15" width="7" height="1.6" rx=".8" fill="#7ee2a8"/><circle cx="12" cy="19.8" r=".9" fill="#0d2a3d"/></symbol>
 </svg>
 <div id="home">
   <div class="hm-dots">
@@ -1720,6 +1751,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         <a href="https://www.primarycodingclubs.co.uk" target="_blank" rel="noopener" title="Primary Coding Clubs"><span class="pcc-mark" role="img" aria-label="Primary Coding Clubs"></span></a>
       </div>
       <nav class="hm-nav" aria-label="CodeJump">
+        <button id="h-offline" class="hm-offline hide" title="Use CodeJump without Wi-Fi on this iPad"><svg class="ic"><use href="#i-offline"></use></svg> <span>Use offline</span></button>
         <button id="h-a11y" class="hm-round" title="Accessibility options" aria-label="Accessibility options"><svg class="ic"><use href="#i-access"></use></svg></button>
         <div id="home-account"></div>
       </nav>
@@ -4095,6 +4127,101 @@ function a11yOpen(){let m=document.getElementById('a11y-modal');if(!m){m=documen
   m.querySelector('.ks1-idea-close').onclick=function(){m.classList.add('hide');};
   m.classList.remove('hide');}
 try{applyA11y();}catch(e){}
+// ── OFFLINE (iPad only) ── On an iPad, CodeJump can be added to the Home Screen; the Home Screen app then copies every
+// file listed in offline.json (made by offline/make-list.mjs) into the cache "cj-app-<version>", checking each file's
+// fingerprint, and sw.js answers from that copy, so it opens and runs with no internet or behind a school filter. Updates
+// download in the background (only changed files) and are used the next time it opens. Other devices never see any of it.
+const CJ_STANDALONE=(()=>{try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;}catch(e){return false;}})();
+const CJ_OFFLINE_ON=(typeof CJ_IPAD!=='undefined')&&CJ_IPAD&&/^https?:$/.test(location.protocol)&&('serviceWorker' in navigator)&&('caches' in window);
+let offBusy=null,offProg=null,offErr='';
+function offInfo(){try{return JSON.parse(localStorage.getItem('cj_offline')||'null');}catch(e){return null;}}
+async function offHash(buf){const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('');}
+const OFF_TYPES={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',json:'application/json',webmanifest:'application/manifest+json',wasm:'application/wasm',png:'image/png',jpg:'image/jpeg',svg:'image/svg+xml',glb:'model/gltf-binary',otf:'font/otf',hex:'text/plain',mp3:'audio/mpeg',wav:'audio/wav'};
+function offType(p){return OFF_TYPES[(p.split('.').pop()||'').toLowerCase()]||'application/octet-stream';}
+async function offPool(jobs,n){let i=0;await Promise.all(Array.from({length:n},async()=>{while(i<jobs.length)await jobs[i++]();}));}
+// Download (or update) the offline copy. Resolves 'same' | 'first' | 'updated'; rejects with a friendly message.
+function offPrepare(){if(offBusy)return offBusy;offErr='';
+  offBusy=(async()=>{
+    const base=new URL('./',location.href);
+    let list;try{const r=await fetch(new URL('offline.json',base),{cache:'no-store'});list=await r.json();}catch(e){list=null;}
+    if(!list||!list.v||!Array.isArray(list.files)||!Array.isArray(list.ext))throw new Error('I can\'t reach CodeJump on the internet just now. Try again on a network that doesn\'t block it (home Wi-Fi or a phone hotspot).');
+    const meta=await caches.open('cj-meta');
+    const cr=await meta.match('current');const cur=cr?await cr.text():'';
+    const name='cj-app-'+list.v;
+    if(cur===name){offSaveInfo(list);return 'same';}
+    let oldMap={};if(cur){try{const ol=await (await meta.match('list')).json();ol.files.forEach(f=>{oldMap[f[0]]=f[2];});}catch(e){}}
+    const cache=await caches.open(name),old=cur?await caches.open(cur):null;
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+    offProg={done:0,total:list.files.reduce((a,f)=>a+f[1],0)+list.ext.length*40000};offRender();
+    const step=n=>{offProg.done+=n;offRender();};
+    const jobs=list.files.map(([p,size,h])=>async()=>{const url=new URL(p,base).href;
+      if(await cache.match(url))return step(size);
+      if(old&&oldMap[p]===h){const r=await old.match(url);if(r){await cache.put(url,r);return step(size);}}
+      const r=await fetch(url+'?cjv='+h,{cache:'reload'});if(!r.ok)throw new Error('missing '+p);
+      const buf=await r.arrayBuffer();if(await offHash(buf)!==h)throw new Error('changed '+p);
+      await cache.put(url,new Response(buf,{headers:{'Content-Type':offType(p)}}));step(size);});
+    const getExt=async u=>{let r=old&&await old.match(u);if(!r){r=await fetch(u,{mode:'cors',cache:'reload'});if(!r.ok)throw new Error('missing '+u);}return r;};
+    list.ext.forEach(u=>jobs.push(async()=>{
+      try{if(!(await cache.match(u))){const r=await getExt(u);
+        if(/fonts\.googleapis\.com/.test(u)){const css=await r.clone().text();
+          for(const m of css.matchAll(/url\((https:[^)]+)\)/g)){try{if(!(await cache.match(m[1])))await cache.put(m[1],await getExt(m[1]));}catch(e){}}}
+        await cache.put(u,r);}}
+      catch(e){if(/unpkg\.com\/blockly@[^/]+\/(blockly_|blocks_|msg\/)/.test(u))throw e;} // the fonts and micro:bit tools are nice to have
+      step(40000);}));
+    await offPool(jobs,4);
+    await meta.put('list',new Response(JSON.stringify(list),{headers:{'Content-Type':'application/json'}}));
+    await meta.put('current',new Response(name));
+    for(const k of await caches.keys())if(/^cj-app-/.test(k)&&k!==name&&k!==cur)await caches.delete(k);
+    try{const reg=await navigator.serviceWorker.getRegistration();if(reg&&reg.active)reg.active.postMessage('cj-switch');}catch(e){}
+    offSaveInfo(list);
+    return cur?'updated':'first';
+  })().catch(e=>{const m=String(e&&(e.message||e));try{console.warn('offline copy:',m);}catch(_){}
+    offErr=/quota|space/i.test(String(e&&e.name)+m)?'This iPad is out of space. Free up about 40 MB (Settings, General, iPad Storage) and try again.':
+      /internet|network/i.test(m)?m:'The download stopped part way. It will carry on next time you open CodeJump with internet.';
+    throw new Error(offErr);}).finally(()=>{offBusy=null;offProg=null;offRender();});
+  return offBusy;}
+function offSaveInfo(list){try{localStorage.setItem('cj_offline',JSON.stringify({v:list.v,at:Date.now(),mb:Math.round(list.files.reduce((a,f)=>a+f[1],0)/1e6)}));}catch(e){}}
+function offPct(){return offProg?Math.min(99,Math.floor(100*offProg.done/Math.max(1,offProg.total))):0;}
+function offRender(){if(!CJ_OFFLINE_ON)return;
+  const info=offInfo(),busy=!!offProg,pct=offPct();
+  const b=document.getElementById('h-offline');
+  if(b){b.classList.remove('hide');b.classList.toggle('ready',CJ_STANDALONE&&!!info&&!busy);
+    b.querySelector('span').textContent=!CJ_STANDALONE?'Use offline':busy?'Getting ready '+pct+'%':info?'Ready offline':'Not ready offline';}
+  let pill=document.getElementById('cj-offpill');
+  if(busy){if(!pill){pill=document.createElement('div');pill.id='cj-offpill';pill.setAttribute('role','status');document.body.appendChild(pill);}
+    pill.innerHTML='Getting ready to work without Wi-Fi <i><b style="width:'+pct+'%"></b></i> '+pct+'%';pill.classList.remove('hide');}
+  else if(pill)pill.classList.add('hide');
+  const m=document.getElementById('offline-modal');if(m&&!m.classList.contains('hide'))offFill(m);}
+function offOpen(){if(!CJ_OFFLINE_ON)return;let m=document.getElementById('offline-modal');
+  if(!m){m=document.createElement('div');m.id='offline-modal';m.className='ks1-modal';m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-label','Use CodeJump without Wi-Fi');
+    m.onclick=e=>{if(e.target===m)m.classList.add('hide');};document.body.appendChild(m);}
+  offFill(m);m.classList.remove('hide');}
+function offFill(m){const info=offInfo(),busy=!!offProg,pct=offPct();
+  const needNet='<div class="off-note">With no internet, every lab, saving on this iPad, the lessons and the Teacher Guide all work. Signing in, handing in, share links and working together still need the internet.</div>';
+  let h='<div class="ks1-modal-box off-box"><h3>'+ksvg('i-offline')+' Use CodeJump without Wi-Fi</h3>';
+  if(!CJ_STANDALONE){
+    h+='<p class="ks1-modal-sub" style="text-align:center">Put CodeJump on this iPad\'s Home Screen and it works with no internet, even where the school Wi-Fi blocks it.</p>'+
+      '<ol class="off-steps"><li>Tap the <b>Share</b> button '+ksvg('i-share')+' at the top of Safari.</li><li>Choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</li>'+
+      '<li>Open CodeJump from its new icon <b>while you still have internet</b>. It copies itself onto the iPad (about '+((info&&info.mb)||31)+' MB). Wait until the button at the top says <b>Ready offline</b>.</li>'+
+      '<li>That\'s it. From now on, open CodeJump from the icon, with or without Wi-Fi. It updates itself whenever it has internet.</li></ol>'+
+      '<div class="off-note"><b>Your saved projects:</b> the Home Screen app keeps its own saves, separate from Safari\'s. Projects saved here in Safari won\'t appear in it, so always use the icon. To move a project across, save it to your CodeJump cloud account in Safari, then open it from the cloud in the app.</div>'+needNet+
+      '<div class="off-btns"><button class="go" data-off="close">OK</button></div>';}
+  else{
+    if(busy)h+='<div class="off-state">Copying CodeJump onto this iPad\u2026 '+pct+'%</div><div class="off-bar"><b style="width:'+pct+'%"></b></div><p class="ks1-modal-sub" style="text-align:left">Keep CodeJump open with internet until it\'s finished. You can carry on using it meanwhile.</p>';
+    else if(info)h+='<div class="off-state ok">'+ksvg('i-check')+' Ready to use without Wi-Fi</div><p class="ks1-modal-sub" style="text-align:left">Copied onto this iPad '+new Date(info.at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+' ('+info.mb+' MB). It checks for updates whenever it has internet, and uses them the next time you open it.</p>';
+    else h+='<div class="off-state">Not copied onto this iPad yet</div><p class="ks1-modal-sub" style="text-align:left">Connect to the internet (home Wi-Fi or a phone hotspot if the school blocks CodeJump) and tap <b>Get ready</b>.</p>';
+    if(offErr&&!busy)h+='<div class="off-note" style="background:#fdecec;color:#8a1c1c">'+offErr+'</div>';
+    h+=needNet+'<div class="off-btns">'+(busy?'':'<button data-off="go">'+(info?'Check for updates':'Get ready')+'</button>')+'<button class="go" data-off="close">Done</button></div>';}
+  m.innerHTML=h+'</div>';
+  m.querySelectorAll('[data-off]').forEach(x=>x.onclick=()=>{if(x.dataset.off==='close')m.classList.add('hide');
+    else offPrepare().then(r=>{toast(r==='same'?'CodeJump is up to date':r==='first'?'CodeJump is ready to use without Wi-Fi':'Update downloaded. Close CodeJump and open it again to use it','#16a34a');}).catch(()=>{});
+    offRender();});}
+(function offStart(){if(!CJ_OFFLINE_ON)return;
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  const b=document.getElementById('h-offline');if(b)b.onclick=offOpen;
+  offRender();
+  if(CJ_STANDALONE)setTimeout(()=>offPrepare().then(r=>{if(r==='first')toast('CodeJump is ready to use without Wi-Fi','#16a34a');
+    else if(r==='updated')toast('CodeJump has an update. Close it and open it again to use it','#16a34a');}).catch(()=>{}),2500);})();
 // ── KS1 pages (scenes, ScratchJr-style; max 4) ──
 function ks1RenderPages(){const el=document.getElementById('ks1-pages');if(!el||!stageState||!stageState.pages)return;el.innerHTML='';
   if(stageState.pages[stageState.pageIdx])stageState.pages[stageState.pageIdx].backdropIdx=stageState.backdropIdx; // keep active page's backdrop synced
@@ -8054,6 +8181,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
  <h3> Accessibility</h3>
  <p>Tap the <b></b> button (on the home screen, or in the Key Stage 1 Stage) to switch on an <b>easy-to-read dyslexia-friendly font</b>, <b>bigger text</b>, <b>high contrast</b>, <b>reduced motion</b>, or <b>read-aloud</b>. Choices are remembered on the device and apply across all key stages.</p>
+ <h3>iPads without Wi-Fi</h3>
+ <p>On an iPad, CodeJump can go on the Home Screen and then works with <b>no internet</b>, which helps where a school network blocks it. Once per iPad, on a network that doesn't block CodeJump (home Wi-Fi or a phone hotspot): open codejump.co.uk in Safari, tap <b>Use offline</b> at the top of the home page and follow the steps (Share, <b>Add to Home Screen</b>, then open the new icon and wait until it says <b>Ready offline</b>, about 31 MB). After that, open CodeJump from the icon. Every lab, saving on the iPad, the lessons and this guide work offline; signing in, handing in, share links and working together still need the internet, and the Critter Lab video guides don't play offline. It updates itself whenever it has internet. The Home Screen app keeps its <b>own saves</b>, separate from Safari's, so pupils should always use the icon. This is for iPads only; other devices use the website as normal.</p>
   <h3>Troubleshooting</h3>
  <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>Can't press Play?</b> Add a Finish — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
   <h3>Curriculum links</h3>
@@ -10104,8 +10233,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.11';
+const CJ_VERSION='2026.10.12';
 const CJ_WHATSNEW=[
+ "iPads: CodeJump now works without Wi-Fi, even where the school network blocks it. Tap Use offline at the top of the home page to see how to put it on the Home Screen.",
  "New: the Build Lab! Walk round a world made of blocks, build in it by hand, and code a robot helper and builder commands in blocks or Python (it’s the same program).",
  "Chat commands: make a block like “when I type tower in the chat”, then type “tower 6” and watch it happen.",
  "Worlds: ready-made worlds with characters to talk to and tasks that tick themselves, including a timed maze challenge where fewer blocks earn more stars.",
@@ -10114,9 +10244,12 @@ const CJ_WHATSNEW=[
  "Build together live in the Build, Critter, AI and Train Labs too: Share → Collaborate, pick up to 5 classmates, and everyone works on the same project at once.",
  "Compete: run build competitions and coding contests. Teams of up to 6 build together live, even across schools, and you choose judges, a pupil vote or automatic checks.",
 ];
+// the iPad line is only for iPads (the offline mode is iPad-only); elsewhere this update changes nothing you can see
+function cjWhatsNewLines(){return (typeof CJ_IPAD!=='undefined'&&CJ_IPAD)?CJ_WHATSNEW:CJ_WHATSNEW.filter(t=>!/^iPads:/.test(t));}
+const CJ_WHATSNEW_NOT_IPAD='2026.10.11'; // the last version with news for other devices
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');
-  document.getElementById('wn-list').innerHTML=CJ_WHATSNEW.map(t=>'<li>'+t+'</li>').join('');
+  document.getElementById('wn-list').innerHTML=cjWhatsNewLines().map(t=>'<li>'+t+'</li>').join('');
   document.getElementById('whatsnew').classList.remove('hide');
 }
 function closeWhatsNew(){document.getElementById('whatsnew').classList.add('hide');try{localStorage.setItem('bap_seen_version',CJ_VERSION);}catch(e){}}
@@ -10124,6 +10257,7 @@ document.getElementById('wn-close').onclick=closeWhatsNew;
 (function maybeShowWhatsNew(){
   let seen=null;try{seen=localStorage.getItem('bap_seen_version');}catch(e){}
   if(seen===CJ_VERSION)return;            // already seen this update
+  if(!(typeof CJ_IPAD!=='undefined'&&CJ_IPAD)&&seen===CJ_WHATSNEW_NOT_IPAD)return; // nothing new off an iPad
   // Wait until the splash screen has cleared, then show once.
   const sp=document.getElementById('splash');
   const delay=(sp&&!sp.classList.contains('gone'))?5200:300;

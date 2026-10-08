@@ -7,7 +7,8 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 ## Repo layout & workflow (machine-independent)
 - `build-and-play.html` = the MASTER file — edit this one.
 - `index.html` = the deployed copy. After every change: `cp build-and-play.html index.html`.
-- Then: quick JS syntax check (extract <script> blocks, `node --check`), verify in a browser,
+- **Then run `node offline/make-list.mjs`** whenever any app file changed (it rewrites `offline.json`, the iPad offline file
+  list; files.test.mjs fails if it's stale). Then: quick JS syntax check (extract <script> blocks, `node --check`), verify in a browser,
   bump `CJ_VERSION` + `CJ_WHATSNEW` for user-facing changes, commit, push `main`, and confirm the
   live site serves the new CJ_VERSION (Pages rebuild ~1–2 min). Never change `CNAME` (codejump.co.uk).
 - **Automatic tests (`tests/`, since 5 Oct 2026):** `cd tests && npm ci && npm test` (locally: `npx playwright install chromium` once,
@@ -29,6 +30,27 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
+
+## iPad offline mode (8 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: school networks block CodeJump as "gaming"; "only make this available for iPads"
+- **iPads only.** A tiny head script sets `CJ_IPAD` (UA has iPad, or Macintosh + touch = iPadOS) and only then adds the manifest
+  (`app.webmanifest`, icons `home/icon-180/192/512.png` made from the logo), apple-touch-icon and the Home Screen meta tags. Main script
+  "OFFLINE (iPad)" block: `CJ_STANDALONE` (opened from the Home Screen), `CJ_OFFLINE_ON`, `offPrepare`, `offRender`, `offOpen`/`offFill`
+  (`#offline-modal`), header button `#h-offline` (`.hm-offline`, icon `i-offline`), progress pill `#cj-offpill`. Laptops etc. get NOTHING
+  (no SW, no manifest, button hidden; tested). The What's New iPad line (`iPads:` prefix) is filtered off non-iPads (`cjWhatsNewLines`),
+  and non-iPads that had seen `CJ_WHATSNEW_NOT_IPAD` ('2026.10.11') don't get the popup for 2026.10.12.
+- **How:** `offline/make-list.mjs` writes `offline.json` = {v, files:[[path,size,sha256-16]], ext:[Blockly 10.4.3 core+media, Google
+  Fonts CSS (its woff2 files are found and stored too), the two jsdelivr micro:bit libs]} — index.html, app.webmanifest, the micro:bit hex
+  and home/ craft/ critter/ world/ robot/ ai/ train/ lessons/ (NOT critter/guides videos, lessons/builds, *.md); ~31 MB. In the Home Screen
+  app (never in Safari: their storage is separate) `offPrepare()` runs 2.5 s after start: fetches offline.json (no-store), builds cache
+  `cj-app-<v>` (unchanged files copied from the old cache, others fetched with `?cjv=<hash>` past the CDN and checked against the hash,
+  4 at a time, resumable), then writes `current` (+ `list`) into cache `cj-meta` and tells the SW (`cj-switch`); keeps the previous cache,
+  deletes older; localStorage `cj_offline` {v,at,mb}. A filter's block page / no internet / wrong hash → friendly error, old copy kept.
+- **`sw.js`** (scope = the page's folder): answers from the `current` cache (same-origin ignoreSearch; any app-page navigation → cached
+  index.html, so `?s=` links work), else the network. A page stays PINNED to the cache it opened with (client id), so an update never
+  mixes old/new files mid-session; byte-range requests answered (iPad media). `sw.js`, `offline.json` and `?cjv=` requests always go to
+  the network. Test: `tests/offline.test.mjs` (laptop gets nothing; iPad Safari = tags + instructions, no download; Home Screen app copies
+  everything; opens + Build Lab/other labs/lessons/3D/Critter files work behind a fake school filter AND with no network; update fetches
+  only the changed file, old page keeps its version, next open uses the new one; broken download keeps the copy).
 
 ## Home page — redesigned Oct 2026 (direction "B · ink arcade"), LIVE on main since 3 Oct 2026 (CJ_VERSION 2026.10.03.2)
 Mockups (3 directions) on the claude.ai canvas "CodeJump home page redesign"; B was chosen. Uses the Primary Coding

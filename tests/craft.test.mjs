@@ -11,6 +11,20 @@ const M = await import(pathToFileURL(ROOT + '/craft/craft-maker.js').href);
 const { checkTeam } = await import(pathToFileURL(ROOT + '/craft/craft-comp.js').href);
 const AC = await import(pathToFileURL(ROOT + '/craft/craft-academy.js').href);
 
+// ── functions (My blocks / def): Python ⇄ blocks, inputs, calls before the def, friendly errors, the runner ──
+{
+  const src = 'def tower(height):\n    for _ in range(height):\n        helper.place(STONE, LEFT)\n        helper.move(UP, 1)\n    helper.move(DOWN, height)\n\ndef step():\n    helper.move(FORWARD, 2)\n\ntower(3)\nstep()\ntower(5)\n';
+  const r = L.fromPython(src), py = r.state && L.toPython(r.state);
+  ok(r.state && r.state.blocks.blocks.filter(b => b.type === 'procedures_defnoreturn').length === 2 && L.toPython(L.fromPython(py).state) === py, 'def → “make a block” blocks, and back to the same Python');
+  const p = play(src, { x: 30, z: 32 });
+  const col = z => { let n = 0; for (let y = GROUND + 1; y < GROUND + 10; y++) if (p.world.get(29, y, z) === B.STONE) n++; return n; };
+  ok(!p.errors.length && col(30) === 3 && col(28) === 5, 'a block with an input builds towers 3 and 5 (the input is a variable while it runs)');
+  ok(/needs 1 thing/.test(L.fromPython('tower(1, 2)\ndef tower(h):\n    pass\n').error.msg) && /Build Lab word/.test(L.fromPython('def helper():\n    pass\n').error.msg) && /start of a line/.test(L.fromPython('if True:\n    def x():\n        pass\n').error.msg), 'friendly errors: wrong number of inputs, a reserved name, def inside other code');
+  const loop = play('def again():\n    again()\n\nagain()\n');
+  ok(loop.errors.some(e => /keeps using itself/.test(e)), 'a block that uses itself forever stops with a friendly message');
+  ok(M.programStats(r.state).types.includes('procedures_callnoreturn') && M.createChecker({ tasks: [], zones: [], npcs: [] })._ok({ type: 'uses', feature: 'function' }, { program: r.state }), 'the “use your own block” task sees a call');
+}
+
 // run a program to the end, standing at (x, GROUND+1, z) facing north
 function play(py, { chat, x = 32, z = 40, secs = 30, setup } = {}) {
   const world = CW.createWorld(), said = [], errors = [];
@@ -164,19 +178,20 @@ const mazePath = (w, maker) => { // the shortest way through the maze, as Python
 function academySolve(id, py) {
   const p = AC.academyProject(id), m = p.maker, world = CW.createWorld(); world.load(m.startWorld);
   const r = py == null ? { state: p.blocks } : L.fromPython(py); if (r.error) return { error: r.error };
-  const run = createRunner(world, { player: () => ({ x: m.start.x, y: m.start.y, z: m.start.z, facing: 0 }) });
-  Object.assign(run.helper, m.helper); run.load(r.state); run.start();
   const ck = M.createChecker(m); for (const n of m.npcs) ck.talk(n.id);
+  const run = createRunner(world, { player: () => ({ x: m.start.x, y: m.start.y, z: m.start.z, facing: 0 }), say: t => ck.say(t) });
+  Object.assign(run.helper, m.helper); run.load(r.state); run.start();
+  const cw = /@on_chat\("(\w+)"\)/.exec(py || ''); if (cw) { run.chat(cw[1], [4]); ck.chat(cw[1]); } // the chat-command lesson: type “lamps 4”
   for (let i = 0; i < 60 * 60 && run.running(); i++) { run.tick(1 / 60); ck.seen(run.helper); }
   ck.check({ world, player: m.start, helper: run.helper, program: r.state });
   return { m, done: ck.done, all: ck.complete(), blocks: M.programStats(r.state).blocks };
 }
 {
-  ok(AC.ACADEMY.length === 6 && AC.ACADEMY.every(a => a.block === 1), 'the Academy has the 6 Block 1 lessons');
+  ok(AC.ACADEMY.length === 18 && [1, 2, 3].every(k => AC.ACADEMY.filter(a => a.block === k).length === 6) && AC.ACADEMY.every((a, i) => a.n === i + 1), 'the Academy has 18 lessons, 6 in each of 3 blocks, in order');
   for (const a of AC.ACADEMY) {
     const p = AC.academyProject(a.id), c = M.cleanMaker(p.maker);
     const s = academySolve(a.id, AC.ACADEMY_ANSWERS[a.id]), bare = academySolve(a.id, null);
-    ok(c && c.tasks.length === p.maker.tasks.length && c.npcs.length === 1 && p.blocks.blocks.blocks.length === 1, a.id + ': a clean world with a character, its tasks and a starter program');
+    ok(c && c.tasks.length === p.maker.tasks.length && c.npcs.length === 1 && p.blocks.blocks.blocks.some(b => b.type === 'cr_on_run' || b.type === 'cr_on_chat'), a.id + ': a clean world with a character, its tasks and a starter program');
     ok(s.all && !bare.all, a.id + ': the answer finishes every task' + (s.all ? '' : ' (done: ' + [...s.done] + ')') + '; the starter code does not');
   }
   ok(academySolve('academy-5-pen', AC.ACADEMY_ANSWERS['academy-5-pen']).blocks <= AC.academyProject('academy-5-pen').maker.challenge.par, 'the sheep pen answer earns three stars');
@@ -185,6 +200,14 @@ function academySolve(id, py) {
   ok(lp.done.has('tPen') && !lp.all && M.stars(lp.blocks, 5) === 1, 'the long way round builds the pen, but only for one star and without the loop task');
   const fenceNoLoop = academySolve('academy-4-fence', 'helper.place(LOG, LEFT)\nhelper.move(FORWARD, 1)\n'.repeat(10));
   ok(!fenceNoLoop.all && fenceNoLoop.done.has('tPosts'), 'the fence without a loop fills the gap but leaves “use a loop” to do');
+  // Block 2: digging every step of the beach removes the sand too, so the if is really needed
+  const digAll = academySolve('academy-9-beach', 'for _ in range(12):\n    helper.move(FORWARD, 1)\n    helper.dig(DOWN)\n');
+  ok(digAll.done.has('tRocks') && !digAll.done.has('tSand') && !digAll.all, 'the rocky beach: digging every step clears the rocks but loses the sand (“keep” checked at the end)');
+  const tooDeep = academySolve('academy-12-mine', 'for _ in range(9):\n    helper.dig(DOWN)\n    helper.move(DOWN, 1)\n');
+  ok(!tooDeep.done.has('tKeep') && !tooDeep.all, 'the gold mine: digging too far loses the gold');
+  ok(!academySolve('academy-10-maze', null).all, 'the hedge maze starter (always turn right) gets stuck');
+  // Block 3: the count is said; the staircase grows; functions with and without inputs
+  ok(academySolve('academy-13-crops', AC.ACADEMY_ANSWERS['academy-13-crops']).done.has('tSay') && !academySolve('academy-13-crops', 'helper.say(5)\n').done.has('tSay'), 'count the crops: the right number is said; a wrong one is not');
   // the checker counts a cell the helper only passed through
   const ck = M.createChecker({ ...AC.academyProject('academy-2-post').maker }); ck.seen({ x: 20, y: GROUND + 1, z: 44 });
   ok(ck._ok({ type: 'helper', zone: 'zMill' }, { helper: { x: 0, y: 0, z: 0 } }), 'a helper task counts a square the helper walked through');
@@ -272,7 +295,7 @@ try {
   await page.click('#crModalX');
   // ── Robot Helper Academy in the app: the gallery, every Run starts again, the answer finishes the lesson ──
   await page.click('#crWorldsBtn');
-  ok(await page.evaluate(() => document.querySelectorAll('[data-ac]').length === 6), 'the Worlds gallery lists the 6 Academy lessons');
+  ok(await page.evaluate(() => document.querySelectorAll('[data-ac]').length === 18 && document.querySelectorAll('.cr-wh').length === 4), 'the Worlds gallery lists the 18 Academy lessons under their 3 blocks');
   await page.click('[data-ac="academy-4-fence"]'); await page.click('#cj-dialog .cj-dlg-btn.ok');
   await page.waitForSelector('#crGo', { timeout: 10000 }); await page.click('#crGo');
   const gap = () => page.evaluate(() => { const w = craftApp._world(); let n = 0; for (let z = 35; z <= 44; z++) if (w.get(29, 13, z) === 6) n++; return n; });
@@ -286,6 +309,17 @@ try {
   await page.click('#crRun');
   await page.waitForFunction(() => /You did it/.test(document.getElementById('crPop').textContent), null, { timeout: 20000 });
   ok(await gap() === 10, 'the loop answer mends the fence and finishes the lesson');
+  // functions in the real Blockly: the beach-hut lesson's starter has a “hut” block; My blocks lists it; the answer finishes it
+  await page.click('#crFinOk'); await page.click('#crWorldsBtn'); await page.click('[data-ac="academy-16-huts"]'); await page.click('#cj-dialog .cj-dlg-btn.ok');
+  await page.waitForSelector('#crGo', { timeout: 10000 }); await page.click('#crGo');
+  const fl = await page.evaluate(() => { const ws = craftApp._ws(), tb = ws.getToolbox(), cat = tb.getToolboxItems().find(i => i.getName && i.getName() === 'My blocks'); tb.setSelectedItem(cat);
+    const types = ws.getFlyout().getWorkspace().getTopBlocks().map(b => b.type); tb.clearSelection(); return { types, defs: ws.getTopBlocks().filter(b => b.type === 'procedures_defnoreturn').map(b => b.getFieldValue('NAME')) }; });
+  ok(fl.defs.join() === 'hut' && fl.types.includes('procedures_defnoreturn') && fl.types.includes('procedures_callnoreturn') && !fl.types.includes('procedures_defreturn'), 'My blocks offers “make a block” and the hut block (no return blocks)');
+  await page.evaluate(st => { Blockly.serialization.workspaces.load(st, craftApp._ws()); craftApp._mk()._talk('npcSol'); }, L.fromPython(AC.ACADEMY_ANSWERS['academy-16-huts']).state);
+  await page.evaluate(async () => { for (let i = 0; i < 5; i++) { document.getElementById('crTalkNext')?.click(); await new Promise(r => setTimeout(r, 80)); } });
+  await page.click('#crRun');
+  await page.waitForFunction(() => /You did it/.test(document.getElementById('crPop').textContent), null, { timeout: 180000 }); // slow under software graphics
+  ok(await page.evaluate(() => Blockly.serialization.workspaces.save(craftApp._ws()).blocks.blocks.some(b => b.type === 'procedures_defnoreturn')), 'the beach huts are built with your own block, and the lesson finishes');
   ok(await page.evaluate(() => typeof helpTabs === 'function' && helpTabs() === CRAFT_HELP), 'Help shows the Build Lab help');
   ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await b.close(); site.close(); }

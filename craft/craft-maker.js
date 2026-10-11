@@ -25,12 +25,16 @@ export const TASK_TYPES = {
   clear: { label: 'Clear an area (dig it out)', needs: ['zone'] },
   tower: { label: 'Build a tower in an area', needs: ['zone', 'n'] },
   chat: { label: 'Type a chat command', needs: ['word'] },
+  none: { label: 'Leave none of a block in an area', needs: ['zone', 'block'] },
+  say: { label: 'Make the helper (or you) say something', needs: ['word'] },
   uses: { label: 'Use something in the code', needs: ['feature'] }
 };
-export const FEATURES = { loop: 'a loop (repeat, count, while)', if: 'an if', variable: 'a variable', chat: 'a chat command', helper: 'the robot helper', builder: 'a builder command' };
+export const FEATURES = { loop: 'a loop (repeat, count, while)', if: 'an if', variable: 'a variable', chat: 'a chat command', helper: 'the robot helper', builder: 'a builder command',
+  logic: 'and, or or not', until: 'a repeat until / while loop', function: 'a block you made yourself (a function)' };
 const FEATURE_TYPES = {
   loop: t => /^(controls_repeat_ext|controls_for|controls_whileUntil|cr_forever)$/.test(t), if: t => t === 'controls_if',
-  variable: t => /^(variables_set|math_change)$/.test(t), chat: t => t === 'cr_on_chat', helper: t => t.startsWith('cr_h_'), builder: t => t.startsWith('cr_b_')
+  variable: t => /^(variables_get|math_change)$/.test(t), chat: t => t === 'cr_on_chat', helper: t => t.startsWith('cr_h_'), builder: t => t.startsWith('cr_b_'),
+  logic: t => /^(logic_operation|logic_negate)$/.test(t), until: t => t === 'controls_whileUntil', function: t => t === 'procedures_callnoreturn'
 };
 export const NPC_COLOURS = ['#e8453c', '#3b8eea', '#2bb673', '#f5a623', '#9b59d0', '#ec6fa8', '#17b8a6', '#6d5d4b'];
 const MAX_ZONE = 32768, MAX_NPCS = 20, MAX_ZONES = 30, MAX_TASKS = 30;
@@ -77,11 +81,13 @@ export function cleanMaker(m) {
   for (const t of (Array.isArray(m.tasks) ? m.tasks : []).slice(0, MAX_TASKS)) {
     if (!t || typeof t !== 'object' || !TASK_TYPES[t.type]) continue; const tid = id(t.id, 't'); if (seen.has(tid)) continue; seen.add(tid);
     const q = { id: tid, type: t.type, text: str(t.text, 160).trim(), hint: str(t.hint, 240) };
+    if (t.keep) q.keep = true; // "keep" tasks (like “don’t dig the gold”) only count at the end, while they are still true
     if (TASK_TYPES[t.type].needs.includes('zone')) { if (!zIds.has(t.zone)) continue; q.zone = t.zone; }
     if (t.type === 'talk') { if (!nIds.has(t.npc)) continue; q.npc = t.npc; }
     if (TASK_TYPES[t.type].needs.includes('block')) q.block = t.block === 'ANY' ? 'ANY' : (t.block in BY_NAME && t.block !== 'AIR' ? t.block : 'STONE');
     if (TASK_TYPES[t.type].needs.includes('n')) q.n = int(t.n, 1, 999, t.type === 'tower' ? 5 : 10);
     if (t.type === 'chat') q.word = str(t.word, 20).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'go';
+    if (t.type === 'say') q.word = str(t.word, 40).trim() || 'hello';
     if (t.type === 'uses') q.feature = FEATURES[t.feature] ? t.feature : 'loop';
     if (!q.text) q.text = taskText(q, out);
     out.tasks.push(q);
@@ -117,6 +123,8 @@ export function taskText(t, m) {
     case 'tower': return 'Build a tower ' + t.n + ' high in ' + zn(t.zone);
     case 'chat': return 'Type “' + t.word + '” in the chat';
     case 'uses': return 'Use ' + FEATURES[t.feature] + ' in your code';
+    case 'none': return 'Leave no ' + bn(t.block) + ' in ' + zn(t.zone);
+    case 'say': return 'Say “' + t.word + '”';
   }
   return 'A task';
 }
@@ -133,7 +141,7 @@ export function stars(blocks, par) { if (!par) return 3; return blocks <= par ? 
 
 // checks the tasks. ctx = {world, player:{x,y,z}, helper:{x,y,z}, program (Blockly JSON)}
 export function createChecker(maker) {
-  const done = new Set(), talked = new Set(), chatted = new Set(), trail = new Set(); // trail = every cell the helper has stood in (so a quick pass still counts)
+  const done = new Set(), talked = new Set(), chatted = new Set(), trail = new Set(), said = []; // trail = every cell the helper has stood in (so a quick pass still counts)
   const zone = idz => maker.zones.find(z => z.id === idz);
   const each = (z, fn) => { const b = box(z); for (let y = b.y0; y <= b.y1; y++) for (let zz = b.z0; zz <= b.z1; zz++) for (let x = b.x0; x <= b.x1; x++) if (fn(x, y, zz) === false) return false; return true; };
   function ok(t, ctx) {
@@ -143,6 +151,8 @@ export function createChecker(maker) {
       case 'helper': { const h = ctx.helper; if (h && z && inZone(z, h.x, h.y, h.z)) return true; if (!z) return false; for (const k of trail) { const c = k.split(',').map(Number); if (inZone(z, c[0], c[1], c[2])) return true; } return false; }
       case 'talk': return talked.has(t.npc);
       case 'chat': return chatted.has(t.word);
+      case 'say': { const w = String(t.word).toLowerCase().trim(); return said.some(x => x === w || x.split(/[^a-z0-9]+/).includes(w) || (w.includes(' ') && x.includes(w))); }
+      case 'none': { if (!z) return false; const want = BY_NAME[t.block]; return each(z, (x, y, q) => w.get(x, y, q) !== want); }
       case 'uses': return programTypes(ctx.program).some(FEATURE_TYPES[t.feature] || (() => false));
       case 'count': { if (!z) return false; const want = t.block === 'ANY' ? null : BY_NAME[t.block]; let n = 0; each(z, (x, y, q) => { const v = w.get(x, y, q); if (want === null ? isSolid(v) : v === want) n++; }); return n >= t.n; }
       case 'fill': { if (!z) return false; const want = BY_NAME[t.block]; return each(z, (x, y, q) => w.get(x, y, q) === want); }
@@ -156,11 +166,17 @@ export function createChecker(maker) {
     return false;
   }
   return {
-    done, talk(n) { talked.add(n); }, chat(word) { chatted.add(String(word).toLowerCase()); },
+    done, talk(n) { talked.add(n); }, chat(word) { chatted.add(String(word).toLowerCase()); }, say(text) { said.push(String(text).toLowerCase().trim()); if (said.length > 200) said.shift(); },
     seen(h) { if (h && trail.size < 5000) trail.add(h.x + ',' + h.y + ',' + h.z); }, forget() { trail.clear(); },
-    reset() { done.clear(); talked.clear(); chatted.clear(); trail.clear(); },
+    reset() { done.clear(); talked.clear(); chatted.clear(); trail.clear(); said.length = 0; },
     restore(ids) { for (const i of ids || []) done.add(i); },
-    check(ctx) { const fresh = []; for (const t of maker.tasks) if (!done.has(t.id) && ok(t, ctx)) { done.add(t.id); fresh.push(t.id); } return fresh; },
+    check(ctx) {
+      const fresh = [];
+      for (const t of maker.tasks) if (!t.keep && !done.has(t.id) && ok(t, ctx)) { done.add(t.id); fresh.push(t.id); }
+      const rest = maker.tasks.every(t => t.keep || done.has(t.id));
+      for (const t of maker.tasks) if (t.keep) { const now = rest && ok(t, ctx); if (now && !done.has(t.id)) { done.add(t.id); fresh.push(t.id); } else if (!now) done.delete(t.id); }
+      return fresh;
+    },
     complete() { return maker.tasks.length > 0 && maker.tasks.every(t => done.has(t.id)); },
     _ok: ok
   };

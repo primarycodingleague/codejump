@@ -9,7 +9,7 @@
  */
 import { BLOCKS, DIRS, BLOCK_ORDER } from './craft-world.js';
 
-export const COLOURS = { events: '#ffbf00', helper: '#20b2aa', builder: '#9966ff', player: '#4c97ff', world: '#5cb1d6', control: '#ffab19', ops: '#59c059', vars: '#ff8c1a' };
+export const COLOURS = { events: '#ffbf00', helper: '#20b2aa', builder: '#9966ff', player: '#4c97ff', world: '#5cb1d6', control: '#ffab19', ops: '#59c059', vars: '#ff8c1a', procs: '#ff6680' };
 const BLOCK_NAMES = BLOCKS.map(b => b[1]);
 export const ENUMS = {
   block: BLOCK_ORDER.map(id => [BLOCKS[id][2], BLOCKS[id][1]]),
@@ -115,7 +115,8 @@ export function toolbox(code = 'all') { // code: 'all' | 'helper' (no builder co
     cat('Maths', COLOURS.ops, [{ kind: 'block', type: 'math_number' }, { kind: 'block', type: 'math_arithmetic', inputs: { A: num(1), B: num(1) } },
       { kind: 'block', type: 'math_random_int', inputs: { FROM: num(1), TO: num(10) } }, { kind: 'block', type: 'math_modulo', inputs: { DIVIDEND: num(10), DIVISOR: num(3) } },
       { kind: 'block', type: 'text' }, { kind: 'block', type: 'text_join' }]),
-    { kind: 'category', name: 'Variables', colour: COLOURS.vars, custom: 'VARIABLE' }
+    { kind: 'category', name: 'Variables', colour: COLOURS.vars, custom: 'VARIABLE' },
+    { kind: 'category', name: 'My blocks', colour: COLOURS.procs, custom: 'CR_PROCS' }
   ].filter(Boolean) };
 }
 // "type tower 5 in the chat": a tower of gold as tall as the number, and Run builds a little house
@@ -219,6 +220,11 @@ export function toPython(state) {
         if (es.hasElse) out.push(ind + 'else:', ...body(b, 'ELSE', ind));
         return out;
       }
+      case 'procedures_callnoreturn': { // a "my block": name(arguments)
+        const es = b.extraState || {}, n = (es.params || []).length, a = [];
+        for (let i = 0; i < n; i++) a.push(expr(input(b, 'ARG' + i))[0]);
+        return [ind + safeName(es.name || 'my_block') + '(' + a.join(', ') + ')'];
+      }
       case 'variables_set': return [ind + vname(field(b, 'VAR')) + ' = ' + expr(input(b, 'VALUE'))[0]];
       case 'math_change': return [ind + vname(field(b, 'VAR')) + ' += ' + expr(input(b, 'DELTA'))[0]];
     }
@@ -227,16 +233,19 @@ export function toPython(state) {
     if (b.type in { math_number: 1, text: 1 }) return [];
     return [ind + '# (a block that has no Python yet: ' + b.type + ')'];
   }
-  const out = [], run = [], used = new Set();
+  const out = [], run = [], defs = [], used = new Set();
   for (const t of tops) {
-    if (t.type === 'cr_on_chat') {
+    if (t.type === 'procedures_defnoreturn') { // "make a block" → def name(inputs):
+      const ps = ((t.extraState && t.extraState.params) || []).map(q => vname({ id: q.id, name: q.name }));
+      defs.push('def ' + safeName(field(t, 'NAME') || 'my_block') + '(' + ps.join(', ') + '):', ...((l => l.length ? l : [IND + 'pass'])(stmts(input(t, 'STACK'), IND))), '');
+    } else if (t.type === 'cr_on_chat') {
       const w = String(field(t, 'WORD') || 'go').trim().split(/\s+/)[0].toLowerCase() || 'go';
       let fn = safeName(w); if (used.has(fn)) { let k = 2; while (used.has(fn + k)) k++; fn = fn + k; } used.add(fn);
       out.push('@on_chat(' + JSON.stringify(w) + ')', 'def ' + fn + '(' + vname(field(t, 'VAR')) + '):', ...((l => l.length ? l : [IND + 'pass'])(stmts(t.next && t.next.block, IND))), '');
     } else if (t.type === 'cr_on_run') run.push(...stmts(t.next && t.next.block, ''));
   }
   const head = run.length ? ['# When Run is clicked', ...run, ''] : [];
-  return [...head, ...out].join('\n').replace(/\n+$/, '\n');
+  return [...defs, ...head, ...out].join('\n').replace(/\n+$/, '\n');
 }
 const PY_WORDS = new Set(['and', 'or', 'not', 'if', 'elif', 'else', 'for', 'while', 'in', 'def', 'return', 'pass', 'True', 'False', 'None', 'import', 'from', 'class', 'break', 'continue', 'lambda', 'with', 'as', 'is', 'global', 'try', 'except', 'finally', 'raise', 'yield', 'del', 'assert', 'nonlocal', 'range', 'print', 'str', 'random', 'wait']);
 function safeName(n) { let s = String(n || 'x').replace(/[^A-Za-z0-9_]/g, '_'); if (!/^[A-Za-z_]/.test(s)) s = '_' + s; if (PY_WORDS.has(s) || CONSTANTS.has(s)) s += '_'; return s; }
@@ -283,6 +292,11 @@ export function fromPython(src) {
   let toks; try { toks = tokenize(src); } catch (e) { return { error: { line: e.line || 1, msg: e.message } }; }
   let p = 0, n = 0;
   const vars = new Map(); // name → id
+  const procs = new Map(); // my blocks: name → [input names] (found first, so a call can come before its def)
+  for (let i = 0; i + 1 < toks.length; i++) if (toks[i].t === 'NAME' && toks[i].v === 'def' && toks[i + 1].t === 'NAME' && !(i >= 2 && toks[i - 1].t === 'NL' && toks[i - 2].v === ')' && chatDef(toks, i))) {
+    const ps = []; for (let j = i + 3; j < toks.length && !(toks[j].t === 'OP' && toks[j].v === ')'); j++) if (toks[j].t === 'NAME') ps.push(toks[j].v);
+    procs.set(toks[i + 1].v, ps);
+  }
   const vid = name => { if (!vars.has(name)) vars.set(name, 'v_' + name); return { id: vars.get(name) }; };
   const peek = () => toks[p], next = () => toks[p++];
   const is = (t, v) => toks[p].t === t && (v === undefined || toks[p].v === v);
@@ -335,7 +349,7 @@ export function fromPython(src) {
       return [b];
     }
     if (t.t === 'OP' && t.v === '@') throw new PyErr(line, 'Put @on_chat(…) functions at the start of a line, not inside other code.');
-    if (t.t === 'NAME' && t.v === 'def') throw new PyErr(line, 'Functions need @on_chat("word") on the line above, so the chat can start them.');
+    if (t.t === 'NAME' && t.v === 'def') throw new PyErr(line, 'Put def at the start of a line (not moved in), above the code that uses it.');
     if (t.t === 'NAME' && ['import', 'class', 'return', 'break', 'continue', 'lambda', 'try', 'with', 'global'].includes(t.v)) throw new PyErr(line, '“' + t.v + '” isn’t part of Build Lab Python yet.');
     if (t.t === 'NAME' && toks[p + 1].t === 'OP' && ['=', '+=', '-='].includes(toks[p + 1].v)) {
       const name = next().v, op = next().v;
@@ -393,6 +407,12 @@ export function fromPython(src) {
       if (name === 'random' || name === 'randint' || name === 'random.randint') { if (a.length !== 2) throw new PyErr(line, 'random needs two numbers, like random(1, 6).'); const r = { type: 'math_random_int', id: id(), inputs: { FROM: sock(a[0]), TO: sock(a[1]) } }; return r; }
       if (name === 'str' || name === 'int') { if (a.length !== 1) throw new PyErr(line, name + '( ) needs one thing inside the brackets.'); return a[0]; }
       if (name === 'print') name = 'player.say';
+      if (procs.has(name)) { // calling one of your own blocks
+        const ps = procs.get(name);
+        if (a.length !== ps.length) throw new PyErr(line, name + '() needs ' + ps.length + ' thing' + (ps.length === 1 ? '' : 's') + ' in the brackets' + (ps.length ? ': ' + ps.join(', ') : '') + '.');
+        const c = { type: 'procedures_callnoreturn', id: id(), extraState: { name, params: ps }, inputs: {} };
+        a.forEach((v, i) => { c.inputs['ARG' + i] = { block: v }; }); c.__stmt = true; return c;
+      }
       const api = API_BY_PY[name];
       if (!api) {
         const near = Object.keys(API_BY_PY).filter(k => k.split('.')[0] === name.split('.')[0]).map(k => k + '()');
@@ -419,7 +439,7 @@ export function fromPython(src) {
     return { type: 'variables_get', id: id(), fields: { VAR: vid(name) } };
   }
   // the program: @on_chat functions and top-level code (= when Run is clicked)
-  const hats = [], run = [];
+  const hats = [], run = [], defs = [];
   try {
     while (!is('EOF')) {
       if (is('NL')) { next(); continue; }
@@ -437,13 +457,25 @@ export function fromPython(src) {
         continue;
       }
       if (is('INDENT')) throw new PyErr(peek().line, 'This line is moved in, but it isn’t inside anything. Take away the spaces at the start.');
+      if (is('NAME', 'def')) { // make a block: def name(inputs):
+        const line = next().line, name = want('NAME', undefined, 'Give your block a name after def, like: def house():').v;
+        if (API_BY_PY[name] || CONSTANTS.has(name) || PY_WORDS.has(name) || ['helper', 'builder', 'player', 'world', 'on_chat'].includes(name)) throw new PyErr(line, '“' + name + '” is already a Build Lab word. Choose another name.');
+        want('OP', '(', 'Put brackets after the name, like: def house():'); const ps = [];
+        while (!is('OP', ')')) { ps.push(want('NAME', undefined, 'Inside the brackets, write names for the inputs, like: def tower(height):').v); if (is('OP', ',')) next(); else break; }
+        want('OP', ')', 'This def needs a closing bracket ).');
+        const body = block(line);
+        defs.push({ type: 'procedures_defnoreturn', id: id(), fields: { NAME: name }, extraState: ps.length ? { params: ps.map(q => ({ name: q, id: vid(q).id })) } : undefined, inputs: body ? { STACK: { block: body } } : undefined });
+        continue;
+      }
       run.push(...statement());
     }
   } catch (e) { if (e instanceof PyErr) return { error: { line: e.line, msg: e.message } }; throw e; }
   const tops = [];
   if (run.length) tops.push({ type: 'cr_on_run', id: id(), next: { block: chain(run) } });
-  tops.push(...hats);
-  let y = 20; for (const h of tops) { h.x = 20; h.y = y; y += 70 + 46 * countBlocks(h); }
+  tops.push(...hats, ...defs);
+  let y = 20; for (const h of tops) { h.x = 20; h.y = y; y += 100 + 50 * countBlocks(h); }
   return { state: JSON.parse(JSON.stringify({ blocks: { languageVersion: 0, blocks: tops }, variables: [...vars].map(([name, vid]) => ({ name, id: vid })) })) }; // drops empty inputs
 }
-function countBlocks(b) { let c = 0; const walk = x => { for (; x; x = x.next && x.next.block) { c++; for (const k in x.inputs || {}) if (/^(DO|ELSE)/.test(k) && x.inputs[k] && x.inputs[k].block) walk(x.inputs[k].block); } }; walk(b.next && b.next.block); return c; }
+// is the def at toks[i] the one straight after an @on_chat(...) line?
+function chatDef(toks, i) { let j = i - 2; while (j > 0 && toks[j].t !== 'NL') j--; return toks[j + 1] && toks[j + 1].t === 'OP' && toks[j + 1].v === '@'; }
+function countBlocks(b) { let c = 0; const walk = x => { for (; x; x = x.next && x.next.block) { c++; for (const k in x.inputs || {}) if (/^(DO|ELSE)/.test(k) && x.inputs[k] && x.inputs[k].block) walk(x.inputs[k].block); } }; walk(b.next ? b.next.block : b.inputs && b.inputs.STACK && b.inputs.STACK.block); return c; }

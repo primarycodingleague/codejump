@@ -117,7 +117,7 @@ export function mount(root, host) {
   const runner = createRunner(world, {
     player: () => ({ x: player.x, y: player.y, z: player.z, facing: player.facing() }),
     teleport: (x, y, z) => { player.x = Math.max(0.5, Math.min(world.W - 0.5, x)); player.y = Math.max(1, Math.min(world.H + 4, y)); player.z = Math.max(0.5, Math.min(world.D - 0.5, z)); player.vy = 0; player.unstick(); },
-    say: (t, who) => log(t, who), time: n => { if (view) view.setTime(n); changed(); },
+    say: (t, who) => { log(t, who); mk.onSay(t); }, time: n => { if (view) view.setTime(n); changed(); },
     error: msg => { status(msg, 'bad'); log(msg, 'err'); },
     placed: () => player.unstick()
   });
@@ -195,7 +195,7 @@ export function mount(root, host) {
   $('crCmds').onclick = () => {
     const rows = L.API.map(a => '<tr><td><code>' + esc(a[2]) + '(' + a[4].map(x => x[0].toLowerCase()).join(', ') + ')</code></td><td>' + esc(a[3].replace(/\s*\|/g, '').replace(/%([A-Z0-9]+)/g, (m, n) => n.toLowerCase())) + '</td></tr>').join('');
     modal('<h3>Python commands</h3><p>Positions are <b>right, up, ahead</b> from where you stand. Use these names for blocks:</p>' + GROUPS.map(([g, n]) => '<p><b>' + n + ':</b> ' + BLOCK_ORDER.filter(id => GROUP_OF(id) === g).map(id => '<code title="' + BLOCKS[id][2] + '">' + BLOCKS[id][1] + '</code>').join(' ') + '</p>').join('') + '<p><code>AIR</code> = nothing (dig a hole). Directions: <code>FORWARD BACK LEFT RIGHT UP DOWN</code>.</p><table class="cr-cmds">' + rows +
-      '<tr><td><code>@on_chat("word")<br>def word(n):</code></td><td>runs when you type the word in the chat (n = a number typed after it)</td></tr><tr><td><code>for i in range(5):</code> · <code>while …:</code> · <code>if … elif … else</code></td><td>loops and choices</td></tr><tr><td><code>random(1, 6)</code></td><td>a random whole number</td></tr></table>');
+      '<tr><td><code>@on_chat("word")<br>def word(n):</code></td><td>runs when you type the word in the chat (n = a number typed after it)</td></tr><tr><td><code>def house(size):</code><br><code>house(5)</code></td><td>make your own block (a function) with inputs, then use it — the same as <b>My blocks</b></td></tr><tr><td><code>for i in range(5):</code> · <code>while …:</code> · <code>if … elif … else</code></td><td>loops and choices</td></tr><tr><td><code>random(1, 6)</code></td><td>a random whole number</td></tr></table>');
   };
   function modal(html) { $('crModalBody').innerHTML = html; $('crModal').hidden = false; const f = $('crModalBody').querySelector('input,select,textarea,button'); if (f) setTimeout(() => f.focus(), 30); }
   const closeModal = () => { $('crModal').hidden = true; cv.focus({ preventScroll: true }); };
@@ -445,6 +445,8 @@ export function mount(root, host) {
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
+    // My blocks: Blockly's "make a block" (functions without a return value — the Python is def name(inputs):)
+    ws.registerToolboxCategoryCallback('CR_PROCS', w => Blockly.Procedures.flyoutCategory(w).filter(el => !/^procedures_(defreturn|ifreturn|callreturn)$/.test(el.getAttribute && el.getAttribute('type'))));
     ws.addChangeListener(e => { if (quiet || e.isUiEvent || String(e.group || '').startsWith('crload') || (e.reason && e.reason.includes('cleanup'))) return; changed(); sendCodeSoon(); });
     view = createView(THREE, cv, world);
     setProject(pending); pending = null; mk.viewReady();

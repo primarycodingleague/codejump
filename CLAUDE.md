@@ -30,6 +30,49 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; LIVE on main since 14 Oct 2026 — without the iPad offline mode, which is still on the branch) — Charlie: "like Minecraft Education's CS units… our own"
+- **Our own unit**, modelled only on the SKILL ORDER of a standard computing progression (Minecraft Education's "Coding FUNdamentals" goes
+  algorithms/sequence/loops → debugging/conditionals/operators/loops → variables/events/functions). NEVER copy their worlds, characters,
+  story or lesson text; Charlie was told their world files can't be converted. Story: the robot helper fixes up **Pebble Island**.
+- **Block 1 (Years 3–4) DONE:** `craft/craft-academy.js` (no DOM) — `ACADEMY` list, `academyProject(id)` (an island world + `maker`:
+  one character, tasks, rules), `ACADEMY_ANSWERS[id]` (Python that finishes it). 1 `academy-1-crate` algorithms (plan on paper; route
+  F4 R F5 L F5) · 2 `academy-2-post` long sequence, decompose, 3 letterbox stops (route built by `route()`, houses checked off the path)
+  · 3 `academy-3-flowers` place RIGHT + move ×5 · 4 `academy-4-fence` repeat 10 {place LOG LEFT; move} · 5 `academy-5-pen` challenge,
+  par 5: trail LOG + repeat 4 {move 5; turn right} (the last step is blocked by its own trail = "the gate") · 6 `academy-6-market`
+  project, 30 blocks in the square + a loop (code 'all', build by hand allowed, no reset).
+- **World Maker additions for it:** `rules.reset` (Settings: "Each Run starts again" — `onRun` reloads `startWorld` and puts the helper
+  back, player stays; lessons 1–5 use it) and the checker's helper trail (`checker.seen(helper)` every frame, `forget()`; a `helper` task
+  counts any square the helper passed through, since a 0.25 s check could miss a 0.18 s step). `M.project` is now exported.
+- **Lessons:** lessons.js entries with `unit: 'Robot Helper Academy · Block 1 · Lesson N'` (shown on library cards + the detail page;
+  `lessonPathHTML` links the unit's previous/next lesson instead of the band progression), slides, steps; starters from
+  `lessons/builds/academy-*.mjs` (make-starters closes the welcome and uses the Helper camera for the picture). Build Lab **Worlds** gallery
+  has an Academy section (`[data-ac]`). The lesson checklist `.cr-lesson` now sits at top 56px (it covered the Make/Worlds buttons).
+- Tests: tests/craft.test.mjs (each answer finishes every task in Node, each starter doesn't, pen par/stars, fence without a loop, the
+  helper trail; app: gallery lists 6, every Run starts again, the fence answer finishes the lesson). lessons.test.mjs opens every starter.
+- **Blocks 2 + 3 DONE (11 Oct 2026, same CJ_VERSION, branch):** `ACADEMY_BLOCKS` ([n, name, years]); 7 `academy-7-bridge` (debug: F2→F3,
+  repeat 4→5; place PLANKS DOWN over water) · 8 `academy-8-lighthouse` (debug a loop: count 6→8, order move/place, lamp UP→FORWARD; tower
+  task) · 9 `academy-9-beach` (if inspect DOWN == COBBLE: dig; `ROCKS`) · 10 `academy-10-maze` (corridor from `route(R10)`, hedges, nested
+  if/else on detect FORWARD/LEFT, repeat 40; maze zone protected) · 11 `academy-11-orchard` (or: PUMPKIN or MELON, keep LEAVES) · 12
+  `academy-12-mine` (while not inspect DOWN == GOLD_ORE; gold at y4) · 13 `academy-13-crops` (count pumpkins, helper.say → 'say' task;
+  7) · 14 `academy-14-stairs` (height variable, nested loop, 21 blocks) · 15 `academy-15-chat` (@on_chat("lamps") n posts; time SUNSET;
+  no reset) · 16 `academy-16-huts` (def hut() ×3) · 17 `academy-17-towers` (def tower(height): 3/5/7 on gold marks, tower tasks n=h+1)
+  · 18 `academy-18-district` (project: 40 blocks + function + variable + if). Years: Block 2 'Years 4–5' (lsBand → y34), Block 3 'Years 5–6'.
+- **Functions ("My blocks") added to the Build Lab for 16–17:** Blockly's own `procedures_defnoreturn`/`procedures_callnoreturn` (params in
+  extraState with variable ids). Toolbox category 'My blocks' = custom `CR_PROCS` (registered in craft-app.js: `Procedures.flyoutCategory`
+  without defreturn/ifreturn/callreturn). craft-lang: `def name(a, b):` at top level ↔ def block (pre-scan of the tokens so a call can come
+  before its def; `chatDef` skips the def after @on_chat); calls `name(x)` ↔ call block (wrong input count = friendly error; reserved names
+  refused); toPython writes defs first. Runner: `procs` from load(), a call sets the param vars, runs the body, restores them; depth > 40 =
+  "keeps using itself". The Python Commands pop-up lists def.
+- **World Maker additions for Blocks 2–3:** task types `none` (none of a block left in an area) and `say` (helper or player says a word/
+  number; craft-app `io.say` → `mk.onSay` → `checker.say`); FEATURES `logic` (and/or/not), `until` (repeat until/while), `function`; feature
+  `variable` now = using a variable's value or changing it (variables_get/math_change — a starter that only SETS one doesn't tick it).
+  **`keep` tasks** (`t.keep`, kept by cleanMaker; no editor UI yet): only count once every other task is done and still true then, and
+  untick if they stop being true ("keep the sand", "leave the bushes", "don't dig the gold") — otherwise they'd tick at the start forever.
+  Starters must not pre-tick tasks: 'uses' tasks were dropped where the starter already has the feature (maze, chat, huts, towers).
+- Tests (craft.test.mjs): 18 lessons in 3 blocks; every answer finishes, no starter does; dig-every-step loses the sand; too deep loses the
+  gold; the maze starter gets stuck; crops says 7 not 5; functions round-trip/inputs/errors/recursion guard/'uses function'; app: gallery 18
+  under 3 headings, My blocks flyout, the huts answer finishes the lesson (slow in swiftshader: 180 s timeout).
+
 ## Home page — redesigned Oct 2026 (direction "B · ink arcade"), LIVE on main since 3 Oct 2026 (CJ_VERSION 2026.10.03.2)
 Mockups (3 directions) on the claude.ai canvas "CodeJump home page redesign"; B was chosen. Uses the Primary Coding
 League design system's colours/type (gold #ae853e on ink, Lazydog display + Montserrat; Lazydog shipped as

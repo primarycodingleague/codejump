@@ -3,7 +3,7 @@
  * The data and the checks live in craft-maker.js (no DOM). craft-app.js creates this with createMakerUI(app) and calls its hooks.
  */
 import * as M from './craft-maker.js';
-import { ACADEMY, academyProject } from './craft-academy.js';
+import { ACADEMY, ACADEMY_BLOCKS, academyProject } from './craft-academy.js';
 import { BLOCKS, NBLOCKS, LABEL_OF, BY_NAME, GROUND, BLOCK_ORDER } from './craft-world.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -330,6 +330,7 @@ export function createMakerUI(app) {
     if (needs.includes('block')) f.push('<label class="cr-f">Block <select id="mkTBlock">' + blockOptions(t.block || (t.type === 'count' ? 'ANY' : 'PLANKS'), t.type === 'count') + '</select></label>');
     if (needs.includes('n')) f.push('<label class="cr-f">' + (t.type === 'tower' ? 'How tall' : 'How many') + ' <input id="mkTN" type="number" min="1" max="999" value="' + (t.n || 5) + '"></label>');
     if (t.type === 'chat') f.push('<label class="cr-f">The word <input id="mkTWord" maxlength="20" value="' + esc(t.word || 'go') + '"></label>');
+    if (t.type === 'say') f.push('<label class="cr-f">What must be said (a word, a number or a few words) <input id="mkTWord" maxlength="40" value="' + esc(t.word || '') + '"></label>');
     if (t.type === 'uses') f.push('<label class="cr-f">Must use <select id="mkTFeat">' + Object.entries(M.FEATURES).map(([k, v]) => '<option value="' + k + '"' + (k === t.feature ? ' selected' : '') + '>' + esc(v) + '</option>').join('') + '</select></label>');
     app.modal(`<h3>${IC.tasks} ${esc(M.TASK_TYPES[t.type].label)}</h3>${f.join('')}
       <label class="cr-f">What the checklist says (leave empty for an automatic sentence) <input id="mkTText" maxlength="160" value="${esc(isNew ? '' : t.text)}"></label>
@@ -379,8 +380,8 @@ export function createMakerUI(app) {
   // ── ready-made worlds ──
   function gallery() {
     app.modal(`<h3>${IC.globe} Worlds</h3><p class="cr-fnote">Open a ready-made world to try it, or use one as the start of your own (open it, then press Make).</p>
-      <h4 class="cr-wh">Robot Helper Academy · Block 1 <small>Years 3–4, a lesson each</small></h4>
-      <div class="cr-wgrid">${ACADEMY.map(e => '<button type="button" class="cr-wcard" data-ac="' + e.id + '"><b>' + e.n + '. ' + esc(e.title) + '</b><small>' + esc(e.skill) + '</small><span>' + esc(e.text) + '</span></button>').join('')}</div>
+      ${ACADEMY_BLOCKS.map(([k, name, years]) => `<h4 class="cr-wh">Robot Helper Academy · Block ${k}: ${esc(name)} <small>${esc(years)}</small></h4>
+      <div class="cr-wgrid">${ACADEMY.filter(e => e.block === k).map(e => '<button type="button" class="cr-wcard" data-ac="' + e.id + '"><b>' + e.n + '. ' + esc(e.title) + '</b><small>' + esc(e.skill) + '</small><span>' + esc(e.text) + '</span></button>').join('')}</div>`).join('')}
       <h4 class="cr-wh">More worlds</h4>
       <div class="cr-wgrid">${M.EXAMPLES.map(e => '<button type="button" class="cr-wcard" data-ex="' + e.id + '"><b>' + esc(e.title) + '</b><small>' + esc(e.kind) + '</small><span>' + esc(e.text) + '</span></button>').join('')}
       <button type="button" class="cr-wcard" data-ex="flat"><b>A blank flat world</b><small>Make your own</small><span>Just grass, ready for your own lesson, challenge or competition arena.</span></button>
@@ -429,6 +430,7 @@ export function createMakerUI(app) {
       return false;
     },
     onChat(word) { if (checker) checker.chat(word); },
+    onSay(text) { if (checker) checker.say(text); },
     onRun() {
       if (maker && maker.rules.reset && !editing && lessonActive()) { // this world starts again on every Run, so pupils can fix their code and try again
         runner.stop(); if (maker.startWorld) world.load(maker.startWorld); app.placeAt(null, maker.helper); checker.forget();

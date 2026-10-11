@@ -158,7 +158,8 @@ for (const id of Object.keys(BUILD)) {
   await page.waitForFunction(() => !document.getElementById('lesson-guide').classList.contains('hide'), null, { timeout: 30000 });
   if (id === 'turtle-shapes' || id === 'turtle-procedures') await page.evaluate(() => { turtleSpeed = 10; turtleRun(); });
   if (id === 'obstacle-course') await page.waitForFunction(() => worldApp._world().editing() && worldApp._world().objects().some(o => o.id === 'finish'), null, { timeout: 60000 });
-  await sleep(/critter|obstacle|world-builders/.test(id) ? 3500 : 1200);
+  if (/^academy-/.test(id)) await page.evaluate(() => { document.getElementById('crGo')?.click(); document.querySelector('.cr [data-cam="helper"]')?.click(); }); // the world, not its welcome card
+  await sleep(/critter|obstacle|world-builders|academy/.test(id) ? 3500 : 1200);
   await page.screenshot({ path: join(OUT, 'pics', id + '.jpg'), type: 'jpeg', quality: 72 });
   console.log('made', id, JSON.stringify(payload).length + ' bytes');
   await ctx.close();

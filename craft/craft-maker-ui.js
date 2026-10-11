@@ -3,6 +3,7 @@
  * The data and the checks live in craft-maker.js (no DOM). craft-app.js creates this with createMakerUI(app) and calls its hooks.
  */
 import * as M from './craft-maker.js';
+import { ACADEMY, academyProject } from './craft-academy.js';
 import { BLOCKS, NBLOCKS, LABEL_OF, BY_NAME, GROUND, BLOCK_ORDER } from './craft-world.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -123,7 +124,7 @@ export function createMakerUI(app) {
   function startChallenge(fromRun) {
     if (!maker || !maker.challenge.on) return;
     if (!fromRun) restart(true);
-    chal = { elapsed: 0, running: true, over: false }; runner.resetSteps(); renderLesson();
+    chal = { elapsed: 0, running: true, over: false }; runner.resetSteps(); checker.forget(); renderLesson();
     app.log('The challenge has started — good luck!', 'sys');
   }
   $('crLStart').onclick = () => startChallenge();
@@ -352,6 +353,7 @@ export function createMakerUI(app) {
       <label class="cr-chk"><input type="checkbox" id="mkSBreak" ${r.break ? 'checked' : ''}> Break blocks by hand</label>
       <label class="cr-chk"><input type="checkbox" id="mkSFly" ${r.fly ? 'checked' : ''}> Fly</label>
       <label class="cr-chk"><input type="checkbox" id="mkSPy" ${r.python ? 'checked' : ''}> Use the Python tab</label>
+      <label class="cr-chk"><input type="checkbox" id="mkSReset" ${r.reset ? 'checked' : ''}> Each Run starts again (the helper and the world go back to the start)</label>
       <label class="cr-f">Code <select id="mkSCode"><option value="all"${r.code === 'all' ? ' selected' : ''}>All the blocks</option><option value="helper"${r.code === 'helper' ? ' selected' : ''}>Robot helper only (no builder commands)</option><option value="builder"${r.code === 'builder' ? ' selected' : ''}>Builder commands only (no helper)</option><option value="none"${r.code === 'none' ? ' selected' : ''}>No code — building by hand only</option></select></label>
       <div class="cr-f">Blocks pupils can build with (none ticked = all of them)<div class="cr-bgrid">${BLOCK_ORDER.map(id => BLOCKS[id]).map(b => '<label><input type="checkbox" data-blk="' + b[0] + '"' + (allowed.has(b[0]) ? ' checked' : '') + '><span>' + esc(b[2]) + '</span></label>').join('')}</div></div>
       <h4>Coding challenge</h4>
@@ -365,7 +367,7 @@ export function createMakerUI(app) {
       const blks = [...document.querySelectorAll('.cr-bgrid input:checked')].map(i => +i.dataset.blk);
       const lw = val('mkSLock').trim().toLowerCase();
       Object.assign(maker, { title: val('mkSTitle'), intro: val('mkSIntro'),
-        rules: { build: chk('mkSBuild'), break: chk('mkSBreak'), fly: chk('mkSFly'), python: chk('mkSPy'), code: val('mkSCode'), blocks: blks.length ? blks : null, protect: r.protect },
+        rules: { build: chk('mkSBuild'), break: chk('mkSBreak'), fly: chk('mkSFly'), python: chk('mkSPy'), code: val('mkSCode'), blocks: blks.length ? blks : null, protect: r.protect, reset: chk('mkSReset') },
         challenge: { on: chk('mkSChal'), time: Math.round(Number(val('mkSTime')) || 0) * 60, par: Math.round(Number(val('mkSPar')) || 0) } });
       if (lw === 'unlock') maker.lock = ''; else if (lw) maker.lock = fnv(lw);
       maker = M.cleanMaker(maker); app.changed(); app.closeModal(); app.toast(lw && lw !== 'unlock' ? 'Saved. The unlock word is “' + lw + '” — write it down!' : 'Saved.');
@@ -377,9 +379,16 @@ export function createMakerUI(app) {
   // ── ready-made worlds ──
   function gallery() {
     app.modal(`<h3>${IC.globe} Worlds</h3><p class="cr-fnote">Open a ready-made world to try it, or use one as the start of your own (open it, then press Make).</p>
+      <h4 class="cr-wh">Robot Helper Academy · Block 1 <small>Years 3–4, a lesson each</small></h4>
+      <div class="cr-wgrid">${ACADEMY.map(e => '<button type="button" class="cr-wcard" data-ac="' + e.id + '"><b>' + e.n + '. ' + esc(e.title) + '</b><small>' + esc(e.skill) + '</small><span>' + esc(e.text) + '</span></button>').join('')}</div>
+      <h4 class="cr-wh">More worlds</h4>
       <div class="cr-wgrid">${M.EXAMPLES.map(e => '<button type="button" class="cr-wcard" data-ex="' + e.id + '"><b>' + esc(e.title) + '</b><small>' + esc(e.kind) + '</small><span>' + esc(e.text) + '</span></button>').join('')}
       <button type="button" class="cr-wcard" data-ex="flat"><b>A blank flat world</b><small>Make your own</small><span>Just grass, ready for your own lesson, challenge or competition arena.</span></button>
       <button type="button" class="cr-wcard" data-ex="starter"><b>The starter world</b><small>Free building</small><span>The pond, the trees and the example program.</span></button></div>`);
+    $('crModalBody').querySelectorAll('[data-ac]').forEach(b => b.onclick = async () => {
+      if (!(await app.confirm('Open this Academy lesson? What you have now will be replaced (save it first if you want to keep it).'))) return;
+      app.closeModal(); app.openProject(academyProject(b.dataset.ac));
+    });
     $('crModalBody').querySelectorAll('[data-ex]').forEach(b => b.onclick = async () => {
       if (!(await app.confirm('Open this world? What you have now will be replaced (save it first if you want to keep it).'))) return;
       app.closeModal(); const id = b.dataset.ex;
@@ -420,7 +429,12 @@ export function createMakerUI(app) {
       return false;
     },
     onChat(word) { if (checker) checker.chat(word); },
-    onRun() { if (maker && maker.challenge.on && !editing && !(chal && (chal.running || chal.over))) startChallenge(true); },
+    onRun() {
+      if (maker && maker.rules.reset && !editing && lessonActive()) { // this world starts again on every Run, so pupils can fix their code and try again
+        runner.stop(); if (maker.startWorld) world.load(maker.startWorld); app.placeAt(null, maker.helper); checker.forget();
+      }
+      if (maker && maker.challenge.on && !editing && !(chal && (chal.running || chal.over))) startChallenge(true);
+    },
     tick(dt) {
       if (!maker) return;
       if (chal && chal.running) { chal.elapsed += dt; updateTime(); if (maker.challenge.time && chal.elapsed >= maker.challenge.time) timeUp(); }
@@ -428,6 +442,7 @@ export function createMakerUI(app) {
       // the nearest character
       const n = nearest(); if (n !== nearNpc) { nearNpc = n; $('crNear').hidden = !n || !$('crTalk').hidden; if (n) $('crNear').innerHTML = '<kbd>E</kbd> or click to talk to <b>' + esc(n.name) + '</b>'; }
       if (!$('crTalk').hidden) $('crNear').hidden = true;
+      if (checker && !(chal && chal.over)) checker.seen(runner.helper);
       if ((checkT += dt) < 0.25) return; checkT = 0;
       // areas with a pop-up
       const px = Math.floor(player.x), py = Math.floor(player.y), pz = Math.floor(player.z), now = new Set();

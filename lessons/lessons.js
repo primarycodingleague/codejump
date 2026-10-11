@@ -782,10 +782,429 @@ export const LESSONS = [
       { t: 'Check the tasks', d: 'You need 30 blocks of building in the square and a loop in your code.' },
       { t: 'Improve it', d: 'Ask a partner for one idea. Change your code to make it better.' }
     ]
+  },
+  // ───────────── ROBOT HELPER ACADEMY · Block 2 "Fix it and decide" (Years 4–5) ─────────────
+  {
+    id: 'academy-7-bridge', unit: 'Robot Helper Academy · Block 2 · Lesson 7', title: 'The broken bridge', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Debugging: Odo the bridgekeeper’s program should build a plank bridge across a stream, but it has two bugs. Pupils watch it run, say what went wrong, find each bug and fix one at a time.',
+    objective: 'We are learning to find and fix bugs by testing and watching what a program really does.',
+    success: ['I can say what a program should do and what it really did.', 'I can find the line that causes a bug.', 'I can fix one bug at a time and test again.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['bug', 'a mistake that makes a program do the wrong thing'], ['debug', 'find and fix bugs'], ['expected', 'what you thought would happen'], ['actual', 'what really happened']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 7, title: 'Spot the bug', html: '<p>Show a recipe with a mistake (“bake for 3 hours”). <b>Ask:</b> how would we know it’s wrong? (We test it!) Introduce <b>bug</b>, <b>debug</b>, <b>expected</b> and <b>actual</b>. Recap Block 1: loops and efficiency.</p>' },
+      { min: 10, title: 'Watch it fail', html: '<p>Open the starter and talk to Odo. Press <b>Run</b> and watch the helper with the class. <b>Ask:</b> what did we expect? What actually happened? (The first plank landed on the grass, and there’s a gap at the far end.)</p>' },
+      { min: 25, title: 'Debug it', html: '<p>Pupils find and fix the two bugs, changing <b>one thing at a time</b> and pressing Run after each change (every Run starts again). Encourage them to keep a bug log: what was wrong, what they changed.</p><p>Bug 1: <b>move forward 2</b> should be <b>3</b> (the helper must stand on the bank edge before the loop). Bug 2: <b>repeat 4</b> should be <b>5</b> (the stream is 5 wide). Then the helper crosses with move forward 2.</p>' },
+      { min: 10, title: 'Make a bug', html: '<p>Pairs swap: each pupil adds one bug to a working program, and their partner debugs it. <b>Ask:</b> which bugs were hardest to find, and why?</p>' },
+      { min: 8, title: 'Plenary', html: '<p><b>Ask:</b> what is a good way to debug? (Watch it run, compare expected with actual, find the first thing that went wrong, change one thing, test again.)</p>' }
+    ],
+    support: 'Tell pupils there is one bug in the first block and one in the loop. Let them change numbers only.',
+    stretch: 'Make the bridge 3 planks wide. Add posts at both ends.',
+    assess: ['Describes expected and actual behaviour', 'Locates the line that causes each bug', 'Tests after each change'],
+    steps: [
+      { t: 'Talk to Odo', d: 'Walk to Odo and press E. What should the program do?' },
+      { t: 'Watch it run', d: 'Press Run and watch the helper closely. Where did the first plank go? Is there a gap?' },
+      { t: 'Expected and actual', d: 'Say (or write) what you expected and what actually happened.' },
+      { t: 'Bug 1', d: 'Look at the first move. Is the helper standing on the edge of the bank when the loop starts? Change one number and Run.' },
+      { t: 'Bug 2', d: 'Count how wide the stream is. Does the loop repeat enough times? Fix it and Run.' },
+      { t: 'Cross the stream', d: 'When the bridge is whole, the helper should reach the far bank. Both tasks tick.' },
+      { t: 'Challenge', d: 'Add a bug to your program and let a partner find it.' }
+    ]
+  },
+  {
+    id: 'academy-8-lighthouse', unit: 'Robot Helper Academy · Block 2 · Lesson 8', title: 'The lighthouse', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Debugging loops: a lighthouse program has three bugs — the loop count, the order of blocks inside the loop, and the lamp’s direction. Pupils predict before running, then trace the loop to fix it.',
+    objective: 'We are learning to debug loops by predicting and tracing what happens each time round.',
+    success: ['I can predict what a loop will do before I run it.', 'I can trace a loop one time round at a time.', 'I can fix bugs in a loop’s count and order.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['predict', 'say what you think will happen before testing'], ['trace', 'follow the code step by step'], ['iteration', 'one time round a loop'], ['bug', 'a mistake in a program']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A trace table on paper (time round · what the helper does · tower height)'],
+    plan: [
+      { min: 8, title: 'Predict', html: '<p>Open the starter and talk to Keeper Iska. Show the code on the board. <b>Before running</b>, pupils predict: how tall will the tower be? Where will the lamp go? Take votes.</p>' },
+      { min: 10, title: 'Trace it', html: '<p>Fill a trace table together for the first 3 times round: “1: move up, place white in front at height 2…”. <b>Ask:</b> what is at height 1? (Nothing — the first block goes in after moving up.)</p>' },
+      { min: 25, title: 'Fix the three bugs', html: '<p>Pupils run, compare with their prediction, and fix: <b>repeat 6 → 8</b>; <b>swap the two blocks inside</b> (place, then move up); lamp direction <b>up → forward</b>. One change, one Run each time.</p><p>Answer: repeat 8 { helper place white forward · helper move up 1 } · helper place lamp forward.</p>' },
+      { min: 10, title: 'Off by one', html: '<p>Discuss “off by one” bugs: loops that run one too many or too few times. <b>Ask:</b> how did we know it needed 8?</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils explain one bug in their own words: what it did, why, and the fix.</p>' }
+    ],
+    support: 'Fix the bugs together one at a time; pupils copy each fix.',
+    stretch: 'Make the tower stripy (red and white) with a loop inside the loop. Add a balcony under the lamp.',
+    assess: ['Makes a prediction before running', 'Traces the first iterations accurately', 'Fixes count, order and direction bugs'],
+    steps: [
+      { t: 'Talk to Iska', d: 'Walk to Keeper Iska and press E. How tall must the tower be?' },
+      { t: 'Predict', d: 'Read the code. How tall will it build? Where will the lamp go? Say it before you Run.' },
+      { t: 'Run and compare', d: 'Press Run. Was your prediction right? What is wrong?' },
+      { t: 'The count', d: 'How many times should the loop repeat for a tower 8 tall? Fix the number.' },
+      { t: 'The order', d: 'Is there a gap at the bottom? Swap the two blocks inside the loop.' },
+      { t: 'The lamp', d: 'The lamp should go on top of the tower, not above the helper. Change its direction.' },
+      { t: 'Challenge', d: 'Make the lighthouse red and white stripes.' }
+    ]
+  },
+  {
+    id: 'academy-9-beach', unit: 'Robot Helper Academy · Block 2 · Lesson 9', title: 'The rocky beach', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Selection: the helper walks up a beach path and decides at each step — IF the block below is a rock, dig it up. The tasks only pass if the sand stays, so digging every step doesn’t work.',
+    objective: 'We are learning to use if to make a program decide what to do.',
+    success: ['I can explain what an if block does.', 'I can use the helper’s sensor in a condition.', 'I can explain why digging every step would be wrong.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['selection', 'choosing what to do'], ['if', 'run these blocks only when the condition is true'], ['condition', 'a question that is true or false'], ['sensor', 'a way for the helper to find out about the world']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 7, title: 'If it rains…', html: '<p>Play “if”: “If you’re wearing blue, stand up.” Try a few. <b>Ask:</b> what decided who stood up? Introduce <b>condition</b> (true or false) and <b>selection</b>.</p>' },
+      { min: 10, title: 'The beach', html: '<p>Open the starter and talk to Lifeguard Pip. The starter walks 12 steps. <b>Ask:</b> what if we put “dig down” in the loop? Try it on the board: the sand disappears too, and the sand task fails. We need the helper to <b>decide</b>.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils put an <b>if</b> inside the loop, with the condition <b>block the helper sees down = cobblestone</b> (from World), and <b>helper dig down</b> inside the if.</p><p>Answer: repeat 12 { helper move forward 1 · if block the helper sees down = cobblestone { helper dig down } }.</p><p>Common bug: the if is outside the loop (it only checks once).</p>' },
+      { min: 10, title: 'True or false?', html: '<p>Trace three steps on the board: “step 1: sand → false → do nothing; step 2: cobblestone → true → dig”. <b>Ask:</b> how many times was the condition checked? (12.)</p>' },
+      { min: 8, title: 'Plenary', html: '<p><b>Ask:</b> where else do computers use if? (Games: if you touch the coin, add a point.) Next lesson: if … <b>else</b>.</p>' }
+    ],
+    support: 'Give the condition block ready-made; pupils only place it in the if.',
+    stretch: 'Put a shell (white block) on the sand where each rock was: inside the if, after digging, place white down.',
+    assess: ['Uses an if inside a loop', 'Builds a condition from the helper’s sensor', 'Explains why the if is needed'],
+    steps: [
+      { t: 'Talk to Pip', d: 'Walk to Lifeguard Pip and press E. Which blocks must go, and which must stay?' },
+      { t: 'Try it without if', d: 'Put “helper dig down” in the loop and Run. What happens to the sand?' },
+      { t: 'Add an if', d: 'Take the dig out. From Logic, put an “if” in the loop, after the move.' },
+      { t: 'The condition', d: 'From World, use “block the helper sees down = …” and choose cobblestone. Put it in the if.' },
+      { t: 'Dig inside', d: 'Put “helper dig down” INSIDE the if. Press Run.' },
+      { t: 'All rocks gone?', d: 'The rocks should be dug up and every bit of sand left. Check the task list.' },
+      { t: 'Challenge', d: 'After digging, put a white shell where the rock was.' }
+    ]
+  },
+  {
+    id: 'academy-10-maze', unit: 'Robot Helper Academy · Block 2 · Lesson 10', title: 'The hedge maze', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'If … else with sensing: instead of planning every step, pupils write rules the helper repeats — if there’s a hedge in front, turn (left or right, depending on the left side), else move forward — and it finds its own way through a maze.',
+    objective: 'We are learning to use if … else and sensing so a program can respond to what it finds.',
+    success: ['I can use if … else to choose between two actions.', 'I can use a sensor (“sees a block?”) in a condition.', 'I can explain why rules can work in any maze.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['if … else', 'do one thing if the condition is true, another if it is false'], ['sense', 'find out about the world (is there a hedge in front?)'], ['nested', 'one block inside another of the same kind'], ['rule', 'a decision the program makes every time']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Optional: a maze drawn on paper for the warm-up'],
+    plan: [
+      { min: 8, title: 'Blindfold maze', html: '<p>A pupil walks a desk “maze” with eyes closed, feeling ahead with a hand. Agree rules: “If there’s a wall in front, turn; else step forward.” <b>Ask:</b> which way to turn?</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter and talk to Ren. The starter says: if a hedge is in front, turn right; else move. Run it: it gets stuck at the first left-hand corner. <b>Ask:</b> what extra question does it need? (Is there a hedge on the left?)</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils put a second if … else inside the first: if a hedge on the left, turn right, else turn left. The task ticks at the gold square.</p><p>Answer: repeat 40 { if helper sees a block forward? { if helper sees a block left? { turn right } else { turn left } } else { move forward 1 } }.</p>' },
+      { min: 10, title: 'Rules vs routes', html: '<p>Compare: in Lesson 2 we planned every step; today the helper decides. <b>Ask:</b> would our Lesson 2 code work in a new maze? Would today’s? (Rules work in any maze like this.)</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils explain the nested if … else using the words <b>condition</b>, <b>true</b>, <b>false</b>.</p>' }
+    ],
+    support: 'Show the structure on a card with gaps for the conditions and actions.',
+    stretch: 'Use “repeat until the helper is on gold” instead of repeat 40 (World → block the helper sees down = gold). Count the steps in a variable.',
+    assess: ['Uses if … else correctly', 'Combines two sensor conditions (nested)', 'Explains why a rule-based program is more general'],
+    steps: [
+      { t: 'Talk to Ren', d: 'Walk to Gardener Ren and press E.' },
+      { t: 'Run the starter', d: 'Press Run. Where does the helper get stuck? Why?' },
+      { t: 'Look left', d: 'When there’s a hedge in front, the helper should check its LEFT side too.' },
+      { t: 'If inside if', d: 'Replace “turn right” with an if … else: if the helper sees a block left, turn right, else turn left.' },
+      { t: 'Run it', d: 'Press Run and watch the helper find its own way to the gold square.' },
+      { t: 'Explain', d: 'Tell a partner the helper’s rules, in your own words.' },
+      { t: 'Challenge', d: 'Use “repeat until” so the helper stops by itself on the gold.' }
+    ]
+  },
+  {
+    id: 'academy-11-orchard', unit: 'Robot Helper Academy · Block 2 · Lesson 11', title: 'The orchard', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Logical operators: the helper harvests a plant on its left if it is a pumpkin OR a melon, and never digs the bushes. Pupils compare or and and, and use not.',
+    objective: 'We are learning to join conditions with and, or and not.',
+    success: ['I can join two conditions with or.', 'I can explain the difference between and and or.', 'I can use not to turn a condition round.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['or', 'true if either condition is true'], ['and', 'true only if both conditions are true'], ['not', 'turns true into false and false into true'], ['operator', 'a word or symbol that works on values']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 8, title: 'And or or?', html: '<p>“Stand up if you have a pet OR a sibling.” Then “…if you have a pet AND a sibling.” <b>Ask:</b> why did fewer stand the second time? Truth tables on the board (true/false for each).</p>' },
+      { min: 8, title: 'The orchard', html: '<p>Open the starter and talk to Farmer Bo. The starter picks pumpkins only. Run it: the melons are left. <b>Ask:</b> how can one if pick both?</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils use the <b>and/or</b> block from Logic, set to <b>or</b>, with two “=” conditions: block on the left = pumpkin, block on the left = melon. The bushes must survive.</p><p>Answer: if block the helper sees left = pumpkin <b>or</b> block the helper sees left = melon { dig left }.</p><p>Try <b>and</b> instead: nothing is picked — a block can’t be a pumpkin and a melon at once!</p>' },
+      { min: 12, title: 'Not', html: '<p>Show a different way: if <b>not</b> (block on the left = leaves) … — but it would dig empty spaces too (harmless here). <b>Ask:</b> which is clearer?</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils write one “or” and one “and” rule from real life.</p>' }
+    ],
+    support: 'Give the or block with one condition already inside.',
+    stretch: 'Count the harvest: a variable that goes up by 1 each time something is picked, said at the end.',
+    assess: ['Joins two conditions with or', 'Predicts the result with and', 'Explains not'],
+    steps: [
+      { t: 'Talk to Bo', d: 'Walk to Farmer Bo and press E. What should be picked, and what must stay?' },
+      { t: 'Run the starter', d: 'Press Run. What is left behind?' },
+      { t: 'Get an or', d: 'From Logic, drag the “and” block and change it to “or”.' },
+      { t: 'Two questions', d: 'Put “block the helper sees left = pumpkin” on one side and “… = melon” on the other.' },
+      { t: 'Use it', d: 'Put the or block into the if. Press Run.' },
+      { t: 'Try and', d: 'Change or to and and Run. What happens, and why?' },
+      { t: 'Challenge', d: 'Count the harvest in a variable and make the helper say it.' }
+    ]
+  },
+  {
+    id: 'academy-12-mine', unit: 'Robot Helper Academy · Block 2 · Lesson 12', title: 'The gold mine', ks: 'ks2', years: 'Years 4–5', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Repeat until: nobody knows how deep the gold is, so a counted loop won’t do. Pupils dig down until the helper’s sensor finds gold, and stop without digging it.',
+    objective: 'We are learning to use a loop that stops when a condition becomes true.',
+    success: ['I can explain the difference between repeat 5 and repeat until.', 'I can write a condition that stops a loop.', 'I can explain when to use each kind of loop.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['repeat until', 'keep going until a condition is true'], ['while', 'keep going while a condition is true'], ['condition', 'a question that is true or false'], ['infinite loop', 'a loop that never stops']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 8, title: 'Until…', html: '<p>“Keep clapping until I raise my hand.” <b>Ask:</b> did you know how many claps? Compare with “clap 5 times”. Introduce <b>repeat until</b>.</p>' },
+      { min: 8, title: 'The mine', html: '<p>Open the starter and talk to Miner Dag. The starter digs 3 times — not deep enough. <b>Ask:</b> could we just try bigger numbers? What if the gold were in a different place?</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils use <b>repeat while</b> from Loops, change it to <b>repeat until</b>, and use the condition block the helper sees <b>down = gold in stone</b>. Inside: dig down, move down 1.</p><p>Answer: repeat until block the helper sees down = gold in stone { helper dig down · helper move down 1 }. The helper stops one block above the gold.</p><p>Common bug: digging after the loop (the gold is gone, so the last task fails).</p>' },
+      { min: 12, title: 'Which loop?', html: '<p>Sort examples: “brush teeth for 2 minutes”, “stir until smooth”, “walk 10 steps”, “walk until you reach the door”. <b>Ask:</b> what is an infinite loop and how could we make one by mistake?</p>' },
+      { min: 7, title: 'Block 2 review', html: '<p>Recap: debugging, if, if … else, and/or/not, repeat until. Block 3 adds variables, events and our own blocks.</p>' }
+    ],
+    support: 'Build the loop together; pupils choose the condition.',
+    stretch: 'Count how deep the gold is in a variable and make the helper say it. Bring the helper back up to the top with another loop.',
+    assess: ['Uses repeat until with a sensor condition', 'Explains why a counted loop is not enough', 'Chooses the right loop for a job'],
+    steps: [
+      { t: 'Talk to Dag', d: 'Walk to Miner Dag and press E. How deep is the gold?' },
+      { t: 'Run the starter', d: 'Press Run. Did the helper reach the gold?' },
+      { t: 'Get the loop', d: 'From Loops, drag “repeat while” and change it to “repeat until”.' },
+      { t: 'The condition', d: 'From World, put “block the helper sees down = …” in it and choose gold in stone.' },
+      { t: 'Dig inside', d: 'Move the dig down and move down blocks INSIDE the loop. Delete the old repeat 3.' },
+      { t: 'Run it', d: 'Press Run. The helper should stop right on top of the gold.' },
+      { t: 'Challenge', d: 'Count how deep the gold is in a variable and make the helper say it.' }
+    ]
+  },
+  // ───────────── ROBOT HELPER ACADEMY · Block 3 "Smart helpers" (Years 5–6) ─────────────
+  {
+    id: 'academy-13-crops', unit: 'Robot Helper Academy · Block 3 · Lesson 13', title: 'Count the crops', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Variables: the helper walks a row of crops and counts the pumpkins in a variable (set to 0, change by 1 when it sees one), then says the total.',
+    objective: 'We are learning to use a variable to store and change a value while a program runs.',
+    success: ['I can create a variable and give it a starting value.', 'I can change a variable inside a loop.', 'I can use a variable’s value in my program.'],
+    curriculum: ['design', 'ssr', 'reason', 'data'],
+    words: [['variable', 'a named box that remembers a value'], ['set', 'give a variable a value'], ['change by', 'add to (or take from) a variable'], ['initialise', 'give a variable its starting value']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Optional: a box labelled “pumpkins” and counters for the warm-up'],
+    plan: [
+      { min: 8, title: 'A box with a name', html: '<p>Hold up a box labelled <b>pumpkins</b>. Walk along a row of pictures; each time you see a pumpkin, add a counter. At the end, read the box. <b>Ask:</b> what if we forgot to empty the box first?</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter and talk to Judge Mo. Show <b>Variables → Create variable</b> (pumpkins already exists in the starter: set to 0). Show <b>change pumpkins by 1</b> and the <b>pumpkins</b> value block.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils add an if inside the loop: if block the helper sees left = pumpkin, change pumpkins by 1. After the loop: helper say pumpkins. The task ticks when the helper says the right number.</p><p>Answer: pumpkins = 0 · repeat 12 { move forward 1 · if block left = pumpkin { change pumpkins by 1 } } · helper say pumpkins. (There are 7.)</p><p>Common bugs: setting to 0 inside the loop; saying inside the loop.</p>' },
+      { min: 12, title: 'Trace the variable', html: '<p>Trace table on the board: step, block on the left, pumpkins. <b>Ask:</b> what would happen if set pumpkins to 0 was inside the loop?</p>' },
+      { min: 7, title: 'Plenary', html: '<p><b>Ask:</b> where do games use variables? (Score, lives, time.)</p>' }
+    ],
+    support: 'Give the if block ready; pupils add the change block and the say block.',
+    stretch: 'Count melons too, in a second variable, and say both: use join.',
+    assess: ['Initialises a variable before a loop', 'Changes the variable inside the loop under a condition', 'Uses the variable’s value at the end'],
+    steps: [
+      { t: 'Talk to Mo', d: 'Walk to Judge Mo and press E. What must be counted?' },
+      { t: 'The variable', d: 'Find “set pumpkins to 0” in the starter. Open Variables to see the pumpkins blocks.' },
+      { t: 'Look left', d: 'Inside the loop, after the move, add an if: block the helper sees left = pumpkin.' },
+      { t: 'Count it', d: 'Inside the if, put “change pumpkins by 1”.' },
+      { t: 'Say it', d: 'After the loop (not inside it), add “helper say” with the pumpkins value block in it.' },
+      { t: 'Run it', d: 'Press Run. Does the helper say the right number? The task ticks if it does.' },
+      { t: 'Challenge', d: 'Count the melons too, in their own variable.' }
+    ]
+  },
+  {
+    id: 'academy-14-stairs', unit: 'Robot Helper Academy · Block 3 · Lesson 14', title: 'The staircase', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Variables with maths: a staircase where each step is one block taller. A height variable controls an inner loop and grows by 1 each time round the outer loop.',
+    objective: 'We are learning to use a variable that changes each time round a loop to control what the program does.',
+    success: ['I can use a variable as the number in a repeat.', 'I can change a variable each time round a loop.', 'I can predict the values a variable will take.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['variable', 'a named value that can change'], ['nested loop', 'a loop inside another loop'], ['increment', 'add 1 to a variable'], ['pattern', '1, 2, 3, 4… a rule that makes a sequence']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Interlocking cubes for the warm-up (optional)'],
+    plan: [
+      { min: 8, title: 'Cube stairs', html: '<p>Build a staircase of cubes: 1, 2, 3, 4. <b>Ask:</b> what is the rule? How many cubes for 6 steps? (21.)</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter and talk to Builder Val. The starter has <b>set height to 1</b>. Show a <b>repeat</b> block with the <b>height</b> value block in its number socket.</p>' },
+      { min: 26, title: 'Your turn', html: '<p>Pupils build: repeat 6 { repeat height { place stone bricks left · move up 1 } · move down height · move forward 1 · change height by 1 }.</p><p>Common bugs: change height outside the loop (all steps the same); forgetting to come down (the steps float).</p>' },
+      { min: 11, title: 'Trace', html: '<p>Trace table: time round, height, blocks placed, total. <b>Ask:</b> what would change height by 2 make?</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils explain how one variable controls the size of every step.</p>' }
+    ],
+    support: 'Give the inner loop (a column) already built; pupils put height into it and add the change.',
+    stretch: 'Make the steps go up by 2. Make the staircase go down again afterwards (change height by -1).',
+    assess: ['Uses a variable in a loop count', 'Changes the variable each iteration', 'Predicts the values with a trace table'],
+    steps: [
+      { t: 'Talk to Val', d: 'Walk to Builder Val and press E. How tall is each step?' },
+      { t: 'One column', d: 'Make a repeat with “helper place stone bricks left” and “helper move up 1” inside.' },
+      { t: 'Use height', d: 'From Variables, drag the height value into the repeat’s number.' },
+      { t: 'Come back down', d: 'After that repeat: helper move down — with height as the number — then move forward 1.' },
+      { t: 'Grow', d: 'Add “change height by 1”. Put all of this inside a repeat 6.' },
+      { t: 'Run it', d: 'Press Run. Are the steps 1, 2, 3, 4, 5, 6 tall?' },
+      { t: 'Challenge', d: 'Make it go back down again.' }
+    ]
+  },
+  {
+    id: 'academy-15-chat', unit: 'Robot Helper Academy · Block 3 · Lesson 15', title: 'Chat commands', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Events: pupils make their own chat command — “when I type lamps” — that runs when they type it. The number typed after the word goes into a variable, so “lamps 4” builds four lamp posts.',
+    objective: 'We are learning to write code that runs when an event happens, and to pass it a value.',
+    success: ['I can explain what an event is.', 'I can make code that runs when I type a word.', 'I can use the number typed after the word in my code.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['event', 'something that happens, which starts some code'], ['trigger', 'what starts the code'], ['input', 'a value given to the program'], ['parameter', 'the variable that holds the value typed (n)']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 8, title: 'Events everywhere', html: '<p>List events: the school bell, a doorbell, pressing a button on a game controller. <b>Ask:</b> what happens after each? The event is the trigger; the code is what happens.</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter and talk to Nia. The starter has <b>when I type lamps in the chat</b>. Type <b>lamps</b> in the chat box (press T or Enter): the helper says “Lamps coming!”.</p>' },
+      { min: 26, title: 'Your turn', html: '<p>Pupils put a <b>repeat n</b> inside the event, building a post 2 high with a lantern and moving on 3. They type <b>lamps 4</b>. Then <b>lamps 2</b> builds two more!</p><p>Answer: when I type lamps (n) { repeat n { place log left · move up 1 · place log left · move up 1 · place lantern left · move down 2 · move forward 3 } }.</p>' },
+      { min: 11, title: 'More commands', html: '<p>Pupils add a second command of their own (e.g. “bench”, “flowers”). <b>Ask:</b> what is the difference between “when Run is clicked” and “when I type…”?</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils explain event, trigger and parameter using their own command.</p>' }
+    ],
+    support: 'Give the post-building blocks; pupils put them in the repeat n.',
+    stretch: 'Make a “dark” command that makes it night, and a “day” command. Use the number to change the post height.',
+    assess: ['Explains what an event is', 'Builds code under a chat event', 'Uses the parameter n'],
+    steps: [
+      { t: 'Talk to Nia', d: 'Walk to Nia and press E.' },
+      { t: 'Try the command', d: 'Press T (or Enter), type lamps and press Enter. What happens?' },
+      { t: 'Repeat n', d: 'From Loops, put a repeat inside the event. From Variables, put n in its number.' },
+      { t: 'Build a post', d: 'Inside: place a tree trunk left, move up, another trunk, move up, a lantern, move down 2, move forward 3.' },
+      { t: 'Light it up', d: 'Type lamps 4 in the chat. Four lamp posts!' },
+      { t: 'Your own command', d: 'Make another “when I type …” command of your own.' }
+    ]
+  },
+  {
+    id: 'academy-16-huts', unit: 'Robot Helper Academy · Block 3 · Lesson 16', title: 'My own block', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Functions (procedures): pupils make their own block called hut that builds one beach hut and moves on, then use it three times. The main program becomes short and readable.',
+    objective: 'We are learning to make our own blocks (functions) to reuse code.',
+    success: ['I can make my own block with a name.', 'I can use (call) my block more than once.', 'I can explain why functions make programs easier to read and change.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['function', 'a named set of instructions you can use again (also called a procedure)'], ['define', 'make the block and say what it does'], ['call', 'use the block in your program'], ['decompose', 'break a big job into smaller named jobs']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 8, title: 'Named routines', html: '<p>A PE warm-up: “star jumps = jump, arms up, land, arms down”. Once we’ve defined star jumps, the coach just says “10 star jumps”. <b>Ask:</b> why is that easier?</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter and talk to Sol. In <b>My blocks</b>, see the block <b>hut</b> (already defined, with one block inside) and the <b>hut</b> call under “when Run is clicked”. Show how to make a new one: drag out <b>to do something</b> from My blocks and type a name.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils fill in the hut definition: 3 columns of planks 3 high with a roof tile on top, then move on 3. The main program: hut · hut · hut.</p><p>Answer: hut = repeat 3 { repeat 3 { place planks left · move up 1 } · place roof tiles left · move down 3 · move forward 1 } · move forward 3.</p><p>In Python it is <code>def hut():</code> and <code>hut()</code>.</p>' },
+      { min: 10, title: 'Change it once', html: '<p>Ask pupils to change the hut’s colour. <b>Ask:</b> how many places did you change? (One!) That is why functions help.</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils explain define and call.</p>' }
+    ],
+    support: 'Give the column (inner loop) ready; pupils put it in the hut block and call it three times.',
+    stretch: 'Make another block, flower_box, and call it between the huts.',
+    assess: ['Defines a function', 'Calls it more than once', 'Explains the benefit'],
+    steps: [
+      { t: 'Talk to Sol', d: 'Walk to Sol and press E. What does a hut front look like?' },
+      { t: 'Find your block', d: 'Open My blocks. The block “hut” is already made, with one block inside it.' },
+      { t: 'Build one hut', d: 'Inside the hut block: 3 columns of planks, 3 high, with roof tiles on top — then move forward 3.' },
+      { t: 'Test it', d: 'Press Run. Does one hut appear?' },
+      { t: 'Use it again', d: 'From My blocks, add two more “hut” blocks under the first.' },
+      { t: 'Change it once', d: 'Change the planks to another colour in the hut block. All three huts change!' }
+    ]
+  },
+  {
+    id: 'academy-17-towers', unit: 'Robot Helper Academy · Block 3 · Lesson 17', title: 'Towers of any height', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Functions with inputs: one block, tower(height), builds light towers 3, 5 and 7 tall. Pupils use the block’s input inside it (inputs are added with the gear on the block).',
+    objective: 'We are learning to give our own blocks inputs, so one block can do different things.',
+    success: ['I can add an input to my own block.', 'I can use the input inside the block.', 'I can call my block with different values.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['input (parameter)', 'a value you give a block when you use it'], ['argument', 'the actual value, like 3 in tower(3)'], ['function', 'a named block you made'], ['generalise', 'make one solution work for many cases']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 8, title: 'One recipe, many sizes', html: '<p>“Make a sandwich with ___ slices of cheese.” <b>Ask:</b> do we need a new recipe for each number? Introduce <b>input</b>.</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter and talk to Kai. The block <b>tower</b> has an input called <b>height</b>. Show how to use the height value inside, and how tower(3) passes 3 in.</p>' },
+      { min: 26, title: 'Your turn', html: '<p>Pupils finish tower: repeat height { place stone bricks left · move up 1 } · place lantern left · move down height · move forward 5. Then call tower 3, tower 5, tower 7.</p><p>Each tower task ticks when the tower on its gold mark is the right height (with its lantern).</p>' },
+      { min: 11, title: 'Compare', html: '<p>Compare with Lesson 16 (no input) and Lesson 14 (a variable). <b>Ask:</b> how is an input like a variable?</p>' },
+      { min: 7, title: 'Plenary', html: '<p>Pupils write a call for a tower 10 tall and say what would happen.</p>' }
+    ],
+    support: 'Give the full tower block; pupils only change the numbers in the calls.',
+    stretch: 'Add a second input, colour… or a gap input to change the move forward.',
+    assess: ['Adds and uses an input', 'Calls the block with different arguments', 'Explains generalisation'],
+    steps: [
+      { t: 'Talk to Kai', d: 'Walk to Harbourmaster Kai and press E. How tall must the towers be?' },
+      { t: 'Find tower', d: 'Open My blocks. The tower block has an input called height.' },
+      { t: 'Use height', d: 'Inside tower: repeat height times — place stone bricks left, move up 1.' },
+      { t: 'Lantern and back', d: 'Then place a lantern left, move down height, move forward 5.' },
+      { t: 'Three towers', d: 'Under “when Run is clicked”: tower 3, tower 5, tower 7. Press Run.' },
+      { t: 'Check the gold marks', d: 'Each tower should stand on a gold mark. The tasks tick when they are right.' },
+      { t: 'Challenge', d: 'Add a second input to change the gap between towers.' }
+    ]
+  },
+  {
+    id: 'academy-18-district', unit: 'Robot Helper Academy · Block 3 · Lesson 18', title: 'Design your district', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'The final project: pupils plan and code their own part of Pebble Island using functions, variables and selection, then test, improve and present it.',
+    objective: 'We are learning to design, write and improve a program that uses functions, variables and selection.',
+    success: ['I can plan a program and split it into functions.', 'I can use a variable and an if in my own project.', 'I can test my project and improve it.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['design', 'a plan for what you will make'], ['decompose', 'split a big job into smaller parts'], ['function', 'a named block you made'], ['evaluate', 'judge how well it works and what to improve']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Squared paper for the plan'],
+    plan: [
+      { min: 10, title: 'Plan', html: '<p>Open the starter and talk to Mayor Juno. Pupils plan their district on squared paper and list the parts that repeat — each becomes a function (house, tree, lamp…).</p>' },
+      { min: 30, title: 'Build', html: '<p>Pupils code their district. Tasks: at least 40 blocks in the plot, and a function, a variable and an if in the code. Hand building is allowed for decoration; the main structures should be coded.</p><p>Example idea: def house(size) builds a square of size; a variable counts houses; if it’s the 2nd house, make it red.</p>' },
+      { min: 12, title: 'Show and tell', html: '<p>Pupils present: “My function … builds … My variable … My if decides …”. Peers give one star and one wish.</p>' },
+      { min: 8, title: 'Graduation', html: '<p>Recap all three blocks: algorithms, sequence, loops, debugging, selection, operators, repeat until, variables, events, functions. Celebrate the Robot Helper Academy graduates!</p>' }
+    ],
+    support: 'Provide a house function to adapt; pupils add a variable and an if.',
+    stretch: 'Use a function with two inputs. Add chat commands to build parts on demand.',
+    assess: ['Plans before coding', 'Uses functions, a variable and selection purposefully', 'Evaluates and improves their program'],
+    steps: [
+      { t: 'Talk to Juno', d: 'Walk to Mayor Juno and press E.' },
+      { t: 'Plan it', d: 'Draw your district on squared paper. Which parts repeat? Each one can be your own block.' },
+      { t: 'Make a block', d: 'In My blocks, drag out “to do something”, name it (like house), put code inside and test it.' },
+      { t: 'Add a variable', d: 'Use a variable — maybe for a size, or to count what you build.' },
+      { t: 'Add an if', d: 'Use an if — maybe to choose a colour, or to build something only sometimes.' },
+      { t: 'Check the tasks', d: '40 blocks in the plot, your own block, a variable and an if.' },
+      { t: 'Show it off', d: 'Tell a partner what your blocks do. What would you improve?' }
+    ]
   }
 ];
 
 const SLIDES = {
+  'academy-7-bridge': [
+    { t: 'Bugs', lead: 'A bug is a mistake that makes a program do the wrong thing.', b: ['Expected: what we thought would happen', 'Actual: what really happened'], notes: 'Recipe with a mistake as the warm-up.' },
+    { t: 'The broken bridge', pic: true, b: ['Odo’s program has TWO bugs', 'Watch it run before changing anything'], notes: 'Run the starter on the board and watch together.' },
+    { t: 'How to debug', b: ['1. Watch it run', '2. Expected vs actual', '3. Find the FIRST thing that went wrong', '4. Change one thing', '5. Test again'], notes: 'Pupils keep a bug log.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'Which bug was hardest to find? Why?', notes: 'Answer: move forward 3 (not 2) and repeat 5 (not 4).' }
+  ],
+  'academy-8-lighthouse': [
+    { t: 'Predict first', q: 'How tall will this build? Where will the lamp go?', code: 'repeat 6:\n    move up 1\n    place white forward\nplace lamp up', notes: 'Votes before running.' },
+    { t: 'Trace a loop', table: [['Time round', 'Helper height', 'Block placed at'], ['1', '2', '2'], ['2', '3', '3'], ['3', '4', '4']], q: 'What is at height 1?', notes: 'Nothing: the move comes before the place.' },
+    { t: 'The lighthouse', pic: true, b: ['8 blocks tall', 'Starting on the ground', 'Lamp on top'], notes: 'Three bugs: count, order, lamp direction.' },
+    { use: 'steps' },
+    { t: 'Off by one', lead: 'Loops that run one time too many or too few are very common bugs.', notes: 'Answer: repeat 8 { place white forward · move up 1 } · place lamp forward.' }
+  ],
+  'academy-9-beach': [
+    { t: 'If…', q: 'Stand up IF you are wearing blue.', notes: 'The condition decides who stands.' },
+    { t: 'Condition', lead: 'A condition is a question that is true or false.', b: ['Is the block below cobblestone?', 'true → dig it', 'false → leave it'], notes: 'Selection = choosing what to do.' },
+    { t: 'The rocky beach', pic: true, b: ['Dig up the rocks', 'Keep the sand'], notes: 'Show why “dig every step” fails the sand task.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'How many times did the helper check the condition?', notes: '12 — once every time round the loop. Next: if … else.' }
+  ],
+  'academy-10-maze': [
+    { t: 'Blindfold maze', q: 'If there is a wall in front, which way should you turn?', notes: 'Act it out with desks.' },
+    { t: 'If … else', code: 'if hedge in front:\n    if hedge on the left:\n        turn right\n    else:\n        turn left\nelse:\n    move forward 1', notes: 'An if inside an if: nested.' },
+    { t: 'The hedge maze', pic: true, b: ['Don’t plan every step', 'Write rules the helper repeats'], notes: 'The starter only turns right, so it gets stuck.' },
+    { use: 'steps' },
+    { t: 'Rules vs routes', q: 'Would your code work in a different maze?', notes: 'Rules work in any corridor maze; a planned route only works in one.' }
+  ],
+  'academy-11-orchard': [
+    { t: 'And or or?', b: ['Stand up if you have a pet OR a sibling', 'Stand up if you have a pet AND a sibling'], notes: 'Fewer stand for and.' },
+    { t: 'Truth table', table: [['pumpkin?', 'melon?', 'or', 'and'], ['true', 'false', 'true', 'false'], ['false', 'true', 'true', 'false'], ['false', 'false', 'false', 'false']], notes: 'A block can’t be both, so “and” never picks anything.' },
+    { t: 'The orchard', pic: true, b: ['Pick pumpkins OR melons', 'Keep the bushes'], notes: 'The starter only picks pumpkins.' },
+    { use: 'steps' },
+    { t: 'Not', lead: '“not” turns true into false.', q: 'Could “if not bush” work here?', notes: 'It would also dig empty spaces, which is harmless here but less clear.' }
+  ],
+  'academy-12-mine': [
+    { t: 'Until…', q: 'Keep clapping until I raise my hand. How many claps?', notes: 'Nobody knew the number in advance.' },
+    { t: 'Two kinds of loop', table: [['repeat 5', 'repeat until'], ['you know how many times', 'you know when to stop'], ['walk 10 steps', 'walk until you reach the door']], notes: 'While = until turned round.' },
+    { t: 'The gold mine', pic: true, b: ['How deep is the gold? Nobody knows!', 'Stop right on top of it'], notes: 'The starter digs only 3 times.' },
+    { use: 'steps' },
+    { t: 'Block 2 done!', b: ['Debugging', 'If and if … else', 'And, or, not', 'Repeat until'], notes: 'Next: variables, events and our own blocks.' }
+  ],
+  'academy-13-crops': [
+    { t: 'A box with a name', lead: 'A variable is a named box that remembers a value.', notes: 'Use a real box labelled pumpkins and counters.' },
+    { t: 'Three things to do', b: ['Set it: pumpkins = 0 (before the loop)', 'Change it: pumpkins + 1 (when you see one)', 'Use it: say pumpkins (after the loop)'], notes: 'Common bugs: set inside the loop, say inside the loop.' },
+    { t: 'Count the crops', pic: true, b: ['12 plants in the row', 'How many are pumpkins?'], notes: 'There are 7.' },
+    { use: 'steps' },
+    { t: 'Trace it', table: [['Step', 'On the left', 'pumpkins'], ['1', 'pumpkin', '1'], ['2', 'melon', '1'], ['3', 'pumpkin', '2']], q: 'Where do games use variables?', notes: 'Score, lives, time.' }
+  ],
+  'academy-14-stairs': [
+    { t: 'Cube stairs', q: '1, 2, 3, 4… how many cubes for 6 steps?', notes: '21.' },
+    { t: 'A loop inside a loop', code: 'height = 1\nrepeat 6:\n    repeat height:\n        place, move up\n    move down height\n    move forward 1\n    height = height + 1', notes: 'The variable controls the inner loop.' },
+    { t: 'The staircase', pic: true, b: ['Steps 1 to 6 tall', 'Up to the castle'], notes: 'Builder Val explains.' },
+    { use: 'steps' },
+    { t: 'Trace it', table: [['Time round', 'height', 'Total blocks'], ['1', '1', '1'], ['2', '2', '3'], ['3', '3', '6'], ['6', '6', '21']], notes: 'What would change height by 2 do?' }
+  ],
+  'academy-15-chat': [
+    { t: 'Events', b: ['The bell rings → go to class', 'Doorbell → open the door', 'Press A → jump'], notes: 'The event triggers the code.' },
+    { t: 'Your own command', code: 'when I type lamps (n):\n    repeat n:\n        build a lamp post\n        move forward 3', notes: 'The number typed after the word goes into n.' },
+    { t: 'The promenade', pic: true, b: ['Type: lamps 4', 'Four lamp posts!'], notes: 'Press T or Enter to open the chat.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'What is the difference between “when Run is clicked” and “when I type …”?', notes: 'Different events. A program can have many.' }
+  ],
+  'academy-16-huts': [
+    { t: 'Star jumps', lead: 'Once a coach has defined “star jumps”, they just say “10 star jumps”.', notes: 'A function is a named routine.' },
+    { t: 'Define and call', code: 'define hut:\n    build one hut front\n    move on\n\nhut\nhut\nhut', notes: 'Python: def hut(): … and hut()' },
+    { t: 'Beach huts', pic: true, b: ['Three huts, all the same', 'One block that builds a hut'], notes: 'Sol explains.' },
+    { use: 'steps' },
+    { t: 'Change it once', q: 'How many places did you change to recolour all the huts?', notes: 'One. That is the power of functions.' }
+  ],
+  'academy-17-towers': [
+    { t: 'One recipe, many sizes', q: 'Do we need a new recipe for 2 slices of cheese and for 3?', notes: 'No: the recipe takes an input.' },
+    { t: 'Inputs', code: 'define tower(height):\n    repeat height:\n        place, move up\n    lantern\n\ntower(3)\ntower(5)\ntower(7)', notes: 'height is the input; 3, 5 and 7 are the values passed in.' },
+    { t: 'The harbour lights', pic: true, b: ['Towers 3, 5 and 7 tall', 'A lantern on each'], notes: 'Each tower stands on a gold mark.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'How is an input like a variable?', notes: 'It is a variable that gets its value when the block is used.' }
+  ],
+  'academy-18-district': [
+    { t: 'Your district', pic: true, b: ['Plan it', 'Code it with your own blocks', 'Use a variable and an if'], notes: 'Mayor Juno gives each pupil a plot.' },
+    { t: 'Plan first', b: ['What will you build?', 'Which parts repeat? → your own blocks', 'What could change? → a variable', 'What needs a decision? → an if'], notes: 'Squared paper.' },
+    { use: 'steps' },
+    { t: 'Show and tell', lead: '“My block … builds … My variable … My if decides …”', notes: 'One star and one wish each.' },
+    { t: 'Academy graduates!', b: ['Algorithms and sequence', 'Loops and efficiency', 'Debugging and selection', 'Variables, events and functions'], notes: 'Celebrate!' }
+  ],
   'academy-1-crate': [
     { t: 'Be the robot', q: 'Which instruction can a robot follow?', b: ['“Go round there and get the box.”', '“Forward 3. Turn right. Forward 2.”'], notes: 'Act it out with a pupil “robot” who can only go forward a number of steps, turn left or turn right. Try the vague instruction first.' },
     { t: 'Algorithm', lead: 'An algorithm is a set of exact steps, in the right order, to do a job.', notes: 'Say the word together. Our robot algorithm used numbers and turns.' },

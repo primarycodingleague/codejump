@@ -15,7 +15,7 @@ const STEP = 0.18, ACT = 0.1; // seconds per helper move / place / dig
 const numOf = v => { const n = Number(v); return isFinite(n) ? n : 0; };
 
 export function createRunner(world, io = {}) {
-  let tops = [], fibers = [], vars = Object.create(null), live = false, allow = null, steps = 0;
+  let tops = [], fibers = [], vars = Object.create(null), live = false, allow = null, steps = 0, procs = Object.create(null), depth = 0;
   const helper = { x: 32, y: 13, z: 30, f: 0, from: null, t: 1, trail: 0 };
 
   const field = (b, n) => (b && b.fields ? b.fields[n] : undefined);
@@ -92,6 +92,15 @@ export function createRunner(world, io = {}) {
         if (es.hasElse) yield* runSeq(input(b, 'ELSE'));
         return;
       }
+      case 'procedures_callnoreturn': { // one of your own blocks ("make a block" / def): its inputs are variables while it runs
+        const es = b.extraState || {}, pr = procs[String(es.name || '').toLowerCase()];
+        if (!pr) throw new Error('There’s no block called “' + (es.name || '?') + '”. Make it first (My blocks → Make a block).');
+        if (depth > 40) throw new Error('“' + es.name + '” keeps using itself — it would never stop.');
+        const args = pr.params.map((_, i) => val(input(b, 'ARG' + i))), saved = pr.params.map(k => vars[k]);
+        pr.params.forEach((k, i) => { vars[k] = args[i]; });
+        depth++; try { yield* runSeq(pr.body); } finally { depth--; pr.params.forEach((k, i) => { vars[k] = saved[i]; }); }
+        return;
+      }
       case 'variables_set': vars[varId(field(b, 'VAR'))] = val(input(b, 'VALUE')); return;
       case 'math_change': { const k = varId(field(b, 'VAR')); vars[k] = numOf(vars[k]) + numOf(val(input(b, 'DELTA'))); return; }
       case 'cr_wait': yield Math.max(0, Math.min(600, numOf(val(input(b, 'S'))))); return;
@@ -128,7 +137,10 @@ export function createRunner(world, io = {}) {
 
   return {
     helper,
-    load(state) { tops = ((state && state.blocks && state.blocks.blocks) || []).slice().sort((a, b) => (a.y || 0) - (b.y || 0)); },
+    load(state) {
+      tops = ((state && state.blocks && state.blocks.blocks) || []).slice().sort((a, b) => (a.y || 0) - (b.y || 0)); procs = Object.create(null);
+      for (const t of tops) if (t.type === 'procedures_defnoreturn') procs[String(field(t, 'NAME') || '').toLowerCase()] = { params: ((t.extraState && t.extraState.params) || []).map(q => q.id || q.name), body: input(t, 'STACK') };
+    },
     start() { this.stop(); vars = Object.create(null); for (const t of tops) if (t.type === 'cr_on_run') spawn(t.next && t.next.block); live = true; },
     chat(word, args) {
       word = String(word || '').toLowerCase(); let hit = false;

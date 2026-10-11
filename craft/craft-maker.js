@@ -6,11 +6,11 @@
  *     npcs:[{id,name,x,y,z,f,colour,lines:[…],task,done}]   characters you talk to (click them or press E near them)
  *     zones:[{id,name,a:[x,y,z],b:[x,y,z],msg,show,colour}] areas: a pop-up when you walk in, task targets, protected spots
  *     tasks:[{id,type,text,…}]                              the checklist (see TASK_TYPES)
- *     rules:{build,break,fly,python,blocks:[ids]|null,code:'all'|'helper'|'builder'|'none',protect:[zone ids]}
+ *     rules:{build,break,fly,python,blocks:[ids]|null,code:'all'|'helper'|'builder'|'none',protect:[zone ids],reset (each Run starts the world + helper again)}
  *     challenge:{on,time (s, 0 = no limit),par (blocks for 3 stars)} }
  * and `progress` { done:[task ids], best:{time,blocks} } so a hand-in shows how far a pupil got.
  *
- *   cleanMaker(m) → a safe copy (or null) · createChecker(maker) → {check(ctx) → [newly done ids], done, talk(id), chat(word), reset()}
+ *   cleanMaker(m) → a safe copy (or null) · createChecker(maker) → {check(ctx) → [newly done ids], done, talk(id), chat(word), seen(helper), reset()}
  *   makeMaze(world, zone, opts) · programStats(state) · EXAMPLES / exampleProject(id)
  */
 import { createWorld, W, H, D, GROUND, NBLOCKS, BY_NAME, isSolid } from './craft-world.js';
@@ -51,7 +51,7 @@ const volume = z => { const b = box(z); return (b.x1 - b.x0 + 1) * (b.y1 - b.y0 
 
 export function blankMaker() {
   return { v: 1, title: 'My world', intro: '', lock: '', start: null, helper: null, startWorld: null, npcs: [], zones: [], tasks: [],
-    rules: { build: true, break: true, fly: true, python: true, blocks: null, code: 'all', protect: [] }, challenge: { on: false, time: 0, par: 0 } };
+    rules: { build: true, break: true, fly: true, python: true, blocks: null, code: 'all', protect: [], reset: false }, challenge: { on: false, time: 0, par: 0 } };
 }
 
 export function cleanMaker(m) {
@@ -90,7 +90,7 @@ export function cleanMaker(m) {
   const r = m.rules && typeof m.rules === 'object' ? m.rules : {};
   out.rules = { build: r.build !== false, break: r.break !== false, fly: r.fly !== false, python: r.python !== false,
     blocks: Array.isArray(r.blocks) ? [...new Set(r.blocks.map(Number).filter(v => Number.isInteger(v) && v > 0 && v < NBLOCKS))].slice(0, NBLOCKS) : null,
-    code: ['all', 'helper', 'builder', 'none'].includes(r.code) ? r.code : 'all', protect: (Array.isArray(r.protect) ? r.protect : []).filter(z => zIds.has(z)) };
+    code: ['all', 'helper', 'builder', 'none'].includes(r.code) ? r.code : 'all', protect: (Array.isArray(r.protect) ? r.protect : []).filter(z => zIds.has(z)), reset: !!r.reset };
   if (out.rules.blocks && !out.rules.blocks.length) out.rules.blocks = null;
   const c = m.challenge && typeof m.challenge === 'object' ? m.challenge : {};
   out.challenge = { on: !!c.on, time: int(c.time, 0, 3600, 0), par: int(c.par, 0, 500, 0) };
@@ -133,14 +133,14 @@ export function stars(blocks, par) { if (!par) return 3; return blocks <= par ? 
 
 // checks the tasks. ctx = {world, player:{x,y,z}, helper:{x,y,z}, program (Blockly JSON)}
 export function createChecker(maker) {
-  const done = new Set(), talked = new Set(), chatted = new Set();
+  const done = new Set(), talked = new Set(), chatted = new Set(), trail = new Set(); // trail = every cell the helper has stood in (so a quick pass still counts)
   const zone = idz => maker.zones.find(z => z.id === idz);
   const each = (z, fn) => { const b = box(z); for (let y = b.y0; y <= b.y1; y++) for (let zz = b.z0; zz <= b.z1; zz++) for (let x = b.x0; x <= b.x1; x++) if (fn(x, y, zz) === false) return false; return true; };
   function ok(t, ctx) {
     const z = t.zone && zone(t.zone); const w = ctx.world;
     switch (t.type) {
       case 'visit': { const p = ctx.player; return !!(p && z && (inZone(z, Math.floor(p.x), Math.floor(p.y), Math.floor(p.z)) || inZone(z, Math.floor(p.x), Math.floor(p.y + 1), Math.floor(p.z)))); }
-      case 'helper': { const h = ctx.helper; return !!(h && z && inZone(z, h.x, h.y, h.z)); }
+      case 'helper': { const h = ctx.helper; if (h && z && inZone(z, h.x, h.y, h.z)) return true; if (!z) return false; for (const k of trail) { const c = k.split(',').map(Number); if (inZone(z, c[0], c[1], c[2])) return true; } return false; }
       case 'talk': return talked.has(t.npc);
       case 'chat': return chatted.has(t.word);
       case 'uses': return programTypes(ctx.program).some(FEATURE_TYPES[t.feature] || (() => false));
@@ -157,7 +157,8 @@ export function createChecker(maker) {
   }
   return {
     done, talk(n) { talked.add(n); }, chat(word) { chatted.add(String(word).toLowerCase()); },
-    reset() { done.clear(); talked.clear(); chatted.clear(); },
+    seen(h) { if (h && trail.size < 5000) trail.add(h.x + ',' + h.y + ',' + h.z); }, forget() { trail.clear(); },
+    reset() { done.clear(); talked.clear(); chatted.clear(); trail.clear(); },
     restore(ids) { for (const i of ids || []) done.add(i); },
     check(ctx) { const fresh = []; for (const t of maker.tasks) if (!done.has(t.id) && ok(t, ctx)) { done.add(t.id); fresh.push(t.id); } return fresh; },
     complete() { return maker.tasks.length > 0 && maker.tasks.every(t => done.has(t.id)); },
@@ -188,7 +189,7 @@ export function makeMaze(world, zone, opts = {}) {
 
 // ── ready-made worlds ────────────────────────────────────────────────────────
 const P = s => L.fromPython(s).state;
-function project(world, maker, py, extra = {}) {
+export function project(world, maker, py, extra = {}) {
   const m = cleanMaker(maker); m.startWorld = world.save();
   return Object.assign({ v: 1, mode: 'blocks', blocks: P(py == null ? 'player.say("Let’s go!")\n' : py), world: m.startWorld, player: { x: m.start.x, y: m.start.y, z: m.start.z, yaw: m.start.yaw, pitch: -0.2, fly: false },
     helper: m.helper, time: 'DAY', hot: null, maker: m }, extra);

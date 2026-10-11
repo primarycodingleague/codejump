@@ -31,13 +31,36 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Robot Helper Academy (Build Lab lesson unit; 11 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: "like Minecraft Education's CS units… our own"
+- **Our own unit**, modelled only on the SKILL ORDER of a standard computing progression (Minecraft Education's "Coding FUNdamentals" goes
+  algorithms/sequence/loops → debugging/conditionals/operators/loops → variables/events/functions). NEVER copy their worlds, characters,
+  story or lesson text; Charlie was told their world files can't be converted. Story: the robot helper fixes up **Pebble Island**.
+- **Block 1 (Years 3–4) DONE:** `craft/craft-academy.js` (no DOM) — `ACADEMY` list, `academyProject(id)` (an island world + `maker`:
+  one character, tasks, rules), `ACADEMY_ANSWERS[id]` (Python that finishes it). 1 `academy-1-crate` algorithms (plan on paper; route
+  F4 R F5 L F5) · 2 `academy-2-post` long sequence, decompose, 3 letterbox stops (route built by `route()`, houses checked off the path)
+  · 3 `academy-3-flowers` place RIGHT + move ×5 · 4 `academy-4-fence` repeat 10 {place LOG LEFT; move} · 5 `academy-5-pen` challenge,
+  par 5: trail LOG + repeat 4 {move 5; turn right} (the last step is blocked by its own trail = "the gate") · 6 `academy-6-market`
+  project, 30 blocks in the square + a loop (code 'all', build by hand allowed, no reset).
+- **World Maker additions for it:** `rules.reset` (Settings: "Each Run starts again" — `onRun` reloads `startWorld` and puts the helper
+  back, player stays; lessons 1–5 use it) and the checker's helper trail (`checker.seen(helper)` every frame, `forget()`; a `helper` task
+  counts any square the helper passed through, since a 0.25 s check could miss a 0.18 s step). `M.project` is now exported.
+- **Lessons:** lessons.js entries with `unit: 'Robot Helper Academy · Block 1 · Lesson N'` (shown on library cards + the detail page;
+  `lessonPathHTML` links the unit's previous/next lesson instead of the band progression), slides, steps; starters from
+  `lessons/builds/academy-*.mjs` (make-starters closes the welcome and uses the Helper camera for the picture). Build Lab **Worlds** gallery
+  has an Academy section (`[data-ac]`). The lesson checklist `.cr-lesson` now sits at top 56px (it covered the Make/Worlds buttons).
+- Tests: tests/craft.test.mjs (each answer finishes every task in Node, each starter doesn't, pen par/stars, fence without a loop, the
+  helper trail; app: gallery lists 6, every Run starts again, the fence answer finishes the lesson). lessons.test.mjs opens every starter.
+- **Next:** Block 2 (Years 4–5): 7–8 debugging, 9 if, 10 if/else + detect (maze), 11 operators, 12 repeat until/while. Block 3 (Years 5–6):
+  13–14 variables, 15 events (chat commands), 16–17 functions (NEEDS a new "make a block" = Blockly procedures + Python `def`, in
+  craft-lang toPython/fromPython + runner), 18 own district project.
+
 ## iPad offline mode (8 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: school networks block CodeJump as "gaming"; "only make this available for iPads"
 - **iPads only.** A tiny head script sets `CJ_IPAD` (UA has iPad, or Macintosh + touch = iPadOS) and only then adds the manifest
   (`app.webmanifest`, icons `home/icon-180/192/512.png` made from the logo), apple-touch-icon and the Home Screen meta tags. Main script
   "OFFLINE (iPad)" block: `CJ_STANDALONE` (opened from the Home Screen), `CJ_OFFLINE_ON`, `offPrepare`, `offRender`, `offOpen`/`offFill`
   (`#offline-modal`), header button `#h-offline` (`.hm-offline`, icon `i-offline`), progress pill `#cj-offpill`. Laptops etc. get NOTHING
-  (no SW, no manifest, button hidden; tested). The What's New iPad line (`iPads:` prefix) is filtered off non-iPads (`cjWhatsNewLines`),
-  and non-iPads that had seen `CJ_WHATSNEW_NOT_IPAD` ('2026.10.11') don't get the popup for 2026.10.12.
+  (no SW, no manifest, button hidden; tested). What's New lines starting `iPads:` are shown only on iPads (`cjWhatsNewLines`; the
+  popup is skipped when a device has no lines).
 - **How:** `offline/make-list.mjs` writes `offline.json` = {v, files:[[path,size,sha256-16]], ext:[Blockly 10.4.3 core+media, Google
   Fonts CSS (its woff2 files are found and stored too), the two jsdelivr micro:bit libs]} — index.html, app.webmanifest, the micro:bit hex
   and home/ craft/ critter/ world/ robot/ ai/ train/ lessons/ (NOT critter/guides videos, lessons/builds, *.md); ~31 MB. In the Home Screen

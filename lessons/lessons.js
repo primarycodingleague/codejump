@@ -4,7 +4,7 @@
  * built by make-starters.mjs) and the pupil steps that CodeJump shows in its "Lesson" card while pupils work.
  * The host (build-and-play.html) lazy-loads this file the first time someone opens Lessons.
  *
- * Fields: id · title · ks ('ks1'|'ks2') · years · minutes · type (projectType of the starter) · tool (what pupils
+ * Fields: id · unit? (e.g. 'Robot Helper Academy · Block 1 · Lesson 1') · title · ks ('ks1'|'ks2') · years · minutes · type (projectType of the starter) · tool (what pupils
  * use, in words) · summary · objective ("We are learning to …") · success (pupil "I can" statements) · curriculum
  * (objective keys: alg/debug1/predict/create1 for ages 5–7, design/ssr/reason/data/safe for 7–11 — curricula.js turns them into each
  * country's official statements) · words [[word, meaning]] · need · plan [{min, title, html}] · support · stretch ·
@@ -616,10 +616,221 @@ export const LESSONS = [
       { t: 'Make it spin', d: 'From Control, add “forever” at the very end. From Motion, put a “turn … by x 0 y 45 z 0 degrees” block inside it, choose star, and change 45 to 5. Press Run!' },
       { t: 'Challenge', d: 'Build a staircase! In Variables, press Create variable and call it up. Set up to 1 before the loop, put up in the box’s height, and change up by 1 inside the loop.' }
     ]
+  },
+  // ───────────── ROBOT HELPER ACADEMY · Block 1 (Build Lab, Years 3–4). Worlds: craft/craft-academy.js ─────────────
+  {
+    id: 'academy-1-crate', unit: 'Robot Helper Academy · Block 1 · Lesson 1', title: 'The lost crate', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'The first Academy lesson. Pupils plan a route for the robot helper on paper as an algorithm (arrows and numbers), then turn their plan into blocks and test it on Pebble Island’s harbour.',
+    objective: 'We are learning to plan an algorithm and turn it into code.',
+    success: ['I can write an algorithm as clear steps in the right order.', 'I can turn my plan into blocks.', 'I can test my code and change it until it works.'],
+    curriculum: ['design', 'reason'],
+    words: [['algorithm', 'a set of exact steps, in order, to do a job'], ['code', 'instructions a computer can follow'], ['sequence', 'the order the steps run in'], ['test', 'run the code to see if it does what you planned']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Squared paper and a pencil each (for the plan)', 'Optional: a printed grid on the floor for the warm-up'],
+    plan: [
+      { min: 8, title: 'Be the robot', html: '<p>Make a route between desks. One pupil is the “robot” and can only do three things: <b>forward (a number of steps)</b>, <b>turn left</b>, <b>turn right</b>. The class gives instructions to reach a box. Try a vague one first (“go round there”). <b>Ask:</b> why didn’t that work? Introduce <b>algorithm</b>: exact steps, in the right order.</p>' },
+      { min: 8, title: 'Meet Pebble Island', html: '<p>Open the starter on the board. Explain the unit: the island needs help, and in each lesson the robot helper learns something new. Walk to Captain Marlo (arrow keys or WASD; drag to look) and press <b>E</b> to talk. Point out the grey gravel path and the crate at the end.</p>' },
+      { min: 12, title: 'Plan on paper', html: '<p>Pupils switch the camera to <b>Helper</b> to see from above, then draw the path on squared paper and write the algorithm as arrows: <b>↑4 ⟳ ↑5 ⟲ ↑5</b> (forward 4, turn right, forward 5, turn left, forward 5). Pairs swap plans and “run” each other’s with a finger. <b>Ask:</b> does the helper turn on the spot, or move while it turns? (On the spot.)</p>' },
+      { min: 24, title: 'Code it', html: '<p>Pupils build their plan with <b>Helper</b> blocks under <b>when Run is clicked</b> and press <b>Run</b>. Every Run starts the helper back at the beginning, so they can change a number and try again. Praise testing and fixing: “What did it do? What did you expect? Which step is different?”</p>' },
+      { min: 8, title: 'Plenary', html: '<p>Show one program on the board and read it as an algorithm. <b>Ask:</b> did anyone have a different algorithm that still worked? Is one better? (Both are fine if they work — next lessons we will care about the number of blocks.)</p><p>Answer: forward 4, turn right, forward 5, turn left, forward 5.</p>' }
+    ],
+    support: 'Give pupils the route already drawn on squared paper; they just count the squares and write the numbers.',
+    stretch: 'Write the algorithm for a different route to the crate (going the other way round the crate stacks). Write the plan for a friend’s route home from the quay.',
+    assess: ['Writes the route as an ordered set of steps', 'Turns the plan into a matching sequence of blocks', 'Finds which step is wrong when the helper goes the wrong way, and fixes it'],
+    steps: [
+      { t: 'Meet the captain', d: 'Click “Let’s go!”. Walk to Captain Marlo with the arrow keys (or W A S D) and press E to talk.' },
+      { t: 'Look from above', d: 'Press the Helper camera button to see the helper. Find the grey gravel path and the crate at the end.' },
+      { t: 'Plan it on paper', d: 'Draw the path on squared paper. Write each step: forward how many? Then turn left or right?' },
+      { t: 'Build your plan', d: 'In the Blocks tab, open Helper. Join “helper move forward” and “helper turn” blocks under “when Run is clicked”, in the order of your plan.' },
+      { t: 'Test it', d: 'Press Run. Did the helper follow the path? Every Run starts it back at the beginning, so change a number and try again.' },
+      { t: 'Reach the crate', d: 'Keep testing until the helper reaches the crate. The task ticks itself off.' },
+      { t: 'Challenge', d: 'Write your algorithm out as arrows for a friend. Can they follow it with a finger on the screen?' }
+    ]
+  },
+  {
+    id: 'academy-2-post', unit: 'Robot Helper Academy · Block 1 · Lesson 2', title: 'The post round', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'A longer sequence: the helper delivers letters to three houses along a winding path. Pupils build and test their code a chunk at a time, and learn that the order of the steps matters.',
+    objective: 'We are learning to build a long sequence by breaking it into parts and testing each part.',
+    success: ['I can break a long job into smaller parts.', 'I can test my code a bit at a time.', 'I can find the first mistake in a sequence and fix it.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['sequence', 'steps that run one after another, in order'], ['decompose', 'break a big job into smaller parts'], ['bug', 'a mistake in the code'], ['debug', 'find and fix the mistake']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Squared paper (optional, for planning)'],
+    plan: [
+      { min: 6, title: 'Order matters', html: '<p>Write three steps of making toast on the board in the wrong order (eat it, put bread in, butter it). <b>Ask:</b> what is wrong? A <b>sequence</b> only works in the right order. Recap last lesson’s algorithm.</p>' },
+      { min: 8, title: 'The post round', html: '<p>Open the starter. Talk to Posty Fen: three stops — Mill Cottage, the bakery, the school — each with a red letterbox beside the path. <b>Ask:</b> how could we break this big job into parts? (One part per stop: <b>decompose</b>.)</p>' },
+      { min: 25, title: 'Chunk by chunk', html: '<p>Pupils code the first part (to Mill Cottage) and press <b>Run</b>. The task ticks when the helper gets there. Then they add the next part, Run again, and so on. Every Run starts from the beginning, so the whole sequence is tested each time.</p><p>Common bug: turning the wrong way. Teach the trick of standing up and facing the same way as the helper. When something goes wrong, the bug is usually in the <b>newest</b> part.</p>' },
+      { min: 13, title: 'Bug hunt', html: '<p>On the board, swap two blocks in a finished program (a turn and a move). <b>Ask:</b> predict where the helper will end up. Run it. Fix it together.</p><p>Answer: forward 3 (Mill Cottage), turn right, forward 5, turn left, forward 4 (the bakery), turn right, forward 6, turn left, forward 3, turn left, forward 4 (the school).</p>' },
+      { min: 8, title: 'Plenary', html: '<p><b>Ask:</b> how many blocks did your program need? Did anyone spot a pattern that repeats? (Hold the thought: next we meet actions, then loops.)</p>' }
+    ],
+    support: 'Pupils code only to the first two stops. Give the first chunk on a card.',
+    stretch: 'Make the helper say something at each house (helper say). Can you find a shorter route that still passes every letterbox?',
+    assess: ['Breaks the route into parts, one per stop', 'Tests after adding each part', 'Uses the newest change to find a bug, and fixes it'],
+    steps: [
+      { t: 'Talk to Fen', d: 'Walk to Posty Fen and press E. Which three places need a letter?' },
+      { t: 'First stop', d: 'The starter goes forward 3 to Mill Cottage. Press Run and watch the task tick.' },
+      { t: 'Second stop', d: 'Add blocks to get from Mill Cottage to the bakery. Press Run to test the whole thing.' },
+      { t: 'Third stop', d: 'Add blocks to reach the school. If it goes wrong, look at the newest blocks first.' },
+      { t: 'All delivered', d: 'Run it from the start until all three tasks are ticked.' },
+      { t: 'Challenge', d: 'Add a “helper say” block at each house, like “Post for you!”.' }
+    ]
+  },
+  {
+    id: 'academy-3-flowers', unit: 'Robot Helper Academy · Block 1 · Lesson 3', title: 'The flower bed', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Sequences that mix moves with actions: the helper plants five flowers in a row. Pupils predict what happens when the order of “plant” and “move” changes, and notice a pattern repeating.',
+    objective: 'We are learning to put moves and actions in the right order, and to spot a pattern.',
+    success: ['I can use an action block (place) as well as moves.', 'I can predict what will happen if two blocks swap places.', 'I can spot the part of my code that repeats.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['action', 'a block that does something (like place a block), not just move'], ['predict', 'say what you think will happen before you test'], ['pattern', 'something that happens again and again'], ['sequence', 'steps in order']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 7, title: 'Plant a row', html: '<p>Act it out: a pupil walks along a line of desks and puts a pencil on each one. Write their actions on the board: <b>put, step, put, step, put</b>. <b>Ask:</b> what happens if you step before you put the first one down?</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter. Talk to Gardener Ada. Show the starter code: <b>helper place red block right</b>, then <b>move forward 1</b>. Press Run: one flower. Show how to change the colour in the drop-down.</p>' },
+      { min: 25, title: 'Five flowers', html: '<p>Pupils extend the sequence to plant 5 flowers in the brown bed (task ticks at 5). Encourage different colours. Then set a <b>predict</b> challenge: “Swap the first place and move. What will happen?” Pupils write their prediction, then test.</p><p>Answer: place, move, place, move, place, move, place, move, place (9 blocks, plus “when Run is clicked”).</p>' },
+      { min: 12, title: 'Spot the pattern', html: '<p>Put a finished program on the board. Circle each “place + move” pair. <b>Ask:</b> what is the same each time? What changes? (Only the colour.) If the bed were 20 flowers long, how many blocks would you need? (39!) Tell them: next lesson we will learn a shortcut — a <b>loop</b>.</p>' },
+      { min: 8, title: 'Plenary', html: '<p>Pupils explain to a partner what “place right” does and why the order matters.</p>' }
+    ],
+    support: 'Pupils build pairs of blocks (place + move) one pair at a time and press Run after each.',
+    stretch: 'Make a rainbow order. Plant flowers on both sides of the path (place LEFT as well as RIGHT).',
+    assess: ['Uses place and move in the correct order', 'Writes a prediction before testing a change', 'Identifies the repeating pair of blocks'],
+    steps: [
+      { t: 'Talk to Ada', d: 'Walk to Gardener Ada and press E to hear what the park needs.' },
+      { t: 'One flower', d: 'Press Run. The helper plants one red flower on its right, then steps forward.' },
+      { t: 'Five in a row', d: 'Add more “helper place … right” and “helper move forward 1” blocks until there are 5 flowers in the bed.' },
+      { t: 'Colours', d: 'Click the colour in a place block to choose a different flower.' },
+      { t: 'Predict', d: 'What will happen if the very first move comes BEFORE the first place? Say it, then test it.' },
+      { t: 'Spot the pattern', d: 'Which two blocks keep repeating? Count how many blocks you used.' }
+    ]
+  },
+  {
+    id: 'academy-4-fence', unit: 'Robot Helper Academy · Block 1 · Lesson 4', title: 'Mend the fence', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'Loops: the farm fence has a 10-post gap. Writing it out takes 20 blocks; a repeat loop takes 3. Pupils learn to find the repeating part and put it inside a loop.',
+    objective: 'We are learning to use a repeat loop to do the same steps again and again.',
+    success: ['I can find the part of a sequence that repeats.', 'I can put blocks inside a repeat loop.', 'I can choose how many times the loop repeats.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['loop', 'code that runs again and again'], ['repeat', 'a loop that runs a set number of times'], ['inside', 'the blocks in the loop’s mouth are the ones that repeat'], ['efficient', 'does the job with fewer blocks']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 6, title: 'Clap it', html: '<p>Clap a pattern: clap, stamp, clap, stamp, clap, stamp. <b>Ask:</b> how could I write this shorter? (“Repeat 3 times: clap, stamp.”) That is a <b>loop</b>.</p>' },
+      { min: 8, title: 'The gap', html: '<p>Open the starter and talk to Farmer Kit. The starter does it the long way: place a post (tree trunk) LEFT, move forward, twice. <b>Ask:</b> how many blocks to fill all 10? (20.)</p>' },
+      { min: 10, title: 'Show me', html: '<p>On the board, drag <b>repeat 4 times</b> from <b>Loops</b>, move the place and move blocks <b>inside</b> it, change 4 to 10, and attach it under “when Run is clicked”. Press Run. Three blocks instead of twenty!</p>' },
+      { min: 28, title: 'Your turn', html: '<p>Pupils follow the card. The task ticks when 10 posts are in the gap and another ticks when the code uses a loop.</p><p>Common bugs: the move is outside the loop (all 10 posts go in the same place — only 1 shows); the loop number is wrong (too few posts); the place and move are swapped (the gap is filled one square later and a post lands on the old fence).</p><p>Answer: repeat 10 times { helper place tree trunk left; helper move forward 1 }.</p>' },
+      { min: 8, title: 'Plenary', html: '<p><b>Ask:</b> what would change if the gap was 50 posts long? (Just the number.) What does efficient mean?</p>' }
+    ],
+    support: 'Give pupils the repeat block already in place; they move the two blocks inside it.',
+    stretch: 'Build a second fence on the other side of the path with the same loop (turn round first). Make the fence two posts high (place LEFT, then move UP? Try it!).',
+    assess: ['Identifies place + move as the repeating part', 'Puts the right blocks inside a repeat loop', 'Sets the loop count to match the job'],
+    steps: [
+      { t: 'Talk to Kit', d: 'Walk to Farmer Kit and press E. How many posts are missing?' },
+      { t: 'The long way', d: 'Press Run. The starter puts 2 posts in. How many blocks would 10 need?' },
+      { t: 'Get a loop', d: 'Open Loops and drag “repeat 4 times” into the code area.' },
+      { t: 'Put them inside', d: 'Drag the place and move blocks INSIDE the repeat. Delete any extra copies.' },
+      { t: 'Ten times', d: 'Change 4 to 10, join the repeat under “when Run is clicked”, and press Run.' },
+      { t: 'Count the blocks', d: 'How many blocks did you use? How many fewer than the long way?' },
+      { t: 'Challenge', d: 'Can you build the fence two posts high?' }
+    ]
+  },
+  {
+    id: 'academy-5-pen', unit: 'Robot Helper Academy · Block 1 · Lesson 5', title: 'The sheep pen', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'A coding challenge with stars: build a square pen with the helper’s trail. Pupils compare the long way with a loop and aim for the most efficient program (5 blocks for three stars).',
+    objective: 'We are learning to make a program more efficient by finding the pattern and using a loop.',
+    success: ['I can find the pattern in a shape.', 'I can use a loop to make my code shorter.', 'I can explain why a shorter program can be better.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['efficient', 'gets the job done with as few blocks as possible'], ['pattern', 'the part that happens again and again'], ['trail', 'the helper leaves a block behind wherever it walks'], ['loop', 'code that repeats']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 6, title: 'Walk a square', html: '<p>A pupil walks a square on the floor while the class writes the steps: forward, turn right, forward, turn right… <b>Ask:</b> what repeats, and how many times? (Forward + turn right, 4 times.)</p>' },
+      { min: 8, title: 'The challenge', html: '<p>Open the starter, talk to Shepherd Rue and read the welcome card: 3 stars for <b>5 blocks or fewer</b>, counting every block including “when Run is clicked”. Show the new block <b>helper leave a trail of …</b>: wherever the helper walks, it leaves that block behind.</p>' },
+      { min: 25, title: 'Go for three stars', html: '<p>Pupils press Run to start (the timer starts too). Many will do it the long way first (11 blocks, 1 star) — great: now make it efficient. The finish pop-up shows the stars and the number of blocks.</p><p>The pen has a gap where the helper ends up: it can’t walk back onto its own trail. Call it the gate!</p><p>Answer (5 blocks): when Run is clicked · helper leave a trail of tree trunk · repeat 4 times { helper move forward 5 · helper turn right }.</p>' },
+      { min: 13, title: 'Plenary', html: '<p>Compare programs on the board: 11 blocks vs 5 blocks. <b>Ask:</b> they both build the pen, so why is shorter better? (Easier to read, quicker to change — try a pen of side 8: one number!)</p>' },
+      { min: 8, title: 'Link forward', html: '<p>Next lesson is a project: pupils use loops to build their own market stalls.</p>' }
+    ],
+    support: 'Show the long-way program first and ask pupils to circle the repeating pair before they use a loop.',
+    stretch: 'Make a pen of side 8. Build a triangle or a bigger pen around the first one. Can you make the gate somewhere else?',
+    assess: ['Explains which part of a square repeats', 'Uses a loop to reduce the number of blocks', 'Explains why efficient code is useful'],
+    steps: [
+      { t: 'Talk to Rue', d: 'Walk to Shepherd Rue and press E. Read the challenge: 5 blocks or fewer for 3 stars.' },
+      { t: 'The trail', d: 'The starter has “helper leave a trail of tree trunk”. Press Run and watch it leave trunks behind.' },
+      { t: 'The long way', d: 'Add blocks to walk all the way round the mossy square. How many blocks is that?' },
+      { t: 'Find the pattern', d: 'Which two blocks repeat? How many times?' },
+      { t: 'Use a loop', d: 'Put the repeating blocks inside a repeat loop. Press Run again.' },
+      { t: 'Three stars?', d: 'The finish pop-up shows your stars. Count every block, even “when Run is clicked”.' }
+    ]
+  },
+  {
+    id: 'academy-6-market', unit: 'Robot Helper Academy · Block 1 · Lesson 6', title: 'Market day', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'craft', tool: 'Build Lab (blocks)',
+    summary: 'The Block 1 project: pupils plan and code their own market stalls with loops, using sequence, actions and repetition together, then test and improve their design.',
+    objective: 'We are learning to plan, code, test and improve our own program using sequence and loops.',
+    success: ['I can plan a design before I code it.', 'I can use loops in my own program.', 'I can test my program and make it better.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['design', 'a plan of what you will make and how'], ['loop', 'code that repeats'], ['test', 'run it and check it'], ['improve', 'change it to make it better']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Squared paper for the stall design'],
+    plan: [
+      { min: 7, title: 'What makes a stall?', html: '<p>Open the starter and visit Mayor Juno’s stall: four posts and a striped roof. <b>Ask:</b> what repeats? (The posts are the same; each post is blocks on top of each other; the stalls are alike.)</p>' },
+      { min: 10, title: 'Design', html: '<p>Pupils draw their stall on squared paper, from the front and from above, and write which parts a loop could build. Show both ways to build: the <b>helper</b> (place, move up/forward) and the <b>builder</b> commands (fill, line — which count from where <b>you</b> stand, so walk into the square first).</p>' },
+      { min: 28, title: 'Build and test', html: '<p>Pupils code their stalls. Tasks: 30 blocks of building in the square, and a loop in the code. This world does not start again on every Run, so stalls stay built. Use the Undo button in the Build Lab to take back a build that went wrong.</p><p>One example answer: the helper walks into the square, then two loops each build four posts 3 high with a coloured top (see the Academy notes).</p>' },
+      { min: 10, title: 'Gallery walk', html: '<p>Pupils visit each other’s screens (or share to the board). Each says: <b>“My loop builds … It repeats … times.”</b> One thing they would improve next.</p>' },
+      { min: 5, title: 'Block 1 review', html: '<p>Recap the block: algorithm → sequence → actions → loops → efficiency → project. Block 2 starts with debugging and then decisions with “if”.</p>' }
+    ],
+    support: 'Give a post loop to copy (repeat 3: place, move up). Pupils just add the move to the next post.',
+    stretch: 'Use a loop inside a loop to build a whole row of stalls. Add a roof with the builder fill command. Light the market with lanterns.',
+    assess: ['Produces a design before coding', 'Uses at least one loop to build part of the design', 'Tests and improves the program after feedback'],
+    steps: [
+      { t: 'Visit Juno', d: 'Walk to Mayor Juno and press E. Look closely at Juno’s stall: what repeats?' },
+      { t: 'Design', d: 'Draw your stall on squared paper. Mark the parts a loop could build.' },
+      { t: 'Walk to the square', d: 'Walk into the tiled square. Builder blocks count from where you stand.' },
+      { t: 'Code a post', d: 'Use a loop to build one post (place, move up). Press Run to test.' },
+      { t: 'Code the stall', d: 'Add more so the whole stall builds. Then build more stalls with a loop.' },
+      { t: 'Check the tasks', d: 'You need 30 blocks of building in the square and a loop in your code.' },
+      { t: 'Improve it', d: 'Ask a partner for one idea. Change your code to make it better.' }
+    ]
   }
 ];
 
 const SLIDES = {
+  'academy-1-crate': [
+    { t: 'Be the robot', q: 'Which instruction can a robot follow?', b: ['“Go round there and get the box.”', '“Forward 3. Turn right. Forward 2.”'], notes: 'Act it out with a pupil “robot” who can only go forward a number of steps, turn left or turn right. Try the vague instruction first.' },
+    { t: 'Algorithm', lead: 'An algorithm is a set of exact steps, in the right order, to do a job.', notes: 'Say the word together. Our robot algorithm used numbers and turns.' },
+    { t: 'Welcome to Pebble Island', pic: true, b: ['A robot helper to code', 'Characters who need help', 'One new skill every lesson'], notes: 'Introduce the Academy: each lesson is a new part of the island. Today: the harbour.' },
+    { t: 'Plan before you code', lead: 'Draw it, then write it with arrows.', code: '↑ 4\n⟳ turn right\n↑ 5\n⟲ turn left\n↑ 5', notes: 'Pupils draw the path from the Helper camera and write their own plan. This is the answer, so show it only at the end if you prefer.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'Was everyone’s algorithm the same? Did they all work?', b: ['Test, look, change, test again.'], notes: 'Next lesson: a much longer sequence.' }
+  ],
+  'academy-2-post': [
+    { t: 'Order matters', q: 'What is wrong with this toast?', b: ['1. Eat it', '2. Put the bread in the toaster', '3. Butter it'], notes: 'A sequence only works in the right order.' },
+    { t: 'Decompose', lead: 'Break a big job into smaller parts.', b: ['Part 1: to Mill Cottage', 'Part 2: to the bakery', 'Part 3: to the school'], notes: 'One part per letterbox. Code a part, Run, then add the next part.' },
+    { t: 'The post round', pic: true, b: ['Follow the gravel path', 'Stop at each red letterbox'], notes: 'Talk to Posty Fen in the starter. The tasks tick when the helper passes each letterbox.' },
+    { use: 'steps' },
+    { t: 'Bug hunt', q: 'If we swap a turn and a move, where will the helper end up?', b: ['Predict first', 'Then test', 'Look at the newest change first'], notes: 'Swap two blocks in a finished program on the board and debug it together.' },
+    { t: 'Think', q: 'Did you see anything that repeated?', notes: 'Hold that thought: loops are coming in lesson 4.' }
+  ],
+  'academy-3-flowers': [
+    { t: 'Put, step, put, step', q: 'What if you step before you put the first one down?', notes: 'Act out putting a pencil on each desk in a row.' },
+    { t: 'Actions', lead: 'Some blocks move the helper. Some blocks DO something.', b: ['helper move forward 1 (a move)', 'helper place red block right (an action)'], notes: 'Show the colour drop-down in the place block.' },
+    { t: 'The flower bed', pic: true, b: ['Plant 5 flowers in the brown bed', 'Any colours you like'], notes: 'Gardener Ada explains the job.' },
+    { use: 'steps' },
+    { t: 'Spot the pattern', lead: 'place, move, place, move, place, move…', q: 'How many blocks for 20 flowers?', notes: '39 blocks! Next lesson we learn a shortcut: a loop.' }
+  ],
+  'academy-4-fence': [
+    { t: 'Clap it', q: 'Clap, stamp, clap, stamp, clap, stamp. How can we say that shorter?', notes: '“Repeat 3 times: clap, stamp.” That is a loop.' },
+    { t: 'Loop', lead: 'A loop runs the same blocks again and again.', code: 'repeat 10 times:\n    place a post on the left\n    move forward 1', notes: 'The blocks INSIDE the loop are the ones that repeat.' },
+    { t: 'Mend the fence', pic: true, b: ['A gap of 10 posts', 'The long way: 20 blocks', 'With a loop: 3 blocks'], notes: 'Farmer Kit explains the job.' },
+    { use: 'steps' },
+    { t: 'Common bugs', b: ['The move is outside the loop: only one post', 'The number is wrong: too few posts', 'Place and move swapped: one square late'], notes: 'Debug these on the board if pupils get stuck.' },
+    { t: 'Think', q: 'What would you change for a gap of 50?', notes: 'Just the number. That is efficient.' }
+  ],
+  'academy-5-pen': [
+    { t: 'Walk a square', q: 'What repeats when you walk round a square?', notes: 'Forward and turn right, four times.' },
+    { t: 'Efficient', lead: 'An efficient program does the job with as few blocks as possible.', notes: 'Easier to read, easier to change.' },
+    { t: 'The sheep pen challenge', pic: true, b: ['Build the pen with a trail of tree trunks', '3 stars for 5 blocks or fewer', 'Count every block'], notes: 'Pressing Run starts the challenge clock.' },
+    { use: 'steps' },
+    { t: 'Compare', table: [['The long way', 'With a loop'], ['11 blocks', '5 blocks'], ['1 star', '3 stars']], q: 'Both work. Which is better, and why?', notes: 'For a bigger pen the loop version only changes one number.' }
+  ],
+  'academy-6-market': [
+    { t: 'Market day!', pic: true, b: ['Build stalls in the tiled square', 'Use at least one loop', '30 blocks of building'], notes: 'Visit Mayor Juno’s stall for ideas.' },
+    { t: 'What repeats?', b: ['A post: blocks on top of each other', 'A stall: four posts the same', 'A market: stalls that look alike'], notes: 'Each of these could be a loop.' },
+    { t: 'Design first', lead: 'Draw it from the front and from above. Mark the loops.', notes: 'Pupils plan on squared paper before coding.' },
+    { use: 'steps' },
+    { t: 'Share', lead: '“My loop builds … It repeats … times.”', q: 'What would you improve next?', notes: 'Gallery walk, then recap Block 1: algorithm, sequence, actions, loops, efficiency, project.' }
+  ],
   'cat-to-star': [
     { t: 'Be a robot!', q: 'Which instruction can a robot follow?', b: ['“Take 3 steps forward. Turn right.”', '“Go over there.”'], notes: 'Choose a pupil to be the robot. Give the exact instruction first, then the vague one. Ask which worked and why computers need exact steps.' },
     { t: 'Algorithm', lead: 'An algorithm is a set of steps in the right order.', notes: 'Say the word together. Ask: what was the algorithm for our robot?' },

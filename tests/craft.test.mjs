@@ -9,6 +9,7 @@ const { createPlayer, raycast } = await import(pathToFileURL(ROOT + '/craft/craf
 const { BY_NAME: B, GROUND } = CW;
 const M = await import(pathToFileURL(ROOT + '/craft/craft-maker.js').href);
 const { checkTeam } = await import(pathToFileURL(ROOT + '/craft/craft-comp.js').href);
+const AC = await import(pathToFileURL(ROOT + '/craft/craft-academy.js').href);
 
 // run a program to the end, standing at (x, GROUND+1, z) facing north
 function play(py, { chat, x = 32, z = 40, secs = 30, setup } = {}) {
@@ -159,6 +160,35 @@ const mazePath = (w, maker) => { // the shortest way through the maze, as Python
   ok(bad.score === 0, '…and code that doesn’t get there scores 0');
 }
 
+// ── Robot Helper Academy: every world can be finished with its answer, and its starter code doesn't finish it ──
+function academySolve(id, py) {
+  const p = AC.academyProject(id), m = p.maker, world = CW.createWorld(); world.load(m.startWorld);
+  const r = py == null ? { state: p.blocks } : L.fromPython(py); if (r.error) return { error: r.error };
+  const run = createRunner(world, { player: () => ({ x: m.start.x, y: m.start.y, z: m.start.z, facing: 0 }) });
+  Object.assign(run.helper, m.helper); run.load(r.state); run.start();
+  const ck = M.createChecker(m); for (const n of m.npcs) ck.talk(n.id);
+  for (let i = 0; i < 60 * 60 && run.running(); i++) { run.tick(1 / 60); ck.seen(run.helper); }
+  ck.check({ world, player: m.start, helper: run.helper, program: r.state });
+  return { m, done: ck.done, all: ck.complete(), blocks: M.programStats(r.state).blocks };
+}
+{
+  ok(AC.ACADEMY.length === 6 && AC.ACADEMY.every(a => a.block === 1), 'the Academy has the 6 Block 1 lessons');
+  for (const a of AC.ACADEMY) {
+    const p = AC.academyProject(a.id), c = M.cleanMaker(p.maker);
+    const s = academySolve(a.id, AC.ACADEMY_ANSWERS[a.id]), bare = academySolve(a.id, null);
+    ok(c && c.tasks.length === p.maker.tasks.length && c.npcs.length === 1 && p.blocks.blocks.blocks.length === 1, a.id + ': a clean world with a character, its tasks and a starter program');
+    ok(s.all && !bare.all, a.id + ': the answer finishes every task' + (s.all ? '' : ' (done: ' + [...s.done] + ')') + '; the starter code does not');
+  }
+  ok(academySolve('academy-5-pen', AC.ACADEMY_ANSWERS['academy-5-pen']).blocks <= AC.academyProject('academy-5-pen').maker.challenge.par, 'the sheep pen answer earns three stars');
+  const longPen = 'helper.trail(LOG)\n' + 'helper.move(FORWARD, 5)\nhelper.turn(RIGHT)\n'.repeat(4);
+  const lp = academySolve('academy-5-pen', longPen);
+  ok(lp.done.has('tPen') && !lp.all && M.stars(lp.blocks, 5) === 1, 'the long way round builds the pen, but only for one star and without the loop task');
+  const fenceNoLoop = academySolve('academy-4-fence', 'helper.place(LOG, LEFT)\nhelper.move(FORWARD, 1)\n'.repeat(10));
+  ok(!fenceNoLoop.all && fenceNoLoop.done.has('tPosts'), 'the fence without a loop fills the gap but leaves “use a loop” to do');
+  // the checker counts a cell the helper only passed through
+  const ck = M.createChecker({ ...AC.academyProject('academy-2-post').maker }); ck.seen({ x: 20, y: GROUND + 1, z: 44 });
+  ok(ck._ok({ type: 'helper', zone: 'zMill' }, { helper: { x: 0, y: 0, z: 0 } }), 'a helper task counts a square the helper walked through');
+}
 // ── the app ──
 const site = await serve(); const b = await browser(); const errors = [];
 try {
@@ -240,6 +270,22 @@ try {
   await page.click('#crCompBtn'); await sleep(200);
   ok(await page.evaluate(() => /Sign in to take part/.test(document.getElementById('crModal').textContent)), 'Compete asks you to sign in when you aren’t');
   await page.click('#crModalX');
+  // ── Robot Helper Academy in the app: the gallery, every Run starts again, the answer finishes the lesson ──
+  await page.click('#crWorldsBtn');
+  ok(await page.evaluate(() => document.querySelectorAll('[data-ac]').length === 6), 'the Worlds gallery lists the 6 Academy lessons');
+  await page.click('[data-ac="academy-4-fence"]'); await page.click('#cj-dialog .cj-dlg-btn.ok');
+  await page.waitForSelector('#crGo', { timeout: 10000 }); await page.click('#crGo');
+  const gap = () => page.evaluate(() => { const w = craftApp._world(); let n = 0; for (let z = 35; z <= 44; z++) if (w.get(29, 13, z) === 6) n++; return n; });
+  await page.click('#crRun'); await page.waitForFunction(() => !craftApp._runner().running(), null, { timeout: 10000 });
+  const first = await gap();
+  await page.click('#crRun'); const h0 = await page.evaluate(() => ({ ...craftApp._runner().helper }));
+  await page.waitForFunction(() => !craftApp._runner().running(), null, { timeout: 10000 });
+  const second = await gap(); ok(first === 2 && second === 2 && (h0.z === 44 || (h0.from && h0.from.z === 44)), 'in an Academy world every Run starts the helper (and the world) again');
+  await page.evaluate(st => { Blockly.serialization.workspaces.load(st, craftApp._ws()); craftApp._mk()._talk('npcKit'); }, L.fromPython(AC.ACADEMY_ANSWERS['academy-4-fence']).state);
+  await page.evaluate(async () => { for (let i = 0; i < 5; i++) { document.getElementById('crTalkNext')?.click(); await new Promise(r => setTimeout(r, 80)); } });
+  await page.click('#crRun');
+  await page.waitForFunction(() => /You did it/.test(document.getElementById('crPop').textContent), null, { timeout: 20000 });
+  ok(await gap() === 10, 'the loop answer mends the fence and finishes the lesson');
   ok(await page.evaluate(() => typeof helpTabs === 'function' && helpTabs() === CRAFT_HELP), 'Help shows the Build Lab help');
   ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await b.close(); site.close(); }

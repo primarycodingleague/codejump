@@ -350,8 +350,8 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 body.ks1-mode #lesson-guide .lg-d{font-size:17px;}
 /* where the card starts (pupils can drag it anywhere): over empty space, not the controls a lesson asks them to use */
 body.stage-mode:not(.ks1-mode) #lesson-guide{right:auto;left:136px;}
-body.ai-mode #lesson-guide{right:auto;left:16px;}body.train-mode #lesson-guide{right:auto;left:16px;}body.robot-mode #lesson-guide{right:auto;left:16px;}body.craft-mode #lesson-guide{right:auto;left:16px;}
-body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode):not(.robot-mode):not(.ai-mode):not(.train-mode):not(.craft-mode) #lesson-guide{bottom:auto;top:104px;}
+body.ai-mode #lesson-guide{right:auto;left:16px;}body.train-mode #lesson-guide{right:auto;left:16px;}body.robot-mode #lesson-guide{right:auto;left:16px;}body.craft-mode #lesson-guide{right:auto;left:16px;}body.print3d-mode #lesson-guide{right:auto;left:16px;}
+body:not(.stage-mode):not(.turtle-mode):not(.critter-mode):not(.threed-mode):not(.robot-mode):not(.ai-mode):not(.train-mode):not(.craft-mode):not(.print3d-mode) #lesson-guide{bottom:auto;top:104px;}
 @media (max-width:820px){body.stage-mode:not(.ks1-mode) #lesson-guide{left:16px;}}
 /* ── Lesson slides: the presenter (#ls-present). Slides are 16:9 and sized in cqw (1cqw = 1% of the slide's width),
    so the same markup fits the board, the Presenter view window and a printed/PDF page. ── */
@@ -821,12 +821,26 @@ body.craft-mode #t-redo,body.craft-mode #t-clear,body.craft-mode #t-testpage,bod
 body.craft-mode #btn-design,body.craft-mode #btn-read,body.craft-mode #palette,body.craft-mode #pages,
 body.craft-mode #play-mute,body.craft-mode #play-sfx,body.craft-mode #hint,body.craft-mode #touch-controls,
 body.craft-mode .cp-run-bar,body.craft-mode #ks3-editor,body.craft-mode #code-panel,body.craft-mode #turtle-ui,body.craft-mode #critter-ui,
-body.craft-mode #world-ui,body.craft-mode #robot-ui,body.craft-mode #ai-ui,body.craft-mode #train-ui,body.craft-mode #stage-right,body.craft-mode #gc,body.craft-mode .stage-only,
+body.craft-mode #world-ui,body.craft-mode #print3d-ui,body.craft-mode #robot-ui,body.craft-mode #ai-ui,body.craft-mode #train-ui,body.craft-mode #stage-right,body.craft-mode #gc,body.craft-mode .stage-only,
 body.craft-mode #t-cave,body.craft-mode #t-mute,body.craft-mode #t-hand,body.craft-mode #rotate-hint{display:none !important;}
 body.craft-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.craft-mode #craft-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #craft-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
 @media(max-width:820px){body.craft-mode #cwrap{overflow:auto;}body.craft-mode #craft-ui{min-height:900px;}}
+/* ── 3D Print Lab (print/print-app.js + print-app.css, lazy-loaded) ── */
+#print3d-ui{display:none;}
+body.print3d-mode #btn-build,body.print3d-mode #btn-play,body.print3d-mode #btn-code,
+body.print3d-mode #t-paint,body.print3d-mode #t-fill,body.print3d-mode #t-erase,body.print3d-mode #t-undo,
+body.print3d-mode #t-redo,body.print3d-mode #t-clear,body.print3d-mode #t-testpage,body.print3d-mode #theme-sel,
+body.print3d-mode #btn-design,body.print3d-mode #btn-read,body.print3d-mode #palette,body.print3d-mode #pages,
+body.print3d-mode #play-mute,body.print3d-mode #play-sfx,body.print3d-mode #hint,body.print3d-mode #touch-controls,
+body.print3d-mode .cp-run-bar,body.print3d-mode #ks3-editor,body.print3d-mode #code-panel,body.print3d-mode #turtle-ui,body.print3d-mode #critter-ui,
+body.print3d-mode #world-ui,body.print3d-mode #robot-ui,body.print3d-mode #ai-ui,body.print3d-mode #train-ui,body.print3d-mode #craft-ui,body.print3d-mode #stage-right,body.print3d-mode #gc,body.print3d-mode .stage-only,
+body.print3d-mode #t-cave,body.print3d-mode #t-mute,body.print3d-mode #t-hand,body.print3d-mode #rotate-hint{display:none !important;}
+body.print3d-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
+body.print3d-mode #print3d-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
+#print3d-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
+@media(max-width:820px){body.print3d-mode #cwrap{overflow:auto;}body.print3d-mode #print3d-ui{min-height:1100px;}}
 body.threed-mode #btn-build,body.threed-mode #btn-play,body.threed-mode #btn-code,
 body.threed-mode #t-paint,body.threed-mode #t-fill,body.threed-mode #t-erase,body.threed-mode #t-undo,
 body.threed-mode #t-redo,body.threed-mode #t-clear,body.threed-mode #t-testpage,body.threed-mode #theme-sel,
@@ -1407,8 +1421,8 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
 #collab-bar{position:fixed;top:64px;right:14px;z-index:55;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.55);border:1px solid var(--gold);border-radius:22px;padding:5px 8px 5px 12px;font-family:var(--font);}
 #collab-bar.hide{display:none;}
 /* the labs have their own buttons where the bar normally sits: put it in the header (small screens: bottom left) */
-:is(body.craft-mode,body.critter-mode,body.ai-mode,body.train-mode,body.robot-mode,body.threed-mode) #collab-bar{top:8px;padding:3px 6px 3px 10px;}
-@media (max-width:900px){:is(body.craft-mode,body.critter-mode,body.ai-mode,body.train-mode,body.robot-mode,body.threed-mode) #collab-bar{top:auto;bottom:10px;right:auto;left:10px;}}
+:is(body.craft-mode,body.print3d-mode,body.critter-mode,body.ai-mode,body.train-mode,body.robot-mode,body.threed-mode) #collab-bar{top:8px;padding:3px 6px 3px 10px;}
+@media (max-width:900px){:is(body.craft-mode,body.print3d-mode,body.critter-mode,body.ai-mode,body.train-mode,body.robot-mode,body.threed-mode) #collab-bar{top:auto;bottom:10px;right:auto;left:10px;}}
 #collab-bar .cb-label{color:var(--gold);font-weight:800;font-size:12px;margin-right:2px;}
 #collab-bar .cb-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-weight:800;font-size:13px;border:2px solid rgba(255,255,255,.5);}
 #collab-bar #cb-leave{margin-left:6px;border:none;background:rgba(255,255,255,.12);color:#fff;border-radius:14px;padding:5px 10px;font-family:var(--font);font-weight:700;font-size:12px;cursor:pointer;}
@@ -1737,6 +1751,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
   <symbol id="i-player" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2" fill="#f0b97a"/><rect x="8" y="11" width="8" height="9" rx="3" fill="#3b8eea"/></symbol>
   <symbol id="i-train" viewBox="0 0 24 24"><rect x="2" y="19" width="20" height="1.6" rx=".8" fill="#8b6b4a"/><rect x="4" y="5" width="16" height="11" rx="3.2" fill="#e8453c"/><rect x="6" y="7" width="5" height="4" rx="1" fill="#bfe3ff"/><rect x="13" y="7" width="5" height="4" rx="1" fill="#bfe3ff"/><rect x="4" y="12.6" width="16" height="1.4" fill="#b32f28"/><circle cx="8" cy="17.4" r="1.9" fill="#2a2d33"/><circle cx="16" cy="17.4" r="1.9" fill="#2a2d33"/><circle cx="12" cy="3.4" r="1.4" fill="#29c46a"/></symbol>
   <symbol id="i-craft" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.6v9.8L12 21.5l-8.5-4.6V7.1z" fill="#6b4a2b"/><path d="M12 2.5l8.5 4.6L12 11.8 3.5 7.1z" fill="#5cb85c"/><path d="M12 11.8v9.7l8.5-4.6V7.1z" fill="#8a5f36"/><path d="M3.5 7.1L12 11.8v2.2L3.5 9.3z" fill="#3f8f3f"/><path d="M20.5 7.1L12 11.8v2.2l8.5-4.7z" fill="#4aa34a"/><path d="M12 2.5l8.5 4.6L12 11.8 3.5 7.1z" fill="none" stroke="#2b2240" stroke-width=".9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-print3d" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="3" fill="#3a3f47"/><rect x="4.5" y="4.5" width="15" height="2.4" rx="1" fill="#9aa3ad"/><path d="M10 6.9h4l-1.2 2.6h-1.6z" fill="#f5a623"/><rect x="5" y="17.4" width="14" height="2" rx=".8" fill="#2d6fb8"/><path d="M8 17.4v-3.2l4-2.3 4 2.3v3.2z" fill="#5cb85c"/><path d="M12 11.9l4 2.3-4 2.3-4-2.3z" fill="#8be08b"/></symbol>
   <symbol id="i-ai" viewBox="0 0 24 24"><rect x="2.5" y="4" width="15" height="15" rx="3" fill="#fff" stroke="#0fa3a3" stroke-width="1.6"/><path d="M5.5 14.5c1.5-4 3-5 4.5-2s3 1.5 4.5-3" fill="none" stroke="#1b1b1f" stroke-width="1.6" stroke-linecap="round"/><path d="M19 1.5l1.1 2.9L23 5.5l-2.9 1.1L19 9.5l-1.1-2.9L15 5.5l2.9-1.1z" fill="#f2b705"/><circle cx="19.5" cy="17.5" r="3.5" fill="#0fa3a3"/><path d="M18 17.6l1.1 1.1 2-2.2" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-robot" viewBox="0 0 24 24"><circle cx="12" cy="2.6" r="1.3" fill="#ff5a3c"/><rect x="11.4" y="3.4" width="1.2" height="2.4" fill="#5d636e"/><rect x="4.5" y="5.6" width="15" height="10.4" rx="5.2" fill="#eef2f6" stroke="#2b6fd8" stroke-width="1.2"/><rect x="6.6" y="8" width="10.8" height="4" rx="2" fill="#141821"/><circle cx="9.4" cy="10" r="1.2" fill="#35d0ff"/><circle cx="14.6" cy="10" r="1.2" fill="#35d0ff"/><rect x="10.2" y="13.2" width="3.6" height="0.9" rx=".45" fill="#35d0ff"/><path d="M5 22c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6z" fill="#2b6fd8"/><circle cx="12" cy="19.6" r="1.1" fill="#35d0ff"/></symbol>
   <symbol id="i-critter" viewBox="0 0 24 24"><path d="M6.5 15.5l-2.5 5M10 16l-1 5M14 16l1 5M17.5 15.5l2.5 5" stroke="#f59f18" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="9.5" ry="6" fill="#38b6ff"/><circle cx="15.5" cy="10" r="2.3" fill="#fff"/><circle cx="19" cy="10.3" r="1.9" fill="#fff"/><circle cx="16.2" cy="10.2" r="1.1" fill="#111"/><circle cx="19.5" cy="10.4" r=".9" fill="#111"/></symbol>
@@ -1802,6 +1817,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         <button class="hm-tile hot" data-start="ai"><img data-home="ai.jpg" alt=""><span class="hm-tile-b"><b>AI Lab <span class="hm-badge">New</span></b><span>Teach a computer to recognise drawings or words, then code a game with it. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="train"><img data-home="train.jpg" alt=""><span class="hm-tile-b"><b>Train Lab <span class="hm-badge">New</span></b><span>Build a train track, then code your trains to drive it. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="craft"><img data-home="craft.jpg" alt=""><span class="hm-tile-b"><b>Build Lab <span class="hm-badge">New</span></b><span>Walk round a block world, build it by hand, and code a robot helper in blocks or Python. KS2 and KS3.</span></span></button>
+        <button class="hm-tile hot" data-start="print3d"><img data-home="print3d.jpg" alt=""><span class="hm-tile-b"><b>3D Print Lab <span class="hm-badge">New</span></b><span>Design something real from shapes and holes, then download it for a 3D printer. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="robot"><img data-home="robot.jpg" alt=""><span class="hm-tile-b"><b>Robot Lab <span class="hm-badge">New</span></b><span>Code a talking 3D robot: faces, moves, lights and voice. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="critter"><img data-home="critter.jpg" alt=""><span class="hm-tile-b"><b>Critter Lab <span class="hm-badge">New</span></b><span>3D creatures and real physics. KS2 and KS3.</span></span></button>
       </div>
@@ -2201,6 +2217,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <button class="ks-opt" data-pt="ai"><span class="ks-emoji"><svg class="ic"><use href="#i-ai"></use></svg></span><b>AI Lab</b><small>Teach a computer with<br>drawings or words — NEW!</small></button>
       <button class="ks-opt" data-pt="train"><span class="ks-emoji"><svg class="ic"><use href="#i-train"></use></svg></span><b>Train Lab</b><small>Build a track and code<br>your trains — NEW!</small></button>
       <button class="ks-opt" data-pt="craft"><span class="ks-emoji"><svg class="ic"><use href="#i-craft"></use></svg></span><b>Build Lab</b><small>Build a block world and<br>code a robot helper — NEW!</small></button>
+      <button class="ks-opt" data-pt="print3d"><span class="ks-emoji"><svg class="ic"><use href="#i-print3d"></use></svg></span><b>3D Print Lab</b><small>Design something to<br>3D print — NEW!</small></button>
       <button class="ks-opt" data-pt="robot"><span class="ks-emoji"><svg class="ic"><use href="#i-robot"></use></svg></span><b>Robot Lab</b><small>Code a talking robot<br>with blocks — NEW!</small></button>
     </div>
     <button class="ks-cancel" id="pt-cancel">Back</button>
@@ -2373,6 +2390,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <div id="robot-ui"></div>
       <div id="train-ui"></div>
       <div id="craft-ui"></div>
+      <div id="print3d-ui"></div>
       <div id="ai-ui"></div>
  <button id="play-mute" title="Music on / off" aria-label="Toggle music"></button>
  <button id="play-sfx" title="Sound effects on / off" aria-label="Toggle sound effects"></button>
@@ -2835,7 +2853,7 @@ function drawMiniThumb(canvas,g,th_name,water){
 function showHome(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.getElementById('home').classList.remove('hide');
@@ -2866,7 +2884,7 @@ function renderHomeSaves(){
     const item=document.createElement('div');item.className='save-item';
     const thumbCanvas=document.createElement('canvas');
     thumbCanvas.className='save-thumb';thumbCanvas.width=80;thumbCanvas.height=48;
-    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot'],ai:['#0fa3a3','AI Lab'],train:['#c0392b','Train'],craft:['#5a8f2e','Build Lab']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
+    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot'],ai:['#0fa3a3','AI Lab'],train:['#c0392b','Train'],craft:['#5a8f2e','Build Lab'],print3d:['#2d6fb8','3D Print']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
     else drawMiniThumb(thumbCanvas,save.grid,save.theme);
     const info=document.createElement('div');info.className='save-info';
     const nm=document.createElement('div');nm.className='save-name';nm.textContent=save.name||'';
@@ -2947,13 +2965,14 @@ document.querySelectorAll('#ks-modal .ks-opt').forEach(b=>b.onclick=()=>{
   const rbOpt=document.querySelector('#pt-modal .ks-opt[data-pt="robot"]');if(rbOpt)rbOpt.style.display=(_pendingKs==='ks1')?'none':''; // Robot Lab is KS2+ only
   const trOpt=document.querySelector('#pt-modal .ks-opt[data-pt="train"]');if(trOpt)trOpt.style.display=(_pendingKs==='ks1')?'none':''; // Train Lab is KS2+ only
   const crOpt=document.querySelector('#pt-modal .ks-opt[data-pt="craft"]');if(crOpt)crOpt.style.display=(_pendingKs==='ks1')?'none':''; // Build Lab is KS2+ only
+  const p3Opt=document.querySelector('#pt-modal .ks-opt[data-pt="print3d"]');if(p3Opt)p3Opt.style.display=(_pendingKs==='ks1')?'none':''; // 3D Print Lab is KS2+ only
   const aiOpt=document.querySelector('#pt-modal .ks-opt[data-pt="ai"]');if(aiOpt)aiOpt.style.display=(_pendingKs==='ks1')?'none':''; // AI Lab is KS2+ only
   const tdOpt=document.querySelector('#pt-modal .ks-opt[data-pt="3d"]');if(tdOpt)tdOpt.style.display=(_pendingKs==='ks1'||!THREED_ON)?'none':''; // 3D is KS2+ only, behind the THREED_ON flag
   // came from a home-page tile: go straight into that project if it suits this key stage, else let them pick
   const want=_pendingPt;_pendingPt=null;
   const wantOpt=want&&document.querySelector('#pt-modal .ks-opt[data-pt="'+want+'"]');
   if(wantOpt&&wantOpt.style.display!=='none'){wantOpt.click();return;}
-  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='robot'?'Robot Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='ai'?'AI Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='train'?'Train Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='craft'?'Build Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
+  if(want)toast(want==='critter'?'Critter Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='robot'?'Robot Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='ai'?'AI Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='train'?'Train Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='craft'?'Build Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':want==='print3d'?'3D Print Lab is for Key Stage 2 and 3. Pick a project for Key Stage 1:':'That one is for Key Stage 2 and 3. Pick a project for Key Stage 1:','#ae853e');
   document.getElementById('pt-modal').classList.remove('hide');
 });
 // Home page (direction B): tiles start a project type; pictures load from home/ (or the live site when opened from a downloaded file)
@@ -2989,6 +3008,7 @@ document.querySelectorAll('#pt-modal .ks-opt').forEach(b=>b.onclick=async()=>{
   else if(b.dataset.pt==='ai')startNewAI(_pendingKs);
   else if(b.dataset.pt==='train')startNewTrain(_pendingKs);
   else if(b.dataset.pt==='craft')startNewCraft(_pendingKs);
+  else if(b.dataset.pt==='print3d')startNewPrint3D(_pendingKs);
   else startNewProject(_pendingKs);
 });
 function startNewProject(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='platformer';
@@ -3069,7 +3089,7 @@ function startNewStage(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
 function enterStageUI(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(keyStage==='ks1'){enterKS1UI();return;} // KS1 uses the ScratchJr-style editor instead of Blockly
   document.body.classList.remove('ks1-mode'); // coming from KS1? drop its mode + hide its UI
@@ -3173,7 +3193,7 @@ function turtleClearDrawing(){if(turtleDrawCtx)turtleDrawCtx.clearRect(0,0,TW,TH
 function enterTurtleUI(){
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');
   document.getElementById('app').classList.remove('hide');
@@ -3216,7 +3236,7 @@ function startNewCritter(ks){clearDirty();leaveLiveRoom();lessonActive=null;proj
 }
 function enterCritterUI(){
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
@@ -3382,13 +3402,13 @@ function applyCountryLabels(){ // the age chooser speaks the teacher's country's
 // with the same Lesson card on every pupil's screen and remembers which step they reached.
 // ═══════════════════════════════════════════════════════════════════════
 let lessonsMod=null,_lessonsLoading=null,lessonActive=null,_lsFilter='all',_lsCurrent=null,_lsLab='all';
-const LS_LAB_ORDER=['platformer','stage','turtle','critter','3d','robot','ai','train','craft'];
+const LS_LAB_ORDER=['platformer','stage','turtle','critter','3d','robot','ai','train','craft','print3d'];
 // the year band a lesson belongs to: ks1 (Years 1–2), y34 (Years 3–4) or y56 (Years 5–6)
 function lsBand(l){if(l.ks==='ks1')return'ks1';const m=/(\d+)/.exec(l.years||'');return m&&+m[1]<=4?'y34':'y56';}
 const LS_BANDS=[['ks1','Years 1–2'],['y34','Years 3–4'],['y56','Years 5–6']];
 function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lessons/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/lessons/';}
 function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
-const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab',train:'Train Lab',craft:'Build Lab'};
+const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab',train:'Train Lab',craft:'Build Lab',print3d:'3D Print Lab'};
 function lsEsc(x){return cesc(x==null?'':x);}
 function lessonLinks(l){return lessonsMod.curriculumLinks?lessonsMod.curriculumLinks(cjCountry,l.curriculum):{heading:'Curriculum',framework:'',items:[],note:''};}
 function lessonLinksHTML(cur){
@@ -3695,7 +3715,7 @@ function startNew3D(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectTy
   worldData=null;_worldLoad=true;hideHome();enter3DUI(); // null = the starter program
 }
 function enter3DUI(){
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
@@ -3735,7 +3755,7 @@ function startNewRobot(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
   robotData=null;_robotLoad=true;hideHome();enterRobotUI(); // null = the starter program
 }
 function enterRobotUI(){
-  if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
@@ -3784,7 +3804,7 @@ function enterAIUI(){
   if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
   document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
   document.getElementById('app').classList.remove('hide');document.getElementById('home').classList.add('hide');
-  if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   const already=document.body.classList.contains('ai-mode');
   mode='code';document.body.classList.add('ai-mode');
   const _tut=document.getElementById('tutorial');if(_tut)_tut.classList.add('hide');
@@ -3821,7 +3841,7 @@ function startNewTrain(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
   trainData=null;_trainLoad=true;hideHome();enterTrainUI(); // null = the starter track and program
 }
 function enterTrainUI(){
-  if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
   if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
@@ -3866,6 +3886,7 @@ function startNewCraft(ks){clearDirty();leaveLiveRoom();lessonActive=null;projec
   craftData=null;_craftLoad=true;hideHome();enterCraftUI(); // null = the starter world and program
 }
 function enterCraftUI(){
+  if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();
   if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
@@ -3894,6 +3915,51 @@ function exitCraftUI(){
   if(!document.body.classList.contains('craft-mode'))return;
   if(craftApp){craftData=craftApp.getProject();craftApp.pause();}
   document.body.classList.remove('craft-mode');
+}
+// ═══════════════════════════════════════════════════════════════════════
+// 3D PRINT LAB — design something real to 3D print from ready-made shapes and holes on a build plate, then download it
+// as .stl / .3mf (projectType==='print3d'). print/print-model.js = the shapes, groups, checks and files (no DOM; the
+// joining and cutting is Manifold, print/vendor/manifold.wasm), print-app.js the editor. Lazy-loaded like the Build Lab.
+// Payload field print3d = {v, title, plate:{w,d}, objs:[…]} (see print-model.js). No live collaboration.
+// ═══════════════════════════════════════════════════════════════════════
+let p3dData=null,p3dApp=null,_p3dLoading=null,_p3dQuiet=false,_p3dLoad=false;
+function print3dBase(){return /^https?:/.test(location.protocol)?new URL('print/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/print/';}
+function loadPrint3DLab(){if(!_p3dLoading)_p3dLoading=import(print3dBase()+'print-app.js').catch(e=>{_p3dLoading=null;throw e;});return _p3dLoading;}
+function p3dCurrent(){return p3dApp?p3dApp.getProject():p3dData;}
+function startNewPrint3D(ks){clearDirty();leaveLiveRoom();lessonActive=null;projectType='print3d';setKeyStage(ks);
+  if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null;
+  document.getElementById('pt-modal').classList.add('hide');
+  p3dData=null;_p3dLoad=true;hideHome();enterPrint3DUI(); // null = an empty build plate
+}
+function enterPrint3DUI(){
+  if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();
+  if(document.body.classList.contains('critter-mode')&&typeof exitCritterUI==='function')exitCritterUI();
+  if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();
+  if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();
+  if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
+  if(document.body.classList.contains('stage-mode')&&typeof exitStageUI==='function')exitStageUI();
+  document.body.classList.remove('ks1-mode');const _k1=document.getElementById('ks1-ui');if(_k1)_k1.classList.add('hide');
+  document.getElementById('app').classList.remove('hide');document.getElementById('home').classList.add('hide');
+  const already=document.body.classList.contains('print3d-mode');
+  mode='code';document.body.classList.add('print3d-mode');
+  const _tut=document.getElementById('tutorial');if(_tut)_tut.classList.add('hide');
+  const holder=document.getElementById('print3d-ui'),load=_p3dLoad||!already;_p3dLoad=false;
+  if(p3dApp){if(load){_p3dQuiet=true;try{p3dApp.setProject(p3dData);}finally{_p3dQuiet=false;}}else p3dApp.resume();return;}
+  if(_p3dLoading&&holder.firstChild)return;
+  holder.innerHTML='<div id="print3d-loading">Getting the 3D Print Lab ready…</div>';
+  loadPrint3DLab().then(mod=>{
+    if(p3dApp){_p3dQuiet=true;try{p3dApp.setProject(p3dData);}finally{_p3dQuiet=false;}return;}
+    _p3dQuiet=true;
+    try{p3dApp=mod.mount(holder,{project:p3dData,onChange:()=>{if(!_p3dQuiet&&projectType==='print3d')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+      confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'})});}finally{_p3dQuiet=false;}
+  }).catch(()=>{holder.innerHTML='<div id="print3d-loading">The 3D Print Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+}
+function exitPrint3DUI(){
+  if(!document.body.classList.contains('print3d-mode'))return;
+  if(p3dApp){p3dData=p3dApp.getProject();p3dApp.pause();}
+  document.body.classList.remove('print3d-mode');
 }
 
 function turtleBindOnce(){
@@ -8050,7 +8116,16 @@ const CRAFT_HELP=[
  ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. Your world, where you are standing, your helper and your code (blocks or Python) are saved together.</p><h3>Build together, live</h3><p>Signed in? Press <b>Share → Collaborate</b> and pick up to 5 classmates. You share one world: blocks anyone places or breaks (by hand or with code) appear for everyone, and you can see each other walking about. The code, the World Maker setup and the time of day are shared too. Changes wait a moment while you're dragging or typing, so nothing jumps under your fingers.</p>`],
  ['cloud',' Cloud',_cloudHelp]
 ];
-function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='ai')return AI_HELP;if(projectType==='train')return TRAIN_HELP;if(projectType==='craft')return CRAFT_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
+const PRINT3D_HELP=[
+ ['start',' Start',`<h3>Welcome to the 3D Print Lab!</h3><p>Design something real — a keyring, a name badge, a pencil pot, a little house — then download it for a 3D printer.</p><ul><li><b>Drag a shape</b> from the left onto the build plate (or just tap it).</li><li><b>Click a shape</b> to pick it. Drag it to move it round the plate.</li><li>Drag <b>empty space</b> to look round. Scroll or pinch to zoom; right-drag (or two fingers) slides the view. <b>Home / Top / Front / Side / Fit</b> are on the right.</li><li>Everything is measured in <b>millimetres</b>: 10 mm = 1 cm, and each square on the plate is 10 mm.</li></ul>`],
+ ['shape',' Size & turn',`<ul><li>The <b>white squares</b> at the bottom corners change the width and depth; the blue ones change just one side. Hold <b>Shift</b> to keep the shape the same (it grows evenly).</li><li>The <b>white square on top</b> changes the height.</li><li>The <b>black arrow</b> lifts the shape up off the plate (or down again).</li><li>The <b>orange curved arrows</b> turn it, in steps of 15° (hold Shift for 1°).</li><li>Or type exact numbers in the panel on the right: position, size and turn. Tick <b>Keep its shape</b> to make it bigger or smaller evenly.</li><li><b>Snap</b> (top bar) is the step things move and size in: 1 mm, 5 mm, 0.5 mm…</li></ul>`],
+ ['holes',' Holes & groups',`<ul><li>Any shape can be a <b>hole</b>: pick it and press <b>Hole</b> (or use the Hole box and Hole cylinder).</li><li>Put the hole where you want a gap, then <b>Shift-click</b> to pick the hole AND the shape, and press <b>Group</b>. The hole cuts the shape — like a hole for a keyring, or the inside of a pot.</li><li>Grouped shapes move, size and turn together. <b>Ungroup</b> takes them apart again.</li><li>A hole on its own doesn’t cut anything and isn’t printed.</li></ul>`],
+ ['print',' Check & print',`<ul><li>Press <b>Check &amp; print</b>. It tells you anything a printer would struggle with: parts floating in the air, parts under or off the plate, very thin parts, holes you haven’t grouped. <b>Show me</b> picks the shapes it means.</li><li><b>Download for printing (.stl)</b> works with every printer. <b>Download with colours (.3mf)</b> keeps each colour as its own part for printers that print more than one colour.</li><li>Open the file in your printer’s <b>slicer</b> app. It slices your design into layers and says how long it will take. Ask a grown-up to start the printer.</li><li><b>Tips:</b> flat bottoms print best. Make walls at least 2 mm thick. Big designs take hours — small and clever is best!</li></ul>`],
+ ['keys',' Keys',`<ul><li><b>Delete</b> deletes · <b>Ctrl+D</b> duplicates · <b>Ctrl+C / Ctrl+V</b> copy and paste (even into another design)</li><li><b>Ctrl+G</b> groups · <b>Ctrl+Shift+G</b> ungroups · <b>Ctrl+Z / Ctrl+Y</b> undo and redo</li><li><b>Arrow keys</b> move (Shift = 10 times as far) · <b>Page Up / Page Down</b> lift up and down</li><li><b>H</b> hole · <b>S</b> solid · <b>D</b> drop onto the plate · <b>F</b> fit the view · <b>Ctrl+A</b> everything · <b>Esc</b> nothing</li></ul>`],
+ ['play',' Save & Share',`<p>Use <b>Save</b> and <b>Share</b> in the top bar, just like your other projects: save on this device or in the cloud, share a link, or hand it in to your class. The design is saved — download the .stl or .3mf file again whenever you want to print it.</p>`],
+ ['cloud',' Cloud',_cloudHelp]
+];
+function helpTabs(){if(typeof projectType==='undefined')return HELP_TABS;if(projectType==='critter')return CRITTER_HELP;if(projectType==='robot')return ROBOT_HELP;if(projectType==='ai')return AI_HELP;if(projectType==='train')return TRAIN_HELP;if(projectType==='craft')return CRAFT_HELP;if(projectType==='print3d')return PRINT3D_HELP;if(projectType==='3d')return WORLD_HELP;if(projectType==='turtle')return TURTLE_HELP;if(projectType==='stage')return keyStage==='ks1'?STAGE_HELP_KS1:STAGE_HELP;return HELP_TABS;}
 let helpTab='start';
 function openHelp(){const T=helpTabs();buildHelpTabs();selHelpTab(T[0][0]);document.getElementById('help-modal').classList.remove('hide');}
 function buildHelpTabs(){const c=document.getElementById('help-tabs');c.innerHTML='';helpTabs().forEach(([k,name])=>{const b=document.createElement('button');b.className='help-tab'+(k===helpTab?' active':'');b.textContent=name;b.onclick=()=>selHelpTab(k);c.appendChild(b);});}
@@ -8147,6 +8222,10 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p><b>Wagons, places and challenge cards:</b> trains can pull a wagon, leave it at a white-yellow snap and collect it again by reversing into it (the magnet is at the back, like the real thing). The <b>Places</b> tool puts signs beside the track (station, airport, museum, depot, farm …). Pupils can give the places an <b>order</b> (the Order tool: tap the signs one after another and gold numbers appear, which also show on the printed card), and zoom and move round big tracks (drag, pinch or the mouse wheel; Fit shows it all). Under <b>Challenges</b> there are four ready-made challenges (levels 1–3) and pupils can make their own: a list of jobs for Train 1 at the places (stop at, turn back at, pick up / drop off the wagon at, end the route at) that tick off on the board as the train does them. <b>Print the challenge card</b> gives a card with the track picture, the jobs and the pieces needed, so pupils can then build the same challenge with real smart-train track; tick the option to print an answer card with the snaps on it. Pupils can swap their own cards with a partner.</p>
  <p><b>Ready-made lesson — “Smart trains: sense, react, decide”</b> (Key Stage 2, 60 minutes, in Ready-made lessons): pupils find out how the train's colour sensor reads the snaps (input), write an event script (<i>when train sees red</i>), count laps with a variable and use <i>if … else</i> to choose the way at a split, so the train goes round three times and then off to the depot. It comes with slides, a starter project and a step-by-step Lesson card. While a program runs, its variables show in the top-right corner of the board.</p>
  <p><b>Big ideas to draw out:</b> <b>events</b> (a train reacts when it sees a colour), <b>selection</b> (choose the way at a split with <i>if</i>), <b>repetition</b> and counting laps with a <b>variable</b>, and <b>sequencing</b> two trains safely with messages — the same idea as real signalling. Good starters: a station stop on red; a shuttle between two buffer stops; two trains sharing a loop without crashing.</p>
+ <h3> 3D Print Lab (Key Stage 2 &amp; 3)</h3>
+ <p>The <b>3D Print Lab</b> is a design studio for real objects. Pupils drag ready-made shapes onto a build plate (box, cylinder, ball, cone, pyramid, roof, ramp, dome, tube, ring, hexagon, star, heart and text), size them in <b>millimetres</b> with handles or typed numbers, lift and turn them, colour them, and turn any shape into a <b>hole</b>. Selecting a hole with a shape and pressing <b>Group</b> cuts the hole out — the key idea of CAD, the way designers build things from simple solids. There is no coding in this lab; it is design and technology with a computing slant (decomposing an object into simple shapes, precise measurement, iterating on a design).</p>
+ <p><b>Check &amp; print</b> looks for the things that spoil a print — parts floating in the air, parts under or off the build plate, parts thinner than 1 mm, holes that haven't been grouped, and very tall designs — and <b>Show me</b> picks the shapes concerned. It then downloads <b>.stl</b> (every printer and slicer) or <b>.3mf</b> (keeps each colour as a separate part for multi-colour printers). Every download is a closed, watertight solid. Open it in your printer's slicer app (Cura, PrusaSlicer, Bambu Studio and so on) to set the material and see the print time. The plate size (120, 180 or 250 mm) is chosen in the right-hand panel when nothing is selected.</p>
+ <p><b>Ideas:</b> a name keyring (a flat box, a hole cylinder for the ring and raised text), a pencil pot (a cylinder with a hole cylinder grouped inside it), a little house with a door cut out, a rocket, a phone stand, a badge, a chess piece. The <b>Examples</b> list on the left opens each of the first four. Good design rules to teach: flat bottoms, walls at least 2 mm, nothing floating, and small designs (a 5 cm keyring takes about 20–30 minutes; a pencil pot several hours). Designs save, share and hand in like every other project; there is no live collaboration in this lab.</p>
  <h3> Build Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>Build Lab</b> is a world made of blocks that pupils walk round in first person and build in by hand (pick a block from the hotbar, click to place, right-click or press-and-hold to break; fly with F). Their code drives a <b>robot helper</b> (move, turn, place, dig, leave a trail, sense the block in front or below) and <b>builder commands</b> that fill, outline, draw lines and make balls of blocks at positions <b>right / up / ahead</b> of where the pupil is standing, so a build always appears in front of them. <b>Chat commands</b> are events: <i>when I type tower in the chat</i> runs when a pupil types “tower 6”, with the 6 in a variable.</p>
  <p><b>Robot Helper Academy</b> (in Ready-made lessons, and under <b>Worlds</b> in the Build Lab): a unit of lessons where pupils code the robot helper round Pebble Island, one part of the island and one new skill per lesson, with characters, tasks that tick themselves, slides and a Lesson card. <b>Block 1 (Years 3–4):</b> 1 The lost crate (algorithms: plan on paper, then code), 2 The post round (a long sequence, built and tested in parts), 3 The flower bed (sequences with actions, predicting), 4 Mend the fence (repeat loops), 5 The sheep pen (efficiency: a challenge with stars for fewer blocks), 6 Market day (a project with loops). <b>Block 2 (Years 4–5):</b> 7 The broken bridge and 8 The lighthouse (debugging, predicting and tracing loops), 9 The rocky beach (if, with the helper’s sensor), 10 The hedge maze (if … else, nested, sensing), 11 The orchard (and, or, not), 12 The gold mine (repeat until). <b>Block 3 (Years 5–6):</b> 13 Count the crops (variables), 14 The staircase (a variable that grows each time round a loop), 15 Chat commands (events with a value), 16 My own block (functions), 17 Towers of any height (functions with inputs), 18 Design your district (a project with functions, variables and if). In most worlds every <b>Run</b> starts the helper and the world again, so pupils can change one thing and test. Tasks like “keep the sand” are checked at the end, so a careless program can’t pass them. <b>My blocks</b> (new): pupils make their own blocks, with inputs; in Python these are <code>def</code> functions.</p>
@@ -8500,11 +8579,12 @@ function switchMode(m){
   if(projectType==='ai'){enterAIUI();return;}
   if(projectType==='train'){enterTrainUI();return;}
   if(projectType==='craft'){enterCraftUI();return;}
+  if(projectType==='print3d'){enterPrint3DUI();return;}
   if(projectType==='robot'){enterRobotUI();return;}
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(projectType==='3d'){enter3DUI();return;}
   if(document.body.classList.contains('threed-mode')&&typeof exit3DUI==='function')exit3DUI();
-  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();
+  if(document.body.classList.contains('robot-mode')&&typeof exitRobotUI==='function')exitRobotUI();if(document.body.classList.contains('ai-mode')&&typeof exitAIUI==='function')exitAIUI();if(document.body.classList.contains('train-mode')&&typeof exitTrainUI==='function')exitTrainUI();if(document.body.classList.contains('craft-mode')&&typeof exitCraftUI==='function')exitCraftUI();if(document.body.classList.contains('print3d-mode')&&typeof exitPrint3DUI==='function')exitPrint3DUI();
   if(projectType==='turtle'){enterTurtleUI();return;}
   if(document.body.classList.contains('turtle-mode')&&typeof exitTurtleUI==='function')exitTurtleUI();
   if(projectType==='stage'){enterStageUI();return;}
@@ -8563,7 +8643,7 @@ function buildPayload(){
   const levels=LEVELS.map(L=>({grid:L.grid,waterGrid:L.waterGrid||mkGrid(),theme:L.theme,cave:!!L.cave,customBg:L.customBg,moverCfg:L.moverCfg||{},enemyCfg:L.enemyCfg||{},doorCfg:L.doorCfg||{},keyCfg:L.keyCfg||{},signCfg:L.signCfg||{},chestCfg:L.chestCfg||{},teleCfg:L.teleCfg||{},buttonCfg:L.buttonCfg||{},gateCfg:L.gateCfg||{},toggleCfg:L.toggleCfg||{},rotCfg:L.rotCfg||{},fanCfg:L.fanCfg||{},beltCfg:L.beltCfg||{},hazardCfg:L.hazardCfg||{},trapCfg:L.trapCfg||{},pageSprites:L.pageSprites||{}}));
   // Keep grid/theme/customBg = first page so legacy importers still work.
   const first=levels[0]||{grid:mkGrid(),theme:'forest',customBg:{top:null,bottom:null,art:null}}; // Stage projects have no platformer levels
-  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),robot:(projectType==='robot'?robotCurrent():null),ai:(projectType==='ai'?aiCurrent():null),train:(projectType==='train'?trainCurrent():null),craft:(projectType==='craft'?craftCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
+  return{version:2,lesson:(lessonActive?{id:lessonActive.id,step:lessonActive.step}:undefined),keyStage,projectType,stage:(projectType==='stage'?stageState:null),turtle:(projectType==='turtle'?{code:turtleCode}:null),critter:(projectType==='critter'?critterCurrent():null),world:(projectType==='3d'?worldCurrent():null),robot:(projectType==='robot'?robotCurrent():null),ai:(projectType==='ai'?aiCurrent():null),train:(projectType==='train'?trainCurrent():null),craft:(projectType==='craft'?craftCurrent():null),print3d:(projectType==='print3d'?p3dCurrent():null),cols:COLS,rows:ROWS,levels,grid:first.grid,theme:first.theme,customBg:first.customBg,blocklyXml:xml,ks3Code,customSprites};
 }
 // Accept only a safe CSS colour (hex or rgb/rgba) from imported data.
 function safeColor(v){return (typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d.,\s%]+\)$/.test(v.trim()))?v.trim():null;}
@@ -8616,14 +8696,18 @@ function applyPayload(d){leaveLiveRoom(); // opening a different project leaves 
   if(!d||typeof d!=='object')return;clearDirty();
   if(typeof cloudProjectId!=='undefined'){cloudProjectId=null;cloudProjectTitle='';cloudProjectClass=null;}if(typeof curSaveId!=='undefined')curSaveId=null; // a freshly loaded project isn't linked to a cloud slot yet
   setKeyStage(d.keyStage==='ks1'?'ks1':d.keyStage==='ks3'?'ks3':'ks2'); // legacy payloads default to full (ks2)
-  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':(d.projectType==='robot')?'robot':(d.projectType==='ai')?'ai':(d.projectType==='train')?'train':(d.projectType==='craft')?'craft':'platformer'; // legacy payloads (no field) are always platformer
+  projectType=(d.projectType==='stage')?'stage':(d.projectType==='turtle')?'turtle':(d.projectType==='3d')?'3d':(d.projectType==='critter')?'critter':(d.projectType==='robot')?'robot':(d.projectType==='ai')?'ai':(d.projectType==='train')?'train':(d.projectType==='craft')?'craft':(d.projectType==='print3d')?'print3d':'platformer'; // legacy payloads (no field) are always platformer
   if(projectType!=='critter'&&typeof exitCritterUI==='function')exitCritterUI();
   if(projectType!=='3d'&&typeof exit3DUI==='function')exit3DUI();
   if(projectType!=='robot'&&typeof exitRobotUI==='function')exitRobotUI();
   if(projectType!=='ai'&&typeof exitAIUI==='function')exitAIUI();
   if(projectType!=='train'&&typeof exitTrainUI==='function')exitTrainUI();
   if(projectType!=='craft'&&typeof exitCraftUI==='function')exitCraftUI();
-  if(projectType==='craft'){
+  if(projectType!=='print3d'&&typeof exitPrint3DUI==='function')exitPrint3DUI();
+  if(projectType==='print3d'){
+    p3dData=(d.print3d&&typeof d.print3d==='object')?d.print3d:null; // print-model.js cleanProject() checks every field when it loads
+    _p3dLoad=true;if(typeof enterPrint3DUI==='function')enterPrint3DUI();
+  }else if(projectType==='craft'){
     craftData=(d.craft&&typeof d.craft==='object')?d.craft:null; // craft-app.js checks every field (world size, numbers, blocks) when it loads
     _craftLoad=true;if(typeof enterCraftUI==='function')enterCraftUI();
   }else if(projectType==='train'){
@@ -8755,7 +8839,7 @@ function importFromFile(file){
 function openShareModal(){
   if(projectType==='platformer'&&!validate())return; // platformer needs start + goal; Stage & Turtle can always share
   document.getElementById('share-name').textContent='Choose how to share your level.';
-  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn())?'':'none'; // Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
+  const sc=document.getElementById('sh-collab');if(sc)sc.style.display=(typeof cloudOn==='function'&&cloudOn()&&typeof isSignedIn==='function'&&isSignedIn()&&projectType!=='print3d')?'':'none'; // the 3D Print Lab has no live collaboration; Critter Lab has no live collaboration (3D World syncs its blocks: world-app.js)
   const fs=document.getElementById('sh-fullscreen');
   // Show "Open Full Screen" only when embedded (e.g. inside a Wix iframe)
   const embedded=(window.self!==window.top);
@@ -10168,6 +10252,7 @@ function loop(){
   if(projectType==='ai')return; // the AI Lab runs its own loop
   if(projectType==='train')return; // the Train Lab runs its own loop
   if(projectType==='craft')return; // the Build Lab runs its own loop
+  if(projectType==='print3d')return; // the 3D Print Lab runs its own loop
   if(projectType==='turtle'){turtleFrame();return;} // turtle playground renders + steps its own interpreter
  if(projectType==='stage'){if(stagePlaying){stageFrame();drawStage();}else if(stageNeedsDraw||(tick&3)===0){drawStage();stageNeedsDraw=false;}return;} // play = 60fps; idle = ~15fps (or on demand) to save battery on Chromebooks
   if(mode==='build'){drawBuild();return;}
@@ -10238,8 +10323,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.12';
+const CJ_VERSION='2026.10.14';
 const CJ_WHATSNEW=[
+ "New: the 3D Print Lab! Drag shapes onto a build plate, size them in millimetres, cut holes, then check your design and download it for a 3D printer. Find it under Start building (Key Stage 2 and 3).",
  "New in the Build Lab: the Robot Helper Academy! 18 lessons where you code the robot helper round Pebble Island: routes and loops, fixing bugs, decisions with if, a hedge maze, a gold mine, variables, your own chat commands and your own blocks. Open Worlds in the Build Lab.",
  "Make your own blocks in the Build Lab: My blocks → “to do something”, with inputs if you like. In Python they are def functions.",
  "Teachers: all 18 Academy lessons (Years 3–6, in three blocks) are in Ready-made lessons, with lesson plans, slides and a step-by-step Lesson card for pupils.",

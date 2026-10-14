@@ -31,6 +31,38 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## 3D Print Lab — `projectType==='print3d'` (14 Oct 2026, CJ_VERSION 2026.10.14; on branch `claude/vibrant-cori-tho25y`) — Charlie: "a whole separate lab that is for designing 3D prints"
+- **Hands-on shapes only (no coding), KS2 + KS3** (Charlie's choices). Our own design studio — never use the Tinkercad or Autodesk names.
+- **Model `print/print-model.js` (no DOM; Node-testable):** project `{v:1, title, plate:{w,d}, objs}` in mm, Z up, plate centre 0,0.
+  obj `{id, kind, hole, color, x, y, z(bottom), w, d, h, rx, ry, rz (deg; Manifold order x→y→z), flip (bits 1 x/2 y/4 z), text?, wall?}`;
+  `KINDS` = box cylinder sphere(Ball) cone pyramid roof ramp dome tube(wall mm) ring hexagon star heart text. Group `{kind:'group', bw,bd,bh,
+  children}` (children in the group's space, bottom middle at 0; w/bw etc. stretch it); inside a group hole children cut the solids
+  (`pieces(o)` → [{m, color}] keeps each part's colour); an ungrouped hole cuts nothing and isn't printed. `createModel(M,{font})`:
+  pieces/whole/bounds/meshOf, `group(project, ids)` (bbox of the RESULT), `ungroup` (exact even when the group is stretched + turned:
+  per-side stretch from the turned child's column lengths, rotations composed via `rotMatrix`/`eulerOf`), `check(project)` → [{level
+  stop|warn|tip|ok, text, ids}] (empty, ungrouped holes, under plate, off plate, <1 mm, >200 mm tall, floating via `decompose()`),
+  `exportWhole` (one solid → STL), `exportParts` (one closed part per colour, earlier colours win overlaps → 3MF), `toSTL`/`to3MF`
+  (own zip writer, like critter-print). `cleanProject` clamps everything (≤300 objects, groups ≤6 deep, text ≤40). `EXAMPLES` keyring /
+  pencilpot / house (ready-made groups) / rocket. Manifold objects live in wasm memory: everything is `.delete()`d (`free`); pieces are
+  cached by the object's JSON (LRU 400). Text = opentype glyphs laid out one by one (opentype's shaping throws on Outfit's GSUB).
+- **Vendor `print/vendor/`:** manifold-3d 3.5.4 (`manifold.js` + `manifold.wasm`, Apache-2.0), opentype.js 2.0.0 (MIT), Outfit-Bold.ttf (OFL).
+- **App `print/print-app.js` + `.css` (scoped `.pl`, ids `pl*`):** shapes panel (pictures rendered once from the real geometry by a
+  second small WebGL renderer; drag a tile onto the plate = drop where released, on top of a shape if over its top face; tap = a free
+  spot) + Hole box/Hole cylinder + Examples; bar: title, Undo/Redo (JSON snapshots, 80), Duplicate, Delete, Group, Ungroup, Drop to
+  plate, Snap (0.1–10 mm), Keys, Check & print; view (Three.js from the Critter bundle, objects under `world` turned −90° about X so print
+  (x,y,z) → three (x,z,−y); camera near/far follow the zoom) with Home/Top/Front/Side/Fit; inspector: Solid/Hole, 12 colours + any colour,
+  text, tube wall, X/Y/Up, Width/Depth/Height, Tip/Roll/Turn, keep shape, flips; plate size when nothing is selected. Handles (one shape
+  selected, in its own turned frame, same size on screen): white corners = width+depth (Shift = all evenly; text keeps its shape), blue
+  edges = one side, top = height, black cone = lift, orange arcs (invisible disc hit area) = turn in 15° (Shift 1°). Shift-click never grabs
+  a handle. Moving drags only shift the meshes until you let go. Check & print pop-up: checks with Show me, size/volume/triangles,
+  Download .stl / .3mf. Keys in `KEYS` (+ PRINT3D_HELP Keys tab — change both). Test hooks `_proj/_model/_sel/_select/_add/_screen/_handles/_pick`.
+- **Host glue (mirrors the Build Lab):** `print3dBase/loadPrint3DLab/p3dData/p3dApp/p3dCurrent/startNewPrint3D/enterPrint3DUI/
+  exitPrint3DUI`, `body.print3d-mode`, `#print3d-ui`, payload `print3d`, `#pt-modal` tile `data-pt="print3d"` (KS1 hidden), home tile
+  `data-start="print3d"` (`home/print3d.jpg`, a real render), icon `#i-print3d`, `PRINT3D_HELP`, Teacher Guide section, thumbnail badge,
+  `LS_TYPE`/`LS_LAB_ORDER`, Share hides Collaborate. Offline list includes `print/`. Test: `tests/print.test.mjs` (57 checks).
+- **Ideas not done:** a lesson (Years 5–6 design brief: keyring / phone stand), align tool, rulers/measure tool, a workplane on a face,
+  making a shape from a drawing, lettering on curved faces.
+
 ## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: "like Minecraft Education's CS units… our own"
 - **Our own unit**, modelled only on the SKILL ORDER of a standard computing progression (Minecraft Education's "Coding FUNdamentals" goes
   algorithms/sequence/loops → debugging/conditionals/operators/loops → variables/events/functions). NEVER copy their worlds, characters,

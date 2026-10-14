@@ -15,7 +15,7 @@ export function done() { process.exit(failed ? 1 : 0); }
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.wasm': 'application/wasm', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary',
-  '.otf': 'font/otf', '.mp4': 'video/mp4', '.hex': 'text/plain' };
+  '.otf': 'font/otf', '.ttf': 'font/ttf', '.mp4': 'video/mp4', '.hex': 'text/plain' };
 
 // Serve the repo folder like GitHub Pages does (404.html is not needed for the app itself).
 export function serve() {

@@ -105,6 +105,67 @@ const near = (a, b, e = 0.05) => Math.abs(a - b) <= e;
   ok(new Set([...PM.allIds(c.objs)]).size === n, 'every id is different');
 }
 
+// ---- more shapes, parts, drawings
+{
+  const h = PM.makeObj('hinge', {}), hm = md.whole(h), comps = hm.decompose();
+  const [a, c] = comps, gap = a.minGap(c, 2);
+  ok(comps.length === 2 && closed(md.meshOf(hm)) && gap >= PM.GAP - 0.05, 'the hinge prints already joined: two separate parts with a ' + gap.toFixed(2) + ' mm gap all round');
+  md.free(hm, ...comps);
+  const r = PM.makeObj('rounded', { w: 20, d: 20, h: 10 }), rm = md.whole(r), rb = md.bounds(r);
+  ok(rm.volume() < 4000 && rm.volume() > 3500 && near(rb.min[2], 0) && near(rb.max[2], 10), 'a rounded box has rounded edges and a flat bottom');
+  md.free(rm);
+  const g12 = md.whole(PM.makeObj('gear', { teeth: 12 })), g24 = md.whole(PM.makeObj('gear', { teeth: 24, w: 60, d: 60 }));
+  ok(g12.genus() === 1 && g24.genus() === 1 && g12.status() === 'NoError', 'gears have teeth and a hole for an axle');
+  md.free(g12, g24);
+  const up = PM.makeObj('sketch', { pts: [[0, 0], [1000, 0], [500, 1000]] }), spin = PM.makeObj('sketch', { mode: 'spin', pts: [[0, 0], [500, 0], [200, 500], [400, 1000], [0, 1000]] });
+  const ub = md.bounds(up), sb = md.bounds(spin), sm = md.whole(spin);
+  ok(near(ub.max[0] - ub.min[0], 30) && near(ub.max[2], 10) && near(sb.max[0] - sb.min[0], 30) && near(sb.max[1] - sb.min[1], 30) && closed(md.meshOf(sm)), 'a drawing stands up into a solid, or spins round into a round one');
+  md.free(sm);
+  ok(md.pieces(PM.makeObj('sketch', { pts: [[0, 0], [500, 500], [1000, 1000]] })).length === 0, 'a drawing that has no area makes nothing (and doesn’t crash)');
+  ok(PM.cleanPts([[0, 0], [2000, -5], ['a', 1], [3, 4]]).join(';') === '0,0;1000,0;3,4' && PM.cleanPts([[1, 1]]) === null, 'drawings are checked when they load');
+  const pr = PM.newProject(), all = PM.PARTS.flatMap(([id]) => { const os = PM.partObjs(id, pr, 0, 0); pr.objs.push(...os); return os; });
+  ok(PM.PARTS.every(([id]) => PM.partObjs(id, pr).length) && new Set(all.map(o => o.id)).size === all.length, 'every ready-made part makes shapes with new ids');
+  const bl = PM.newProject(); bl.objs = PM.partObjs('boxlid', bl);
+  const [box, lid] = bl.objs.map(o => md.bounds(o));
+  ok(!md.check(bl).some(c => c.level === 'warn' || c.level === 'stop') && box.max[0] < lid.min[0] && near(box.max[2], 25) && near(lid.max[2], 5), 'the box and lid sit side by side, ready to print');
+  const pg = PM.newProject(); pg.objs = PM.partObjs('pegs', pg); const [peg, hole] = pg.objs;
+  ok(hole.hole && near(hole.w - peg.w, 0.6), 'the hole for a peg is 0.6 mm wider than the peg');
+}
+// ---- align, measure-free maths, estimates
+{
+  const p = PM.newProject(); p.objs = [PM.makeObj('box', { id: 'a', x: -20, y: 5 }), PM.makeObj('cylinder', { id: 'b', x: 30, y: -10, w: 10, d: 10, z: 7 })];
+  md.align(p, ['a', 'b'], 1, 'min'); const A = md.bounds(p.objs[0]), B = md.bounds(p.objs[1]);
+  ok(near(A.min[1], B.min[1]) && near(A.min[1], -15), 'Line up → Front puts their front edges together');
+  md.align(p, ['a', 'b'], 2, 'min'); ok(near(md.bounds(p.objs[1]).min[2], 0), 'Line up → Bottom puts them on the same level');
+  const cube = PM.newProject(); cube.objs = [PM.makeObj('box', { id: 'a' })];
+  const e = md.estimate(cube), big = PM.newProject(); big.objs = [PM.makeObj('box', { id: 'a', w: 60, d: 60, h: 60 })];
+  const e2 = md.estimate(big);
+  ok(e.grams > 2 && e.grams < 5 && e.minutes[0] < e.minutes[1] && e2.grams > e.grams * 5 && e2.minutes[1] > e.minutes[1], 'a 20 mm cube is about ' + e.grams + ' g and ' + PM.timeText(e.minutes) + '; a bigger design takes more of both');
+}
+// ---- design challenges
+{
+  ok(PM.BRIEFS.length >= 5 && PM.BRIEFS.every(b => PM.cleanBrief(b).rules.length === b.rules.length), 'the ready-made challenges are all valid');
+  ok(PM.BRIEFS.every(b => { const p = PM.briefProject(b.id); return !PM.briefCheck(md, p, p.brief).every(r => r.ok); }), 'an empty plate doesn’t finish any challenge');
+  const k = PM.exampleProject('keyring'); k.brief = PM.cleanBrief(PM.BRIEFS.find(b => b.id === 'keyring'));
+  ok(PM.briefCheck(md, k, k.brief).every(r => r.ok), 'the ready-made name keyring meets the keyring challenge');
+  k.objs[0].w = 80; k.objs[0].bw = 60; const res = PM.briefCheck(md, k, k.brief);
+  ok(!res.find(r => r.k === 'maxw').ok && res.find(r => r.k === 'hole').ok, 'stretching it to 80 mm breaks just the width rule');
+  // the phone stand lesson's answer (its Lesson card steps)
+  const s = PM.briefProject('phonestand');
+  s.objs.push(PM.makeObj('box', { id: 'o1', w: 70, d: 70, h: 6 }), PM.makeObj('box', { id: 'o2', w: 70, d: 6, h: 80, y: 30, rx: -15 }), PM.makeObj('box', { id: 'o3', w: 70, d: 6, h: 14, y: -30, z: 6 }));
+  const b2 = md.bounds(s.objs[1]); s.objs[1].z -= b2.min[2];
+  const sr = PM.briefCheck(md, s, s.brief);
+  ok(sr.every(r => r.ok), 'the phone stand lesson’s steps finish its challenge' + (sr.every(r => r.ok) ? '' : ': ' + sr.filter(r => !r.ok).map(r => r.text).join(', ')));
+  const st = JSON.parse(readFileSync(ROOT + '/lessons/starters/print-keyring.json', 'utf8')).print3d;
+  ok(st && st.brief && !PM.briefCheck(md, PM.cleanProject(st), PM.cleanProject(st).brief).every(r => r.ok), 'the keyring lesson starter doesn’t finish its challenge by itself');
+  const kr = PM.cleanProject(st); kr.objs.push(PM.makeObj('text', { id: 'o2', text: 'AMY', w: 30, d: 12, h: 2, z: 3, x: 5 }), PM.makeObj('cylinder', { id: 'o3', hole: true, x: -19, w: 6, d: 6, h: 6, z: -1 }));
+  md.group(kr, ['o1', 'o3']);
+  ok(PM.briefCheck(md, kr, kr.brief).every(r => r.ok), 'the keyring lesson’s steps finish its challenge');
+  const cb = PM.cleanBrief({ title: 'x'.repeat(99), rules: [{ k: 'maxw', v: 5000 }, { k: 'nope' }, { k: 'uses', v: 'sketch' }, { k: 'uses', v: 'bad' }, { k: 'hole', v: 3 }] });
+  ok(cb.title.length === 60 && cb.rules.length === 3 && cb.rules[0].v === 1000 && cb.rules[2].v === undefined, 'challenges are checked when they load');
+  ok(PM.cleanProject({ objs: [], brief: { title: 'T', rules: [{ k: 'text' }] } }).brief.rules[0].k === 'text', 'a challenge travels with the saved design');
+}
+
 // ---- the app
 const srv = await serve(), b = await browser();
 try {
@@ -119,7 +180,7 @@ try {
   await page.evaluate(() => { document.getElementById('pt-modal').classList.add('hide'); showHome(); });
   await page.click('.hm-tile[data-start="print3d"]'); await page.click('#ks-modal .ks-opt[data-ks="ks2"]');
   await page.waitForFunction(() => typeof p3dApp !== 'undefined' && p3dApp && p3dApp._model && p3dApp._model() && document.querySelectorAll('.pl-tile img[src^="data:"]').length > 10, null, { timeout: 90000 });
-  ok(await page.evaluate(() => document.body.classList.contains('print3d-mode') && document.querySelectorAll('.pl-tile').length === 16), 'it opens with the shapes (and 2 holes), each with a picture');
+  ok(await page.evaluate(() => document.body.classList.contains('print3d-mode') && document.querySelectorAll('.pl-tile').length === 25), 'it opens with the shapes, 2 holes and 5 parts, each with a picture');
 
   // drag the Box tile onto the middle of the plate
   const tile = await page.locator('.pl-tile[data-kind="box"]:not(.hole)').boundingBox();
@@ -224,6 +285,47 @@ try {
   await page.evaluate(() => { window._cjc = window.cjConfirm; window.cjConfirm = () => Promise.resolve(true); });
   await page.click('[data-ex="keyring"]'); await page.waitForFunction(() => p3dApp._proj().title === 'Name keyring');
   ok((await p3()).objs.some(o => o.kind === 'text'), 'Examples open a ready-made design');
+
+
+  // parts, drawing, measuring, lining up, challenges
+  await page.evaluate(() => startNewPrint3D('ks2'));
+  await page.waitForFunction(() => p3dApp._model() && p3dApp._proj().objs.length === 0);
+  await page.click('[data-part="hinge"]');
+  ok((await p3()).objs.length === 1 && (await p3()).objs[0].kind === 'hinge', 'tapping a part adds it');
+  await page.click('#plDraw');
+  const cv = await page.locator('#plDrawCv').boundingBox();
+  for (const [x, y] of [[0.2, 0.9], [0.8, 0.9], [0.5, 0.2]]) await page.mouse.click(cv.x + cv.width * x, cv.y + cv.height * y);
+  await page.click('#plDrawOk');
+  pr = await p3(); const sk = pr.objs.find(o => o.kind === 'sketch');
+  ok(sk && sk.pts.length === 3 && sk.mode === 'up', 'Draw a shape: three clicks and Make it give a new shape from the drawing');
+  await page.click('#plInsp #plEditDraw'); await page.click('[data-dm="spin"]'); await page.click('#plDrawClear');
+  await page.click('#plDrawOk'); ok(await page.locator('#plDrawMsg', { hasText: '3 points' }).count() === 1, 'it asks for at least 3 points');
+  for (const [x, y] of [[0.5, 0.9], [0.8, 0.9], [0.6, 0.5], [0.5, 0.1]]) await page.mouse.click(cv.x + cv.width * x, cv.y + cv.height * y);
+  await page.click('#plDrawOk');
+  ok((await p3()).objs.find(o => o.id === sk.id).mode === 'spin', 'Change the drawing → Spin it round turns it into a round shape');
+  await page.click('#plMeasure');
+  for (const pt of [[-50, -70, 0], [10, -70, 0]]) { const q = await page.evaluate(p => p3dApp._screen(p), pt); await page.mouse.click(q[0], q[1]); }
+  const m = await page.evaluate(() => p3dApp._measurePts());
+  ok(m && m.length === 2 && Math.abs(Math.hypot(m[1][0] - m[0][0], m[1][1] - m[0][1]) - 60) < 1.5 && await page.locator('#plMLabel b', { hasText: 'mm' }).isVisible(), 'Measure: two clicks show the distance between them (' + (m && Math.hypot(m[1][0] - m[0][0], m[1][1] - m[0][1]).toFixed(1)) + ' mm)');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => p3dApp._select(p3dApp._proj().objs.map(o => o.id)));
+  await page.click('#plInsp [data-al="1min"]');
+  const fronts = await page.evaluate(() => p3dApp._proj().objs.map(o => p3dApp._model().bounds(o).min[1]));
+  ok(Math.abs(fronts[0] - fronts[1]) < 0.05, 'Line them up → Front lines up the front edges');
+  await page.click('#plPrintBtn');
+  ok(await page.locator('.pl-facts', { hasText: 'of plastic' }).count() === 1 && await page.locator('.pl-facts', { hasText: 'min' }).count() === 1, 'Check & print says roughly how much plastic and how long');
+  await page.click('#plMClose');
+  await page.click('[data-brief="badge"]');
+  await page.waitForFunction(() => p3dApp._proj().brief && !document.getElementById('plBrief').hidden);
+  ok(await page.locator('#plBrief li').count() === 6 && (await p3()).objs.length === 0, 'a ready-made challenge opens on a clear plate with its checklist');
+  await page.evaluate(() => { p3dApp._add('box'); });
+  await page.fill('#plInsp [data-f="h"]', '3'); await page.press('#plInsp [data-f="h"]', 'Enter');
+  await page.waitForFunction(() => document.querySelectorAll('#plBrief li.ok').length >= 3);
+  ok(await page.locator('#plBrief li.ok', { hasText: 'No taller than 6 mm' }).count() === 1, 'its rules tick themselves as you design');
+  await page.click('#plBriefEdit');
+  await page.fill('#plBTitle', 'Bird feeder'); await page.click('#plBAdd'); await page.click('#plBSave');
+  ok((await p3()).brief.title === 'Bird feeder' && (await p3()).brief.rules.length === 7, 'Make a challenge: a teacher can write their own (title and rules)');
+
 
   // home and back
   await page.evaluate(() => showHome());

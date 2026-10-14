@@ -1117,10 +1117,91 @@ export const LESSONS = [
       { t: 'Check the tasks', d: '40 blocks in the plot, your own block, a variable and an if.' },
       { t: 'Show it off', d: 'Tell a partner what your blocks do. What would you improve?' }
     ]
+  },
+  {
+    id: 'print-keyring', title: 'Design a name keyring', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'print3d', tool: 'Print Lab (shapes)',
+    summary: 'Pupils design a real object to 3D print: a keyring with their name. They build it from simple shapes, measure in millimetres, cut a hole for the ring by grouping a hole with a shape, and use a design brief that checks itself to make sure it fits in a pocket and will print well.',
+    objective: 'We are learning to design a real object on a computer by putting simple shapes together and measuring them in millimetres.',
+    success: ['I can add shapes, move them and change their size in millimetres.', 'I can cut a hole by grouping a hole with a shape.', 'I can check my design against a brief and fix what doesn’t meet it.', 'I can explain why a design must be checked before it is printed.'],
+    curriculum: ['data', 'design'],
+    words: [['design brief', 'what a design has to do, and the rules it must keep to'], ['millimetre (mm)', 'a tiny unit of length: 10 mm make 1 cm'],
+      ['shape', 'a ready-made solid, like a box or a cylinder'], ['hole', 'a shape that cuts a gap out of another shape'], ['group', 'join shapes into one, so the holes cut the solid shapes'],
+      ['3D printer', 'a machine that builds a real object from plastic, one thin layer at a time']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A ruler per pair (to see how big 60 mm is)', 'Optional: a real keyring and, if your school has one, a 3D printer to print a few of the designs'],
+    plan: [
+      { min: 5, title: 'Real things are designed', html: '<p>Hold up a keyring (or a bottle top, a toy brick). <b>Ask:</b> somebody designed this on a computer before it was made. What shapes is it made of? Pupils point out the simple shapes: a flat box, a ring, a cylinder. Introduce <b>design brief</b>: the job a design has to do, and its rules.</p>' },
+      { min: 5, title: 'How big is 60 mm?', html: '<p>Pairs use a ruler to show 60 mm (6 cm) and 3 mm. Everything in the Print Lab is measured in <b>millimetres</b>: each square on the build plate is 10 mm. A keyring that fits in a pocket is no wider than about 70 mm.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter on the board. Read the challenge card at the top left: its rules tick themselves. Show how to click a shape, drag it, drag a white corner to resize it and type a size in the panel on the right. Drag <b>Text</b> onto the plate and type a name in the panel.</p>' },
+      { min: 20, title: 'Design it', html: '<p>Pupils follow the Lesson card: put their name on the tag, make the tag fit the name, then add a <b>Hole cylinder</b> near one end. <b>Ask:</b> why doesn’t the hole cut yet? Show how to Shift-click the hole and the tag and press <b>Group</b>. Pupils who finish add a second colour or round the corners.</p>' },
+      { min: 10, title: 'Check & print', html: '<p>Pupils press <b>Check &amp; print</b> and fix anything it finds (floating letters, a hole that isn’t grouped). Read the plastic and the print time together. If you have a printer, choose two or three designs to print and download them as .stl.</p>' },
+      { min: 5, title: 'Reflect', html: '<p><b>Ask:</b> which rule of the brief was hardest to meet? What would you change if you printed it and it didn’t fit on your keys?</p>' }
+    ],
+    support: 'Start from Examples → Name keyring, which is already made, and change the name, size and colours. Pair pupils so one reads the brief while the other designs.',
+    stretch: 'Make the letters a different colour, add a border round the tag with a Rounded box, or try Challenges → A badge for the school club.',
+    assess: ['Uses millimetres to size shapes to the brief', 'Explains that a hole only cuts once it is grouped with a shape', 'Fixes problems Check & print finds', 'Uses the brief’s rules to evaluate their design'],
+    steps: [
+      { t: 'Read the brief', d: 'Read the challenge card at the top left. Which rules are ticked already? Which are not?' },
+      { t: 'Your name', d: 'Drag Text onto the blue tag. In the panel on the right, change Hi to your name or your initials.' },
+      { t: 'On the tag', d: 'Lift the letters onto the top of the tag: set Up to 3 in the panel. Change the Width so the letters fit on the tag.' },
+      { t: 'Fit the tag', d: 'Click the tag and change its Width so your name fits with room at one end for a hole. Keep it no wider than 70 mm.' },
+      { t: 'The hole', d: 'Drag a Hole cylinder to the empty end of the tag. Make it 6 mm wide and 6 mm deep.' },
+      { t: 'Group it', d: 'Hold Shift and click the hole and the tag, then press Group. The hole cuts through the tag.' },
+      { t: 'Check & print', d: 'Press Check & print. Fix anything it finds, until every rule on the challenge card is ticked.' },
+      { t: 'Make it yours', d: 'Change the colours or add a shape. Does every rule still tick?' }
+    ]
+  },
+  {
+    id: 'print-phone-stand', title: 'Design challenge: a phone stand', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'print3d', tool: 'Print Lab (shapes)',
+    summary: 'Pupils meet a real design brief with measurements and rules, decompose a phone stand into simple shapes, build a first version, test it against the brief (with the Measure tool and Check & print), then improve it. They compare plastic and print time to make the design better, not just bigger.',
+    objective: 'We are learning to solve a design problem by breaking it into parts, building a version, testing it against the brief and improving it.',
+    success: ['I can break an object into simple shapes before I build it.', 'I can measure and size parts accurately to meet a brief.', 'I can test my design against every rule and improve it.', 'I can compare two versions using evidence (size, plastic, print time).'],
+    curriculum: ['design', 'data', 'reason'],
+    words: [['decompose', 'break a problem or an object into smaller parts'], ['prototype', 'a first version to test and improve'],
+      ['iterate', 'test, improve and test again'], ['criteria', 'the rules a design is judged against'], ['tolerance', 'a little extra room so parts fit, e.g. a 12 mm slot for a 10 mm phone'],
+      ['overhang', 'a part that sticks out over nothing; printers struggle with these']],
+    need: ['A device per pupil or pair', 'A ruler, and a phone or a phone-sized piece of card (about 75 × 150 × 10 mm) to measure', 'Optional: a 3D printer to print the class’s best two designs'],
+    plan: [
+      { min: 5, title: 'The problem', html: '<p>Show a phone lying flat on a desk. <b>Ask:</b> how could we hold it up so we can watch a video? Read the brief on the board. Introduce <b>criteria</b> (the rules on the card) and <b>tolerance</b>: the slot must be wider than the phone or it won’t fit.</p>' },
+      { min: 10, title: 'Decompose it', html: '<p>In pairs, pupils sketch a stand on paper and label it as simple shapes: a base (box), a back rest (a box tipped back), a lip at the front (a box). They write a size in mm on each part, measuring the phone with a ruler.</p>' },
+      { min: 20, title: 'Prototype', html: '<p>Pupils build version 1 following the Lesson card. Show <b>Tip</b> in the panel (it tips a shape backwards or forwards) and the <b>Measure</b> tool: click two points to check the slot is at least 12 mm. Remind them that every part must touch the plate or another part.</p>' },
+      { min: 10, title: 'Test and improve', html: '<p>Pupils press <b>Check &amp; print</b> and note the plastic and the print time. <b>Ask:</b> can you use less plastic and keep it strong? Pupils make version 2 (e.g. cut a hole in the base, make the back thinner) and compare the numbers.</p>' },
+      { min: 10, title: 'Evaluate', html: '<p>Pairs swap screens and judge each other’s stand against the criteria: does every rule tick? Is the slot wide enough? Would it tip over? Choose the class’s best two to print if you can.</p>' },
+      { min: 5, title: 'Reflect', html: '<p><b>Ask:</b> what changed between version 1 and 2, and how do you know it’s better? Link to computing: we decomposed a problem, then tested and improved, just like debugging a program.</p>' }
+    ],
+    support: 'Give pupils a labelled sketch with sizes to build from. Start with just a base and a back rest; add the front lip later.',
+    stretch: 'Add a cable hole through the base, put the school’s name on it, or make the side of the stand a shape you draw yourself (Draw a shape). Try the pencil pot or chess piece challenges.',
+    assess: ['Decomposes the stand into named parts with sizes', 'Uses Measure to check a size against the brief', 'Improves the design and explains why version 2 is better using evidence', 'Evaluates a design against every criterion'],
+    steps: [
+      { t: 'Read the brief', d: 'Read the challenge card. Which rules are about size? Measure your phone (or card) with a ruler.' },
+      { t: 'The base', d: 'Drag a Box onto the plate. Make it 70 mm wide, 70 mm deep and 6 mm tall. A wide base stops the stand tipping over.' },
+      { t: 'The back rest', d: 'Add another Box: 70 wide, 6 deep, 80 tall. In the panel set Tip to -15 so it leans back. Move it to the back of the base, then press Drop to plate.' },
+      { t: 'The lip', d: 'Add a small Box at the front of the base (70 wide, 6 deep, 14 tall) to stop the phone sliding off.' },
+      { t: 'Measure the slot', d: 'Press Measure and click the lip and the back rest. Is the gap at least 12 mm? Move the lip if not.' },
+      { t: 'Check & print', d: 'Press Check & print. Fix anything it finds. Write down the plastic (g) and the print time.' },
+      { t: 'Version 2', d: 'Use less plastic: make a part thinner, or cut a hole in the base with a Hole box and Group. Compare the plastic and the time.' },
+      { t: 'Evaluate', d: 'Does every rule on the challenge card tick? Swap with a partner and judge each other’s stand.' }
+    ]
   }
 ];
 
 const SLIDES = {
+  'print-keyring': [
+    { t: 'Who designed this?', q: 'What simple shapes is a keyring made of?', b: ['A flat box (the tag)', 'A ring (the hole)', 'Some letters on top'], notes: 'Hold up a real keyring or toy. Everything made in a factory was designed on a computer first, often from simple shapes like these.' },
+    { t: 'Millimetres', lead: '10 mm = 1 cm. Each square on the build plate is 10 mm.', b: ['A pocket keyring: no wider than 70 mm', 'A tag: about 3 mm thick', 'A hole for the ring: about 6 mm'], notes: 'Pairs show 60 mm and 3 mm on a ruler. Printers work in millimetres, so designers do too.' },
+    { t: 'The design brief', pic: true, lead: 'A brief says what the design has to do. Our rules tick themselves.', b: ['No wider than 70 mm', 'No taller than 8 mm', 'Has writing on it', 'Has a hole cut out', 'Ready to print'], notes: 'Open the starter and read the challenge card at the top left.' },
+    { t: 'Holes cut when grouped', lead: 'A hole on its own does nothing. Group it with a shape to cut it out.', b: ['1. Put the hole where the gap should be', '2. Shift-click the hole and the tag', '3. Press Group'], notes: 'Show this on the board before pupils try. Ask why the hole doesn’t cut until it is grouped (the computer needs to know which shape to cut).' },
+    { use: 'steps' },
+    { t: 'Check before you print', q: 'Why check a design before we print it?', b: ['Floating parts would fall', 'Too thin parts break', 'Printing takes time and plastic'], notes: 'Check & print shows the plastic and the time it would take. Printing a mistake wastes both. Next in Years 5–6: a design challenge with measurements, prototypes and improving a design.' }
+  ],
+  'print-phone-stand': [
+    { t: 'The problem', q: 'How can we hold a phone up on a desk so we can watch it?', b: ['It mustn’t tip over', 'The phone must fit', 'It mustn’t waste plastic'], notes: 'Show a phone lying flat. Collect ideas before showing the brief.' },
+    { t: 'The brief and its criteria', pic: true, lead: 'Criteria are the rules a design is judged against.', b: ['No wider than 90 mm, no deeper than 90 mm', 'At least 40 mm tall', 'Made from at least 3 shapes', 'Ready to print'], notes: 'Open the starter. The rules on the challenge card tick themselves as pupils design.' },
+    { t: 'Decompose it', lead: 'Break the stand into simple parts, with a size for each.', table: [['Part', 'Shape', 'Size (mm)'], ['Base', 'Box', '70 × 70 × 6'], ['Back rest', 'Box, tipped back', '70 × 6 × 80'], ['Lip', 'Box', '70 × 6 × 14']], notes: 'Pupils sketch and label on paper first. Their sizes may differ: that’s fine if they meet the brief.' },
+    { t: 'Tolerance', q: 'The phone is 10 mm thick. How wide should the slot be?', b: ['Exactly 10 mm: it won’t fit', '12 mm: a little room to slide in', 'Check it with the Measure tool'], notes: 'Real designers always leave a gap (a tolerance) so parts fit, because printers are not perfectly exact.' },
+    { use: 'steps' },
+    { t: 'Version 1 → version 2', lead: 'Use evidence to show your design got better.', table: [['', 'Version 1', 'Version 2'], ['Plastic (g)', '', ''], ['Print time', '', ''], ['Every rule ticks?', '', '']], notes: 'Pupils copy the table and fill it in from Check & print. Better can mean less plastic and a shorter print with every rule still met.' },
+    { t: 'Evaluate', q: 'Is your partner’s stand better than version 1? How do you know?', b: ['Does every rule tick?', 'Is the slot wide enough?', 'Would it tip over?'], notes: 'Link back to computing: decompose, build, test, improve — the same cycle as writing and debugging a program.' }
+  ],
   'academy-7-bridge': [
     { t: 'Bugs', lead: 'A bug is a mistake that makes a program do the wrong thing.', b: ['Expected: what we thought would happen', 'Actual: what really happened'], notes: 'Recipe with a mistake as the warm-up.' },
     { t: 'The broken bridge', pic: true, b: ['Odo’s program has TWO bugs', 'Watch it run before changing anything'], notes: 'Run the starter on the board and watch together.' },

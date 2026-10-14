@@ -24,7 +24,7 @@ const KEYS = [
   ['Delete', 'Delete the selected shapes'], ['Ctrl + D', 'Duplicate'], ['Ctrl + C / V', 'Copy and paste'], ['Ctrl + G', 'Group'],
   ['Ctrl + Shift + G', 'Ungroup'], ['Ctrl + Z / Y', 'Undo / redo'], ['Arrow keys', 'Move (Shift = 10 times as far)'],
   ['Page Up / Down', 'Lift up / down'], ['H', 'Make it a hole'], ['S', 'Make it solid'], ['D', 'Drop it onto the plate'],
-  ['Ctrl + A', 'Select everything'], ['Esc', 'Select nothing'], ['F', 'Look at the selection (or everything)']
+  ['Ctrl + A', 'Select everything'], ['M', 'Measure between two points'], ['Esc', 'Select nothing'], ['F', 'Look at the selection (or everything)']
 ];
 
 const TEMPLATE = `
@@ -33,8 +33,13 @@ const TEMPLATE = `
     <h3>Shapes</h3>
     <p class="pl-hint">Drag one onto the plate, or tap it.</p>
     <div class="pl-grid" id="plGrid"></div>
+    <button type="button" class="pl-drawbtn" id="plDraw" title="Draw an outline and turn it into a 3D shape">${ic('i-pen')} Draw a shape</button>
     <h3>Holes</h3>
     <div class="pl-grid" id="plHoles"></div>
+    <h3>Parts</h3>
+    <div class="pl-grid" id="plParts"></div>
+    <h3>Challenges</h3>
+    <div class="pl-ex" id="plBriefs"></div>
     <h3>Examples</h3>
     <div class="pl-ex" id="plEx"></div>
   </aside>
@@ -52,6 +57,7 @@ const TEMPLATE = `
       <button type="button" id="plDrop" title="Drop onto the plate (D)">Drop to plate</button>
       <span class="pl-sep"></span>
       <label class="pl-snap" title="Shapes move and size in steps of this many millimetres">Snap <select id="plSnap"></select> mm</label>
+      <button type="button" id="plMeasure" title="Measure: click two points to see how far apart they are (M)">${ic('i-ruler')}<span>Measure</span></button>
       <button type="button" id="plKeys" title="Keyboard shortcuts">Keys</button>
       <button type="button" class="pl-go" id="plPrintBtn" title="Check your design and download it for the 3D printer">${ic('i-save')}<span>Check &amp; print</span></button>
     </div>
@@ -60,6 +66,8 @@ const TEMPLATE = `
       <div class="pl-loading" id="plLoading">Getting the Print Lab ready…</div>
       <div class="pl-empty" id="plEmpty" hidden>Drag a shape onto the build plate to start.</div>
       <div class="pl-tip" id="plTip" hidden></div>
+      <div class="pl-mlabel" id="plMLabel" hidden></div>
+      <div class="pl-brief" id="plBrief" hidden></div>
       <div class="pl-views" role="group" aria-label="Camera">
         <button type="button" data-view="home" title="Look from the front corner">Home</button>
         <button type="button" data-view="top" title="Look from above">Top</button>
@@ -174,7 +182,7 @@ export function mount(root, host) {
     for (const [id, v] of views) if (!seen.has(id)) { objGrp.remove(v.grp); disposeGrp(v.grp); views.delete(id); }
     sel = sel.filter(id => seen.has(id));
     $('plEmpty').hidden = proj.objs.length > 0;
-    drawSel(); inspector(); sizeLine(); buttons();
+    drawSel(); inspector(); sizeLine(); buttons(); renderBrief();
     needs = true;
   }
   const byId = id => proj.objs.find(o => o.id === id);
@@ -294,6 +302,19 @@ export function mount(root, host) {
     commit();
     return o;
   }
+  function addPart(id, at) {
+    if (!model) return null;
+    let objs = PM.partObjs(id, proj, 0, 0);
+    if (!objs.length || proj.objs.length + objs.length > PM.LIMITS.objs) return null;
+    snapshot();
+    let b = null; for (const o of objs) { const q = model.bounds(o); if (q) { if (!b) b = { min: q.min.slice(), max: q.max.slice() }; else for (let i = 0; i < 3; i++) { b.min[i] = Math.min(b.min[i], q.min[i]); b.max[i] = Math.max(b.max[i], q.max[i]); } } }
+    let to = at;
+    if (!to) { const s = freeSpot({ w: b.max[0] - b.min[0], d: b.max[1] - b.min[1] }); to = [s[0], s[1], 0]; }
+    for (const o of objs) { o.x = fix(o.x + snapV(to[0])); o.y = fix(o.y + snapV(to[1])); o.z = fix(o.z + (to[2] || 0)); }
+    proj.objs.push(...objs); sel = objs.map(o => o.id); commit();
+    const tipText = (PM.PARTS.find(p => p[0] === id) || [])[2]; if (tipText) toast(tipText);
+    return objs;
+  }
   function setField(ids, f, v) {
     snapshot();
     for (const id of ids) { const o = byId(id); if (!o) continue; o[f] = v; }
@@ -347,27 +368,36 @@ export function mount(root, host) {
     const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#fff', '#8090a8', 1.7)); const l = new THREE.DirectionalLight('#fff', 1.8); l.position.set(-1, 3, 2); sc.add(l);
     const cam = new THREE.PerspectiveCamera(30, 1, 1, 1000); const wg = new THREE.Group(); wg.rotation.x = -Math.PI / 2; sc.add(wg);
     const pics = {};
-    const draw = (o, key) => {
-      wg.clear();
-      for (const p of model.pieces(o)) { const g = geomOf(model.meshOf(p.m)); wg.add(new THREE.Mesh(g, o.hole ? new THREE.MeshStandardMaterial({ color: '#c8d3e0', transparent: true, opacity: 0.6, flatShading: true }) : matOf(p.color))); }
-      const b = model.bounds(o); const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2];
+    const draw = (os, key) => {
+      wg.clear(); if (!Array.isArray(os)) os = [os];
+      const b = { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
+      for (const o of os) {
+        for (const p of model.pieces(o)) { const g = geomOf(model.meshOf(p.m)); wg.add(new THREE.Mesh(g, o.hole ? new THREE.MeshStandardMaterial({ color: '#c8d3e0', transparent: true, opacity: 0.6, flatShading: true }) : matOf(p.color))); }
+        const q = model.bounds(o); if (q) for (let i = 0; i < 3; i++) { b.min[i] = Math.min(b.min[i], q.min[i]); b.max[i] = Math.max(b.max[i], q.max[i]); }
+      }
+      const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2];
       const r = Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]) / 2;
       const d = r / Math.sin(15 * Math.PI / 180) * 1.02, dir = [-0.55, -1, 0.75], L = Math.hypot(...dir);
       cam.position.copy(toT([c[0] + dir[0] / L * d, c[1] + dir[1] / L * d, c[2] + dir[2] / L * d])); cam.lookAt(toT(c));
       pr.render(sc, cam); pics[key] = pr.domElement.toDataURL('image/png');
       wg.children.forEach(m => m.geometry.dispose());
     };
-    const COL = { box: '#e8453c', cylinder: '#f59f18', sphere: '#3b7fc4', cone: '#7c5cff', pyramid: '#f5d63c', roof: '#e45fa5', ramp: '#2fb7a8', dome: '#5cb85c', tube: '#3b7fc4', ring: '#f59f18', hexagon: '#7c5cff', star: '#f5d63c', heart: '#e8453c', text: '#2fb7a8' };
-    for (const [k] of PM.KINDS) { try { draw(PM.makeObj(k, { color: COL[k], text: 'Abc' }), k); } catch (e) { /* no picture */ } }
+    const COL = { box: '#e8453c', cylinder: '#f59f18', sphere: '#3b7fc4', cone: '#7c5cff', pyramid: '#f5d63c', roof: '#e45fa5', ramp: '#2fb7a8', dome: '#5cb85c', tube: '#3b7fc4', ring: '#f59f18', hexagon: '#7c5cff', star: '#f5d63c', heart: '#e8453c', text: '#2fb7a8', rounded: '#5cb85c', halfcyl: '#e45fa5', arrow: '#e8453c', plus: '#3b7fc4' };
+    for (const k of PM.SHAPE_KINDS) { try { draw(PM.makeObj(k, { color: COL[k], text: 'Abc' }), k); } catch (e) { /* no picture */ } }
     for (const k of ['box', 'cylinder']) { try { draw(PM.makeObj(k, { hole: true }), 'hole-' + k); } catch (e) { /* no picture */ } }
+    for (const [id] of PM.PARTS) { try { draw(PM.partObjs(id, PM.newProject()), 'part-' + id); } catch (e) { /* no picture */ } }
     pr.dispose(); try { pr.forceContextLoss(); } catch (e) { /* fine */ }
     return pics;
   }
   function shapePanel() {
     let pics = {}; try { pics = shapePics(); } catch (e) { /* pictures are a nicety */ }
     const tile = (kind, label, hole) => `<button type="button" class="pl-tile${hole ? ' hole' : ''}" data-kind="${kind}"${hole ? ' data-hole="1"' : ''} title="${esc(label)}"><img alt="" src="${pics[(hole ? 'hole-' : '') + kind] || ''}"><span>${esc(label)}</span></button>`;
-    $('plGrid').innerHTML = PM.KINDS.map(k => tile(k[0], k[1], false)).join('');
+    $('plGrid').innerHTML = PM.SHAPE_KINDS.map(k => tile(k, PM.KIND[k][1], false)).join('');
     $('plHoles').innerHTML = tile('box', 'Hole box', true) + tile('cylinder', 'Hole cylinder', true);
+    $('plParts').innerHTML = PM.PARTS.map(([id, label, tipText]) => `<button type="button" class="pl-tile" data-part="${id}" title="${esc(tipText)}"><img alt="" src="${pics['part-' + id] || ''}"><span>${esc(label)}</span></button>`).join('');
+    $('plBriefs').innerHTML = PM.BRIEFS.map(b => `<button type="button" data-brief="${b.id}" title="${esc(b.text)}">${esc(b.title)}</button>`).join('') + `<button type="button" class="pl-mkbrief" id="plMakeBrief" title="Write your own challenge (teachers: set it, then give the project to your class)">Make a challenge…</button>`;
+    root.querySelectorAll('[data-brief]').forEach(b => b.onclick = () => openBrief(b.dataset.brief));
+    $('plMakeBrief').onclick = editBrief;
     $('plEx').innerHTML = PM.EXAMPLES.map(e => `<button type="button" data-ex="${e[0]}" title="${esc(e[2])}">${esc(e[1])}</button>`).join('');
     root.querySelectorAll('.pl-tile').forEach(b => b.addEventListener('pointerdown', ev => tileDown(ev, b)));
     root.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => openExample(b.dataset.ex));
@@ -376,7 +406,7 @@ export function mount(root, host) {
   function tileDown(ev, b) {
     if (ev.button !== 0 && ev.pointerType === 'mouse') return;
     ev.preventDefault();
-    const kind = b.dataset.kind, hole = !!b.dataset.hole, x0 = ev.clientX, y0 = ev.clientY; let moved = false;
+    const kind = b.dataset.kind, part = b.dataset.part, hole = !!b.dataset.hole, x0 = ev.clientX, y0 = ev.clientY; let moved = false;
     const move = e => {
       if (!moved && Math.hypot(e.clientX - x0, e.clientY - y0) < 6) return;
       if (!moved) { moved = true; ghost = document.createElement('div'); ghost.className = 'pl-ghost'; ghost.innerHTML = b.innerHTML; document.body.appendChild(ghost); }
@@ -385,10 +415,10 @@ export function mount(root, host) {
     const up = e => {
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
       if (ghost) { ghost.remove(); ghost = null; }
-      if (!moved) { addShape(kind, hole); return; }
+      if (!moved) { if (part) addPart(part); else addShape(kind, hole); return; }
       const r = canvas.getBoundingClientRect();
       if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
-      const spot = dropSpot(e.clientX, e.clientY); if (spot) addShape(kind, hole, spot);
+      const spot = dropSpot(e.clientX, e.clientY); if (spot) { if (part) addPart(part, spot); else addShape(kind, hole, spot); }
     };
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
   }
@@ -434,6 +464,7 @@ export function mount(root, host) {
   canvas.addEventListener('pointerdown', ev => {
     if (!model || drag) { if (drag) endDrag(true); return; }
     if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+    if (measure) { controls.enabled = true; drag = { kind: 'empty', x0: ev.clientX, y0: ev.clientY, moved: false, measure: true }; return; }
     const h = !(ev.shiftKey || ev.ctrlKey || ev.metaKey) && pickHandle(ev.clientX, ev.clientY); // Shift-click is for picking shapes
     if (h) { controls.enabled = false; startHandle(ev, h); return; }
     const hit = pickObj(ev.clientX, ev.clientY);
@@ -466,7 +497,7 @@ export function mount(root, host) {
   }
   function endDrag(cancel, ev) {
     const d = drag; drag = null; controls.enabled = true; tip(null);
-    if (d.kind === 'empty') { if (!d.moved && !(ev && (ev.shiftKey || ev.ctrlKey))) select([]); return; }
+    if (d.kind === 'empty') { if (d.measure) { if (!d.moved && ev) measurePoint(ev.clientX, ev.clientY); return; } if (!d.moved && !(ev && (ev.shiftKey || ev.ctrlKey))) select([]); return; }
     if (!d.moved) return;
     if (cancel) { doUndo(); redo.pop(); return; }
     for (const v of views.values()) v.grp.position.set(0, 0, 0);
@@ -556,7 +587,8 @@ export function mount(root, host) {
     else if (ctrl && k.toLowerCase() === 'a') select(proj.objs.map(o => o.id));
     else if (ctrl) done = false;
     else if (k === 'Delete' || k === 'Backspace') del();
-    else if (k === 'Escape') select([]);
+    else if (k === 'Escape') { if (measure) setMeasure(false); else select([]); }
+    else if (k === 'm' || k === 'M') setMeasure(!measure);
     else if (k === 'ArrowLeft') nudge(-step, 0, 0); else if (k === 'ArrowRight') nudge(step, 0, 0);
     else if (k === 'ArrowUp') nudge(0, step, 0); else if (k === 'ArrowDown') nudge(0, -step, 0);
     else if (k === 'PageUp') nudge(0, 0, step); else if (k === 'PageDown') nudge(0, 0, -step);
@@ -599,6 +631,10 @@ export function mount(root, host) {
     if (one) {
       if (o.kind === 'text') h += `<label class="pl-row pl-text">Text <input id="plText" maxlength="${PM.LIMITS.text}" value="${esc(o.text || '')}" autocomplete="off"></label>`;
       if (o.kind === 'tube') h += `<label class="pl-row">Wall (mm) <input type="number" id="plWall" step="0.5" min="0.4" value="${o.wall}"></label>`;
+      if (o.kind === 'rounded') h += `<label class="pl-row">Roundness (mm) <input type="number" id="plRound" step="0.5" min="0" value="${o.round}"></label>`;
+      if (o.kind === 'gear') h += `<label class="pl-row">Teeth <input type="number" id="plTeeth" step="1" min="6" max="60" value="${o.teeth}"></label><p class="pl-hint">Two gears mesh when their teeth are the same size: keep width ÷ teeth the same (e.g. 30 mm with 12 teeth and 60 mm with 24).</p>`;
+      if (o.kind === 'hinge') h += `<p class="pl-hint">This hinge prints already joined. Keep the gaps: don’t make it much smaller than 30 × 15 × 5 mm.</p>`;
+      if (o.kind === 'sketch') h += `<div class="pl-acts"><button type="button" id="plEditDraw">${ic('i-pen')} Change the drawing</button></div>`;
       h += '<div class="pl-nums">' + NUMS.map(([f, l], i) => (i % 3 === 0 ? `<div class="pl-numh">${['Position (mm)', 'Size (mm)', 'Turn (degrees)'][i / 3]}</div>` : '') +
         `<label>${l}<input type="number" data-f="${f}" step="${f[0] === 'r' ? 15 : snap}" value="${r1(o[f])}"></label>`).join('') + '</div>';
       h += `<label class="pl-check"><input type="checkbox" id="plKeep"> Keep its shape when I change the size</label>`;
@@ -606,7 +642,10 @@ export function mount(root, host) {
     h += `<div class="pl-acts"><button type="button" data-act="mx" title="Flip left to right">Flip ↔</button><button type="button" data-act="my" title="Flip front to back">Flip ↕</button><button type="button" data-act="mz" title="Turn upside down">Upside down</button></div>`;
     if (one && o.kind === 'group') h += `<p class="pl-hint">Holes in a group cut the shapes. To change one part, press <b>Ungroup</b>.</p>`;
     if (one && o.hole) h += `<p class="pl-hint">A hole on its own isn’t printed. Put it where you want the gap, select it and the shape, then press <b>Group</b>.</p>`;
-    if (!one) h += `<p class="pl-hint">Press <b>Group</b> to join them into one — any holes cut the shapes.</p>`;
+    if (!one) {
+      h += `<div class="pl-numh">Line them up</div><div class="pl-align">${[['0', 'min', 'Left'], ['0', 'mid', 'Centre'], ['0', 'max', 'Right'], ['1', 'min', 'Front'], ['1', 'mid', 'Middle'], ['1', 'max', 'Back'], ['2', 'min', 'Bottom'], ['2', 'mid', 'Halfway'], ['2', 'max', 'Top']].map(([a, w, l]) => `<button type="button" data-al="${a}${w}" title="Line up their ${l.toLowerCase()} edges">${l}</button>`).join('')}</div>`;
+      h += `<p class="pl-hint">Press <b>Group</b> to join them into one — any holes cut the shapes.</p>`;
+    }
     box.innerHTML = h;
     box.querySelectorAll('[data-hole]').forEach(b => b.onclick = () => setField(sel, 'hole', b.dataset.hole === '1'));
     box.querySelectorAll('[data-col]').forEach(b => b.onclick = () => colour(b.dataset.col));
@@ -616,6 +655,10 @@ export function mount(root, host) {
       const v = tx.value.slice(0, PM.LIMITS.text); if (!v.trim()) { tx.value = o.text; return; }
       snapshot(); o.text = v; o.w = Math.max(0.2, r1(o.d * model.textRatio(v))); commit();
     };
+    const rd = $('plRound'); if (rd) rd.onchange = () => { const v = Number(rd.value); if (v >= 0) setField([o.id], 'round', Math.min(100, v)); };
+    const te = $('plTeeth'); if (te) te.onchange = () => { const v = Math.round(Number(te.value)); if (v >= 6 && v <= 60) setField([o.id], 'teeth', v); else te.value = o.teeth; };
+    const ed = $('plEditDraw'); if (ed) ed.onclick = () => openDraw(o);
+    box.querySelectorAll('[data-al]').forEach(b => b.onclick = () => { snapshot(); if (model.align(proj, sel, +b.dataset.al[0], b.dataset.al.slice(1))) commit(); else undo.pop(); });
     const wl = $('plWall'); if (wl) wl.onchange = () => { const v = Number(wl.value); if (v >= 0.4) setField([o.id], 'wall', v); };
     box.querySelectorAll('[data-f]').forEach(inp => inp.onchange = () => {
       let v = Number(inp.value); const f = inp.dataset.f; if (!Number.isFinite(v)) { inp.value = r1(o[f]); return; }
@@ -634,6 +677,179 @@ export function mount(root, host) {
     commit();
   }
 
+  /* ------------------------------------------------------------ measure */
+  let measure = null; // {pts:[[x,y,z]…]} while the Measure tool is on
+  const mLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: '#ff4fa3', depthTest: false })); mLine.renderOrder = 20; world.add(mLine);
+  const mDots = new THREE.Group(); world.add(mDots);
+  function setMeasure(on) {
+    measure = on ? { pts: [] } : null;
+    $('plMeasure').classList.toggle('on', !!on); canvas.style.cursor = on ? 'crosshair' : '';
+    drawMeasure();
+    if (on) toast('Click two points on your design or the plate to measure between them.');
+  }
+  function measurePoint(cx, cy) {
+    const hit = pickObj(cx, cy); const p = hit ? fromT(hit.point) : rayPlaneZ(cx, cy, 0);
+    if (!p) return;
+    if (measure.pts.length >= 2) measure.pts = [];
+    measure.pts.push(p.map(v => Math.round(v * 10) / 10)); drawMeasure();
+  }
+  function drawMeasure() {
+    const pts = measure ? measure.pts : [];
+    mLine.geometry.dispose(); mLine.geometry = new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(...p)));
+    mDots.clear(); for (const p of pts) { const d = new THREE.Mesh(G.sq, new THREE.MeshBasicMaterial({ color: '#ff4fa3', depthTest: false })); d.renderOrder = 21; d.position.set(...p); d.scale.setScalar(camera.position.distanceTo(toT(p)) * 0.005); mDots.add(d); }
+    const L = $('plMLabel');
+    if (pts.length === 2) {
+      const [a, b] = pts, d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      L.innerHTML = `<b>${mm(Math.hypot(...d))} mm</b><small>across ${mm(Math.abs(d[0]))} · back ${mm(Math.abs(d[1]))} · up ${mm(Math.abs(d[2]))}</small>`;
+      L.hidden = false; L.dataset.at = JSON.stringify([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]);
+    } else L.hidden = true;
+    needs = true;
+  }
+  function placeMeasureLabel() {
+    const L = $('plMLabel'); if (L.hidden) return;
+    const at = JSON.parse(L.dataset.at || '[0,0,0]'), v = toT(at).project(camera), r = stage.getBoundingClientRect();
+    L.style.left = ((v.x + 1) / 2 * r.width) + 'px'; L.style.top = ((1 - v.y) / 2 * r.height) + 'px';
+    for (const d of mDots.children) d.scale.setScalar(camera.position.distanceTo(toT([d.position.x, d.position.y, d.position.z])) * 0.005);
+  }
+
+  /* ------------------------------------------------------------ draw your own shape */
+  function openDraw(edit) {
+    const D = { mode: edit ? edit.mode : 'up', tool: 'points', pts: edit ? edit.pts.map(p => p.slice()) : [], snapOn: true, drag: -1, free: null };
+    modal(`<h2 id="plMTitle">Draw a shape</h2>
+      <div class="pl-drawbar">
+        <div class="pl-seg pl-segsm" role="group" aria-label="What to make"><button type="button" data-dm="up">Stand it up</button><button type="button" data-dm="spin">Spin it round</button></div>
+        <div class="pl-seg pl-segsm" role="group" aria-label="How to draw"><button type="button" data-dt="points">Click points</button><button type="button" data-dt="free">Draw freehand</button></div>
+      </div>
+      <p class="pl-hint" id="plDrawHint"></p>
+      <div class="pl-drawwrap"><canvas id="plDrawCv" width="440" height="440" aria-label="Drawing grid"></canvas></div>
+      <div class="pl-drawbar"><label class="pl-check"><input type="checkbox" id="plDrawSnap" checked> Snap to the grid</label><span class="pl-sp"></span>
+        <button type="button" id="plDrawUndo">Undo point</button><button type="button" id="plDrawClear">Clear</button><button type="button" class="pl-go" id="plDrawOk">${edit ? 'Change it' : 'Make it'}</button></div>
+      <p class="pl-hint pl-bad" id="plDrawMsg"></p>`);
+    $('plModal').querySelector('.pl-card').classList.add('wide');
+    const cv = $('plDrawCv'), cx = cv.getContext('2d'), N = 440, M = 20;
+    // drawing units 0–1000 → canvas; in spin mode the drawing is the right half (the left edge is the middle of the shape)
+    const sx = x => D.mode === 'spin' ? N / 2 + x / 1000 * (N / 2 - M) : M + x / 1000 * (N - 2 * M);
+    const sy = y => N - M - y / 1000 * (N - 2 * M);
+    const ux = px => D.mode === 'spin' ? (px - N / 2) / (N / 2 - M) * 1000 : (px - M) / (N - 2 * M) * 1000;
+    const uy = py => (N - M - py) / (N - 2 * M) * 1000;
+    const clampU = v => Math.max(0, Math.min(1000, Math.round(v)));
+    const snapU = v => D.snapOn ? Math.round(v / 50) * 50 : v;
+    function paint() {
+      cx.clearRect(0, 0, N, N); cx.fillStyle = '#f4f7fb'; cx.fillRect(0, 0, N, N);
+      cx.strokeStyle = '#d9e2ee'; cx.lineWidth = 1;
+      for (let i = 0; i <= 20; i++) { const a = M + i * (N - 2 * M) / 20; cx.beginPath(); cx.moveTo(a, M); cx.lineTo(a, N - M); cx.stroke(); cx.beginPath(); cx.moveTo(M, a); cx.lineTo(N - M, a); cx.stroke(); }
+      if (D.mode === 'spin') { cx.strokeStyle = '#e45fa5'; cx.setLineDash([6, 5]); cx.lineWidth = 2; cx.beginPath(); cx.moveTo(N / 2, M - 6); cx.lineTo(N / 2, N - M + 6); cx.stroke(); cx.setLineDash([]); }
+      const P = D.pts;
+      if (P.length) {
+        const path = (mirror) => { cx.beginPath(); P.forEach(([x, y], i) => { const X = mirror ? N - sx(x) : sx(x); i ? cx.lineTo(X, sy(y)) : cx.moveTo(X, sy(y)); }); if (P.length > 2) cx.closePath(); };
+        if (D.mode === 'spin') { path(true); cx.fillStyle = 'rgba(59,127,196,.12)'; cx.fill(); }
+        path(false); cx.fillStyle = 'rgba(59,127,196,.35)'; if (P.length > 2) cx.fill(); cx.strokeStyle = '#2d6fb8'; cx.lineWidth = 2.5; cx.stroke();
+        if (D.tool === 'points' || P.length < 60) P.forEach(([x, y], i) => { cx.fillStyle = i === 0 ? '#e8453c' : '#fff'; cx.strokeStyle = '#2d6fb8'; cx.lineWidth = 2; cx.beginPath(); cx.arc(sx(x), sy(y), 6, 0, Math.PI * 2); cx.fill(); cx.stroke(); });
+      }
+      if (D.free) { cx.strokeStyle = '#e8453c'; cx.lineWidth = 2; cx.beginPath(); D.free.forEach(([x, y], i) => i ? cx.lineTo(sx(x), sy(y)) : cx.moveTo(sx(x), sy(y))); cx.stroke(); }
+      root.querySelectorAll('[data-dm]').forEach(b => b.classList.toggle('on', b.dataset.dm === D.mode));
+      root.querySelectorAll('[data-dt]').forEach(b => b.classList.toggle('on', b.dataset.dt === D.tool));
+      $('plDrawHint').textContent = (D.mode === 'spin' ? 'Draw half the outline, from the pink middle line outwards — like half a vase or a chess piece. It spins round the line. ' : 'Draw the outline seen from above; it stands up into a solid shape. ')
+        + (D.tool === 'points' ? 'Click to add points; drag a point to move it.' : 'Press and draw round the outline in one go.');
+      $('plDrawMsg').textContent = '';
+    }
+    const at = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * N / r.width, (e.clientY - r.top) * N / r.height]; };
+    cv.onpointerdown = e => {
+      e.preventDefault(); cv.setPointerCapture(e.pointerId);
+      const [px, py] = at(e);
+      if (D.tool === 'free') { D.free = [[clampU(ux(px)), clampU(uy(py))]]; paint(); return; }
+      const near = D.pts.findIndex(([x, y]) => Math.hypot(sx(x) - px, sy(y) - py) < 10);
+      if (near >= 0) { D.drag = near; return; }
+      D.pts.push([clampU(snapU(ux(px))), clampU(snapU(uy(py)))]); D.drag = D.pts.length - 1; paint();
+    };
+    cv.onpointermove = e => {
+      const [px, py] = at(e);
+      if (D.free) { const q = [clampU(ux(px)), clampU(uy(py))], l = D.free[D.free.length - 1]; if (Math.hypot(q[0] - l[0], q[1] - l[1]) > 6) { D.free.push(q); paint(); } return; }
+      if (D.drag >= 0 && e.buttons) { D.pts[D.drag] = [clampU(snapU(ux(px))), clampU(snapU(uy(py)))]; paint(); }
+    };
+    cv.onpointerup = () => {
+      if (D.free) { const s2 = simplify(D.free, 9); D.pts = s2.length >= 3 ? s2 : D.pts; D.free = null; paint(); }
+      D.drag = -1;
+    };
+    root.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { D.mode = b.dataset.dm; paint(); });
+    root.querySelectorAll('[data-dt]').forEach(b => b.onclick = () => { D.tool = b.dataset.dt; paint(); });
+    $('plDrawSnap').onchange = e => { D.snapOn = e.target.checked; };
+    $('plDrawUndo').onclick = () => { D.pts.pop(); paint(); };
+    $('plDrawClear').onclick = () => { D.pts = []; paint(); };
+    $('plDrawOk').onclick = () => {
+      const pts = PM.cleanPts(D.pts);
+      if (!pts) { $('plDrawMsg').textContent = 'Add at least 3 points first.'; return; }
+      const test = Object.assign(PM.makeObj('sketch', { pts, mode: D.mode }), edit ? { w: edit.w, d: edit.d, h: edit.h } : {});
+      const w = model.whole(test); const okShape = w && w.volume() > 0.5; if (w) model.free(w);
+      if (!okShape) { $('plDrawMsg').textContent = D.mode === 'spin' ? 'That doesn’t make a shape — start on the pink line and draw out to the right.' : 'That outline is too thin or crosses itself — try again.'; return; }
+      closeModal();
+      if (edit) { const o = byId(edit.id); if (o) { snapshot(); o.pts = pts; o.mode = D.mode; commit(); } return; }
+      const o = addShape('sketch', false); if (!o) return;
+      o.pts = pts; o.mode = D.mode; if (D.mode === 'spin') { o.h = 40; o.w = o.d = 30; } commit();
+    };
+    paint();
+  }
+  // Ramer–Douglas–Peucker: fewer points along the same outline.
+  function simplify(pts, eps) {
+    if (pts.length < 3) return pts;
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+    const st = [[0, pts.length - 1]];
+    while (st.length) {
+      const [a, b] = st.pop(); let best = -1, bd = eps;
+      const [x1, y1] = pts[a], [x2, y2] = pts[b], L = Math.hypot(x2 - x1, y2 - y1) || 1;
+      for (let i = a + 1; i < b; i++) { const d = Math.abs((x2 - x1) * (y1 - pts[i][1]) - (x1 - pts[i][0]) * (y2 - y1)) / L; if (d > bd) { bd = d; best = i; } }
+      if (best > 0) { keep[best] = 1; st.push([a, best], [best, b]); }
+    }
+    return pts.filter((p, i) => keep[i]).slice(0, 300);
+  }
+
+  /* ------------------------------------------------------------ design challenges (briefs) */
+  let briefTimer = 0, briefDone = false;
+  function renderBrief() {
+    clearTimeout(briefTimer);
+    briefTimer = setTimeout(() => {
+      const el = $('plBrief'), b = proj.brief;
+      if (!b || !model) { el.hidden = true; return; }
+      const res = PM.briefCheck(model, proj, b), all = res.length && res.every(r => r.ok);
+      el.hidden = false;
+      el.innerHTML = `<div class="pl-bhead"><b>${esc(b.title || 'Design challenge')}</b><button type="button" id="plBriefMin" title="Fold away">−</button></div>
+        <div class="pl-bbody">${b.text ? `<p>${esc(b.text)}</p>` : ''}<ul>${res.map(r => `<li class="${r.ok ? 'ok' : ''}"><span>${r.ok ? '✓' : ''}</span>${esc(r.text)}</li>`).join('')}</ul>
+        ${all ? '<p class="pl-bwin">Challenge complete! Download it with Check &amp; print.</p>' : ''}
+        <div class="pl-bacts"><button type="button" id="plBriefEdit">Change</button><button type="button" id="plBriefOff">Remove</button></div></div>`;
+      $('plBriefMin').onclick = () => el.classList.toggle('min');
+      $('plBriefEdit').onclick = editBrief;
+      $('plBriefOff').onclick = async () => { if (await ask('Take the challenge off this design?')) { snapshot(); delete proj.brief; commit(); } };
+      if (all && !briefDone) toast('Challenge complete — well designed!', '#3fae5e');
+      briefDone = all;
+    }, 250);
+  }
+  async function openBrief(id) {
+    const b = PM.BRIEFS.find(x => x.id === id); if (!b) return;
+    if (proj.objs.length && !(await ask('Start “' + b.title + '” on a clear build plate? Choose No to keep your design and add the challenge to it.'))) { snapshot(); proj.brief = PM.cleanBrief(b); briefDone = false; commit(); return; }
+    snapshot(); const p = PM.briefProject(id); p.plate = proj.plate; proj = p; sel = []; briefDone = false; afterLoad(); setView('home'); changed();
+  }
+  function editBrief() {
+    const b = proj.brief ? clone(proj.brief) : { title: '', text: '', rules: [{ k: 'ready' }] };
+    const KINDS_OPT = PM.KINDS.map(k => `<option value="${k[0]}">${esc(k[1])}</option>`).join('');
+    const ruleRow = (r, i) => `<div class="pl-rrow" data-i="${i}"><select data-rk>${Object.keys(PM.RULES).map(k => `<option value="${k}"${r.k === k ? ' selected' : ''}>${esc(PM.ruleText({ k, v: k === 'uses' ? 'box' : 'N' }).replace(' N ', ' … '))}</option>`).join('')}</select>
+      ${['hole', 'text', 'ready'].includes(r.k) ? '<span></span>' : r.k === 'uses' ? `<select data-rv>${KINDS_OPT.replace(`value="${r.v}"`, `value="${r.v}" selected`)}</select>` : `<input type="number" data-rv min="1" max="1000" value="${r.v || 50}">`}
+      <button type="button" data-rdel title="Take this rule away" aria-label="Take this rule away">${ic('i-x')}</button></div>`;
+    const draw = () => {
+      modal(`<h2 id="plMTitle">${proj.brief ? 'Change the challenge' : 'Make a challenge'}</h2>
+        <p class="pl-hint">Write a design brief and the rules a design must meet. The rules tick themselves while pupils design. Teachers: save the project and give it to your class.</p>
+        <label class="pl-frow">Title <input id="plBTitle" maxlength="60" value="${esc(b.title)}" placeholder="e.g. A bird feeder"></label>
+        <label class="pl-frow">What to make <textarea id="plBText" maxlength="400" rows="3" placeholder="Who is it for? What does it need to do?">${esc(b.text)}</textarea></label>
+        <div class="pl-rules">${b.rules.map(ruleRow).join('')}</div>
+        <div class="pl-dl"><button type="button" id="plBAdd">Add a rule</button><span class="pl-sp"></span><button type="button" class="pl-go" id="plBSave">Save the challenge</button></div>`);
+      const read = () => { b.title = $('plBTitle').value; b.text = $('plBText').value; root.querySelectorAll('.pl-rrow').forEach(row => { const r = b.rules[+row.dataset.i], k = row.querySelector('[data-rk]').value, v = row.querySelector('[data-rv]'); r.k = k; if (v) r.v = k === 'uses' ? v.value : Number(v.value); }); };
+      root.querySelectorAll('.pl-rrow [data-rk]').forEach(sel2 => sel2.onchange = () => { read(); const r = b.rules[+sel2.closest('.pl-rrow').dataset.i]; if (r.k === 'uses') r.v = 'box'; else if (typeof r.v !== 'number') r.v = 50; draw(); });
+      root.querySelectorAll('[data-rdel]').forEach(x => x.onclick = () => { read(); b.rules.splice(+x.closest('.pl-rrow').dataset.i, 1); draw(); });
+      $('plBAdd').onclick = () => { read(); if (b.rules.length < 12) b.rules.push({ k: 'maxw', v: 60 }); draw(); };
+      $('plBSave').onclick = () => { read(); const c = PM.cleanBrief(b); snapshot(); if (c) proj.brief = c; else delete proj.brief; briefDone = false; closeModal(); commit(); };
+    };
+    draw();
+  }
+
   /* ------------------------------------------------------------ check & print */
   function closeModal() { $('plModal').hidden = true; canvas.focus(); }
   function modal(html) { $('plMBody').innerHTML = html; $('plModal').hidden = false; const f = $('plModal').querySelector('button:not(.pl-x), a'); if (f) f.focus(); }
@@ -645,7 +861,8 @@ export function mount(root, host) {
     const b = whole && whole.box, size = b ? mm(b.max[0] - b.min[0]) + ' × ' + mm(b.max[1] - b.min[1]) + ' × ' + mm(b.max[2] - Math.min(0, b.min[2])) + ' mm' : '';
     let h = `<h2 id="plMTitle">Check &amp; print</h2><ul class="pl-checks">${checks.map((c, i) => `<li class="${c.level}"><span>${c.level === 'ok' ? '✓' : c.level === 'tip' ? 'i' : '!'}</span><div>${esc(c.text)}${c.ids.length ? ` <button type="button" class="pl-show" data-i="${i}">Show me</button>` : ''}</div></li>`).join('')}</ul>`;
     if (whole) {
-      h += `<div class="pl-facts"><div><b>${size}</b><small>size</small></div><div><b>${(whole.volume / 1000).toFixed(1)} cm³</b><small>plastic if it were solid</small></div><div><b>${(whole.indices.length / 3).toLocaleString()}</b><small>triangles</small></div></div>
+      const est = PM.estimateFrom(whole.volume, whole.area);
+      h += `<div class="pl-facts"><div><b>${size}</b><small>size</small></div><div><b>about ${est.grams} g</b><small>of plastic</small></div><div><b>${PM.timeText(est.minutes)}</b><small>to print (it depends on the printer)</small></div></div>
         <div class="pl-dl"><button type="button" class="pl-go" id="plSTL">${ic('i-save')} Download for printing (.stl)</button><button type="button" id="pl3MF">${ic('i-save')} Download with colours (.3mf)</button></div>
         <p class="pl-hint">Open the file in your 3D printer’s slicer app (for example Cura, PrusaSlicer or Bambu Studio). It turns your design into layers and tells you how long it will take. Ask a grown-up to start the printer.</p>`;
     }
@@ -665,6 +882,7 @@ export function mount(root, host) {
   $('plSnap').onchange = e => { snap = Number(e.target.value) || 1; inspector(); };
   $('plUndo').onclick = doUndo; $('plRedo').onclick = doRedo; $('plDup').onclick = duplicate; $('plDel').onclick = del;
   $('plGroup').onclick = group; $('plUngroup').onclick = ungroup; $('plDrop').onclick = dropToPlate;
+  $('plMeasure').onclick = () => setMeasure(!measure); $('plDraw').onclick = () => model && openDraw(null);
   $('plPrintBtn').onclick = openPrint; $('plKeys').onclick = showKeys; $('plMClose').onclick = closeModal;
   $('plModal').addEventListener('pointerdown', e => { if (e.target === $('plModal')) closeModal(); });
   $('plTitle').onchange = () => { snapshot(); proj.title = $('plTitle').value.slice(0, 60); changed(); };
@@ -676,7 +894,7 @@ export function mount(root, host) {
     if (!needs) return; needs = false;
     const dist = camera.position.distanceTo(controls.target); // depth range follows the zoom (no flicker, no clipping)
     camera.near = Math.max(0.5, dist / 60); camera.far = dist * 30 + 2000; camera.updateProjectionMatrix();
-    placeHandles();
+    placeHandles(); placeMeasureLabel();
     renderer.render(scene, camera);
   }
 
@@ -700,7 +918,7 @@ export function mount(root, host) {
   return {
     getProject() { return clone(proj); },
     setProject(p) {
-      proj = PM.cleanProject(p || null); undo = []; redo = []; sel = [];
+      proj = PM.cleanProject(p || null); undo = []; redo = []; sel = []; briefDone = false; if (measure) setMeasure(false);
       if (model) { afterLoad(); setView('home'); } else $('plTitle').value = proj.title || '';
       if (!raf) raf = requestAnimationFrame(tick);
     },
@@ -712,6 +930,7 @@ export function mount(root, host) {
       controls.dispose(); renderer.dispose(); root.innerHTML = '';
     },
     // test hooks
+    _draw: openDraw, _measure: setMeasure, _measurePts: () => measure && measure.pts.slice(), _brief: openBrief, _editBrief: editBrief, _addPart: addPart,
     ready, _pick: (x, y) => { const h = pickHandle(x, y); if (h) return 'handle:' + h.userData.h.kind; const o = pickObj(x, y); return o ? o.object.userData.id : null; }, _proj: () => proj, _model: () => model, _sel: () => sel.slice(), _select: select, _add: addShape, _group: group, _ungroup: ungroup,
     _setView: setView, _open: openPrint, _drop: dropToPlate, _undo: doUndo, _redo: doRedo,
     _screen(p) { const v = toT(p).project(camera), r = canvas.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; },

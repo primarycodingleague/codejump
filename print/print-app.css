@@ -40,7 +40,7 @@
 .pl .pl-stage { flex: 1 1 auto; position: relative; border-radius: 10px; overflow: hidden; border: 2px solid var(--pl-line); min-height: 0; background: #1b2230; }
 .pl canvas { width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
 .pl .pl-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #1b2230; color: #ddd; font-weight: 800; font-size: 16px; }
-.pl .pl-empty { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); background: rgba(14,18,26,.82); color: #fff; font-weight: 800; font-size: 15px; padding: 9px 16px; border-radius: 12px; pointer-events: none; text-align: center; max-width: 86%; }
+.pl .pl-empty { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); background: rgba(14,18,26,.82); color: #fff; font-weight: 800; font-size: 15px; padding: 9px 16px; border-radius: 12px; pointer-events: none; text-align: center; max-width: 86%; }
 .pl .pl-tip { position: absolute; background: #0e121a; color: #fff; font-weight: 800; font-size: 13px; padding: 5px 9px; border-radius: 8px; pointer-events: none; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
 .pl .pl-views { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .pl .pl-views button { background: rgba(14,18,26,.78); color: #fff; border: 1px solid #4a5361; border-radius: 8px; padding: 5px 9px; font-size: 12px; font-weight: 800; cursor: pointer; min-width: 58px; }
@@ -75,6 +75,47 @@
 .pl .pl-learn { margin-top: 12px; background: #1d2128; border-radius: 9px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; color: #c9d2de; }
 .pl .pl-learn ul { margin: 6px 0 0; padding-left: 18px; }
 .pl .pl-learn li { margin: 3px 0; }
+
+/* draw / measure / challenges */
+.pl .pl-drawbtn { width: 100%; margin: 8px 0 2px; display: flex; align-items: center; justify-content: center; gap: 6px; background: #1d2128; color: #fff; border: 2px dashed #5d6b7d; border-radius: 10px; padding: 8px; font-weight: 900; font-size: 13px; cursor: pointer; }
+.pl .pl-drawbtn:hover { border-color: var(--pl-blue); }
+.pl .pl-mkbrief { border-style: dashed !important; color: #c9d2de !important; }
+.pl .pl-bar button.on { background: #ff4fa3; border-color: #ff4fa3; color: #fff; }
+.pl .pl-mlabel { position: absolute; transform: translate(-50%, -130%); background: #ff4fa3; color: #fff; border-radius: 9px; padding: 4px 9px; pointer-events: none; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
+.pl .pl-mlabel b { display: block; font-size: 15px; } .pl .pl-mlabel small { font-size: 11px; font-weight: 700; white-space: nowrap; }
+.pl .pl-brief { position: absolute; left: 10px; top: 10px; width: min(300px, calc(100% - 100px)); background: rgba(247,248,250,.97); color: #1b1f26; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.35); font-size: 13px; overflow: hidden; }
+.pl .pl-bhead { display: flex; align-items: center; gap: 8px; background: var(--pl-gold); color: #fff; padding: 7px 10px; }
+.pl .pl-bhead b { flex: 1; font-size: 14px; }
+.pl .pl-bhead button { border: 0; background: rgba(255,255,255,.25); color: #fff; width: 26px; height: 26px; border-radius: 7px; font-weight: 900; cursor: pointer; }
+.pl .pl-brief.min .pl-bbody { display: none; }
+.pl .pl-bbody { padding: 8px 10px 10px; max-height: 50vh; overflow-y: auto; }
+.pl .pl-bbody p { margin: 0 0 6px; line-height: 1.4; }
+.pl .pl-bbody ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pl .pl-bbody li { display: flex; gap: 7px; align-items: flex-start; font-weight: 700; line-height: 1.35; }
+.pl .pl-bbody li > span { flex: 0 0 18px; height: 18px; border-radius: 5px; border: 2px solid #9aa3ad; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; }
+.pl .pl-bbody li.ok > span { background: var(--pl-green); border-color: var(--pl-green); }
+.pl .pl-bbody li.ok { color: #2f7d45; }
+.pl .pl-bwin { margin-top: 8px !important; font-weight: 900; color: #2f7d45; }
+.pl .pl-bacts { display: flex; gap: 6px; margin-top: 8px; }
+.pl .pl-bacts button { border: 1px solid #c9d0d8; background: #fff; border-radius: 7px; padding: 3px 9px; font-weight: 800; font-size: 12px; cursor: pointer; }
+.pl .pl-align { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 4px 0 8px; }
+.pl .pl-align button { background: #1d2128; color: #e9edf2; border: 2px solid var(--pl-line); border-radius: 7px; padding: 4px 2px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.pl .pl-card.wide { max-width: 640px; }
+.pl .pl-drawbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0; }
+.pl .pl-drawbar > button { border: 2px solid #c9d0d8; background: #fff; border-radius: 9px; padding: 6px 11px; font-weight: 800; font-size: 13px; cursor: pointer; }
+.pl .pl-drawbar .pl-go, .pl .pl-dl .pl-go { background: var(--pl-green); border-color: var(--pl-green); color: #fff; }
+.pl .pl-segsm { margin: 0; border-color: #c9d0d8; }
+.pl .pl-segsm button { background: #fff; color: #1b1f26; padding: 6px 10px; }
+.pl .pl-segsm button.on { background: #3b7fc4; color: #fff; }
+.pl .pl-sp { flex: 1; }
+.pl .pl-drawwrap { display: flex; justify-content: center; }
+.pl #plDrawCv { width: min(440px, 100%); height: auto; aspect-ratio: 1; border-radius: 10px; border: 2px solid #c9d0d8; touch-action: none; cursor: crosshair; }
+.pl .pl-bad { color: #c0392b !important; font-weight: 800; min-height: 1em; }
+.pl .pl-frow { display: flex; flex-direction: column; gap: 4px; font-weight: 800; font-size: 13px; margin: 8px 0; }
+.pl .pl-frow input, .pl .pl-frow textarea, .pl .pl-rrow select, .pl .pl-rrow input { border: 2px solid #c9d0d8; border-radius: 8px; padding: 6px 8px; font: inherit; font-weight: 600; background: #fff; color: #1b1f26; }
+.pl .pl-rules { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
+.pl .pl-rrow { display: grid; grid-template-columns: 1fr 110px 34px; gap: 6px; align-items: center; }
+.pl .pl-rrow button { width: 34px; height: 34px; border: 0; border-radius: 8px; background: #e3e7ec; cursor: pointer; }
 
 /* check & print pop-up */
 .pl .pl-modal { position: absolute; inset: 0; z-index: 30; background: rgba(8,10,14,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }

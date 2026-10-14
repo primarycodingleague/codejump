@@ -29,8 +29,18 @@ export const KINDS = [
   ['hexagon', 'Hexagon', 20, 20, 10],
   ['star', 'Star', 24, 24, 5],
   ['heart', 'Heart', 24, 22, 5],
-  ['text', 'Text', 30, 15, 5]
+  ['text', 'Text', 30, 15, 5],
+  ['rounded', 'Rounded box', 20, 20, 20],
+  ['halfcyl', 'Half cylinder', 20, 20, 10],
+  ['arrow', 'Arrow', 24, 16, 5],
+  ['plus', 'Plus', 20, 20, 5],
+  ['gear', 'Gear', 30, 30, 5, 'part'],
+  ['hinge', 'Hinge', 40, 20, 6, 'part'],
+  ['sketch', 'My drawing', 30, 30, 10, 'hidden']
 ];
+// shapes for the Shapes panel (in this order), and the kinds shown under Parts
+export const SHAPE_KINDS = KINDS.filter(k => !k[5]).map(k => k[0]);
+export const GAP = 0.5; // the gap a printed part needs to move (hinges, pegs): 0.5 mm suits most school printers
 export const KIND = Object.fromEntries(KINDS.map(k => [k[0], k]));
 export const COLOURS = ['#e8453c', '#f59f18', '#f5d63c', '#5cb85c', '#2fb7a8', '#3b7fc4', '#7c5cff', '#e45fa5', '#ffffff', '#9aa3ad', '#3a3f47', '#8b5a2b'];
 export const PLATES = [['small', 'Small printer (120 mm)', 120, 120], ['medium', 'Most printers (180 mm)', 180, 180], ['large', 'Big printer (250 mm)', 250, 250]];
@@ -51,6 +61,9 @@ export function makeObj(kind, o = {}) {
   const ob = { id: o.id || 'o1', kind: k[0], hole: !!o.hole, color: isCol(o.color) ? o.color : COLOURS[5], x: 0, y: 0, z: 0, w: k[2], d: k[3], h: k[4], rx: 0, ry: 0, rz: 0, flip: 0 };
   if (kind === 'text') ob.text = o.text != null ? String(o.text).slice(0, LIMITS.text) : 'Hi';
   if (kind === 'tube') ob.wall = 2;
+  if (kind === 'rounded') ob.round = 3;
+  if (kind === 'gear') ob.teeth = 12;
+  if (kind === 'sketch') { ob.pts = Array.isArray(o.pts) ? o.pts : [[200, 0], [800, 0], [1000, 600], [500, 1000], [0, 600]]; ob.mode = o.mode === 'spin' ? 'spin' : 'up'; }
   for (const f of ['x', 'y', 'z', 'w', 'd', 'h', 'rx', 'ry', 'rz']) if (o[f] != null) ob[f] = o[f];
   return ob;
 }
@@ -78,6 +91,9 @@ export function cleanProject(p) {
       rx: num(o.rx, -360, 360, 0), ry: num(o.ry, -360, 360, 0), rz: num(o.rz, -360, 360, 0), flip: num(o.flip, 0, 7, 0) | 0 };
     if (kind === 'text') c.text = typeof o.text === 'string' ? o.text.slice(0, LIMITS.text) : 'Hi';
     if (kind === 'tube') c.wall = num(o.wall, 0.4, 100, 2);
+    if (kind === 'rounded') c.round = num(o.round, 0, 100, 3);
+    if (kind === 'gear') c.teeth = Math.round(num(o.teeth, 6, 60, 12));
+    if (kind === 'sketch') { c.pts = cleanPts(o.pts); c.mode = o.mode === 'spin' ? 'spin' : 'up'; if (!c.pts) { count--; ids.delete(id); return null; } }
     if (kind === 'group') {
       c.bw = num(o.bw, 0.2, S, c.w); c.bd = num(o.bd, 0.2, S, c.d); c.bh = num(o.bh, 0.2, S, c.h);
       c.children = (Array.isArray(o.children) ? o.children : []).map(k => clean(k, depth + 1)).filter(Boolean);
@@ -86,7 +102,15 @@ export function cleanProject(p) {
     return c;
   };
   out.objs = (Array.isArray(p.objs) ? p.objs : []).map(o => clean(o, 0)).filter(Boolean);
+  const br = cleanBrief(p.brief); if (br) out.brief = br;
   return out;
+}
+// A drawing's outline: 3–300 points, whole numbers 0–1000 across and up the drawing box.
+export function cleanPts(pts) {
+  if (!Array.isArray(pts)) return null;
+  const out = [];
+  for (const q of pts.slice(0, 300)) { if (!Array.isArray(q)) continue; const x = Math.round(num(q[0], 0, 1000, NaN)), y = Math.round(num(q[1], 0, 1000, NaN)); if (Number.isFinite(x) && Number.isFinite(y)) out.push([x, y]); }
+  return out.length >= 3 ? out : null;
 }
 
 // Every id in the project, and a fresh one.
@@ -171,6 +195,23 @@ export function createModel(M, opts = {}) {
     return u;
   }
 
+  // A pupil's drawing: stood up into a solid ('up') or spun round its left edge like a pot ('spin').
+  function sketchShape(key) {
+    const [, mode, json] = key.split('|'); let pts; try { pts = JSON.parse(json); } catch (e) { return null; }
+    let cs = null, m = null;
+    try {
+      if (mode === 'spin') {
+        const prof = pts.map(([x, y]) => [x / 1000, y / 1000]);
+        cs = new CrossSection([prof], 'NonZero'); if (cs.isEmpty()) return null;
+        m = Manifold.revolve(cs, SEG);
+      } else {
+        cs = new CrossSection([pts.map(([x, y]) => [x / 1000, y / 1000])], 'NonZero'); if (cs.isEmpty()) return null;
+        m = Manifold.extrude(cs, 1);
+      }
+    } catch (e) { free(m); return null; } finally { free(cs); }
+    if (!m || m.isEmpty() || m.volume() < 1e-6) { free(m); return null; }
+    return fitUnit(m);
+  }
   function unit(kind, text) {
     const key = kind === 'text' ? 'text|' + text : kind;
     if (unitCache.has(key)) return unitCache.get(key);
@@ -194,6 +235,15 @@ export function createModel(M, opts = {}) {
       const p = []; for (let i = 0; i < 64; i++) { const t = i / 64 * Math.PI * 2, s = Math.sin(t); p.push([16 * s * s * s, 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)]); }
       m = prism(p);
     } else if (kind === 'text') m = textShape(text);
+    else if (kind === 'halfcyl') { const c = Manifold.cylinder(1, 0.5, 0.5, SEG, true), r = c.rotate([0, 90, 0]), cut = Manifold.cube([2, 2, 1], false).translate([-1, -1, 0]), hm = r.intersect(cut); free(c, r, cut); m = fitUnit(hm); }
+    else if (kind === 'arrow') m = prism([[-0.5, -0.15], [0.05, -0.15], [0.05, -0.4], [0.5, 0], [0.05, 0.4], [0.05, 0.15], [-0.5, 0.15]]);
+    else if (kind === 'plus') m = prism([[-0.17, -0.5], [0.17, -0.5], [0.17, -0.17], [0.5, -0.17], [0.5, 0.17], [0.17, 0.17], [0.17, 0.5], [-0.17, 0.5], [-0.17, 0.17], [-0.5, 0.17], [-0.5, -0.17], [-0.17, -0.17]]);
+    else if (kind.startsWith('gear|')) {
+      const n = +kind.slice(5), outer = [], hole = [];
+      for (let i = 0; i < n; i++) for (const [f, r] of [[0, 0.41], [0.12, 0.41], [0.3, 0.5], [0.45, 0.5], [0.63, 0.41], [0.88, 0.41]]) { const a = (i + f) / n * Math.PI * 2; outer.push([Math.cos(a) * r, Math.sin(a) * r]); }
+      for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; hole.push([Math.cos(a) * 0.09, Math.sin(a) * 0.09]); }
+      const cs = new CrossSection([outer, hole], 'EvenOdd'), e = Manifold.extrude(cs, 1); free(cs); m = fitUnit(e);
+    } else if (kind.startsWith('sketch|')) m = sketchShape(kind);
     unitCache.set(key, m);
     return m;
   }
@@ -201,21 +251,54 @@ export function createModel(M, opts = {}) {
   // A plain shape in its parent's space.
   function primitive(o) {
     let base = null; const tmp = [];
-    if (o.kind === 'tube') {
+    if (o.kind === 'rounded') base = roundedBox(o);
+    else if (o.kind === 'hinge') base = hinge(o);
+    else if (o.kind === 'tube') {
       const u = unit('tube'), wall = Math.max(0.4, o.wall || 2);
       const outer = u.scale([o.w, o.d, o.h]); tmp.push(outer);
       const iw = o.w - 2 * wall, id = o.d - 2 * wall;
       if (iw > 0.2 && id > 0.2) { const inner = u.scale([iw, id, o.h + 2]), inner2 = inner.translate([0, 0, -1]); tmp.push(inner, inner2); base = outer.subtract(inner2); }
       else base = outer.translate([0, 0, 0]);
     } else {
-      const u = unit(o.kind, o.text || '');
+      const k = o.kind === 'gear' ? 'gear|' + (o.teeth || 12) : o.kind === 'sketch' ? 'sketch|' + o.mode + '|' + JSON.stringify(o.pts) : o.kind;
+      const u = unit(k, o.text || '');
       if (!u) return null;
       base = u.scale([o.w, o.d, o.h]);
     }
+    if (!base) return null;
     let m = base;
     for (const [bit, n] of [[1, [1, 0, 0]], [2, [0, 1, 0]], [4, [0, 0, 1]]]) if (o.flip & bit) { tmp.push(m); m = m.mirror(n); if (bit === 4) { tmp.push(m); m = m.translate([0, 0, o.h]); } }
     const out = place(m, o); tmp.push(m);
     free(...tmp);
+    return out;
+  }
+  // A box with rounded sides and top edges but a flat bottom (so it prints well), built at its real size.
+  function roundedBox(o) {
+    const r = Math.max(0, Math.min(o.round || 0, o.w / 2 - 0.01, o.d / 2 - 0.01, o.h - 0.01));
+    if (r < 0.05) return Manifold.cube([o.w, o.d, o.h], false).translate([-o.w / 2, -o.d / 2, 0]);
+    const parts = [];
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+      const x = sx * (o.w / 2 - r), y = sy * (o.d / 2 - r);
+      const s = Manifold.sphere(r, 24), c = Manifold.cylinder(0.01, r, r, 24, false);
+      parts.push(s.translate([x, y, o.h - r]), c.translate([x, y, 0])); free(s, c);
+    }
+    const m = Manifold.hull(parts); free(...parts); return m;
+  }
+  // A hinge that prints already put together: two leaves lying flat, a pin on one, a knuckle with a hole round it
+  // on the other, and a GAP all round so it can swing. Built at its real size (gaps must stay 0.5 mm).
+  function hinge(o) {
+    const W = o.w, D = o.d, H = o.h, g = GAP, t = Math.max(1, Math.min(2, H / 2)), R = H / 2, pr = Math.max(0.8, H / 4);
+    const tmp = [], T = m => (tmp.push(m), m);
+    const rod = (r, y0, y1) => { const c = T(Manifold.cylinder(y1 - y0, r, r, 32, false)), a = T(c.rotate([-90, 0, 0])); return T(a.translate([0, y0, R])); };
+    const box = (x0, x1, y0, y1, z1) => T(Manifold.cube([x1 - x0, y1 - y0, z1], false).translate([x0, y0, 0]));
+    const y = [-D / 2, -D / 6, D / 6, D / 2];
+    const leafA = box(-W / 2, 0, -D / 2, D / 2, t), leafB = box(0, W / 2, -D / 2, D / 2, t);
+    const kA1 = rod(R, y[0], y[1] - g / 2), kA3 = rod(R, y[2] + g / 2, y[3]), kB = rod(R, y[1] + g / 2, y[2] - g / 2);
+    const pin = rod(pr, y[0] + 0.2, y[3] - 0.2);
+    const A = Manifold.union([T(leafA.subtract(rod(R + g, y[1] - g / 2, y[2] + g / 2))), kA1, kA3, pin]);
+    const leafBcut = T(T(leafB.subtract(rod(R + g, y[0] - 1, y[1] + g / 2))).subtract(rod(R + g, y[2] - g / 2, y[3] + 1)));
+    const B = T(T(Manifold.union([leafBcut, kB])).subtract(rod(pr + g, y[0] - 1, y[3] + 1)));
+    const out = Manifold.union([A, B]); free(A, ...tmp);
     return out;
   }
   // Turn about the middle, then stand the bottom at z.
@@ -366,13 +449,31 @@ export function createModel(M, opts = {}) {
     const ps = project.objs.filter(o => !o.hole).flatMap(o => pieces(o));
     if (!ps.length) return null;
     const u = Manifold.union(ps.map(p => p.m));
-    const mesh = meshOf(u), info = { volume: u.volume(), genus: u.genus(), status: u.status(), box: u.boundingBox() };
+    const mesh = meshOf(u), info = { volume: u.volume(), area: u.surfaceArea(), genus: u.genus(), status: u.status(), box: u.boundingBox(), pieces: 0 };
+    const comps = u.decompose(); info.pieces = comps.length; free(...comps);
     free(u);
     return { positions: mesh.positions, indices: mesh.indices, colour: ps[0].color, name: project.title || 'My design', ...info };
   }
 
+  // Line the objects up with the box round them all: axis 0 x / 1 y / 2 z, at 'min' | 'mid' | 'max'.
+  function align(project, ids, axis, at) {
+    const objs = ids.map(id => project.objs.find(o => o.id === id)).filter(Boolean), bs = objs.map(o => bounds(o));
+    if (objs.length < 2 || bs.some(b => !b)) return false;
+    const lo = Math.min(...bs.map(b => b.min[axis])), hi = Math.max(...bs.map(b => b.max[axis])), f = ['x', 'y', 'z'][axis];
+    objs.forEach((o, i) => {
+      const b = bs[i], d = at === 'min' ? lo - b.min[axis] : at === 'max' ? hi - b.max[axis] : (lo + hi) / 2 - (b.min[axis] + b.max[axis]) / 2;
+      o[f] = Math.round((o[f] + d) * 100) / 100;
+    });
+    return true;
+  }
+  // Roughly how much plastic and time a print takes (a typical school printer: 2 walls, 15% inside fill, PLA).
+  function estimate(project) {
+    const w = exportWhole(project); if (!w) return null;
+    return estimateFrom(w.volume, w.area);
+  }
+
   return {
-    pieces, whole, bounds, meshOf, group, ungroup, check, exportParts, exportWhole, free,
+    pieces, whole, bounds, meshOf, group, ungroup, check, exportParts, exportWhole, free, align, estimate,
     setFont(f) { font = f; for (const [k, v] of unitCache) if (k.startsWith('text|')) { free(v); unitCache.delete(k); } this.clear(); },
     hasFont: () => !!font,
     clear() { for (const v of cache.values()) for (const p of v) free(p.m); cache.clear(); },
@@ -493,4 +594,102 @@ export function exampleProject(id) {
     for (let i = 0; i < 3; i++) { const a = i * 120; add('ramp', { w: 14, d: 2, h: 20, x: Math.round(Math.cos(a * Math.PI / 180) * 160) / 10, y: Math.round(Math.sin(a * Math.PI / 180) * 160) / 10, rz: a, color: '#3b7fc4' }); }
   } else return null;
   return p;
+}
+
+/* ------------------------------------------------------------------ estimates */
+
+// Plastic: the outside skin (about 0.8 mm: two 0.4 mm walls, and top/bottom layers) is solid, the inside 15% filled.
+// Time: a slow and a fast school printer push out about 4 and 10 mm³ of plastic a second, plus a few minutes to start.
+export function estimateFrom(volume, area) {
+  const skin = Math.min(volume, area * 0.8), used = skin + 0.15 * Math.max(0, volume - skin);
+  const grams = used / 1000 * 1.24;
+  const lo = Math.round(used / 10 / 60 + 3), hi = Math.round(used / 4 / 60 + 5);
+  return { mm3: used, grams: Math.max(0.1, Math.round(grams * 10) / 10), minutes: [lo, hi] };
+}
+export function timeText(m) { const f = n => n < 60 ? n + ' min' : Math.floor(n / 60) + ' h' + (n % 60 ? ' ' + (n % 60) + ' min' : ''); return m[0] === m[1] ? f(m[0]) : f(m[0]) + ' to ' + f(m[1]); }
+
+/* ------------------------------------------------------------------ ready-made parts */
+
+export const PARTS = [
+  ['loop', 'Key ring loop', 'A ring to put on the edge of a keyring or a pendant.'],
+  ['pegs', 'Peg and hole', 'A peg, and a hole 0.6 mm wider so the peg fits into it after printing.'],
+  ['boxlid', 'Box and lid', 'A little box and a lid that fits on it.'],
+  ['gear', 'Gear', 'A gear wheel. Choose how many teeth; gears with the same tooth size mesh together.'],
+  ['hinge', 'Hinge', 'Prints already joined, with gaps so it can swing.']
+];
+// New objects for a part, standing round x, y (fresh ids from the project).
+export function partObjs(id, project, x = 0, y = 0) {
+  const ids = allIds(project.objs); let n = ids.size;
+  const nid = () => { do { n++; } while (ids.has('o' + n)); ids.add('o' + n); return 'o' + n; };
+  const mk = (kind, o) => { const ob = makeObj(kind, { ...o, id: nid() }); for (const f of ['wall', 'teeth', 'round']) if (o[f] != null) ob[f] = o[f]; ob.x += x; ob.y += y; return ob; };
+  const grp = (children, w, d, h, color, gx, gy) => { const g = { id: nid(), kind: 'group', hole: false, color, x: x + gx, y: y + gy, z: 0, w, d, h, bw: w, bd: d, bh: h, rx: 0, ry: 0, rz: 0, flip: 0, children }; children.forEach(c => { c.x -= x; c.y -= y; }); return g; };
+  if (id === 'loop') return [mk('tube', { w: 10, d: 10, h: 3, wall: 2.5, color: '#f59f18' })];
+  if (id === 'pegs') return [mk('cylinder', { x: -8, w: 5, d: 5, h: 10, color: '#3b7fc4' }), mk('cylinder', { x: 8, w: 5 + 2 * 0.3, d: 5 + 2 * 0.3, h: 8, z: 2, hole: true })];
+  if (id === 'boxlid') {
+    const box = grp([mk('box', { w: 40, d: 30, h: 25, color: '#2fb7a8' }), mk('box', { w: 36, d: 26, h: 25, z: 2, hole: true })], 40, 30, 25, '#2fb7a8', -25, 0);
+    const lid = grp([mk('box', { w: 40, d: 30, h: 2, color: '#f5d63c' }), mk('box', { w: 35.4, d: 25.4, h: 3, z: 2, color: '#f5d63c' }), mk('box', { w: 31.4, d: 21.4, h: 4, z: 2, hole: true })], 40, 30, 5, '#f5d63c', 25, 0);
+    return [box, lid];
+  }
+  if (id === 'gear') return [mk('gear', { color: '#9aa3ad' })];
+  if (id === 'hinge') return [mk('hinge', { color: '#e45fa5' })];
+  return [];
+}
+
+/* ------------------------------------------------------------------ design briefs */
+
+// A brief = {title, text, rules:[{k, v}]}. Rules tick themselves while pupils design.
+export const RULES = {
+  maxw: v => 'No wider than ' + v + ' mm', maxd: v => 'No deeper than ' + v + ' mm', maxh: v => 'No taller than ' + v + ' mm',
+  minw: v => 'At least ' + v + ' mm wide', minh: v => 'At least ' + v + ' mm tall',
+  hole: () => 'Has a hole cut out of it (a hole grouped with a shape)', text: () => 'Has some writing on it',
+  colours: v => 'Uses at least ' + v + ' colours', shapes: v => 'Made from at least ' + v + ' shapes',
+  uses: v => 'Uses ' + ((KIND[v] || [0, v])[1] === 'My drawing' ? 'a shape you drew' : 'a ' + (KIND[v] || [0, v])[1].toLowerCase()),
+  ready: () => 'Ready to print (Check & print finds nothing to fix)'
+};
+export function ruleText(r) { const f = RULES[r.k]; return f ? f(r.v) : ''; }
+export function cleanBrief(b) {
+  if (!b || typeof b !== 'object') return null;
+  const rules = (Array.isArray(b.rules) ? b.rules : []).slice(0, 12).map(r => {
+    if (!r || !RULES[r.k]) return null;
+    if (r.k === 'uses') return KIND[r.v] ? { k: 'uses', v: r.v } : null;
+    if (['hole', 'text', 'ready'].includes(r.k)) return { k: r.k };
+    const v = Math.round(num(r.v, 1, 1000, NaN)); return Number.isFinite(v) ? { k: r.k, v } : null;
+  }).filter(Boolean);
+  const title = typeof b.title === 'string' ? b.title.slice(0, 60) : '', text = typeof b.text === 'string' ? b.text.slice(0, 400) : '';
+  if (!title && !text && !rules.length) return null;
+  return { title, text, rules };
+}
+export const BRIEFS = [
+  { id: 'keyring', title: 'A keyring with your name', text: 'Design a keyring with your name (or initials) on it. It has to fit in a pocket and needs a hole for the key ring.', rules: [{ k: 'maxw', v: 70 }, { k: 'maxh', v: 8 }, { k: 'text' }, { k: 'hole' }, { k: 'ready' }] },
+  { id: 'phonestand', title: 'A phone stand', text: 'Design a stand that holds a phone up so you can watch it on a desk. The phone is about 10 mm thick, so leave a slot at least 12 mm wide for it to sit in.', rules: [{ k: 'maxw', v: 90 }, { k: 'maxd', v: 90 }, { k: 'minh', v: 40 }, { k: 'shapes', v: 3 }, { k: 'ready' }] },
+  { id: 'pencilpot', title: 'A pencil pot', text: 'Design a pot that holds pencils without falling over. It needs a hollow inside and a bottom.', rules: [{ k: 'minh', v: 60 }, { k: 'maxw', v: 90 }, { k: 'hole' }, { k: 'ready' }] },
+  { id: 'badge', title: 'A badge for the school club', text: 'Design a badge for a school club. Use at least two colours and some writing. Keep it thin and flat.', rules: [{ k: 'maxw', v: 60 }, { k: 'maxd', v: 60 }, { k: 'maxh', v: 6 }, { k: 'text' }, { k: 'colours', v: 2 }, { k: 'ready' }] },
+  { id: 'chess', title: 'A chess piece', text: 'Draw the outline of a chess piece (a pawn, rook or king) and spin it round to make it solid. Add a top if you like.', rules: [{ k: 'uses', v: 'sketch' }, { k: 'maxh', v: 60 }, { k: 'minh', v: 25 }, { k: 'ready' }] }
+];
+// Which rules of a brief the design meets: [{text, ok}] (model = createModel(...)).
+export function briefCheck(model, project, brief) {
+  if (!brief) return [];
+  const solids = project.objs.filter(o => !o.hole);
+  let b = null;
+  for (const o of solids) { const q = model.bounds(o); if (q) { if (!b) b = { min: q.min.slice(), max: q.max.slice() }; else for (let i = 0; i < 3; i++) { b.min[i] = Math.min(b.min[i], q.min[i]); b.max[i] = Math.max(b.max[i], q.max[i]); } } }
+  const size = b ? [b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - Math.min(0, b.min[2])] : [0, 0, 0];
+  const all = []; const walk = (os, inGroup) => { for (const o of os) { all.push({ o, inGroup }); if (o.children) walk(o.children, true); } }; walk(solids, false);
+  const prims = all.filter(x => x.o.kind !== 'group');
+  const cutting = all.some(x => x.o.kind === 'group' && x.o.children.some(c => c.hole));
+  const cols = new Set(prims.filter(x => !x.o.hole).map(x => x.o.color));
+  let ready = null;
+  return brief.rules.map(r => {
+    let ok = false; const e = 0.05;
+    if (r.k === 'maxw') ok = !!b && size[0] <= r.v + e; else if (r.k === 'maxd') ok = !!b && size[1] <= r.v + e; else if (r.k === 'maxh') ok = !!b && size[2] <= r.v + e;
+    else if (r.k === 'minw') ok = size[0] >= r.v - e; else if (r.k === 'minh') ok = size[2] >= r.v - e;
+    else if (r.k === 'hole') ok = cutting; else if (r.k === 'text') ok = prims.some(x => x.o.kind === 'text' && !x.o.hole);
+    else if (r.k === 'colours') ok = cols.size >= r.v; else if (r.k === 'shapes') ok = prims.filter(x => !x.o.hole).length >= r.v;
+    else if (r.k === 'uses') ok = prims.some(x => x.o.kind === r.v && !x.o.hole);
+    else if (r.k === 'ready') { if (ready == null) ready = !model.check(project).some(c => c.level === 'stop' || c.level === 'warn'); ok = ready; }
+    return { text: ruleText(r), ok, k: r.k };
+  });
+}
+export function briefProject(id) {
+  const b = BRIEFS.find(x => x.id === id); if (!b) return null;
+  const p = newProject(); p.title = b.title; p.brief = cleanBrief(b); return p;
 }

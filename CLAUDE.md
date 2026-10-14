@@ -60,8 +60,22 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   exitPrint3DUI`, `body.print3d-mode`, `#print3d-ui`, payload `print3d`, `#pt-modal` tile `data-pt="print3d"` (KS1 hidden), home tile
   `data-start="print3d"` (`home/print3d.jpg`, a real render), icon `#i-print3d`, `PRINT3D_HELP`, Teacher Guide section, thumbnail badge,
   `LS_TYPE`/`LS_LAB_ORDER`, Share hides Collaborate. Offline list includes `print/`. Test: `tests/print.test.mjs` (57 checks).
-- **Ideas not done:** a lesson (Years 5–6 design brief: keyring / phone stand), align tool, rulers/measure tool, a workplane on a face,
-  making a shape from a drawing, lettering on curved faces.
+- **More (14 Oct 2026, Charlie picked all four):** shapes rounded (`round` mm; flat bottom: hull of top spheres + bottom discs, built at
+  real size), halfcyl, arrow, plus; parts kinds `gear` (`teeth` 6–60, unit cache key `gear|n`, axle hole) and `hinge` (built at real size:
+  two leaves + knuckles + pin with `GAP` 0.5 mm all round → 2 separate pieces, print-in-place); `KINDS[i][5]` = 'part'|'hidden' (not in
+  `SHAPE_KINDS`). `PARTS` + `partObjs(id, project, x, y)`: loop (tube), pegs (peg + hole 0.6 wider), boxlid (two groups, lip 0.3 gap),
+  gear, hinge. **Drawings** kind `sketch` {pts: ≤300 [x,y] ints 0–1000 (`cleanPts`), mode 'up' (extrude) | 'spin' (revolve round x=0)},
+  unit cache key `sketch|mode|json`; no area → no pieces. App: `#plDraw` → `openDraw(edit)` (modal canvas 440, click points with snap
+  50 / freehand + RDP `simplify`, spin mode = right half with a mirrored ghost, validates via model.whole). **Align** `model.align(p, ids,
+  axis, 'min'|'mid'|'max')` → inspector "Line them up" (multi-select). **Measure** `#plMeasure`/M: `setMeasure`, two clicks (object hit or
+  plate), pink line + `#plMLabel` (distance + across/back/up). **Estimate** `estimateFrom(volume, area)` (skin 0.8 mm solid + 15% fill,
+  PLA 1.24 g/cm³; 10 and 4 mm³/s → time range) + `timeText`; Check & print shows plastic + time (`exportWhole` now has area + pieces).
+  **Challenges** = `project.brief` {title, text, rules [{k, v}]} (`RULES` maxw/maxd/maxh/minw/minh/hole/text/colours/shapes/uses/ready,
+  `cleanBrief`, `briefCheck(model, project, brief)` → [{text, ok, k}], `BRIEFS` keyring/phonestand/pencilpot/badge/chess, `briefProject`).
+  App: Challenges section, `#plBrief` checklist on the stage (`renderBrief`, debounced, toast once when all tick), `editBrief` ("Make a
+  challenge…", rule rows). **Lessons:** `print-keyring` (Years 3–4) + `print-phone-stand` (Years 5–6), slides, starters from
+  `lessons/builds/print-*.mjs`; the Lesson card sits bottom-right in print3d-mode (`.pl-empty` hint moved to the bottom). Tests: 88 checks.
+- **Ideas not done:** a workplane on a face, lettering on curved faces, more parts (snap fit, threads), a printable "fit test" card.
 
 ## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: "like Minecraft Education's CS units… our own"
 - **Our own unit**, modelled only on the SKILL ORDER of a standard computing progression (Minecraft Education's "Coding FUNdamentals" goes

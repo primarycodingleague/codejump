@@ -1,5 +1,5 @@
-/* CodeJump · 3D Print Lab — the app: design something to 3D print from ready-made shapes on a build plate.
- * Lazy-loaded by CodeJump (build-and-play.html: loadPrintLab) only when a 3D Print Lab project opens, and mounted into
+/* CodeJump · Print Lab — the app: design something to 3D print from ready-made shapes on a build plate.
+ * Lazy-loaded by CodeJump (build-and-play.html: loadPrintLab) only when a Print Lab project opens, and mounted into
  * #print3d-ui. CodeJump owns saving and sharing: getProject() goes into the payload (payload.print3d) and onChange()
  * marks the project dirty.
  *
@@ -57,7 +57,7 @@ const TEMPLATE = `
     </div>
     <div class="pl-stage" id="plStage">
       <canvas id="plCanvas" tabindex="0" aria-label="The build plate. Drag a shape to move it; drag the white handles to size it, the arrow to lift it and the curved arrows to turn it. Drag empty space to look around, scroll or pinch to zoom."></canvas>
-      <div class="pl-loading" id="plLoading">Getting the 3D Print Lab ready…</div>
+      <div class="pl-loading" id="plLoading">Getting the Print Lab ready…</div>
       <div class="pl-empty" id="plEmpty" hidden>Drag a shape onto the build plate to start.</div>
       <div class="pl-tip" id="plTip" hidden></div>
       <div class="pl-views" role="group" aria-label="Camera">
@@ -693,7 +693,7 @@ export function mount(root, host) {
     $('plLoading').hidden = true;
     shapePanel(); afterLoad(); resize(); setView('home');
   })();
-  ready.catch(e => { console.warn(e); $('plLoading').textContent = 'The 3D Print Lab needs the internet the first time it opens. Check your connection and try again.'; });
+  ready.catch(e => { console.warn(e); $('plLoading').textContent = 'The Print Lab needs the internet the first time it opens. Check your connection and try again.'; });
   $('plTitle').value = proj.title || '';
   raf = requestAnimationFrame(tick);
 

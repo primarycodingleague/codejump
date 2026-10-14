@@ -1,4 +1,4 @@
-// 3D Print Lab (projectType 'print3d'): the shapes, holes, groups, checks and print files in Node (Manifold +
+// Print Lab (projectType 'print3d'): the shapes, holes, groups, checks and print files in Node (Manifold +
 // opentype.js straight from print/vendor), then the app — chooser, dragging shapes on, moving, sizing, lifting and
 // turning with the handles, grouping a hole, Check & print, downloads, undo, saving and reopening.
 import { ok, done, serve, browser, openApp, ROOT, sleep } from './lib.mjs';
@@ -113,9 +113,9 @@ try {
   const p3 = () => page.evaluate(() => p3dApp._proj());
 
   // from the home page: Key Stage 1 doesn't get it, Key Stage 2 does
-  ok(await page.evaluate(() => !!document.querySelector('.hm-tile[data-start="print3d"] img')), 'the 3D Print Lab has a tile on the home page');
+  ok(await page.evaluate(() => !!document.querySelector('.hm-tile[data-start="print3d"] img')), 'the Print Lab has a tile on the home page');
   await page.click('.hm-tile[data-start="print3d"]'); await page.click('#ks-modal .ks-opt[data-ks="ks1"]');
-  ok(await page.evaluate(() => !document.body.classList.contains('print3d-mode') && getComputedStyle(document.querySelector('#pt-modal .ks-opt[data-pt="print3d"]')).display === 'none'), 'Key Stage 1 doesn’t get the 3D Print Lab');
+  ok(await page.evaluate(() => !document.body.classList.contains('print3d-mode') && getComputedStyle(document.querySelector('#pt-modal .ks-opt[data-pt="print3d"]')).display === 'none'), 'Key Stage 1 doesn’t get the Print Lab');
   await page.evaluate(() => { document.getElementById('pt-modal').classList.add('hide'); showHome(); });
   await page.click('.hm-tile[data-start="print3d"]'); await page.click('#ks-modal .ks-opt[data-ks="ks2"]');
   await page.waitForFunction(() => typeof p3dApp !== 'undefined' && p3dApp && p3dApp._model && p3dApp._model() && document.querySelectorAll('.pl-tile img[src^="data:"]').length > 10, null, { timeout: 90000 });

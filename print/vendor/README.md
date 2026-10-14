@@ -1,4 +1,4 @@
-# 3D Print Lab vendor files
+# Print Lab vendor files
 
 | File | What | Licence |
 |---|---|---|

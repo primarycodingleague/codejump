@@ -1,4 +1,4 @@
-// CodeJump 3D Print Lab — the model (no DOM; runs in Node too).
+// CodeJump Print Lab — the model (no DOM; runs in Node too).
 //
 // Pupils design things to 3D print from ready-made shapes: drop shapes on the build plate, size them in
 // millimetres, turn any shape into a HOLE, and GROUP shapes so the holes cut the solid shapes. The real
@@ -386,7 +386,7 @@ export function createModel(M, opts = {}) {
 
 /* ------------------------------------------------------------------ STL */
 
-export function toSTL(parts, head = 'CodeJump 3D Print Lab') {
+export function toSTL(parts, head = 'CodeJump Print Lab') {
   const tris = parts.reduce((t, p) => t + p.indices.length / 3, 0);
   const buf = new ArrayBuffer(84 + 50 * tris), dv = new DataView(buf); let o = 84;
   for (let h = 0; h < Math.min(80, head.length); h++) dv.setUint8(h, head.charCodeAt(h) & 0x7f);
@@ -414,7 +414,7 @@ const n3 = v => (Math.round(v * 1000) / 1000).toString();
 export function to3MF(parts, title) {
   title = title || 'My design';
   let x = '<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-GB" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">\n' +
-    '<metadata name="Title">' + esc(title) + '</metadata>\n<metadata name="Application">CodeJump 3D Print Lab</metadata>\n<resources>\n<basematerials id="1">\n';
+    '<metadata name="Title">' + esc(title) + '</metadata>\n<metadata name="Application">CodeJump Print Lab</metadata>\n<resources>\n<basematerials id="1">\n';
   parts.forEach((p, i) => { x += '<base name="' + esc(p.name || 'Part ' + (i + 1)) + '" displaycolor="' + p.colour.toUpperCase() + 'FF"/>\n'; });
   x += '</basematerials>\n';
   const chunks = [x];

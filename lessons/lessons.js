@@ -75,7 +75,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'level-for-a-friend', title: 'Make a level for a friend', ks: 'ks1', years: 'Years 1–2', minutes: 50, type: 'platformer', tool: 'Platformer (build mode)',
+    id: 'level-for-a-friend', title: 'Make a level for a friend', ks: 'ks1', years: 'Years 1–2', minutes: 50, type: 'platformer', tool: 'Platformer Lab (build mode)',
     summary: 'Pupils design a platform game level from Start to Finish, play-test it, then let a friend try.',
     objective: 'We are learning to plan, make and test something on a computer.',
     success: ['I can place blocks to make a path.', 'I can test my level by playing it.', 'I can make my level better after testing.'],
@@ -104,7 +104,7 @@ export const LESSONS = [
 
   // ───────────────────────────────── KEY STAGE 2 ─────────────────────────────────
   {
-    id: 'turtle-shapes', title: 'Shapes with repeat', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'turtle', tool: 'Turtle (typed Logo)',
+    id: 'turtle-shapes', title: 'Shapes with repeat', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'turtle', tool: 'Turtle Lab (typed Logo)',
     summary: 'Pupils turn a long list of commands into a short repeat loop, then work out the rule for drawing any shape.',
     objective: 'We are learning to use repetition (loops) to make programs shorter.',
     success: ['I can spot a pattern in a program.', 'I can use repeat to draw a shape.', 'I can explain how to work out the turn for any shape.'],
@@ -132,7 +132,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'catch-the-stars', title: 'Catch the stars', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'stage', tool: 'Stage (Scratch-style blocks)',
+    id: 'catch-the-stars', title: 'Catch the stars', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'stage', tool: 'Stage Lab (Scratch-style blocks)',
     summary: 'Pupils finish a catching game: an “if touching” check adds to the score and sends the star back to the top.',
     objective: 'We are learning to use selection (if … then) and a score variable in a game.',
     success: ['I can explain what my program does when the star touches the catcher.', 'I can use an if block with a condition.', 'I can change the score.'],
@@ -306,7 +306,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'level-designers', title: 'Level designers: find the bugs', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'platformer', tool: 'Platformer (Build, Play and Code)',
+    id: 'level-designers', title: 'Level designers: find the bugs', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'platformer', tool: 'Platformer Lab (Build, Play and Code)',
     summary: 'Pupils read the events and rules behind a platform game, test it, and fix two bugs: backwards controls and a gem nobody can reach. Then they change the rules, design their own level and get a partner to test it.',
     objective: 'We are learning to design, test and debug a game, using events and rules.',
     success: ['I can explain which event makes the player move or jump.', 'I can find a bug by testing and fix it.', 'I can change the rules of my game and test that they work.', 'I can improve my level after a partner has played it.'],
@@ -337,7 +337,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'code-the-rules', title: 'Code the rules', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'platformer', tool: 'Platformer (Code blocks)',
+    id: 'code-the-rules', title: 'Code the rules', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'platformer', tool: 'Platformer Lab (Code blocks)',
     summary: 'Pupils turn a level that is far too easy into a real challenge by coding their own game rules: variables for the time and the gems, a countdown every second, extra time for every gem, a bonus life with if, and game over when the time runs out.',
     objective: 'We are learning to use variables and selection (if … then) to make the rules of a game.',
     success: ['I can create a variable and give it a starting value.', 'I can change a variable when an event happens.', 'I can use an if block with a condition to make a rule.', 'I can test my rules and explain what each one does.'],
@@ -368,7 +368,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'stage-animate', title: 'Animate a dance party', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'stage', tool: 'Stage (Scratch-style blocks)',
+    id: 'stage-animate', title: 'Animate a dance party', ks: 'ks2', years: 'Years 3–4', minutes: 60, type: 'stage', tool: 'Stage Lab (Scratch-style blocks)',
     summary: 'Pupils bring a dance party to life: each sprite starts its own script from a different event, a repeat loop makes the Cat dance, and a bug makes the Robot float away.',
     objective: 'We are learning to use events, sequence and repetition to animate several sprites, and to debug a program.',
     success: ['I can start a script with different events: the green flag, a click or a key.', 'I can use a repeat loop so I don’t have to copy blocks.', 'I can find and fix a bug in a sprite’s code.'],
@@ -397,7 +397,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'turtle-procedures', title: 'Teach the turtle new words', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'turtle', tool: 'Turtle (typed Logo)',
+    id: 'turtle-procedures', title: 'Teach the turtle new words', ks: 'ks2', years: 'Years 5–6', minutes: 60, type: 'turtle', tool: 'Turtle Lab (typed Logo)',
     summary: 'Pupils break a picture into parts and teach the turtle a new command for each part. A parameter lets one command draw a house of any size, and a street command uses the house command three times.',
     objective: 'We are learning to break a problem into parts and write our own procedures with parameters.',
     success: ['I can break a picture into smaller parts.', 'I can write a procedure with to … end and use it.', 'I can use a parameter so one procedure draws different sizes.', 'I can write a procedure that uses another procedure.'],

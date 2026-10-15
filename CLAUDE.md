@@ -153,6 +153,13 @@ tiles (`[data-start=<projectType>]`: set `_pendingPt`, open the KS modal, then t
 teacher band (`#h-setup-class` = For teachers, `#h-guide` = Teacher Guide) → footer (`#pol-*`). Pictures are real
 screenshots in `home/*.jpg`, loaded via `homeAsset()` (live-site URL when CodeJump runs from a downloaded file).
 All home CSS is the `.hm-*` block under "HOME SCREEN"; the old `.hcard`/`.quickstart` rules are now unused.
+- **Labs carousel (15 Oct 2026, CJ_VERSION 2026.10.15, branch):** the hero's Critter Lab spotlight is now `#hm-spot` = a carousel of
+  `.hm-slide[data-lab]` (one per lab, each with a picture, words and a `[data-start]` Try button; `.on` = showing). JS `homeCarousel`
+  (after the tile bindings): drops a slide whose `.hm-tile[data-start]` is missing/hidden (3D off, or no Print Lab on main), builds
+  `#hm-spot-dots`, arrows `#hm-spot-prev/next`, moves on every 6 s (not while hovered/focused, tab hidden, home hidden, or reduced
+  motion), swipes on touch; `window._homeCarousel` {show, cur, count}. Add a slide when a lab is added.
+- **Lab names (15 Oct 2026):** Platformer / Stage / Turtle are shown as **Platformer Lab / Stage Lab / Turtle Lab** (home tiles, chooser,
+  badges, `LS_TYPE`, help, Teacher Guide, lessons' `tool`). `projectType` values are unchanged. 3D World keeps its name.
 
 ## Project types — `projectType` ('platformer' | 'stage' | 'turtle' | '3d' | 'critter') — NEW, in progress
 The app is becoming a multi-engine "one-stop shop". A `let projectType` global (declared by

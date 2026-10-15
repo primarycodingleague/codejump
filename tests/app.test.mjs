@@ -19,6 +19,27 @@ try {
   ok(await page.evaluate(() => !document.getElementById('home').classList.contains('hide')), 'the home page shows');
   ok(errors.length === 0, 'no errors while loading' + (errors.length ? ': ' + errors.join(' | ') : ''));
 
+  // ---- the home "Our labs" carousel: one slide per lab tile, one showing at a time, arrows and dots move it, a slide's button opens its lab
+  const car = await page.evaluate(() => {
+    const on = () => [...document.querySelectorAll('#hm-spot .hm-slide.on')].map(s => s.dataset.lab);
+    const tiles = [...document.querySelectorAll('#home .hm-tile[data-start]')].filter(t => t.style.display !== 'none').map(t => t.dataset.start);
+    const labs = [...document.querySelectorAll('#hm-spot .hm-slide')].map(s => s.dataset.lab);
+    const first = on(); document.getElementById('hm-spot-next').click(); const second = on();
+    document.querySelectorAll('#hm-spot-dots .hm-spot-dot')[labs.length - 1].click(); const last = on();
+    document.getElementById('hm-spot-next').click(); const wrap = on();
+    const hiddenBtns = [...document.querySelectorAll('#hm-spot .hm-slide:not(.on) button')].every(b => b.tabIndex === -1);
+    const names = ['platformer', 'stage', 'turtle'].map(k => document.querySelector('#home .hm-tile[data-start="' + k + '"] b').textContent.trim());
+    return { first, second, last, wrap, labs, tiles, hiddenBtns, dots: document.querySelectorAll('#hm-spot-dots .hm-spot-dot').length, names };
+  });
+  ok(car.labs.length >= 9 && car.labs.every(l => car.tiles.includes(l)) && car.dots === car.labs.length, 'the labs carousel has a slide (and a dot) for every lab: ' + car.labs.join(' '));
+  ok(car.first.length === 1 && car.first[0] === car.labs[0] && car.second[0] === car.labs[1] && car.last[0] === car.labs.at(-1) && car.wrap[0] === car.labs[0] && car.hiddenBtns,
+    'one slide shows at a time; next, the dots and wrapping round work; hidden slides can\'t be tabbed to');
+  ok(car.names.join('|') === 'Platformer Lab|Stage Lab|Turtle Lab', 'the tiles say Platformer Lab, Stage Lab and Turtle Lab: ' + car.names.join(', '));
+  await page.evaluate(() => _homeCarousel.show([...document.querySelectorAll('#hm-spot .hm-slide')].findIndex(s => s.dataset.lab === 'turtle')));
+  await page.click('#hm-spot .hm-slide.on [data-start]');
+  ok(await page.evaluate(() => !document.getElementById('ks-modal').classList.contains('hide') && _pendingPt === 'turtle'), 'a slide\'s "Try" button starts that lab');
+  await page.evaluate(() => document.getElementById('ks-modal').classList.add('hide'));
+
   // ---- every project type starts
   await page.evaluate(() => startNewProject('ks2'));
   ok(await page.evaluate(() => projectType === 'platformer' && !document.getElementById('app').classList.contains('hide')), 'Platformer opens');

@@ -92,6 +92,22 @@ button,select,.pal-item,.mode-btn,.tbtn,.hbtn,.share-opt{touch-action:manipulati
 .hm-spot-body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
 .hm-spot-title{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;}
 .hm-spot-body p{font-size:15px;line-height:1.55;color:rgba(255,255,255,.82);}
+.hm-spot{position:relative;display:flex;flex-direction:column;}
+.hm-slides{position:relative;display:grid;flex:1 1 auto;}
+.hm-slide{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s linear .6s;}
+.hm-slide.on{opacity:1;visibility:visible;transition:opacity .6s ease;}
+.hm-slide .hm-spot-title .ic{width:26px;height:26px;}
+.hm-spot-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px 16px;}
+.hm-spot-arrow{width:40px;height:40px;flex:0 0 40px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.hm-spot-arrow svg{width:20px;height:20px;}
+.hm-spot-arrow:hover{border-color:var(--gold);color:var(--gold);}
+.hm-spot-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;}
+.hm-spot-dot{width:24px;height:24px;border:0;background:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.hm-spot-dot::before{content:"";width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3);transition:width .3s,background .3s;}
+.hm-spot-dot[aria-current="true"]::before{width:22px;border-radius:5px;background:var(--gold);}
+@media (max-width:480px){.hm-spot-dots{gap:0;}.hm-spot-dot{width:20px;}.hm-spot-dot::before{width:8px;height:8px;}.hm-spot-dot[aria-current="true"]::before{width:16px;}}
+body.a11y-reduce .hm-slide{transition:none;}
+@media (prefers-reduced-motion:reduce){.hm-slide{transition:none;}}
 .hm-badge{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:#e10000;color:#fff;border-radius:999px;padding:3px 9px;vertical-align:2px;}
 .hm-modes{background:#111;padding:clamp(40px,6vw,72px) clamp(16px,4vw,48px);}
 .hm-eyebrow{font-weight:800;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
@@ -1779,12 +1795,93 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
           <button class="hm-btn outline lg" id="h-myprojects"><svg class="ic"><use href="#i-layers"></use></svg> My projects</button>
         </div>
       </div>
-      <div class="hm-spot">
-        <img data-home="critter-build.jpg" alt="A four-legged Critter in the Critter Lab builder, with the path its foot follows">
-        <div class="hm-spot-body">
-          <div class="hm-spot-title"><span class="hm-badge">New</span> Critter Lab</div>
-          <p>Build a creature from blobs and joints. Real physics decides how it moves, then race it in eight contests.</p>
-          <button class="hm-btn gold" data-start="critter"><svg class="ic"><use href="#i-critter"></use></svg> Try Critter Lab</button>
+      <div class="hm-spot" id="hm-spot" aria-roledescription="carousel" aria-label="Our labs">
+        <div class="hm-slides" id="hm-slides">
+          <div class="hm-slide" data-lab="critter" role="group" aria-roledescription="slide" aria-label="Critter Lab">
+            <img data-home="critter-build.jpg" alt="A four-legged Critter in the Critter Lab builder">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-critter"></use></svg> Critter Lab</div>
+              <p>Build a creature from blobs and joints. Real physics decides how it moves, then race it in eight contests.</p>
+              <button class="hm-btn gold" data-start="critter"><svg class="ic"><use href="#i-critter"></use></svg> Try the Critter Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="craft" role="group" aria-roledescription="slide" aria-label="Build Lab" aria-hidden="true">
+            <img data-home="craft.jpg" alt="A block world with a robot helper in the Build Lab">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-craft"></use></svg> Build Lab</div>
+              <p>Walk round a world made of blocks, build it by hand, and code a robot helper in blocks or Python. 18 lessons to follow.</p>
+              <button class="hm-btn gold" data-start="craft" tabindex="-1"><svg class="ic"><use href="#i-craft"></use></svg> Try the Build Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="print3d" role="group" aria-roledescription="slide" aria-label="Print Lab" aria-hidden="true">
+            <img data-home="print3d.jpg" alt="A house, a rocket and a keyring on a 3D printer build plate">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-print3d"></use></svg> Print Lab</div>
+              <p>Design something real from shapes and holes, check it, then download it for a 3D printer.</p>
+              <button class="hm-btn gold" data-start="print3d" tabindex="-1"><svg class="ic"><use href="#i-print3d"></use></svg> Try the Print Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="ai" role="group" aria-roledescription="slide" aria-label="AI Lab" aria-hidden="true">
+            <img data-home="ai.jpg" alt="The AI Lab guessing a drawing">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-ai"></use></svg> AI Lab</div>
+              <p>Teach a computer to recognise your drawings or words, see how it learns, then code a game with it.</p>
+              <button class="hm-btn gold" data-start="ai" tabindex="-1"><svg class="ic"><use href="#i-ai"></use></svg> Try the AI Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="robot" role="group" aria-roledescription="slide" aria-label="Robot Lab" aria-hidden="true">
+            <img data-home="robot.jpg" alt="A friendly 3D robot in the Robot Lab">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-robot"></use></svg> Robot Lab</div>
+              <p>Code a talking 3D robot: faces, moves, lights and its own voice.</p>
+              <button class="hm-btn gold" data-start="robot" tabindex="-1"><svg class="ic"><use href="#i-robot"></use></svg> Try the Robot Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="train" role="group" aria-roledescription="slide" aria-label="Train Lab" aria-hidden="true">
+            <img data-home="train.jpg" alt="A train track with stations in the Train Lab">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-train"></use></svg> Train Lab</div>
+              <p>Click a train track together, then program your trains with colour snaps or blocks.</p>
+              <button class="hm-btn gold" data-start="train" tabindex="-1"><svg class="ic"><use href="#i-train"></use></svg> Try the Train Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="3d" role="group" aria-roledescription="slide" aria-label="3D World" aria-hidden="true">
+            <img data-home="world3d.jpg" alt="A 3D world with a character and trees">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-cube"></use></svg> 3D World</div>
+              <p>Build a 3D world with characters and objects, then play it as a game.</p>
+              <button class="hm-btn gold" data-start="3d" tabindex="-1"><svg class="ic"><use href="#i-cube"></use></svg> Try the 3D World</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="stage" role="group" aria-roledescription="slide" aria-label="Stage Lab" aria-hidden="true">
+            <img data-home="stage.jpg" alt="Sprites on a stage in the Stage Lab">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-stage"></use></svg> Stage Lab</div>
+              <p>Make sprites move, talk and react with snap-together blocks, then add sounds and backdrops.</p>
+              <button class="hm-btn gold" data-start="stage" tabindex="-1"><svg class="ic"><use href="#i-stage"></use></svg> Try the Stage Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="platformer" role="group" aria-roledescription="slide" aria-label="Platformer Lab" aria-hidden="true">
+            <img data-home="platformer.jpg" alt="A platform game level">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-runner"></use></svg> Platformer Lab</div>
+              <p>Paint a level, code the rules, then jump in and play it. Share it with a friend.</p>
+              <button class="hm-btn gold" data-start="platformer" tabindex="-1"><svg class="ic"><use href="#i-runner"></use></svg> Try the Platformer Lab</button>
+            </div>
+          </div>
+          <div class="hm-slide" data-lab="turtle" role="group" aria-roledescription="slide" aria-label="Turtle Lab" aria-hidden="true">
+            <img data-home="turtle.jpg" alt="A turtle drawing a pattern">
+            <div class="hm-spot-body">
+              <div class="hm-spot-title"><svg class="ic"><use href="#i-turtle"></use></svg> Turtle Lab</div>
+              <p>Type Logo commands and watch the turtle draw shapes, spirals and patterns.</p>
+              <button class="hm-btn gold" data-start="turtle" tabindex="-1"><svg class="ic"><use href="#i-turtle"></use></svg> Try the Turtle Lab</button>
+            </div>
+          </div>
+        </div>
+        <div class="hm-spot-nav">
+          <button class="hm-spot-arrow" id="hm-spot-prev" aria-label="Previous lab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="hm-spot-dots" id="hm-spot-dots" role="group" aria-label="Choose a lab"></div>
+          <button class="hm-spot-arrow" id="hm-spot-next" aria-label="Next lab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </div>
     </section>
@@ -1795,9 +1892,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <div class="hm-eyebrow">Choose your game mode</div>
       <h2 class="hm-h2">What do you want to make?</h2>
       <div class="hm-grid hm-tiles6">
-        <button class="hm-tile" data-start="platformer"><img data-home="platformer.jpg" alt=""><span class="hm-tile-b"><b>Platformer</b><span>Paint a level, code the rules, then jump in and play.</span></span></button>
-        <button class="hm-tile" data-start="stage"><img data-home="stage.jpg" alt=""><span class="hm-tile-b"><b>Stage</b><span>Make sprites move, talk and react with snap-together blocks.</span></span></button>
-        <button class="hm-tile" data-start="turtle"><img data-home="turtle.jpg" alt=""><span class="hm-tile-b"><b>Turtle</b><span>Type Logo commands and watch the turtle draw. KS2 and KS3.</span></span></button>
+        <button class="hm-tile" data-start="platformer"><img data-home="platformer.jpg" alt=""><span class="hm-tile-b"><b>Platformer Lab</b><span>Paint a level, code the rules, then jump in and play.</span></span></button>
+        <button class="hm-tile" data-start="stage"><img data-home="stage.jpg" alt=""><span class="hm-tile-b"><b>Stage Lab</b><span>Make sprites move, talk and react with snap-together blocks.</span></span></button>
+        <button class="hm-tile" data-start="turtle"><img data-home="turtle.jpg" alt=""><span class="hm-tile-b"><b>Turtle Lab</b><span>Type Logo commands and watch the turtle draw. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="3d" id="h-tile-3d"><img data-home="world3d.jpg" alt=""><span class="hm-tile-b"><b>3D World <span class="hm-badge">New</span></b><span>Build a 3D world with characters, then play it. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="ai"><img data-home="ai.jpg" alt=""><span class="hm-tile-b"><b>AI Lab <span class="hm-badge">New</span></b><span>Teach a computer to recognise drawings or words, then code a game with it. KS2 and KS3.</span></span></button>
         <button class="hm-tile hot" data-start="train"><img data-home="train.jpg" alt=""><span class="hm-tile-b"><b>Train Lab <span class="hm-badge">New</span></b><span>Build a train track, then code your trains to drive it. KS2 and KS3.</span></span></button>
@@ -2193,9 +2290,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
     <h2>What do you want to make?</h2>
     <p>Pick the kind of project. You can't change this later, so choose what you'd like to build!</p>
     <div class="ks-opts">
-      <button class="ks-opt" data-pt="platformer"><span class="ks-emoji"><svg class="ic"><use href="#i-runner"></use></svg></span><b>Platformer</b><small>Build a level on a grid<br>and jump through it</small></button>
-      <button class="ks-opt" data-pt="stage"><span class="ks-emoji"><svg class="ic"><use href="#i-stage"></use></svg></span><b>Stage</b><small>Sprites on a stage<br>(like Scratch)</small></button>
-      <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle</b><small>Type Logo code to<br>draw pictures</small></button>
+      <button class="ks-opt" data-pt="platformer"><span class="ks-emoji"><svg class="ic"><use href="#i-runner"></use></svg></span><b>Platformer Lab</b><small>Build a level on a grid<br>and jump through it</small></button>
+      <button class="ks-opt" data-pt="stage"><span class="ks-emoji"><svg class="ic"><use href="#i-stage"></use></svg></span><b>Stage Lab</b><small>Sprites on a stage<br>(like Scratch)</small></button>
+      <button class="ks-opt" data-pt="turtle"><span class="ks-emoji"><svg class="ic"><use href="#i-turtle"></use></svg></span><b>Turtle Lab</b><small>Type Logo code to<br>draw pictures</small></button>
       <button class="ks-opt" data-pt="critter"><span class="ks-emoji"><svg class="ic"><use href="#i-critter"></use></svg></span><b>Critter Lab</b><small>Build a 3D creature<br>and race it — NEW!</small></button>
       <button class="ks-opt" data-pt="3d"><span class="ks-emoji"><svg class="ic"><use href="#i-cube"></use></svg></span><b>3D World</b><small>Build a 3D world<br>and play it — NEW!</small></button>
       <button class="ks-opt" data-pt="ai"><span class="ks-emoji"><svg class="ic"><use href="#i-ai"></use></svg></span><b>AI Lab</b><small>Teach a computer with<br>drawings or words — NEW!</small></button>
@@ -2209,7 +2306,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
 
 <div id="turtle-modal" class="hide">
   <div class="ks-box" style="max-width:560px;text-align:left;max-height:85vh;overflow:auto;">
-    <h2 id="ttm-title" style="text-align:center;">Turtle</h2>
+    <h2 id="ttm-title" style="text-align:center;">Turtle Lab</h2>
     <div id="ttm-body"></div>
     <div style="text-align:center;"><button class="ks-cancel" id="ttm-close">Close</button></div>
   </div>
@@ -2866,7 +2963,7 @@ function renderHomeSaves(){
     const item=document.createElement('div');item.className='save-item';
     const thumbCanvas=document.createElement('canvas');
     thumbCanvas.className='save-thumb';thumbCanvas.width=80;thumbCanvas.height=48;
-    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage'],turtle:['#2e9e6b','Turtle'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot'],ai:['#0fa3a3','AI Lab'],train:['#c0392b','Train'],craft:['#5a8f2e','Build Lab']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
+    if(save.projectType&&save.projectType!=='platformer'){const ctx=thumbCanvas.getContext('2d');const bd={stage:['#7c5cff','Stage Lab'],turtle:['#2e9e6b','Turtle Lab'],'3d':['#3b7fc4','3D'],critter:['#f59f18','Critter'],robot:['#2b6fd8','Robot'],ai:['#0fa3a3','AI Lab'],train:['#c0392b','Train'],craft:['#5a8f2e','Build Lab']}[save.projectType]||['#888','Game'];ctx.fillStyle=bd[0];ctx.fillRect(0,0,80,48);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(bd[1],40,24);}
     else drawMiniThumb(thumbCanvas,save.grid,save.theme);
     const info=document.createElement('div');info.className='save-info';
     const nm=document.createElement('div');nm.className='save-name';nm.textContent=save.name||'';
@@ -2961,6 +3058,35 @@ function homeAsset(f){return(/^https?:/.test(location.protocol)?'home/':'https:/
 document.querySelectorAll('#home img[data-home],#teacher img[data-home]').forEach(im=>{im.src=homeAsset(im.dataset.home);im.loading='lazy';im.decoding='async';});
 document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendingPt=b.dataset.start;document.getElementById('ks-modal').classList.remove('hide');});
 {const t3=document.getElementById('h-tile-3d');if(t3&&!THREED_ON)t3.style.display='none';}
+// Home "Our labs" carousel: one slide per lab, moves on by itself every 6 s (stops while hovered/focused, when the tab is hidden,
+// or with reduced motion); a slide whose lab tile isn't on the page (e.g. 3D World switched off) is dropped.
+(function homeCarousel(){
+  const box=document.getElementById('hm-spot'),dots=document.getElementById('hm-spot-dots');if(!box||!dots)return;
+  const slides=[...box.querySelectorAll('.hm-slide')].filter(s=>{const t=document.querySelector('#home .hm-tile[data-start="'+s.dataset.lab+'"]');
+    if(!t||t.style.display==='none'){s.remove();return false;}return true;});
+  if(!slides.length)return;
+  let cur=0,timer=0,hold=false;
+  const still=()=>document.body.classList.contains('a11y-reduce')||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+  slides.forEach((s,i)=>{const d=document.createElement('button');d.className='hm-spot-dot';d.type='button';d.setAttribute('aria-label',s.getAttribute('aria-label'));
+    d.onclick=()=>{show(i);restart();};dots.appendChild(d);});
+  function show(i){cur=(i+slides.length)%slides.length;
+    slides.forEach((s,j)=>{const on=j===cur;s.classList.toggle('on',on);if(on)s.removeAttribute('aria-hidden');else s.setAttribute('aria-hidden','true');
+      s.querySelectorAll('button').forEach(b=>{if(on)b.removeAttribute('tabindex');else b.tabIndex=-1;});});
+    [...dots.children].forEach((d,j)=>{if(j===cur)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current');});}
+  function restart(){clearInterval(timer);timer=setInterval(()=>{const home=document.getElementById('home');
+    if(hold||document.hidden||still()||(home&&home.classList.contains('hide')))return;show(cur+1);},6000);}
+  document.getElementById('hm-spot-prev').onclick=()=>{show(cur-1);restart();};
+  document.getElementById('hm-spot-next').onclick=()=>{show(cur+1);restart();};
+  box.addEventListener('mouseenter',()=>hold=true);box.addEventListener('mouseleave',()=>hold=false);
+  box.addEventListener('focusin',()=>hold=true);box.addEventListener('focusout',()=>hold=false);
+  let sx=null,sy=0;
+  box.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'){sx=e.clientX;sy=e.clientY;}});
+  box.addEventListener('pointerup',e=>{if(sx===null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.5){show(cur+(dx<0?1:-1));restart();}});
+  box.addEventListener('pointercancel',()=>sx=null);
+  show(0);restart();
+  window._homeCarousel={show,get cur(){return cur;},get count(){return slides.length;}};
+})();
 document.getElementById('h-myprojects').onclick=()=>{const el=document.getElementById('home-projects');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 document.getElementById('h-setup-class').onclick=()=>openTeacherHubGated();
 document.getElementById('h-guide').onclick=()=>{showTeacher();openTeacherGuide();};
@@ -3388,7 +3514,7 @@ function lsBand(l){if(l.ks==='ks1')return'ks1';const m=/(\d+)/.exec(l.years||'')
 const LS_BANDS=[['ks1','Years 1–2'],['y34','Years 3–4'],['y56','Years 5–6']];
 function lessonsBase(){return /^https?:/.test(location.protocol)?new URL('lessons/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/lessons/';}
 function loadLessons(){if(!_lessonsLoading)_lessonsLoading=import(lessonsBase()+'lessons.js').then(m=>(lessonsMod=m)).catch(e=>{_lessonsLoading=null;throw e;});return _lessonsLoading;}
-const LS_TYPE={stage:'Stage',platformer:'Platformer',turtle:'Turtle',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab',train:'Train Lab',craft:'Build Lab'};
+const LS_TYPE={stage:'Stage Lab',platformer:'Platformer Lab',turtle:'Turtle Lab',critter:'Critter Lab','3d':'3D World',robot:'Robot Lab',ai:'AI Lab',train:'Train Lab',craft:'Build Lab'};
 function lsEsc(x){return cesc(x==null?'':x);}
 function lessonLinks(l){return lessonsMod.curriculumLinks?lessonsMod.curriculumLinks(cjCountry,l.curriculum):{heading:'Curriculum',framework:'',items:[],note:''};}
 function lessonLinksHTML(cur){
@@ -7944,7 +8070,7 @@ const HELP_TABS=[
 // Stage help — KS2/KS3 (Blockly) and KS1 (ScratchJr). Cloud/Teamwork content is shared with the platformer.
 const _cloudHelp=(HELP_TABS.find(t=>t[0]==='cloud')||[])[2]||'';
 const STAGE_HELP=[
- ['start',' Start',`<h3>Welcome to the Stage!</h3><p>The Stage is a Scratch-style world where your <b>characters (sprites)</b> follow code you build with snap-together blocks. Press <b>Run</b> (above the stage) to run everything and <b>Stop</b> to stop. The <b>magnifier</b> button next to them makes the stage bigger.</p><h3>Make something in 3 steps</h3><ul><li>Pick a character (or tap <b></b> to add one).</li><li>Drag blocks from the coloured categories and snap them under a <b> when green flag clicked</b> block.</li><li>Press <b>Run</b> and watch it happen!</li></ul><p style="opacity:.7">Tip: hover over any block to see what it does.</p>`],
+ ['start',' Start',`<h3>Welcome to the Stage Lab!</h3><p>The Stage Lab is a Scratch-style world where your <b>characters (sprites)</b> follow code you build with snap-together blocks. Press <b>Run</b> (above the stage) to run everything and <b>Stop</b> to stop. The <b>magnifier</b> button next to them makes the stage bigger.</p><h3>Make something in 3 steps</h3><ul><li>Pick a character (or tap <b></b> to add one).</li><li>Drag blocks from the coloured categories and snap them under a <b> when green flag clicked</b> block.</li><li>Press <b>Run</b> and watch it happen!</li></ul><p style="opacity:.7">Tip: hover over any block to see what it does.</p>`],
  ['blocks',' Blocks',`<p>Blocks are grouped by colour — drag them out and snap them together. Each character has its <b>own</b> blocks, so click a character first.</p><ul>
  <li><b> Motion</b> — move, turn, glide, point, go to x/y, bounce on the edge.</li>
  <li><b> Looks</b> — say/think, costumes, backdrops, size, show/hide, effects, layers.</li>
@@ -7974,7 +8100,7 @@ const STAGE_HELP_KS1=[
  ['play','▶ Play & Share',`<p>Press <b> Go</b> to start and <b>⏹ Stop</b> to stop. Tap a character to run its "when tapped" blocks.</p><p><b> Save</b> keeps your project, and <b> Share</b> makes a link to send to a grown-up.</p>`]
 ];
 const TURTLE_HELP=[
- ['start',' Start',`<h3>Welcome to the Turtle! </h3><p>Type <b>Logo</b> commands in the box on the left, then press <b>▶ Run</b> to watch the turtle draw on the right.</p><h3>Try this</h3><pre style="background:#11161c;color:#e6f0e6;padding:10px;border-radius:8px;">repeat 4 [
+ ['start',' Start',`<h3>Welcome to the Turtle Lab!</h3><p>Type <b>Logo</b> commands in the box on the left, then press <b>▶ Run</b> to watch the turtle draw on the right.</p><h3>Try this</h3><pre style="background:#11161c;color:#e6f0e6;padding:10px;border-radius:8px;">repeat 4 [
   fd 100
   rt 90
 ]</pre><p>That draws a square: go <b>forward 100</b> and <b>turn right 90°</b>, four times.</p><ul><li><b>▶ Run</b> draws it · <b>⏹ Stop</b> stops · <b> Clear</b> wipes the picture.</li><li>Use the <b> Speed</b> slider to watch slowly or draw instantly.</li><li>Tap <b> Commands</b> for the full list and <b> Examples</b> for ready-made pictures.</li></ul>`],
@@ -8122,8 +8248,8 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>Press <b>Ready-made lessons</b> on the home page (teacher section) or in the Teacher Hub. Each lesson is a complete, no-preparation computing lesson for ages 5–11: a plan with timings and what to say, curriculum links for your country (pick it with <b>Curriculum</b> at the top of the lessons: England, Scotland, Wales, Northern Ireland, Ireland, Cyprus, the United States, Australia or New Zealand; it also renames the age groups when pupils start a project), key words, support and stretch ideas, what to look for, and a <b>starter project</b>. Press <b>Present the slides</b> to show the pupil slides on the board (full screen; arrow keys, space or a clicker move on; <b>N</b> shows your notes under the slide; <b>Presenter view</b> opens a second window with your notes, the next slide and a timer, for a laptop plus a board; <b>Print / PDF</b> prints them or saves a PDF), <b>Open the starter</b> to show the project, <b>Give to my class</b> to send every pupil their own copy (they open it from Cloud → My games), or <b>Print lesson plan</b>. When a pupil opens the starter, a <b>Lesson</b> card in the corner takes them through the task step by step (it can read itself aloud, folds away, and remembers their step when they save). Lessons: Get the cat to the star, Fix the dance, Make a level for a friend (KS1); Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course (KS2).</p>
   <h3>The four modes</h3>
  <ul><li><b> Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b> Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
- <h3> Three project types: Platformer, Stage &amp; Turtle</h3>
- <p>When pupils start a new project they first choose a <b>type</b>: <b>Platformer</b> (the grid game above), <b>Stage</b> — a Scratch-style world of <b>characters (sprites)</b> on a stage — or <b>Turtle</b> (see below). The Stage adapts to the key stage:</p>
+ <h3> The Platformer Lab, Stage Lab &amp; Turtle Lab</h3>
+ <p>When pupils start a new project they first choose a <b>lab</b>: the <b>Platformer Lab</b> (the grid game above), the <b>Stage Lab</b> — a Scratch-style world of <b>characters (sprites)</b> on a stage — the <b>Turtle Lab</b> (see below), or one of the other labs below. The Stage Lab adapts to the key stage:</p>
   <ul>
  <li><b>Key Stage 1 — ScratchJr-style:</b> big <b>picture blocks</b> that snap together left-to-right (no reading needed), in colour-coded groups (Start, Move, Looks, Sound, Control, End). Pupils pick a character, tap blocks to build a program, and press Go. It includes a <b>repeat loop</b> (blocks go <i>inside</i> it), colour-coded <b>messages</b> between characters, a <b>set-speed</b> block, <b>record-your-own-sounds</b>, up to <b>4 pages</b> (scenes) with a <b>go-to-page</b> block, <b>drag-to-reorder</b>, <b>read-aloud</b> on tap, a full <b>character painter</b>, ready-made <b>Ideas</b>, and step-by-step <b>Missions</b> that guide pupils block-by-block.</li>
     <li><b>Key Stage 2 &amp; 3 — full Scratch-style blocks:</b> Motion, Looks, Sound, Events, Control, Sensing, Operators, Variables, Lists, Pen and Score — close to the whole Scratch palette, with multiple sprites, costumes, painted backdrops (a <b>Scratch-style paint editor</b>: vector parts you can recolour, move, resize, reshape, group and layer, a colour wheel with gradients and an eyedropper, a bitmap mode, and seven ready-made backdrops), broadcasts, clones and a live interpreter. (Stage uses these blocks at KS3 too, rather than Python — Python is for Platformer KS3.)</li>
@@ -8157,7 +8283,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p><b>Competitions (build competitions and coding contests):</b> signed-in teachers press <b>Compete → Set up a competition</b> and choose a building or coding contest, the map (the arena, a flat world, a maze or the world they have open), up to 6 teams of up to 6 pupils, how many teams each school may enter, the time, the criteria with their points, and the judging: <b>judges' scorecards</b>, a <b>pupil vote</b> and/or <b>automatic checks</b> (the map's tasks; for coding contests each team's program is run on the map and fewer blocks score more), mixed by the weights you set. Share the 6-letter code with other teachers, including in other schools. They enter a team and pick pupils from their own classes, and those pupils get a message inviting them to join. Each team builds together live in its own copy of the map. As the organiser you press Start, watch any team, add judges, then move on to judging and publish the results. Teachers from other schools only see pupils' usernames, never their real names.</p>
  <h3> Robot Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>Robot Lab</b> is a robot to code with blocks: a 3D robot head and shoulders on a plinth, with eight motors from 0 to 10 (head turn, nod and tilt, eyes left/right and up/down, eyelids, eyebrows and mouth), lights in its eyes, ears, chest and antenna, and a voice (the browser's own speech, so no recordings are made or sent). Pupils name it and choose its colours. Blocks cover events (Run, tapping the robot, keys, messages), moves (move and wait, start moving, change by, move over time, speed, look), faces (happy, sad, surprised, angry, sleepy, thinking), lights, speech (say, say until done, voices, ask and answer), sensing (motor positions, keys, mouse position, timer), loops, if, maths, text and variables. It covers sequence, repetition, selection, variables and input/output, and works well for conversations, quizzes and short robot plays. Saving, sharing and handing in work as usual, and pupils can build a robot together live (Share → Collaborate): blocks, name and colours stay in step on every screen, while Run plays on each pupil's own screen.</p>
- <h3> Turtle (Logo)</h3>
+ <h3> Turtle Lab (Logo)</h3>
  <p>The <b>Turtle</b> project is a text <b>Logo</b> playground (like the classic turtle-graphics languages): pupils type commands on the left and a turtle draws on the right. Press ▶ <b>Run</b> to draw, ⏹ <b>Stop</b> / <b>Clear</b> to start over, and use the <b> Speed</b> slider to watch the turtle move slowly or draw instantly. Built-in <b>Commands</b> and <b>Examples</b> buttons get pupils started.</p>
   <p>It supports movement (<code>fd/forward</code>, <code>bk/back</code>, <code>rt/right</code>, <code>lt/left</code>, <code>setxy</code>, <code>seth</code>, <code>home</code>), pen control (<code>pu/pd</code>, <code>setpensize</code>, <code>setpencolor</code>, <code>setbg</code>), <code>repeat</code> loops, <code>if</code>/<code>ifelse</code>, variables (<code>make "x …</code> and <code>:x</code>), arithmetic and <code>random</code>, and pupils can teach the turtle <b>their own commands</b> with <code>to NAME … end</code> — a great bridge from blocks to typed code, and ideal for maths links (angles, repetition, polygons). It works at any key stage, but typing suits <b>Key Stage 2 upward</b> best.</p>
   <h3>Key Stage 1 vs Key Stage 2</h3>
@@ -10238,16 +10364,14 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.12';
+const CJ_VERSION='2026.10.15';
 const CJ_WHATSNEW=[
- "New in the Build Lab: the Robot Helper Academy! 18 lessons where you code the robot helper round Pebble Island: routes and loops, fixing bugs, decisions with if, a hedge maze, a gold mine, variables, your own chat commands and your own blocks. Open Worlds in the Build Lab.",
- "Make your own blocks in the Build Lab: My blocks → “to do something”, with inputs if you like. In Python they are def functions.",
- "Teachers: all 18 Academy lessons (Years 3–6, in three blocks) are in Ready-made lessons, with lesson plans, slides and a step-by-step Lesson card for pupils.",
+ "The home page now shows off every lab: the big card at the top moves through them one by one (use the arrows or dots to pick one). Platformer, Stage and Turtle are now the Platformer Lab, Stage Lab and Turtle Lab.",
  "iPads: CodeJump now works without Wi-Fi, even where the school network blocks it. Tap Use offline at the top of the home page to see how to put it on the Home Screen.",
 ];
-// the iPad line is only for iPads (the offline mode is iPad-only); elsewhere this update changes nothing you can see
+// the iPad line is only for iPads (the offline mode is iPad-only)
 function cjWhatsNewLines(){return (typeof CJ_IPAD!=='undefined'&&CJ_IPAD)?CJ_WHATSNEW:CJ_WHATSNEW.filter(t=>!/^iPads:/.test(t));}
-const CJ_WHATSNEW_NOT_IPAD='2026.10.11'; // the last version with news for other devices
+const CJ_WHATSNEW_NOT_IPAD='2026.10.15'; // the last version with news for other devices
 function showWhatsNew(){
   document.getElementById('wn-ver').textContent='Updated '+CJ_VERSION.replace(/\./g,'·');
   document.getElementById('wn-list').innerHTML=cjWhatsNewLines().map(t=>'<li>'+t+'</li>').join('');

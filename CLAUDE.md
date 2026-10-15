@@ -120,7 +120,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   gold; the maze starter gets stuck; crops says 7 not 5; functions round-trip/inputs/errors/recursion guard/'uses function'; app: gallery 18
   under 3 headings, My blocks flyout, the huts answer finishes the lesson (slow in swiftshader: 180 s timeout).
 
-## iPad offline mode (8 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: school networks block CodeJump as "gaming"; "only make this available for iPads"
+## iPad offline mode (8 Oct 2026; LIVE on main since 15 Oct 2026, CJ_VERSION 2026.10.15) — Charlie: school networks block CodeJump as "gaming"; "only make this available for iPads"
 - **iPads only.** A tiny head script sets `CJ_IPAD` (UA has iPad, or Macintosh + touch = iPadOS) and only then adds the manifest
   (`app.webmanifest`, icons `home/icon-180/192/512.png` made from the logo), apple-touch-icon and the Home Screen meta tags. Main script
   "OFFLINE (iPad)" block: `CJ_STANDALONE` (opened from the Home Screen), `CJ_OFFLINE_ON`, `offPrepare`, `offRender`, `offOpen`/`offFill`
@@ -153,7 +153,7 @@ tiles (`[data-start=<projectType>]`: set `_pendingPt`, open the KS modal, then t
 teacher band (`#h-setup-class` = For teachers, `#h-guide` = Teacher Guide) → footer (`#pol-*`). Pictures are real
 screenshots in `home/*.jpg`, loaded via `homeAsset()` (live-site URL when CodeJump runs from a downloaded file).
 All home CSS is the `.hm-*` block under "HOME SCREEN"; the old `.hcard`/`.quickstart` rules are now unused.
-- **Labs carousel (15 Oct 2026, CJ_VERSION 2026.10.15, branch):** the hero's Critter Lab spotlight is now `#hm-spot` = a carousel of
+- **Labs carousel (15 Oct 2026, CJ_VERSION 2026.10.15, LIVE on main 15 Oct 2026 — main has no Print Lab slide):** the hero's Critter Lab spotlight is now `#hm-spot` = a carousel of
   `.hm-slide[data-lab]` (one per lab, each with a picture, words and a `[data-start]` Try button; `.on` = showing). JS `homeCarousel`
   (after the tile bindings): drops a slide whose `.hm-tile[data-start]` is missing/hidden (3D off, or no Print Lab on main), builds
   `#hm-spot-dots`, arrows `#hm-spot-prev/next`, moves on every 6 s (not while hovered/focused, tab hidden, home hidden, or reduced

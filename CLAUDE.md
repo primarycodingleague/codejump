@@ -85,12 +85,15 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **`world/world-park.js` (no DOM):** `PARK`, `PARK_BLOCKS`, `parkProject(id)` → `{blocks, goals}`, `parkAnswer(id)`, `parkGoals(id)`,
   `PARK_PLAY[id]` (the test script: wait / click / key). Programs are written with small helpers (`bk`, `box`, `onClick`, `repeat`, `iff`…)
   that produce Blockly JSON; object names are variables `v_<name>`. Lessons: 1 gate · 2 mascot (click → wave + say) · 3 chat (say-for
-  sequence) · 4 apple drop (physics on click) · 5 star launcher (push) · 6 welcome zone · 7 spinner (repeat 12 × turn 30) · 8 drop tower
-  (repeat glides) · 9 carousel lights (forever + colour random) · 10 big wheel (debug: axis, count, wait inside) · 11 confetti (repeat makes
-  20 balls, random) · 12 ride project · 13 ring the bell (if touching in forever) · 14 dodgems (two ifs on x position; `stay` goal) · 15
-  weather (if-else on random) · 16 ghost train (3 bugs) · 17 splash (if-else on distance) · 18 stall project · 19 tickets (change by 1 +
-  show) · 20 coaster cam (camera view + broadcast/receive) · 21 coins (score, coin moves on) · 22 countdown (repeat until) · 23 grow the
-  park (if money ≥ 10 … else; buys tents, visitors earn money) · 24 grand opening project.
+  sequence) · 4 pop the balloons (hide + physics on click) · 5 penalty kick (push) · 6 welcome zone · 7 spinner (repeat 12 × turn 30) ·
+  8 drop tower (repeat glides) · 9 carousel lights (forever + colour random) · 10 big wheel (debug: axis, count, wait inside) · 11 fireworks
+  (repeat makes 12 balls at random places, no physics) · 12 ride project · 13 ring the bell (if touching in forever) · 14 dodgems (two ifs
+  on x position; `stay` goal) · 15 weather (if-else on random) · 16 ghost train (3 bugs) · 17 splash (if-else on distance) · 18 stall
+  project · 19 tickets (change by 1 + show) · 20 coaster cam (camera view + broadcast/receive) · 21 star hunt (score, the star moves on) ·
+  22 countdown (repeat until) · 23 ice cream stand (stock/sold, if stock > 0 … else Sold out!, the van restocks) · 24 grand opening project.
+- **Kept clearly apart from their paid units** (Charlie sent their Stage 3–6 lesson pages, 16 Oct): the first draft had a star launcher, a
+  tree that drops things, a loop of falling random-colour objects, coin collecting and upgrades-over-time, which echoed their lessons, so
+  those became balloons, a penalty kick, fireworks, a star hunt and an ice cream stand. Don't drift back towards their projects.
 - **Goals (`world/world-goals.js`, no DOM):** a 3D World project can carry `goals {title, list}` — types uses (block types, n, `inside`
   one of a list; pseudo-type `controls_if_else`), has, reach, turn, say, show, var, colours, anim, touch, click, gone, stay. `cleanGoals`,
   `programInfo(state)`, `createGoals(g)` → `reset/program(state)/check(world)/ticks/allDone`. "uses" follows the blocks all the time;

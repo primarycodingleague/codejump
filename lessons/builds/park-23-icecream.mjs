@@ -1,10 +1,10 @@
-// Starter for the "park-4-drop" lesson (used by lessons/make-starters.mjs): the Park Designers world from world/world-park.js
+// Starter for the "park-23-icecream" lesson (used by lessons/make-starters.mjs): the Park Designers world from world/world-park.js
 // (its blocks and its goals checklist), opened in the 3D World.
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 export async function makeArgs(ROOT) {
   const P = await import(pathToFileURL(join(ROOT, 'world', 'world-park.js')).href);
-  return { project: P.parkProject('park-4-drop') };
+  return { project: P.parkProject('park-23-icecream') };
 }
 export const build = async ({ project }) => {
   startNew3D('ks2');

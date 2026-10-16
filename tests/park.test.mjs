@@ -78,13 +78,13 @@ for (const l of PK.PARK.filter(l => !process.env.ONLY || l.id === process.env.ON
 
 // "stay" unticks when it leaves; "gone" needs the thing to have been there
 {
-  const prog = PK.parkAnswer('park-21-coins');
-  const g = G.createGoals({ list: [{ type: 'gone', id: 'coin', text: 'gone' }] });
+  const prog = PK.parkAnswer('park-21-stars');
+  const g = G.createGoals({ list: [{ type: 'gone', id: 'star', text: 'gone' }] });
   const ws = new Blockly.Workspace(); Blockly.serialization.workspaces.load(prog, ws);
   const code = WB.compile(Blockly, javascriptGenerator, ws); ws.dispose();
   await w.run(code, { layout: true }); await w.run(code); g.reset();
   for (let i = 0; i < 30; i++) { w.tick(); g.check(w); await sleep(0); }
-  ok(!g.ticks()[0], '"gone" doesn’t tick while the coin is still there');
+  ok(!g.ticks()[0], '"gone" doesn’t tick while the star is still there');
   w.stop();
 }
 w.dispose();

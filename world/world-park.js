@@ -177,36 +177,35 @@ lesson({
   ] },
   play: [['wait', 0.5], ['click', 'visitor'], ['wait', 10]]
 });
+const balloons = () => [...parkGround(), ...trees(), ball('balloon1', '#e03131', 1.4, -2, 6, 4), thing('gift1', 'Heart', 1, -2, 4.6, 4),
+  ball('balloon2', '#4c7fe0', 1.4, 2, 6.5, 4), thing('gift2', 'donut', 1, 2, 5.1, 4)];
 lesson({
-  id: 'park-4-drop', block: 1, n: 4, title: 'The apple drop', concept: 'events and physics',
-  starter: P(() => onRun([...parkGround(), thing('tree', 'tree', 2, 0, 0, 4), thing('apple1', 'apple', 1, -1, 3, 3), thing('apple2', 'apple', 1, 1, 3.4, 3),
-    box('button', '#e03131', 1, 0.4, 1, 4, 0, 1), sayFor('button', 'Click me!', 3)]),
-    () => onClick('button', [colour('button', '#2dc653')])),
-  answer: P(() => onRun([...parkGround(), thing('tree', 'tree', 2, 0, 0, 4), thing('apple1', 'apple', 1, -1, 3, 3), thing('apple2', 'apple', 1, 1, 3.4, 3),
-    box('button', '#e03131', 1, 0.4, 1, 4, 0, 1), sayFor('button', 'Click me!', 3)]),
-    () => onClick('button', [colour('button', '#2dc653'), phys('apple1', 'dynamic'), wait(0.5), phys('apple2', 'dynamic')])),
-  goals: { title: 'Drop the apples', list: [
-    { type: 'click', id: 'button', text: 'Click the red button' },
-    { type: 'uses', blocks: ['w3_physics'], inside: ['w3_when_clicked'], text: 'Make the apples “fall and bump” when the button is clicked' },
-    { type: 'reach', id: 'apple1', axis: 'y', op: '<', v: 0.6, text: 'The first apple falls to the ground' },
-    { type: 'reach', id: 'apple2', axis: 'y', op: '<', v: 0.6, text: 'The second apple falls too' }
+  id: 'park-4-balloons', block: 1, n: 4, title: 'Pop the balloons', concept: 'events and physics',
+  starter: P(() => onRun(balloons()), () => onClick('balloon1', [sound('pop')])),
+  answer: P(() => onRun(balloons()), () => onClick('balloon1', [sound('pop'), hide('balloon1'), phys('gift1', 'dynamic')]),
+    () => onClick('balloon2', [sound('pop'), hide('balloon2'), phys('gift2', 'dynamic')], 480, 240)),
+  goals: { title: 'Pop! Catch the gifts', list: [
+    { type: 'click', id: 'balloon1', text: 'Click the red balloon' },
+    { type: 'uses', blocks: ['w3_hide'], n: 2, inside: ['w3_when_clicked'], text: 'Each balloon hides when it’s clicked (pop!)' },
+    { type: 'reach', id: 'gift1', axis: 'y', op: '<', v: 0.6, text: 'The heart falls to the ground' },
+    { type: 'reach', id: 'gift2', axis: 'y', op: '<', v: 0.6, text: 'The doughnut falls too' }
   ] },
-  play: [['wait', 0.5], ['click', 'button'], ['wait', 3]]
+  play: [['wait', 0.5], ['click', 'balloon1'], ['click', 'balloon2'], ['wait', 3]]
 });
+const pitch = () => [...parkGround(), box('pitch', '#3f9a4a', 10, 0.05, 18, 0, 0, 6),
+  box('postL', '#ffffff', 0.3, 2.4, 0.3, -2.5, 0, 13), box('postR', '#ffffff', 0.3, 2.4, 0.3, 2.5, 0, 13), box('crossbar', '#ffffff', 5.3, 0.3, 0.3, 0, 2.4, 13),
+  box('net', '#dddddd', 5.3, 2.7, 0.2, 0, 0, 14.5), phys('net', 'static'),
+  ball('football', '#ffffff', 0.8, 0, 0.05, 0), phys('football', 'dynamic')];
 lesson({
-  id: 'park-5-launch', block: 1, n: 5, title: 'Star launcher', concept: 'physics and forces',
-  starter: P(() => onRun([...parkGround(), cyl('pad', '#4c7fe0', 3, 0.5, 0, 0, 0), phys('pad', 'static'),
-    thing('star', 'Star', 1, 0, 0.6, 0), phys('star', 'dynamic'), cyl('target', '#f2b61d', 4, 0.5, 8, 0, 0), phys('target', 'static')]),
-    () => onClick('pad', [push('star', 0, 2, 0)])),
-  answer: P(() => onRun([...parkGround(), cyl('pad', '#4c7fe0', 3, 0.5, 0, 0, 0), phys('pad', 'static'),
-    thing('star', 'Star', 1, 0, 0.6, 0), phys('star', 'dynamic'), cyl('target', '#f2b61d', 4, 0.5, 8, 0, 0), phys('target', 'static')]),
-    () => onClick('pad', [sound('jump'), push('star', 3, 14, 0)])),
-  goals: { title: 'Launch the star', list: [
-    { type: 'click', id: 'pad', text: 'Click the blue launch pad' },
-    { type: 'reach', id: 'star', axis: 'y', op: '>', v: 6, text: 'Push the star higher than 6' },
-    { type: 'reach', id: 'star', axis: 'x', op: '>', v: 4, text: 'Push it sideways towards the yellow target too' }
+  id: 'park-5-kick', block: 1, n: 5, title: 'Penalty kick', concept: 'physics and forces',
+  starter: P(() => onRun(pitch()), () => onClick('football', [push('football', 0, 0, 2)])),
+  answer: P(() => onRun(pitch()), () => onClick('football', [sound('boing'), push('football', 0, 4, 10)])),
+  goals: { title: 'Score a goal', list: [
+    { type: 'click', id: 'football', text: 'Click the football to kick it' },
+    { type: 'reach', id: 'football', axis: 'y', op: '>', v: 1.2, text: 'Chip it: the ball lifts off the ground' },
+    { type: 'reach', id: 'football', axis: 'z', op: '>', v: 12.5, text: 'It goes in the goal' }
   ] },
-  play: [['wait', 0.5], ['click', 'pad'], ['wait', 4]]
+  play: [['wait', 0.5], ['click', 'football'], ['wait', 4]]
 });
 lesson({
   id: 'park-6-welcome', block: 1, n: 6, title: 'Project: the welcome zone', concept: 'design a sequence of events',
@@ -275,16 +274,17 @@ lesson({
   play: [['wait', 0.5], ['click', 'wheel'], ['wait', 5]]
 });
 const cannon = () => [...parkGround(), cyl('cannon', '#e03131', 1.5, 2, 0, 0, 3)];
+const night = () => [sky('#151a3a'), ground('#2f5d3a'), cyl('launcher', '#8a5fd6', 1.5, 1.5, 0, 0, 3)];
 lesson({
-  id: 'park-11-confetti', block: 2, n: 5, title: 'The confetti cannon', concept: 'loops that make things, and random',
-  starter: P(() => onRun(cannon()), () => onClick('cannon', [ball('confetti', '#f2b61d', 0.4, 0, 8, 3), phys('confetti', 'dynamic')])),
-  answer: P(() => onRun(cannon()), () => onClick('cannon', [sound('pop'), repeat(20, [ball('confetti', randomColour(), 0.4, rnd(-4, 4), 8, rnd(0, 6)), phys('confetti', 'dynamic'), wait(0.05)])])),
-  goals: { title: 'Party time', list: [
-    { type: 'uses', blocks: ['w3_sphere'], inside: ['controls_repeat_ext'], text: 'Make the confetti inside a repeat' },
-    { type: 'uses', blocks: ['w3_random'], n: 2, text: 'Use “pick random” so it lands all over' },
-    { type: 'has', id: 'confetti', n: 20, text: 'Click the cannon: 20 pieces of confetti' }
+  id: 'park-11-fireworks', block: 2, n: 5, title: 'Fireworks finale', concept: 'loops that make things, and random',
+  starter: P(() => onRun(night()), () => onClick('launcher', [ball('firework', '#f2b61d', 0.6, 0, 10, 9), sound('pop')])),
+  answer: P(() => onRun(night()), () => onClick('launcher', [repeat(12, [ball('firework', randomColour(), 0.6, rnd(-8, 8), rnd(7, 14), rnd(6, 12)), sound('pop'), wait(0.15)])])),
+  goals: { title: 'Light up the sky', list: [
+    { type: 'uses', blocks: ['w3_sphere'], inside: ['controls_repeat_ext'], text: 'Make the firework inside a repeat' },
+    { type: 'uses', blocks: ['w3_random'], n: 2, text: 'Use “pick random” so they burst all over the sky' },
+    { type: 'has', id: 'firework', n: 12, text: 'Click the launcher: 12 fireworks' }
   ] },
-  play: [['wait', 0.5], ['click', 'cannon'], ['wait', 3]]
+  play: [['wait', 0.5], ['click', 'launcher'], ['wait', 3]]
 });
 lesson({
   id: 'park-12-ride', block: 2, n: 6, title: 'Project: design a ride', concept: 'design with loops',
@@ -420,27 +420,27 @@ lesson({
   ] },
   play: [['wait', 6]]
 });
-const coinGame = () => [...parkGround(), person('player', 'Block5', 1, 0, 0, -6), phys('player', 'dynamic'), control('player', 6), follow('player'),
-  thing('coin', 'Coin', 1, 0, 0.3, -2), setVar('score', 0), showText(join('Score: ', get('score')))];
+const starGame = () => [...parkGround(), person('player', 'Block5', 1, 0, 0, -6), phys('player', 'dynamic'), control('player', 6), follow('player'),
+  thing('star', 'Star', 1, 0, 0.3, -2), setVar('score', 0), showText(join('Score: ', get('score')))];
 lesson({
-  id: 'park-21-coins', block: 4, n: 3, title: 'Collect the coins', concept: 'a score variable',
-  starter: P(() => onRun(coinGame()), () => onTouch('player', 'coin', [sound('coin')])),
-  answer: P(() => onRun(coinGame()), () => onTouch('player', 'coin', [sound('coin'), change('score', 1), showText(join('Score: ', get('score'))), moveBy('coin', 0, 0, 4)])),
-  goals: { title: 'Five coins', list: [
-    { type: 'uses', blocks: ['math_change'], inside: ['w3_when_touch'], text: 'Add 1 to score when the player touches the coin' },
-    { type: 'uses', blocks: ['w3_move_by', 'w3_move_to'], inside: ['w3_when_touch'], text: 'Move the coin on, so it can be caught again' },
+  id: 'park-21-stars', block: 4, n: 3, title: 'Star hunt', concept: 'a score variable',
+  starter: P(() => onRun(starGame()), () => onTouch('player', 'star', [sound('magic')])),
+  answer: P(() => onRun(starGame()), () => onTouch('player', 'star', [sound('magic'), change('score', 1), showText(join('Score: ', get('score'))), moveBy('star', 0, 0, 4)])),
+  goals: { title: 'Five stars', list: [
+    { type: 'uses', blocks: ['math_change'], inside: ['w3_when_touch'], text: 'Add 1 to score when the player touches the star' },
+    { type: 'uses', blocks: ['w3_move_by', 'w3_move_to'], inside: ['w3_when_touch'], text: 'Move the star on, so it can be caught again' },
     { type: 'show', match: 'Score', text: 'Show the score on the screen' },
-    { type: 'var', name: 'score', op: '>=', v: 5, text: 'Walk forward and collect 5 coins' }
+    { type: 'var', name: 'score', op: '>=', v: 5, text: 'Walk forward and catch 5 stars' }
   ] },
   play: [['wait', 0.5], ['key', 'up', 6], ['wait', 0.5]]
 });
-const clockGame = () => [...coinGame(), setVar('clock', 10)];
+const clockGame = () => [...starGame(), setVar('clock', 10)];
 lesson({
   id: 'park-22-clock', block: 4, n: 4, title: 'Beat the clock', concept: 'a countdown and decisions',
-  starter: P(() => onRun(clockGame()), () => onTouch('player', 'coin', [sound('coin'), change('score', 1), showText(join('Score: ', get('score'))), moveBy('coin', 0, 0, 4)])),
+  starter: P(() => onRun(clockGame()), () => onTouch('player', 'star', [sound('magic'), change('score', 1), showText(join('Score: ', get('score'))), moveBy('star', 0, 0, 4)])),
   answer: P(() => onRun([...clockGame(), until(cmp(get('clock'), '=', 0), [wait(1), change('clock', -1), showText(join('Score: ', get('score'), '  Time: ', get('clock')))]),
     iff(cmp(get('score'), '>=', 5), [sayFor('player', 'I win!', 3)], [sayFor('player', 'Time’s up!', 3)])]),
-    () => onTouch('player', 'coin', [sound('coin'), change('score', 1), showText(join('Score: ', get('score'))), moveBy('coin', 0, 0, 4)])),
+    () => onTouch('player', 'star', [sound('magic'), change('score', 1), showText(join('Score: ', get('score'))), moveBy('star', 0, 0, 4)])),
   goals: { title: 'Ten seconds', list: [
     { type: 'uses', blocks: ['controls_whileUntil'], text: 'Count down with “repeat until”' },
     { type: 'show', match: 'Time', text: 'Show the time left on the screen' },
@@ -451,19 +451,22 @@ lesson({
 });
 const grow = () => [...parkGround(), box('shop', '#f2b61d', 2, 2, 2, 0, 0, 2), setVar('money', 0), setVar('visitors', 1)];
 const earn = () => forever([wait(1), change('money', get('visitors')), showText(join('Money: ', get('money'), '  Visitors: ', get('visitors')))]);
+const iceCream = () => [...parkGround(), box('stand', '#ff8fb1', 3, 2.5, 1.5, -2, 0, 4), cone('cone', '#f2c94c', 0.8, 1.4, -2, 2.5, 4),
+  box('van', '#ffffff', 3, 2, 1.6, 4, 0, 6), setVar('stock', 5), setVar('sold', 0), showText(join('Ice creams left: ', get('stock'), '  Sold: ', get('sold')))];
+const shelf = () => showText(join('Ice creams left: ', get('stock'), '  Sold: ', get('sold')));
 lesson({
-  id: 'park-23-grow', block: 4, n: 5, title: 'Grow the park', concept: 'variables that control a game',
-  starter: P(() => onRun([...grow(), earn()]), () => onClick('shop', [say('shop', 'Coming soon')])),
-  answer: P(() => onRun([...grow(), earn()]),
-    () => onClick('shop', [iff(cmp(get('money'), '>=', 10), [change('money', -10), change('visitors', 1), thing('tent', 'hut3', 1, rnd(-8, 8), 0, rnd(6, 12)), sayFor('shop', 'New ride!', 2)],
-      [sayFor('shop', 'Not enough money yet', 2)])])),
-  goals: { title: 'Buy new rides', list: [
-    { type: 'uses', blocks: ['controls_if_else'], inside: ['w3_when_clicked'], text: 'When the shop is clicked: if money ≥ 10 … else …' },
-    { type: 'say', id: 'shop', match: 'not enough', text: 'Too soon? The shop says not enough money' },
-    { type: 'has', id: 'tent', n: 2, text: 'Buy two new rides' },
-    { type: 'var', name: 'visitors', op: '>=', v: 3, text: 'More rides bring more visitors (3)' }
+  id: 'park-23-icecream', block: 4, n: 5, title: 'The ice cream stand', concept: 'variables and decisions together',
+  starter: P(() => onRun(iceCream()), () => onClick('stand', [change('stock', -1), change('sold', 1), shelf(), say('stand', 'Enjoy!')])),
+  answer: P(() => onRun(iceCream()),
+    () => onClick('stand', [iff(cmp(get('stock'), '>', 0), [change('stock', -1), change('sold', 1), shelf(), say('stand', 'Enjoy!')], [say('stand', 'Sold out!')])]),
+    () => onClick('van', [change('stock', 10), shelf(), sayFor('van', 'Delivery!', 2)], 480, 280)),
+  goals: { title: 'Keep the ice cream coming', list: [
+    { type: 'uses', blocks: ['controls_if_else'], inside: ['w3_when_clicked'], text: 'Sell one only if there are any left: if … else' },
+    { type: 'say', id: 'stand', match: 'sold out', text: 'When the stock runs out, the stand says Sold out!' },
+    { type: 'say', id: 'van', text: 'Click the van: a delivery adds 10 to stock' },
+    { type: 'var', name: 'sold', op: '>=', v: 8, text: 'Sell 8 ice creams' }
   ] },
-  play: [['wait', 1.5], ['click', 'shop'], ['wait', 9.5], ['click', 'shop'], ['wait', 6.5], ['click', 'shop'], ['wait', 1]]
+  play: [['wait', 0.3], ...Array(6).fill(0).flatMap(() => [['click', 'stand'], ['wait', 0.2]]), ['click', 'van'], ['wait', 0.3], ...Array(3).fill(0).flatMap(() => [['click', 'stand'], ['wait', 0.2]]), ['wait', 0.5]]
 });
 lesson({
   id: 'park-24-opening', block: 4, n: 6, title: 'Project: the grand opening', concept: 'design a park game',

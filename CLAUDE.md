@@ -102,7 +102,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   the edit view), per-object `spun` (turnBy degrees per axis), `lo`/`hi` positions while playing, `opts.onFrame`, and `record()`,
   `vars()` (compile() appends `__vars(() => ({name: jsVar, …}))`), `playTime()`, `touchingIds(a,b)`; `objects()` gained model/color/anim/
   spun/lo/hi/size.
-- **App (world-app.js):** `#w3Goals` checklist top right under the banner (title + n/total, fold away, green ring when all done, toast +
+- **App (world-app.js):** `#w3Goals` checklist top left under the tip (title + n/total, fold away, green ring when all done, toast +
   win sound once); `getProject()` keeps `goals`; `_goals()` test hook. No goal editor UI yet.
 - **Lessons:** lessons.js entries `unit: 'Park Designers · Block N · Lesson M'`, years 'Year 3'…'Year 6', type '3d'; slides; starters
   from `lessons/builds/park-*.mjs` (generated, one per lesson).

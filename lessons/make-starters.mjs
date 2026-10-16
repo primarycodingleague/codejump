@@ -154,7 +154,7 @@ for (const id of Object.keys(BUILD)) {
   const payload = await page.evaluate(() => { const p = buildPayload(); delete p.lesson; return p; });
   writeFileSync(join(OUT, 'starters', id + '.json'), JSON.stringify(payload));
   // the card picture: the starter as a pupil first sees it, with its Lesson card
-  await page.evaluate(id => { clearDirty(); return lessonOpenStarter(id); }, id);
+  await page.evaluate(id => { clearDirty(); lessonOpenStarter(id); }, id); // not returned: a big starter’s promise can be collected before it resolves
   await page.waitForFunction(() => !document.getElementById('lesson-guide').classList.contains('hide'), null, { timeout: 30000 });
   if (id === 'turtle-shapes' || id === 'turtle-procedures') await page.evaluate(() => { turtleSpeed = 10; turtleRun(); });
   if (id === 'obstacle-course') await page.waitForFunction(() => worldApp._world().editing() && worldApp._world().objects().some(o => o.id === 'finish'), null, { timeout: 60000 });

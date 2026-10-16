@@ -153,6 +153,7 @@ export function mount(root, host) {
     shownTicks = ''; allDoneSaid = false;
     const box = $('w3Goals');
     box.hidden = !goals;
+    $('w3Wrap').classList.toggle('has-goals', !!goals);
     if (!goals) return;
     $('w3GoalsTitle').textContent = goals.goals.title;
     $('w3GoalsList').innerHTML = goals.goals.list.map((x, i) => '<li data-i="' + i + '"><span class="w3-tick" aria-hidden="true"></span><span></span></li>').join('');

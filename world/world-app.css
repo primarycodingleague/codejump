@@ -48,8 +48,8 @@
 }
 
 /* lesson goals: a checklist that ticks itself while the program runs */
-.w3 .w3-goals { position: absolute; right: 8px; top: 92px; width: min(270px, 46%); background: rgba(20,20,26,0.82); color: #fff; border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: 12.5px; z-index: 3; overflow: hidden; }
+.w3 .w3-goals { position: absolute; left: 8px; top: 40px; width: min(230px, 40%); background: rgba(20,20,26,0.82); color: #fff; border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: 12px; z-index: 3; overflow: hidden; }
 .w3 .w3-goals.all { box-shadow: 0 0 0 2px #7bd88f, 0 6px 20px rgba(0,0,0,0.35); }
 .w3 .w3-goals-head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; border: 0; background: rgba(255,255,255,0.06);
   color: #fff; font: inherit; font-weight: 800; padding: 8px 10px; cursor: pointer; text-align: left; }
@@ -62,3 +62,5 @@
 .w3 .w3-goals li.done .w3-tick { background: #2dc653; border-color: #2dc653; }
 .w3 .w3-goals li.done .w3-tick::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .w3 .w3-goals li.done span:last-child { color: #b9e8c3; }
+/* with a checklist on the left, the "show … on the screen" line sits on the right so they never cover each other */
+.w3 .w3-canvas-wrap.has-goals .w3-banner { left: auto; right: 8px; transform: none; max-width: calc(100% - 256px); font-size: 17px; }

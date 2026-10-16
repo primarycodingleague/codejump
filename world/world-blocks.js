@@ -298,6 +298,10 @@ export function compile(Blockly, gen, ws) {
     if (!HATS.includes(b.type) || !b.isEnabled()) continue;
     code += gen.blockToCode(b);
   }
+  // let the runtime read the program's variables (shown by lesson goals such as "tickets reaches 5")
+  const vars = ws.getAllVariables ? ws.getAllVariables() : ws.getVariableMap().getAllVariables();
+  const named = vars.filter(x => !x.type).map(x => gen.quote_(x.name) + ': ' + gen.nameDB_.getName(x.getId(), Blockly.Names.NameType.VARIABLE));
+  if (named.length) code += `__vars(() => ({ ${named.join(', ')} }));\n`;
   code = gen.finish(code);
   gen.nameDB_ && gen.nameDB_.reset && gen.nameDB_.reset();
   return code;

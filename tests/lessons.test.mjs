@@ -126,6 +126,15 @@ try {
   }
   ok(errors.length === 0, 'no errors opening the starters' + (errors.length ? ': ' + errors.join(' | ') : ''));
 
+  // a Park Designers starter brings its Goals checklist (and its unit links the next lesson)
+  if (LESSONS.some(l => l.id === 'park-7-spinner')) {
+    await page.evaluate(() => { clearDirty(); lessonOpenStarter('park-7-spinner'); });
+    await page.waitForFunction(() => lessonActive && lessonActive.id === 'park-7-spinner' && worldApp && worldApp._world && worldApp._world() && worldApp._world().editing(), null, { timeout: 60000 });
+    await page.waitForFunction(() => !document.getElementById('w3Goals').hidden, null, { timeout: 20000 }).catch(() => {});
+    const g = await page.evaluate(() => ({ shown: !document.getElementById('w3Goals').hidden, title: document.getElementById('w3GoalsTitle').textContent, n: document.querySelectorAll('#w3GoalsList li').length }));
+    ok(g.shown && g.title === 'One full spin' && g.n === 3, 'a Park Designers starter opens with its Goals checklist: ' + JSON.stringify(g));
+  }
+
   // ---- the Lesson card: next/back, minimise, and it is saved with the work
   await page.evaluate(() => lessonOpenStarter('turtle-shapes'));
   await page.waitForFunction(() => projectType === 'turtle');

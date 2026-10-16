@@ -77,7 +77,38 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   `lessons/builds/print-*.mjs`; the Lesson card sits bottom-right in print3d-mode (`.pl-empty` hint moved to the bottom). Tests: 88 checks.
 - **Ideas not done:** a workplane on a face, lettering on curved faces, more parts (snap fit, threads), a printable "fit test" card.
 
-## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; on branch `claude/vibrant-cori-tho25y`) — Charlie: "like Minecraft Education's CS units… our own"
+## Park Designers (3D World lesson unit, 24 lessons, Years 3–6; 16 Oct 2026, CJ_VERSION 2026.10.16; on branch `claude/vibrant-cori-tho25y`) — Charlie shared Flip Computing's "Coding 3D Worlds" curriculum map and chose "primary only, 6 per block"
+- **Our own unit**, following only the usual primary SKILL ORDER (their map: Stages 3–6 = sequence/events/physics → repetition →
+  selection/debugging → variables/cameras/game systems). NEVER copy their projects, names or text (it's their paid material) or use the
+  Flock names. Story: pupils design and run a 3D theme park. Blocks: 1 Opening day (Year 3) · 2 Rides that move (Year 4) · 3 Fairground
+  games (Year 5) · 4 Running the park (Year 6); lesson 6 of each block is a design project.
+- **`world/world-park.js` (no DOM):** `PARK`, `PARK_BLOCKS`, `parkProject(id)` → `{blocks, goals}`, `parkAnswer(id)`, `parkGoals(id)`,
+  `PARK_PLAY[id]` (the test script: wait / click / key). Programs are written with small helpers (`bk`, `box`, `onClick`, `repeat`, `iff`…)
+  that produce Blockly JSON; object names are variables `v_<name>`. Lessons: 1 gate · 2 mascot (click → wave + say) · 3 chat (say-for
+  sequence) · 4 apple drop (physics on click) · 5 star launcher (push) · 6 welcome zone · 7 spinner (repeat 12 × turn 30) · 8 drop tower
+  (repeat glides) · 9 carousel lights (forever + colour random) · 10 big wheel (debug: axis, count, wait inside) · 11 confetti (repeat makes
+  20 balls, random) · 12 ride project · 13 ring the bell (if touching in forever) · 14 dodgems (two ifs on x position; `stay` goal) · 15
+  weather (if-else on random) · 16 ghost train (3 bugs) · 17 splash (if-else on distance) · 18 stall project · 19 tickets (change by 1 +
+  show) · 20 coaster cam (camera view + broadcast/receive) · 21 coins (score, coin moves on) · 22 countdown (repeat until) · 23 grow the
+  park (if money ≥ 10 … else; buys tents, visitors earn money) · 24 grand opening project.
+- **Goals (`world/world-goals.js`, no DOM):** a 3D World project can carry `goals {title, list}` — types uses (block types, n, `inside`
+  one of a list; pseudo-type `controls_if_else`), has, reach, turn, say, show, var, colours, anim, touch, click, gone, stay. `cleanGoals`,
+  `programInfo(state)`, `createGoals(g)` → `reset/program(state)/check(world)/ticks/allDone`. "uses" follows the blocks all the time;
+  the rest tick while running and stay ticked until the next Run (`stay` can untick).
+- **Runtime additions (world-runtime.js):** a per-run record `rec` (said / shown / anims / colours / clicks; only while playing, never
+  the edit view), per-object `spun` (turnBy degrees per axis), `lo`/`hi` positions while playing, `opts.onFrame`, and `record()`,
+  `vars()` (compile() appends `__vars(() => ({name: jsVar, …}))`), `playTime()`, `touchingIds(a,b)`; `objects()` gained model/color/anim/
+  spun/lo/hi/size.
+- **App (world-app.js):** `#w3Goals` checklist top right under the banner (title + n/total, fold away, green ring when all done, toast +
+  win sound once); `getProject()` keeps `goals`; `_goals()` test hook. No goal editor UI yet.
+- **Lessons:** lessons.js entries `unit: 'Park Designers · Block N · Lesson M'`, years 'Year 3'…'Year 6', type '3d'; slides; starters
+  from `lessons/builds/park-*.mjs` (generated, one per lesson).
+- Tests: `tests/park.test.mjs` (headless: every answer ticks every goal, no starter does; the harness must `setImmediate` every frame
+  or loops run slow) + `tests/park-app.test.mjs` (checklist shows, uses-goals before Run, ticks while running, Run again, fold, save/reopen).
+- **Also fixed:** the Build Lab's Worlds / Make / Competitions help tabs had been put in the 3D World's `WORLD_HELP` (7 Oct); moved to
+  `CRAFT_HELP`. WORLD_HELP gained a "Lessons & goals" tab.
+
+## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; LIVE on main since 14 Oct 2026) — Charlie: "like Minecraft Education's CS units… our own"
 - **Our own unit**, modelled only on the SKILL ORDER of a standard computing progression (Minecraft Education's "Coding FUNdamentals" goes
   algorithms/sequence/loops → debugging/conditionals/operators/loops → variables/events/functions). NEVER copy their worlds, characters,
   story or lesson text; Charlie was told their world files can't be converted. Story: the robot helper fixes up **Pebble Island**.

@@ -46,3 +46,19 @@
   .w3 .w3-blocks { flex: 1 1 52%; min-height: 300px; }
   .w3 .w3-view { flex: 1 1 48%; min-height: 320px; }
 }
+
+/* lesson goals: a checklist that ticks itself while the program runs */
+.w3 .w3-goals { position: absolute; right: 8px; top: 92px; width: min(270px, 46%); background: rgba(20,20,26,0.82); color: #fff; border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: 12.5px; z-index: 3; overflow: hidden; }
+.w3 .w3-goals.all { box-shadow: 0 0 0 2px #7bd88f, 0 6px 20px rgba(0,0,0,0.35); }
+.w3 .w3-goals-head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; border: 0; background: rgba(255,255,255,0.06);
+  color: #fff; font: inherit; font-weight: 800; padding: 8px 10px; cursor: pointer; text-align: left; }
+.w3 .w3-goals-head b { color: #f2c94c; font-weight: 900; }
+.w3 .w3-goals.all .w3-goals-head b { color: #7bd88f; }
+.w3 .w3-goals ol { list-style: none; margin: 0; padding: 4px 10px 8px; max-height: calc(100% - 180px); overflow: auto; }
+.w3 .w3-goals.min ol { display: none; }
+.w3 .w3-goals li { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; line-height: 1.35; }
+.w3 .w3-goals li .w3-tick { flex: 0 0 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); margin-top: 1px; position: relative; }
+.w3 .w3-goals li.done .w3-tick { background: #2dc653; border-color: #2dc653; }
+.w3 .w3-goals li.done .w3-tick::after { content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.w3 .w3-goals li.done span:last-child { color: #b9e8c3; }

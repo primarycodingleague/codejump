@@ -143,6 +143,7 @@ export function createMakerUI(app) {
       '<div class="cr-popbtns"><button type="button" class="gold" id="crFinOk">Keep building</button><button type="button" id="crFinAgain">Start again</button></div>');
     $('crFinOk').onclick = () => { hidePop(); app.focus(); }; $('crFinAgain').onclick = () => { hidePop(); askRestart(); };
     app.changed();
+    if (app.done) app.done(); // a lesson world: the host's Lesson card offers the next lesson
   }
   function timeUp() {
     chal.running = false; chal.over = true; renderLesson();

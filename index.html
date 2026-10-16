@@ -360,6 +360,10 @@ body.a11y-reduce .hm-slide{transition:none;}
 #lesson-guide .lg-nav button{flex:1;min-height:44px;border-radius:10px;border:2px solid #1b1b1f;background:#fff;color:#1b1b1f;font:800 15px var(--font);cursor:pointer;}
 #lesson-guide .lg-nav .lg-next{background:#1b1b1f;color:#fff;}
 #lesson-guide .lg-nav button:disabled{opacity:.4;cursor:default;}
+#lesson-guide .lg-go{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;margin-top:8px;min-height:48px;padding:7px 12px;border-radius:10px;border:2px solid #1b1b1f;background:var(--gold);color:#1b1b1f;font:800 12px var(--font);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;text-align:left;}
+#lesson-guide .lg-go b{font-size:15px;text-transform:none;letter-spacing:0;}
+#lesson-guide .lg-go.hide{display:none;}
+#lesson-guide.done .lg-go{box-shadow:0 0 0 3px rgba(174,133,62,.35);}
 #lesson-guide.min{width:auto;max-width:calc(100vw - 32px);}
 #lesson-guide.min .lg-body{display:none;}
 #lesson-guide.min .lg-head{border-radius:12px;}
@@ -1955,7 +1959,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
         <div class="hm-tl-top">
           <div class="hm-tl-text">
             <h3><svg class="ic"><use href="#i-book"></use></svg> Ready-made lessons</h3>
-            <p>Each lesson has a plan with timings and what to say, slides to present on the board, a starter project, and a Lesson card that takes pupils through it step by step. For ages 5 to 11, with the curriculum links for your country.</p>
+            <p>Each lesson has a plan with timings and what to say, slides to present on the board, a starter project, and a Lesson card that takes pupils through it step by step, and offers the next lesson when they finish. For ages 5 to 11, with the curriculum links for your country.</p>
           </div>
           <button class="hm-btn gold lg" id="h-lessons"><svg class="ic"><use href="#i-book"></use></svg> See all the lessons</button>
         </div>
@@ -2016,7 +2020,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
 <div id="lesson-guide" class="hide" role="region" aria-label="Lesson steps">
   <div class="lg-head" id="lg-head"><span class="lg-name" id="lg-name">Lesson</span><button class="lg-icon" id="lg-read" title="Read this step aloud" aria-label="Read this step aloud"><svg class="ic"><use href="#i-read"></use></svg></button><button class="lg-icon" id="lg-min" title="Make smaller" aria-label="Make the lesson card smaller">&#8211;</button><button class="lg-icon" id="lg-close" title="Hide the lesson steps" aria-label="Hide the lesson steps"><svg class="ic"><use href="#i-x"></use></svg></button></div>
   <div class="lg-body"><div class="lg-count" id="lg-count"></div><h4 class="lg-t" id="lg-t"></h4><p class="lg-d" id="lg-d"></p><div class="lg-dots" id="lg-dots"></div>
-    <div class="lg-nav"><button id="lg-prev">Back</button><button class="lg-next" id="lg-next">Next</button></div></div>
+    <div class="lg-nav"><button id="lg-prev">Back</button><button class="lg-next" id="lg-next">Next</button></div>
+    <button class="lg-go hide" id="lg-go"><span>Next lesson</span><b id="lg-go-t"></b></button></div>
 </div>
 <div id="ls-present" class="hide" role="dialog" aria-modal="true" aria-label="Lesson slides">
   <div class="lp-stage" id="lp-stage"></div>
@@ -3577,9 +3582,12 @@ function lessonList(){
 // the same lab's lessons in the year bands before and after this one (the progression)
 // (a lesson in a unit, like the Robot Helper Academy, links to the lesson before and after it in the unit instead)
 const lsUnitOf=l=>l.unit?l.unit.replace(/ · Lesson.*$/,''):'';
-function lessonPathHTML(l){const bi=LS_BANDS.findIndex(b=>b[0]===lsBand(l)),same=lessonsMod.LESSONS.filter(o=>o.type===l.type&&o.id!==l.id&&!o.unit);
+// the lessons before and after this one: within its unit (Academy, Park Designers…), else the same lab's next age band
+function lessonNeighbours(l){const bi=LS_BANDS.findIndex(b=>b[0]===lsBand(l)),same=lessonsMod.LESSONS.filter(o=>o.type===l.type&&o.id!==l.id&&!o.unit);
   let prev=same.filter(o=>LS_BANDS.findIndex(b=>b[0]===lsBand(o))===bi-1),next=same.filter(o=>LS_BANDS.findIndex(b=>b[0]===lsBand(o))===bi+1);
   if(l.unit){const u=lessonsMod.LESSONS.filter(o=>o.unit&&lsUnitOf(o).replace(/ · Block.*$/,'')===lsUnitOf(l).replace(/ · Block.*$/,'')),i=u.indexOf(l);prev=i>0?[u[i-1]]:[];next=i<u.length-1?[u[i+1]]:[];}
+  return{prev,next};}
+function lessonPathHTML(l){const{prev,next}=lessonNeighbours(l);
   if(!prev.length&&!next.length)return'';
   const link=o=>`<button class="ls-pathl" data-go="${lsEsc(o.id)}">${lsEsc(o.title)} <small>(${lsEsc(cjYears(o.years))})</small></button>`;
   return`<div class="ls-path">${prev.length?'<span><b>Before this:</b> '+prev.map(link).join(' ')+'</span>':''}${next.length?'<span><b>Next:</b> '+next.map(link).join(' ')+'</span>':''}</div>`;}
@@ -3784,6 +3792,32 @@ function lessonFromPayload(d){ // called by applyPayload (not for edits arriving
   lessonGuideRender();
 }
 function lessonStop(){lessonActive=null;lessonGuideRender();}
+// the pupil finished: the last step, every goal in a 3D World, or every task in a Build Lab world. The card opens on the
+// last step with a Next lesson button, so they can carry on without going back to the home page.
+async function lessonDone(){
+  if(!lessonActive)return;
+  if(!lessonsMod){try{await loadLessons();}catch(e){return;}}
+  const l=lessonsMod.lesson(lessonActive.id);if(!l)return;
+  const first=!lessonActive.done;lessonActive.done=true;lessonActive.step=l.steps.length-1;
+  document.getElementById('lesson-guide').classList.remove('min');lessonGuideRender();
+  if(first)toast(lessonNeighbours(l).next.length?'Lesson complete! Press Next lesson on the Lesson card when you’re ready.':'Lesson complete! Well done.','#10b981');
+}
+// save this lesson's work (back to its own cloud copy, which hands it in if it came from the class), then open the next one
+async function lessonSaveWork(){
+  if(isSignedIn()&&cloudProjectId){try{commitLevel();
+    await cloudApi('/project/save',{token:cloudToken,id:cloudProjectId,title:cloudProjectTitle||'My Game',class:cloudProjectClass||null,payload:buildPayload()});
+    clearDirty();toast(cloudProjectClass?'Handed in to your class':'Saved to the Cloud','#10b981');return true;}catch(e){toast('Couldn’t save to the Cloud, so saving on this device instead','#ef4444');}}
+  await saveCurrentLevel();return !dirty;
+}
+async function lessonGoNext(){
+  if(!lessonActive||!lessonsMod)return;
+  const l=lessonsMod.lesson(lessonActive.id),nx=l&&lessonNeighbours(l).next[0];if(!nx)return;
+  if(dirty){
+    if(!await cjConfirm('Save your work on “'+l.title+'” and go on to “'+nx.title+'”?',{title:'Next lesson',okLabel:'Save and go on',cancelLabel:'Stay here'}))return;
+    if(!await lessonSaveWork())return; // not saved (e.g. the name box was closed): stay
+  }
+  lessonOpenStarter(nx.id);
+}
 async function lessonGuideRender(){
   const g=document.getElementById('lesson-guide');if(!g)return;
   if(!lessonActive||!document.getElementById('home').classList.contains('hide')||!document.getElementById('teacher').classList.contains('hide')){g.classList.add('hide');return;}
@@ -3796,6 +3830,10 @@ async function lessonGuideRender(){
   document.getElementById('lg-dots').innerHTML=l.steps.map((_,k)=>'<i class="'+(k<=i?'on':'')+'"></i>').join('');
   document.getElementById('lg-prev').disabled=i===0;
   document.getElementById('lg-next').textContent=i===n-1?'Finish':'Next';
+  const nx=lessonNeighbours(l).next[0],go=document.getElementById('lg-go');
+  go.classList.toggle('hide',!(nx&&(i===n-1||lessonActive.done)));
+  if(nx){document.getElementById('lg-go-t').textContent=nx.title;go.dataset.id=nx.id;go.title='Open the next lesson: '+nx.title;}
+  g.classList.toggle('done',!!lessonActive.done);
   g.classList.remove('hide');
 }
 (function lessonGuideBind(){
@@ -3803,7 +3841,8 @@ async function lessonGuideRender(){
   document.getElementById('lg-prev').onclick=()=>{if(lessonActive&&lessonActive.step>0){lessonActive.step--;lessonGuideRender();}};
   document.getElementById('lg-next').onclick=()=>{if(!lessonActive||!lessonsMod)return;const l=lessonsMod.lesson(lessonActive.id);if(!l)return;
     if(lessonActive.step<l.steps.length-1){lessonActive.step++;lessonGuideRender();if(keyStage==='ks1'&&typeof readAloud!=='undefined'&&readAloud)lessonSpeak();} // KS1 cards read themselves aloud
-    else{toast('Well done! You finished the lesson steps.','#10b981');g.classList.add('min');lessonGuideRender();}};
+    else lessonDone();};
+  document.getElementById('lg-go').onclick=e=>{e.stopPropagation();lessonGoNext();};
   document.getElementById('lg-read').onclick=e=>{e.stopPropagation();lessonSpeak();};
   document.getElementById('lg-min').onclick=e=>{e.stopPropagation();g.classList.toggle('min');lessonGuideRender();};
   document.getElementById('lg-close').onclick=async e=>{e.stopPropagation();if(await cjConfirm('Hide the lesson steps for this project? Your work stays as it is.',{title:'Lesson steps',okLabel:'Hide them'}))lessonStop();};
@@ -3857,7 +3896,7 @@ function enter3DUI(){
   holder.innerHTML='<div id="world-loading">Getting the 3D world ready…</div>';
   loadWorldEngine().then(mod=>{
     if(worldApp){_worldQuiet=true;try{worldApp.setProject(worldData);}finally{_worldQuiet=false;}return;}
-    worldApp=mod.mount(holder,{project:worldData,onChange:()=>{if(!_worldQuiet&&projectType==='3d')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    worldApp=mod.mount(holder,{project:worldData,onChange:()=>{if(!_worldQuiet&&projectType==='3d')markDirty();},onGoalsDone:()=>{if(projectType==='3d')lessonDone();},toast:(m,c)=>toast(m,c||'#ae853e'),
       collab:{active:()=>typeof collabActive!=='undefined'&&collabActive&&projectType==='3d',send:op=>collabSend({type:'op',op})}});
   }).catch(()=>{holder.innerHTML='<div id="world-loading">The 3D world needs the internet the first time it opens. Check your connection and try again.</div>';});
 }
@@ -4033,7 +4072,7 @@ function enterCraftUI(){
   loadCraftLab().then(mod=>{
     if(craftApp){_craftQuiet=true;try{craftApp.setProject(craftData);}finally{_craftQuiet=false;}return;}
     _craftQuiet=true;
-    try{craftApp=mod.mount(holder,{project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    try{craftApp=mod.mount(holder,{project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},onLessonDone:()=>{if(projectType==='craft')lessonDone();},toast:(m,c)=>toast(m,c||'#ae853e'),
       confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'}),cloud:cloudOn()?critterCloud:null,
       live:{active:()=>collabActive&&projectType==='craft',send:op=>collabSend({type:'op',op}),me:()=>collabMe&&collabMe.uid,members:()=>collabMembers}});}finally{_craftQuiet=false;}
   }).catch(()=>{holder.innerHTML='<div id="craft-loading">The Build Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
@@ -8344,7 +8383,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <h3> 3D World (Key Stage 2 &amp; 3)</h3>
  <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
  <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. On slower Chromebooks, the Blocky characters are the lightest.</p>
- <p><b>Park Designers (24 ready-made lessons, Years 3–6):</b> a unit in which pupils design and run a 3D theme park, in four blocks of six lessons that follow the usual primary order of skills. <b>Year 3 · Opening day:</b> algorithms and sequence, click events, physics, animation and speech. <b>Year 4 · Rides that move:</b> repeat, forever, loops that make things, random, and debugging loops. <b>Year 5 · Fairground games:</b> if and if … else with sensing (touching, distance, position, random), testing and debugging. <b>Year 6 · Running the park:</b> variables (counters, a score, a countdown, money that buys new rides), cameras and messages. The sixth lesson of each block is a design project. Each lesson opens its own world with a <b>Goals</b> checklist (top left of the world) that ticks itself: goals about the blocks tick as soon as the code is right, the rest tick while the program runs, so you can see at a glance who is done. Find them in <b>Ready-made lessons</b> (lesson plans, slides, a Lesson card for pupils, and Give to my class).</p>
+ <p><b>Park Designers (24 ready-made lessons, Years 3–6):</b> a unit in which pupils design and run a 3D theme park, in four blocks of six lessons that follow the usual primary order of skills. <b>Year 3 · Opening day:</b> algorithms and sequence, click events, physics, animation and speech. <b>Year 4 · Rides that move:</b> repeat, forever, loops that make things, random, and debugging loops. <b>Year 5 · Fairground games:</b> if and if … else with sensing (touching, distance, position, random), testing and debugging. <b>Year 6 · Running the park:</b> variables (counters, a score, a countdown, money that buys new rides), cameras and messages. The sixth lesson of each block is a design project. When a pupil finishes a lesson (every goal ticked, or the last step of the Lesson card) the card offers <b>Next lesson</b>, which saves their work (handing it in if it came from your class) and opens the next one. Each lesson opens its own world with a <b>Goals</b> checklist (top left of the world) that ticks itself: goals about the blocks tick as soon as the code is right, the rest tick while the program runs, so you can see at a glance who is done. Find them in <b>Ready-made lessons</b> (lesson plans, slides, a Lesson card for pupils, and Give to my class).</p>
  <h3> AI Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>AI Lab</b> lets pupils <b>teach a computer</b> to recognise their own <b>drawings</b> or <b>words</b> (machine learning), then use it in a block-coded game. Three steps: <b>Teach</b> (choose Drawings or Words, make 2–6 labels and add examples of each; ready-made <i>Shapes</i>, <i>Happy or sad faces</i>, <i>Sunny, rainy or snowy</i> and <i>Kind or unkind messages</i> sets are there for a quick start or a demo; under the pad pupils see <i>what the computer sees</i>, a 20 × 20 grid), <b>Train &amp; test</b> (a small neural network practises on the drawings, slightly turned and stretched each time; if each label has 4+ drawings it is also checked on 1 in 4 drawings it never practised with, and shows the ones it got wrong, a <i>mix-ups</i> table and, under <i>Look inside your AI</i>, the average drawing of each label or the key words of each label; pupils then draw or type to test it, with a confidence bar for every label and the examples it thinks are most alike) and <b>Code it</b> (Blockly: <i>when the AI makes a guess</i>, <i>when the AI thinks it’s …</i>, <i>AI’s guess</i>, <i>how sure the AI is</i>, <i>a random label</i>, <i>wait for the next guess</i>, plus show/say out loud, sounds, pad colour, score, loops, if, variables and operators).</p>
  <p><b>Big ideas to draw out:</b> the computer isn’t told rules — it finds patterns in examples; more and more varied examples make it better; testing on data it hasn’t seen is the fair test; it gives a <i>confidence</i>, not a certainty; and an AI trained on narrow or unbalanced examples is unfair to the things it wasn’t shown (bias). The ready-made lesson <b>Teach the computer</b> (Years 5–6) covers all of this, with slides. <b>Safeguarding:</b> drawings and typed words only — no camera, no microphone — and training happens in the browser; nothing is sent anywhere except inside the pupil’s own saved or shared project. Live collaboration isn’t available for the AI Lab.</p>
@@ -10459,6 +10498,7 @@ const CJ_VERSION='2026.10.16';
 const CJ_WHATSNEW=[
  "New in the 3D World: Park Designers! 24 lessons where you design and run a 3D theme park: build the gate, pop balloons, score a penalty, code spinning rides and fireworks, fairground games, an ice cream stand and a whole park game.",
  "Goals that tick themselves: lesson worlds in the 3D World now have a checklist at the top left. Press Run and watch each goal tick as your program works.",
+ "Finished a lesson? The Lesson card now has a Next lesson button, so you can carry straight on without going back to the home page. Your work is saved first.",
  "Teachers: the 24 Park Designers lessons (Years 3, 4, 5 and 6, a block of six for each year) are in Ready-made lessons, with lesson plans, slides and a Lesson card for pupils.",
  "New: the Print Lab! Design real things to 3D print: drag shapes onto a build plate, size them in millimetres, cut holes, draw your own shapes, add parts like hinges and gears, then check it and download it for a 3D printer. Key Stage 2 and 3.",
  "Print Lab challenges: design briefs whose rules tick themselves as you design, five ready-made or write your own. Teachers: two new ready-made Print Lab lessons (Years 3–4 and 5–6).",

@@ -77,6 +77,13 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   `lessons/builds/print-*.mjs`; the Lesson card sits bottom-right in print3d-mode (`.pl-empty` hint moved to the bottom). Tests: 88 checks.
 - **Ideas not done:** a workplane on a face, lettering on curved faces, more parts (snap fit, threads), a printable "fit test" card.
 
+## Next lesson button (16 Oct 2026, CJ_VERSION 2026.10.16) — Charlie: "when a student completes a lesson they need a button that says next lesson"
+- Lesson card `#lg-go` ("Next lesson: <title>") shows on the last step and once `lessonDone()` runs (Finish on the last step, every goal
+  ticked in a 3D World lesson via world-app `host.onGoalsDone`, every task done in a Build Lab world via craft-maker-ui `app.done` →
+  `host.onLessonDone`). `lessonNeighbours(l)` = next in the unit (Academy, Park Designers), else the same lab's next band (also used by the
+  library's Before this / Next links). `lessonGoNext()`: unsaved work → "Save and go on" (`lessonSaveWork`: its own cloud copy, which
+  hands it in when it came from the class, else a device save) → `lessonOpenStarter(next)`. Tests: lessons.test.mjs + park-app.test.mjs.
+
 ## Park Designers (3D World lesson unit, 24 lessons, Years 3–6; 16 Oct 2026, CJ_VERSION 2026.10.16; on branch `claude/vibrant-cori-tho25y`) — Charlie shared Flip Computing's "Coding 3D Worlds" curriculum map and chose "primary only, 6 per block"
 - **Our own unit**, following only the usual primary SKILL ORDER (their map: Stages 3–6 = sequence/events/physics → repetition →
   selection/debugging → variables/cameras/game systems). NEVER copy their projects, names or text (it's their paid material) or use the

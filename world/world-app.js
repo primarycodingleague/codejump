@@ -170,7 +170,7 @@ export function mount(root, host) {
     $('w3GoalsCount').textContent = ticks.filter(Boolean).length + '/' + ticks.length;
     const all = ticks.length && ticks.every(Boolean);
     $('w3Goals').classList.toggle('all', !!all);
-    if (all && !allDoneSaid && world && world.running()) { allDoneSaid = true; toast('Every goal done. Brilliant!'); sound.play('win'); }
+    if (all && !allDoneSaid && world && world.running()) { allDoneSaid = true; toast('Every goal done. Brilliant!'); sound.play('win'); if (host.onGoalsDone) host.onGoalsDone(); }
   }
   function goalsFrame() {
     if (!goals || !world || !world.running()) return;

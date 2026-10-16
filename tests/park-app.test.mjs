@@ -58,6 +58,17 @@ try {
   await sleep(500);
   ok(await page.evaluate(() => !document.getElementById('w3Goals').hidden && document.getElementById('w3GoalsTitle').textContent === 'Count the visitors'),
     'reopened: the checklist is back');
+  // a lesson opened from the library: ticking every goal brings up Next lesson on the Lesson card
+  await page.evaluate(() => { clearDirty(); lessonOpenStarter('park-19-tickets'); });
+  await page.waitForFunction(() => lessonActive && lessonActive.id === 'park-19-tickets' && worldApp._world() && worldApp._world().editing(), null, { timeout: 60000 });
+  await page.evaluate(p => worldApp.setProject(p), { blocks: PK.parkAnswer('park-19-tickets'), goals: PK.parkGoals('park-19-tickets') });
+  await page.waitForFunction(() => worldApp._world().editing() && worldApp._world().objects().some(o => o.id === 'turnstile'), null, { timeout: 60000 });
+  await page.click('#w3Run');
+  await page.waitForFunction(() => worldApp._world().running(), null, { timeout: 30000 });
+  for (let i = 0; i < 5; i++) { await page.evaluate(() => worldApp._world().click('turnstile')); await sleep(150); }
+  await page.waitForFunction(() => lessonActive && lessonActive.done, null, { timeout: 15000 }).catch(() => {});
+  const nx = await page.evaluate(() => ({ done: !!(lessonActive && lessonActive.done), shown: !document.getElementById('lg-go').classList.contains('hide'), t: document.getElementById('lg-go-t').textContent }));
+  ok(nx.done && nx.shown && nx.t === 'Coaster cam', 'every goal ticked: the Lesson card offers “Next lesson: Coaster cam”: ' + JSON.stringify(nx));
   ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 } finally { await b.close(); site.close(); }
 done();

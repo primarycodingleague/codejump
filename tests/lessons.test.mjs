@@ -135,6 +135,38 @@ try {
     ok(g.shown && g.title === 'One full spin' && g.n === 3, 'a Park Designers starter opens with its Goals checklist: ' + JSON.stringify(g));
   }
 
+  // ---- finishing a lesson offers the next one, straight from the Lesson card
+  {
+    await page.evaluate(() => { clearDirty(); lessonOpenStarter('turtle-shapes'); });
+    await page.waitForFunction(() => lessonActive && lessonActive.id === 'turtle-shapes' && projectType === 'turtle', null, { timeout: 30000 });
+    ok(await page.evaluate(() => document.getElementById('lg-go').classList.contains('hide')), 'no Next lesson button on the first step');
+    await page.evaluate(() => { lessonActive.step = lessonsMod.lesson('turtle-shapes').steps.length - 2; lessonGuideRender(); });
+    await page.click('#lg-next'); // the last step
+    await page.click('#lg-next'); // Finish
+    const go = await page.evaluate(() => ({ shown: !document.getElementById('lg-go').classList.contains('hide'), t: document.getElementById('lg-go-t').textContent,
+      open: !document.getElementById('lesson-guide').classList.contains('min'), done: !!lessonActive.done }));
+    const nextT = (await page.evaluate(() => lessonNeighbours(lessonsMod.lesson('turtle-shapes')).next[0].title));
+    ok(go.shown && go.t === nextT && go.open && go.done, 'Finish shows “Next lesson: ' + go.t + '” on the open card');
+    await page.evaluate(() => clearDirty());
+    await page.click('#lg-go');
+    await page.waitForFunction(() => lessonActive && lessonActive.id === 'turtle-procedures', null, { timeout: 30000 });
+    ok(await page.evaluate(() => projectType === 'turtle' && lessonActive.step === 0 && !lessonActive.done), 'Next lesson opens the next lesson’s starter at step 1');
+    // unsaved work: it asks first, and "Stay here" stays
+    await page.evaluate(() => { clearDirty(); lessonOpenStarter('turtle-shapes'); });
+    await page.waitForFunction(() => lessonActive && lessonActive.id === 'turtle-shapes', null, { timeout: 30000 });
+    await page.evaluate(() => { lessonActive.step = lessonsMod.lesson('turtle-shapes').steps.length - 1; lessonGuideRender(); markDirty(); });
+    const hasNext = await page.evaluate(() => !document.getElementById('lg-go').classList.contains('hide'));
+    if (hasNext) {
+      await page.click('#lg-go');
+      await page.waitForFunction(() => !document.getElementById('cj-dialog').classList.contains('hide'), null, { timeout: 5000 }).catch(() => {});
+      const asked = await page.evaluate(() => /Save your work/.test(document.getElementById('cj-dialog').textContent));
+      await page.evaluate(() => { const b = [...document.querySelectorAll('#cj-dialog button')].find(x => /Stay here/.test(x.textContent)); if (b) b.click(); });
+      await sleep(200);
+      ok(asked && await page.evaluate(() => lessonActive.id === 'turtle-shapes'), 'with unsaved work it asks to save first, and Stay here stays');
+    } else ok(false, 'turtle-shapes should offer a Next lesson');
+    await page.evaluate(() => clearDirty());
+  }
+
   // ---- the Lesson card: next/back, minimise, and it is saved with the work
   await page.evaluate(() => lessonOpenStarter('turtle-shapes'));
   await page.waitForFunction(() => projectType === 'turtle');

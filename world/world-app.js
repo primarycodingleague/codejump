@@ -11,13 +11,15 @@
  * 1.5 s after you stop, which the room keeps for late joiners and which fixes anyone who fell out of step. Events are
  * tagged with a Blockly event group: 'w3load…' (opening a project) and 'w3remote…' (a partner's change) are never sent on.
  *
- * A project is { blocks: <Blockly JSON workspace> }. Uses the page's Blockly 10 (window.Blockly) plus
+ * A project is { blocks: <Blockly JSON workspace>, goals? } — goals (world-goals.js) are a checklist that ticks itself while the
+ * program runs, used by the Park Designers lessons (world-park.js). Uses the page's Blockly 10 (window.Blockly) plus
  * Blockly's JavaScript generator from vendor/, which world-blocks.js drives.
  */
 import * as B from './vendor/babylon-world.min.js';
 import { createWorld, keyName } from './world-runtime.js';
 import * as WB from './world-blocks.js';
 import { createSound } from './world-sound.js';
+import { createGoals, cleanGoals } from './world-goals.js';
 
 const CSS_URL = new URL('./world-app.css', import.meta.url).href;
 const GEN_URL = new URL('./vendor/blockly-javascript-10.4.3.min.js', import.meta.url).href;
@@ -52,6 +54,10 @@ const TEMPLATE = `
       <div class="w3-loading" id="w3Loading">Getting the 3D world ready…</div>
       <div class="w3-tip" id="w3Tip">Drag to look around · scroll to zoom</div>
       <div class="w3-banner" id="w3Banner" role="status" aria-live="polite" hidden></div>
+      <div class="w3-goals" id="w3Goals" hidden>
+        <button type="button" class="w3-goals-head" id="w3GoalsHead" aria-expanded="true"><span id="w3GoalsTitle">Goals</span> <b id="w3GoalsCount"></b></button>
+        <ol id="w3GoalsList"></ol>
+      </div>
       <div class="w3-pad" id="w3Pad" hidden>
         <div class="w3-dpad">
           <button type="button" data-k="up" aria-label="Forward">▲</button>
@@ -122,15 +128,55 @@ export function mount(root, host) {
     try {
       ws.clear();
       const data = p && p.blocks && typeof p.blocks === 'object' ? p.blocks : WB.starterProgram();
+      setGoals(p && p.goals);
       try { Blockly.serialization.workspaces.load(data, ws); } catch (e) {
         ws.clear(); Blockly.serialization.workspaces.load(WB.starterProgram(), ws);
         toast('Some blocks in this project couldn’t be loaded, so it starts from the example instead.');
       }
     } finally { quiet = false; Blockly.Events.setGroup(false); }
+    goalsProgram();
     // start at the top-left of the program, where the "when Run is clicked" block sits
     try { const top = ws.getTopBlocks(true)[0]; if (top) { const xy = top.getRelativeToSurfaceXY(), sc = ws.scale; ws.scroll(-(xy.x * sc) + 20, -(xy.y * sc) + 20); } } catch (e) { /* hidden */ }
   }
-  function getProject() { return ws ? { blocks: Blockly.serialization.workspaces.save(ws) } : pendingProject; }
+  function getProject() {
+    if (!ws) return pendingProject;
+    const p = { blocks: Blockly.serialization.workspaces.save(ws) };
+    if (goals && goals.goals) p.goals = goals.goals;
+    return p;
+  }
+
+  // ── goals: a checklist that ticks itself while the program runs ──
+  let goals = null, shownTicks = '', goalFrame = 0, allDoneSaid = false;
+  function setGoals(g) {
+    const clean = cleanGoals(g);
+    goals = clean ? createGoals(clean) : null;
+    shownTicks = ''; allDoneSaid = false;
+    const box = $('w3Goals');
+    box.hidden = !goals;
+    $('w3Wrap').classList.toggle('has-goals', !!goals);
+    if (!goals) return;
+    $('w3GoalsTitle').textContent = goals.goals.title;
+    $('w3GoalsList').innerHTML = goals.goals.list.map((x, i) => '<li data-i="' + i + '"><span class="w3-tick" aria-hidden="true"></span><span></span></li>').join('');
+    goals.goals.list.forEach((x, i) => { $('w3GoalsList').children[i].lastChild.textContent = x.text; });
+    goalsProgram();
+  }
+  function goalsProgram() { if (goals && ws) { goals.program(Blockly.serialization.workspaces.save(ws)); renderGoals(goals.ticks()); } }
+  function renderGoals(ticks) {
+    const key = ticks.join(',');
+    if (key === shownTicks) return;
+    shownTicks = key;
+    const items = $('w3GoalsList').children;
+    ticks.forEach((t, i) => { if (items[i]) { items[i].classList.toggle('done', !!t); items[i].setAttribute('aria-label', (t ? 'Done: ' : 'To do: ') + goals.goals.list[i].text); } });
+    $('w3GoalsCount').textContent = ticks.filter(Boolean).length + '/' + ticks.length;
+    const all = ticks.length && ticks.every(Boolean);
+    $('w3Goals').classList.toggle('all', !!all);
+    if (all && !allDoneSaid && world && world.running()) { allDoneSaid = true; toast('Every goal done. Brilliant!'); sound.play('win'); if (host.onGoalsDone) host.onGoalsDone(); }
+  }
+  function goalsFrame() {
+    if (!goals || !world || !world.running()) return;
+    if (++goalFrame % 6) return; // ten times a second is plenty
+    renderGoals(goals.check(world));
+  }
 
   // ── live collaboration ──
   // Two people changing the same thing at once can each end up with the other's value. Every full copy carries a time
@@ -215,6 +261,7 @@ export function mount(root, host) {
     clearTimeout(editTimer);
     const code = compile(); if (code == null) return;
     status(''); setMode(true); staleWarned = false;
+    if (goals) { goals.reset(); allDoneSaid = false; renderGoals(goals.ticks()); }
     const ok = await world.run(code);
     if (ok && world.running()) status('Running', 'ok');
     $('w3Canvas').focus({ preventScroll: true });
@@ -322,6 +369,10 @@ export function mount(root, host) {
     const up = e => { e.preventDefault(); if (world) world.pad(k, false); };
     b.addEventListener('pointerdown', dn); b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up); b.addEventListener('pointercancel', up);
   });
+  $('w3GoalsHead').onclick = () => {
+    const box = $('w3Goals'), open = box.classList.toggle('min');
+    $('w3GoalsHead').setAttribute('aria-expanded', String(!open));
+  };
   $('w3Run').onclick = run;
   $('w3Stop').onclick = stop;
   root.querySelectorAll('.w3-tool').forEach(b => b.addEventListener('click', () => {
@@ -356,7 +407,7 @@ export function mount(root, host) {
         return;
       }
       if (!grp.startsWith(REMOTE) && collabOn()) shareEvent(e); // a partner's change isn't sent back
-      clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 250);
+      clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (!alive) return; goalsProgram(); if (host.onChange) host.onChange(); }, 250);
       if (!world || grp.startsWith(GIZMO)) return; // the gizmo already moved it
       if (world.editing()) editSoon(); // the starting layout follows your blocks as you change them
       else if (world.running() && !staleWarned) { staleWarned = true; status('You changed your blocks: press Run to try them.'); }
@@ -366,7 +417,7 @@ export function mount(root, host) {
     try { havok = await B.HavokPhysics(); } catch (e) { toast('Physics couldn’t start, so things won’t fall or bump.'); }
     if (!alive) return;
     world = createWorld(B, { canvas: $('w3Canvas'), havok, loadAsset, onError: m => status(m, 'bad'), onPad: setPad, onPick, onEdit, gizmoScale: touchy ? 1.9 : 1.3,
-      sound: sound, onBanner: t => { const el = $('w3Banner'); el.textContent = t; el.hidden = !t; },
+      sound: sound, onFrame: goalsFrame, onBanner: t => { const el = $('w3Banner'); el.textContent = t; el.hidden = !t; },
       onLoading: n => {
         if (n > 0) { status('Loading models…'); return; }
         if ($('w3Status').textContent === 'Loading models…') { if (world && world.running()) status('Running', 'ok'); else status(EDIT_TIP); }
@@ -402,6 +453,6 @@ export function mount(root, host) {
       root.innerHTML = '';
     },
     applyRemote,
-    _world: () => world, _ws: () => ws
+    _world: () => world, _ws: () => ws, _goals: () => goals
   };
 }

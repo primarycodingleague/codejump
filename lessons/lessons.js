@@ -1117,6 +1117,691 @@ export const LESSONS = [
       { t: 'Check the tasks', d: '40 blocks in the plot, your own block, a variable and an if.' },
       { t: 'Show it off', d: 'Tell a partner what your blocks do. What would you improve?' }
     ]
+  },
+  {
+    id: 'park-1-gate', unit: 'Park Designers · Block 1 · Lesson 1', title: 'Build the gate', ks: 'ks2', years: 'Year 3', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The first Park Designers lesson. Pupils meet the 3D World and the park they will build this year, write the algorithm for a park gate as ordered steps, then finish the gate with “make” blocks: a second post, a bar across the top and a star.',
+    objective: 'We are learning to write an algorithm as a sequence of steps and turn it into code.',
+    success: ['I can write the steps to build something in a sensible order.', 'I can use a “make” block to add a shape to the world.', 'I can change x, y and z numbers to put a shape in the right place.', 'I can give a new thing its own name.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['algorithm', 'a set of exact steps, in order, to do a job'], ['sequence', 'the order the steps run in'], ['code', 'instructions a computer can follow'], ['x, y, z', 'three numbers for a place: across, up and forwards or backwards'], ['variable', 'a name the computer remembers, like postR']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Building bricks or three pencils and a ruler for the warm-up (optional)', 'Paper for writing the gate algorithm'],
+    plan: [
+      { min: 8, title: 'Build a gate', html: '<p>Hold up two pencils and a ruler (or bricks). <b>Ask:</b> how would you build a gate with these? Take steps from the class and write them on the board as numbered steps: 1. stand a post on the left, 2. stand a post on the right, 3. put a bar across the top. <b>Ask:</b> could we put the bar first? (Not in real life: it would fall.) Introduce <b>algorithm</b> and <b>sequence</b>.</p>' },
+      { min: 8, title: 'Welcome to the park', html: '<p>Explain the unit: this year the class are park designers, and every lesson adds something to the park. Open the starter on the board. Show the two halves: blocks on the left, the world on the right. Drag on the world to look around. Click the pink post: it shows Move arrows. Find its block, <b>make box postL</b>, and change its <b>x</b> from −3 to 0: the post moves at once. Put it back to −3.</p>' },
+      { min: 10, title: 'Show me: x, y and z', html: '<p>Stand up. Point left and right: that is <b>x</b>. Point up: <b>y</b>. Point forwards and back: <b>z</b>. On the board, show <b>Right-click → Duplicate</b> on the postL block, join the copy underneath, then <b>Variables → Create variable</b> “postR” and choose postR in the copy’s drop-down. Change x to 3. <b>Ask:</b> why does it need its own name? (So other blocks can tell the two posts apart.)</p>' },
+      { min: 24, title: 'Your turn', html: '<p>Pupils follow the steps. The <b>Goals</b> list at the top right of the world ticks while the program runs, so they press <b>Run</b> to check.</p><p>Common bug: the bar is made at y 0, so it sits on the grass between the posts. The posts are 4 tall and a shape’s y is where its bottom sits, so the bar needs y 4. Another: a new block still says box1 or tree1 in its drop-down, so the goal can’t find postR, bar or star — choose the right name.</p><p>Answer: make box postR (pink, width 1 height 4 depth 1, at x 3 y 0 z 6); make box bar (width 7 height 1 depth 1, at x 0 y 4 z 6); make star (Star, size 1, at x 0 y 5 z 6).</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Read one finished program aloud as an algorithm, block by block. <b>Ask:</b> does the order of the blocks matter here? (The computer makes them all in a flash, so the gate looks the same — but a name must be made before another block can use it.) <b>Ask:</b> what number would put the star on the left post? Next lesson: a mascot who does something when you click it.</p>' }
+    ],
+    support: 'Pairs start with the postR block already made on the board for them to copy; they only change the name and x. Give a card that says “x = across, y = up, z = forwards”.',
+    stretch: 'Put a cone on top of each post (Shapes → make cone, y 4). Add a second star on each end of the bar. Change the colours to make a park theme.',
+    assess: ['Writes the gate steps in a sensible order', 'Adds a shape with a “make” block and a new name', 'Changes x, y or z to place a shape correctly and can explain which way each number moves it'],
+    steps: [
+      { t: 'Look around', d: 'Drag on the world to look around. Find the pink post. Its block is “make box postL” inside “when Run is clicked”.' },
+      { t: 'Try a number', d: 'In the postL block, change x from -3 to 0. Watch the post move. Put it back to -3.' },
+      { t: 'A second post', d: 'Right-click the postL block and choose Duplicate. Join the copy underneath. In Variables, press Create variable and type postR. Choose postR in the copy’s drop-down. Change x to 3.' },
+      { t: 'The bar', d: 'From Shapes, drag “make box … colour …” under your posts. Create a variable called bar and choose it. Make it width 7, height 1, depth 1, at x 0 y 4 z 6.' },
+      { t: 'Test it', d: 'Press Run. Look at the Goals list at the top right. Which goals have ticked?' },
+      { t: 'The star', d: 'From Models, drag a “make” block under the bar. Create a variable called star and choose it. Pick the Star picture. Put it at x 0 y 5 z 6. Press Run.' },
+      { t: 'Challenge', d: 'Put a cone on top of each post. What y number do they need?' }
+    ]
+  },
+  {
+    id: 'park-2-mascot', unit: 'Park Designers · Block 1 · Lesson 2', title: 'Meet the mascot', ks: 'ks2', years: 'Year 3', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Events: the park’s mascot stands by the gate but does nothing. Pupils add a “when mascot is clicked” block so that clicking the mascot makes it wave and say “Welcome to the park!”.',
+    objective: 'We are learning to use an event to start some code.',
+    success: ['I can explain what an event is.', 'I can use a “when … is clicked” block.', 'I can make a character move and speak when it is clicked.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['event', 'something that happens, like a click, that starts some code'], ['input', 'what we give the computer, like a click or a key press'], ['output', 'what the computer does back, like a wave or a speech bubble'], ['animation', 'a movement a character can play, like wave or dance']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 8, title: 'What starts it?', html: '<p>Ring a bell or knock on the door. <b>Ask:</b> what happens at home when someone rings the doorbell? (Someone answers.) The ring is an <b>event</b>: something happens, and that starts an action. List events the children know: a school bell, pressing a lift button, tapping an app. Recap last lesson: our code so far ran only <b>when Run is clicked</b> — that is an event too.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter: the gate from last lesson and a cat mascot. Press <b>Run</b> and click the mascot: nothing happens. <b>Ask:</b> why not? (No code tells it what to do.) From <b>Events</b>, drag <b>when … is clicked</b> into an empty space (not inside “when Run is clicked”) and choose <b>mascot</b> in its drop-down. From <b>Characters</b>, drag the animation block inside and choose mascot, wave and once. Run and click.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the steps and watch the Goals tick. Remind them that clicks only work while the program is running: in the edit view, clicking a thing just selects it to move.</p><p>Common bugs: the event block still says box1, so clicking the mascot does nothing; the wave block says player, not mascot; the new blocks were put inside “when Run is clicked”, so the mascot waves straight away without a click.</p><p>Answer: when mascot is clicked { mascot wave once; mascot says “Welcome to the park!” for 3 seconds }.</p>' },
+      { min: 9, title: 'Input and output', html: '<p>On the board draw: <b>input</b> (click the mascot) → <b>code</b> → <b>output</b> (wave, speech bubble). <b>Ask:</b> what is the input? What is the output? Pupils who finish add a second event (a click on a post that changes its colour) and say its input and output.</p>' },
+      { min: 8, title: 'Plenary', html: '<p><b>Ask:</b> what is the difference between “when Run is clicked” and “when mascot is clicked”? (One runs at the start; one waits for a click, and runs every time you click.) Next lesson: two characters having a conversation, in the right order.</p>' }
+    ],
+    support: 'Show the finished event block on a card for pupils to copy. Pairs take turns: one drags, one checks the drop-downs.',
+    stretch: 'Make the mascot do a different animation each time you click something else: add “when postL is clicked” to make it dance. Add a “set colour of … to …” block to the bar when it is clicked.',
+    assess: ['Explains an event as something that starts code', 'Uses “when … is clicked” with the right object chosen', 'Names the input and output of their program'],
+    steps: [
+      { t: 'Try it', d: 'Press Run and click the mascot. Nothing happens — yet! Press Stop.' },
+      { t: 'An event', d: 'From Events, drag “when … is clicked” into an empty space. Click its drop-down and choose mascot.' },
+      { t: 'Wave', d: 'From Characters, drag the animation block inside it. Choose mascot, then wave, then once.' },
+      { t: 'Say hello', d: 'From Looks, drag “… says … for … seconds” under the wave. Choose mascot. Type Welcome to the park! and make it 3 seconds.' },
+      { t: 'Test it', d: 'Press Run, then click the mascot. Does it wave and speak? Check the Goals list.' },
+      { t: 'Again!', d: 'Click the mascot again. The event runs every time you click.' },
+      { t: 'Challenge', d: 'Add “when postL is clicked”. Make the mascot do a dance when you click the post.' }
+    ]
+  },
+  {
+    id: 'park-3-chat', unit: 'Park Designers · Block 1 · Lesson 3', title: 'Help a visitor', ks: 'ks2', years: 'Year 3', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Sequence and timing: a visitor asks the park guide the way. Pupils build a conversation in the right order with “says … for … seconds” blocks, then make the visitor walk through the gate.',
+    objective: 'We are learning to put steps in the right order and use timing so they happen one after another.',
+    success: ['I can put speech blocks in the right order to make a conversation.', 'I can explain why “says … for … seconds” waits before the next block.', 'I can make a character walk to a place with a glide block.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['sequence', 'steps that run one after another, in order'], ['timing', 'how long each step takes before the next one starts'], ['glide', 'move smoothly to a place over a number of seconds'], ['predict', 'say what you think will happen before you test']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Speech-bubble cards for the warm-up (optional)'],
+    plan: [
+      { min: 7, title: 'Act it out', html: '<p>Two pupils act a visitor asking the way. Then give them the lines on cards in the wrong order (“Thank you!” first). <b>Ask:</b> what went wrong? A conversation is a <b>sequence</b>. Now ask them to say all their lines at the same time. <b>Ask:</b> why is that no good? Each line needs <b>time</b> before the next.</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter: the gate, a guide and a visitor. Press <b>Run</b> and click the visitor: “Where are the rides?”. Show the code under <b>when visitor is clicked</b>. Point out the <b>for 2 seconds</b>: the bubble stays for 2 seconds, and the next block waits until it has gone.</p>' },
+      { min: 10, title: 'Predict', html: '<p>On the board, add <b>guide says “Through the gate and turn left!”</b> with the plain <b>… says …</b> block (no seconds), then <b>visitor says “Thank you!” for 2 seconds</b>. <b>Ask:</b> predict — what will happen? Run it. (The guide’s bubble and the thank you appear at once: the plain block does not wait.) Swap it for <b>says … for … seconds</b> and run again.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the steps. The goal for three “says … for … seconds” blocks needs all three inside the <b>when visitor is clicked</b> block.</p><p>Common bugs: a speech block with the wrong character chosen; the glide is above the speech blocks, so the visitor walks off before saying thank you; the walk animation is left out, so the visitor slides.</p><p>Answer: when visitor is clicked { visitor says “Where are the rides?” for 2 seconds; guide reach once; guide says “Through the gate and turn left!” for 2 seconds; visitor says “Thank you!” for 2 seconds; visitor walk over and over; glide visitor to x 2 y 0 z 9 in 3 secs }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Read a finished program aloud while pupils act it. <b>Ask:</b> which block makes the visitor wait? What would happen if the glide came first? (They would walk away before the guide answers.) Next lesson: we use physics to make things fall.</p>' }
+    ],
+    support: 'Give the three lines on cards to order before coding. Pupils add one speech block at a time and press Run after each.',
+    stretch: 'Make the conversation longer: the guide says “Have fun!” as the visitor walks off. Give the guide an animation (try wave or nod yes). Make the visitor walk back again with a second glide.',
+    assess: ['Orders speech blocks to make a sensible conversation', 'Explains that “for … seconds” waits before the next block runs', 'Uses a glide block with x, y and z to move a character to a place'],
+    steps: [
+      { t: 'Try it', d: 'Press Run and click the visitor. What does the visitor ask?' },
+      { t: 'The guide answers', d: 'From Looks, drag “… says … for … seconds” under the visitor’s question, inside “when visitor is clicked”. Choose guide. Type Through the gate and turn left!' },
+      { t: 'Say thank you', d: 'Add another “… says … for … seconds” underneath. Choose visitor. Type Thank you!' },
+      { t: 'Test the order', d: 'Press Run and click the visitor. Do they take turns? If not, check the order and the names.' },
+      { t: 'Start walking', d: 'From Characters, add the animation block at the end. Choose visitor, walk and over and over.' },
+      { t: 'Through the gate', d: 'From Motion, add “glide … to x y z in … secs” at the very end. Choose visitor. Make it x 2 y 0 z 9 in 3 secs. Press Run and click the visitor.' },
+      { t: 'Check the goals', d: 'Do all four goals tick? If not, read your blocks from the top, one at a time.' },
+      { t: 'Challenge', d: 'Make the guide say “Have fun!” as the visitor walks away.' }
+    ]
+  },
+  {
+    id: 'park-4-balloons', unit: 'Park Designers · Block 1 · Lesson 4', title: 'Pop the balloons', ks: 'ks2', years: 'Year 3', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Events and physics: two balloons float over the park, each holding a gift (a heart and a doughnut). Clicking the red balloon only plays a pop. Pupils make each balloon hide when it is clicked and make its gift “fall and bump”, so it drops to the ground.',
+    objective: 'We are learning to use physics in our code and to choose which event starts it.',
+    success: ['I can make an object disappear with a “hide” block.', 'I can make an object fall with the “fall and bump” block.', 'I can choose the right event to start the fall.', 'I can copy an event and change it for a second object.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['physics', 'how things move in the real world: falling, bumping, bouncing'], ['gravity', 'the pull that makes things fall to the ground'], ['event', 'something that happens, like a click, that starts some code'], ['hide', 'make something disappear from view']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A balloon or a ball for the warm-up'],
+    plan: [
+      { min: 6, title: 'What goes up', html: '<p>Hold up a balloon (or a ball). <b>Ask:</b> if a balloon holding a toy pops, what happens to the toy? (It falls.) Introduce <b>gravity</b>. <b>Ask:</b> what would happen if there were no gravity? In the 3D World, things only feel gravity when we tell them to.</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter: a red balloon holding a heart and a blue balloon holding a doughnut. Press <b>Run</b> and click the red balloon: pop! But the balloon is still there and the heart stays in the air. Show the code: <b>when balloon1 is clicked → play sound pop</b>. <b>Ask:</b> what else should happen when a balloon pops? (It disappears and the gift falls.) Show <b>hide …</b> in <b>Looks</b> and <b>make … fall and bump</b> in <b>Physics</b>.</p>' },
+      { min: 8, title: 'Predict', html: '<p>On the board, put <b>hide balloon1</b> under the pop. <b>Ask:</b> predict — will the heart fall now? Run it and click. (No: the heart still floats. Hiding the balloon does not tell the heart to fall; the computer only does what our blocks say.) Then put <b>make gift1 fall and bump</b> inside <b>when Run is clicked</b>. <b>Ask:</b> when will it fall? Run it. (Straight away, before anyone clicks.) Move it into <b>when balloon1 is clicked</b>.</p>' },
+      { min: 26, title: 'Your turn', html: '<p>Pupils follow the steps. The Goals tick when the red balloon is clicked and each gift reaches the ground. The hide goal needs two hide blocks, one in each click event.</p><p>Common bugs: the drop-down still says box1, or the hide block says gift1 instead of balloon1; after Duplicate, the copy still says balloon1, so clicking the blue balloon does nothing; the copy still says gift1, so the doughnut never falls; the fall block is in “when Run is clicked”, so the gifts drop before the click.</p><p>Answer: when balloon1 is clicked { play sound pop; hide balloon1; make gift1 fall and bump }. when balloon2 is clicked { play sound pop; hide balloon2; make gift2 fall and bump }.</p>' },
+      { min: 12, title: 'Plenary', html: '<p><b>Ask:</b> why didn’t the heart fall when the balloon was hidden? (Each object needs its own instruction.) Which event starts the fall, and why? Pupils who tried bounciness show their gifts bouncing. Next lesson: a penalty kick, where we push a ball into a goal.</p>' }
+    ],
+    support: 'Pupils finish the red balloon first and test. Then they right-click the whole “when balloon1 is clicked” block, choose Duplicate and change only the names: balloon2 (twice) and gift2. Give a card: click → pop → hide → fall.',
+    stretch: 'Add “set bounciness of gift1 to 80 %” (Physics) before it falls. Put “wait 1 seconds” between the hide and the fall: what changes? Add a third balloon and gift with new names, balloon3 and gift3.',
+    assess: ['Uses “hide” and “make … fall and bump” on the right objects', 'Puts the physics inside the click event, and explains why', 'Makes a second click event for a second object'],
+    steps: [
+      { t: 'Try it', d: 'Press Run and click the red balloon. Pop! Does it disappear? Does the heart fall? Press Stop.' },
+      { t: 'Pop!', d: 'From Looks, drag “hide …” under “play sound pop”, inside “when balloon1 is clicked”. Choose balloon1.' },
+      { t: 'Drop the gift', d: 'From Physics, drag “make … fall and bump” under the hide block. Choose gift1.' },
+      { t: 'Test it', d: 'Press Run and click the red balloon. Does it disappear? Does the heart fall to the ground?' },
+      { t: 'The blue balloon', d: 'Right-click “when balloon1 is clicked” and choose Duplicate. In the copy, change balloon1 to balloon2 (two places) and gift1 to gift2.' },
+      { t: 'Test both', d: 'Press Run and click both balloons. Check the Goals list.' },
+      { t: 'Predict', d: 'What will happen if “make gift1 fall and bump” goes inside “when Run is clicked”? Say it, try it, then put it back.' },
+      { t: 'Challenge', d: 'From Physics, add “set bounciness of gift1 to 80 %” before it falls. Does the heart bounce?' }
+    ]
+  },
+  {
+    id: 'park-5-kick', unit: 'Park Designers · Block 1 · Lesson 5', title: 'Penalty kick', ks: 'ks2', years: 'Year 3', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Physics and forces: a football sits on the penalty spot in front of a goal. Clicking it gives the ball a tiny push that only rolls it a little way. Pupils predict and test, changing one number at a time in “push football by x y z”, so the ball lifts off the ground (y) and travels forward (z) into the goal.',
+    objective: 'We are learning that a push (a force) has a direction and a size, and to change one number at a time to control it.',
+    success: ['I can explain that a push has a direction and a size.', 'I can say what the y and z numbers in a push do.', 'I can predict, then test, changing one number at a time.', 'I can use my results to score a goal.'],
+    curriculum: ['design', 'reason', 'predict'],
+    words: [['force', 'a push or a pull'], ['direction', 'which way something goes: across (x), up (y) or forwards (z)'], ['size', 'how strong a push is: a bigger number is a stronger push'], ['predict', 'say what you think will happen before you test'], ['fair test', 'change only one thing at a time, so you know what made the difference']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A soft ball for the warm-up', 'A results table on paper (push y, push z, I predict, what happened)'],
+    plan: [
+      { min: 6, title: 'Kick it', html: '<p>Roll a soft ball gently, then harder. <b>Ask:</b> what changed? (The <b>size</b> of the <b>push</b>, the <b>force</b>.) Now roll it along the floor, then throw it gently up and forwards. <b>Ask:</b> what else changed? (The <b>direction</b>.) A push always has a direction and a size.</p>' },
+      { min: 8, title: 'Show me', html: '<p>Open the starter: a pitch, a goal and a white football on the spot. Press <b>Run</b> and click the football: it rolls a tiny bit. Show the code: <b>when football is clicked → push football by x 0 y 0 z 2</b>. Recap x (across), y (up) and z (forwards). The goal is straight ahead along z, about 13 away, and the crossbar is about 2.4 high. The ball already has <b>make football fall and bump</b> in “when Run is clicked”, because only falling things can be pushed.</p>' },
+      { min: 10, title: 'Predict', html: '<p>Draw a results table on the board: push y, push z, I predict, what happened. <b>Ask:</b> predict — what will z 6 do? Test it. To try again, press <b>Run</b>: the ball goes back on the spot. Then <b>ask:</b> what will y 4 do, with z still 2? Introduce the <b>fair test</b>: change one number at a time, so you know which number made the difference.</p>' },
+      { min: 26, title: 'Experiment', html: '<p>Pupils change z until the ball reaches the goal, then change y so it lifts off the ground, recording each try in the table. The Goals tick when the ball is clicked, when it lifts higher than 1.2 and when it goes in the goal.</p><p>Common bugs: changing x instead of y or z (the ball goes wide of the post); a huge y (the ball flies over the crossbar, or straight up and back down); too small a z (the ball stops short); clicking the ball again without pressing Run, so it is pushed from wherever it stopped.</p><p>Answer: when football is clicked { play sound boing; push football by x 0 y 4 z 10 }. Other numbers work too: pupils find their own by testing.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Share tables. <b>Ask:</b> which number made the ball go further? Which made it lift? What happened when a number was much too big? Did changing one number at a time help? Next lesson is a project: pupils design their own welcome zone using everything from Block 1.</p>' }
+    ],
+    support: 'Give a partly filled table with z values to try first (4, 8, 12), then y values (2, 4, 6). Pupils change only z, then only y.',
+    stretch: 'Score in a corner: try a small x as well, like 1 or -1. Add “set bounciness of football to 60 %” and watch it bounce off the net. Try “set weight of football to 5 kg”: does the same push still score?',
+    assess: ['Explains that a push has a direction and a size', 'Says which number pushes up and which pushes forwards', 'Predicts, changes one number at a time and records the result', 'Uses earlier results to choose better numbers'],
+    steps: [
+      { t: 'Try it', d: 'Press Run and click the football. How far does it go?' },
+      { t: 'Find the push', d: 'Find “push football by x 0 y 0 z 2” inside “when football is clicked”. z pushes forwards.' },
+      { t: 'Predict', d: 'What will z 6 do? Say it first. Change z to 6, press Run and click the ball. Write down what happened.' },
+      { t: 'Reach the goal', d: 'Keep changing z until the ball gets to the goal. Press Run before each try.' },
+      { t: 'Lift it', d: 'y pushes up. Change y to 4. Predict, then test. Does the goal “Chip it” tick?' },
+      { t: 'Score!', d: 'Change one number at a time until the ball goes into the goal, under the crossbar.' },
+      { t: 'Add a sound', d: 'From Sound, drag “play sound …” to the top of “when football is clicked”. Choose boing.' },
+      { t: 'Challenge', d: 'Can you score in a corner? Try a small x, like 1 or -1.' }
+    ]
+  },
+  {
+    id: 'park-6-welcome', unit: 'Park Designers · Block 1 · Lesson 6', title: 'Project: the welcome zone', ks: 'ks2', years: 'Year 3', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The Block 1 project: pupils plan and build their own welcome zone by the park gate, with a character that moves and speaks when clicked and something that falls or flies when clicked. The Goals list is the success criteria.',
+    objective: 'We are learning to design a program with events, sequence and physics, and to test it against a plan.',
+    success: ['I can plan what my program will do before I code it.', 'I can use two click events to start different actions.', 'I can use animation, speech and physics in my own design.', 'I can test my program and improve it.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['design', 'a plan of what you will make and how it will work'], ['event', 'something that happens, like a click, that starts some code'], ['sequence', 'steps in order'], ['evaluate', 'say what works well and what could be better']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A planning sheet: a drawing box and “When I click … then …” lines (two of them)'],
+    plan: [
+      { min: 7, title: 'Recap Block 1', html: '<p>Recap on the board: <b>make</b> blocks and x y z (the gate), <b>when … is clicked</b> (the mascot), <b>says … for … seconds</b> in order (the visitor), <b>hide</b> and <b>fall and bump</b> (the balloons) and <b>push</b> (the football). Show the project goals in the starter: a character, two clicks, an animation, speech, and something that falls or flies when clicked.</p>' },
+      { min: 10, title: 'Design on paper', html: '<p>Pupils draw their welcome zone and write two lines: “When I click <i>the host</i>, then <i>it dances and says Have a great day!</i>” and “When I click <i>the bell</i>, then <i>the present falls</i>.” <b>Ask:</b> what needs a name? (Everything you click or move.) Remind them a falling thing must start up in the air (y bigger than 0).</p>' },
+      { min: 25, title: 'Build and test', html: '<p>Pupils build from their plans and press <b>Run</b> often. Circulate and ask: “Which goal is next? Which block will tick it?”</p><p>Common bugs: a new character keeps the name player in its drop-down; the falling thing starts at y 0 so it has nowhere to fall; the physics block sits in “when Run is clicked”, so that goal won’t tick; both events use the same object.</p><p>An example answer: make character host (Monkey) at x 0 y 0 z 2; make gift (Diamond) at x 3 y 3 z 3; make box bell at x −3 y 0 z 2. when host is clicked { host dance 1 once; host says “Have a great day!” for 2 seconds }. when bell is clicked { play sound win; make gift fall and bump }.</p>' },
+      { min: 12, title: 'Share and evaluate', html: '<p>Pairs swap devices and try each other’s zone without being told what to click. <b>Ask:</b> could you find the things to click? Did it do what the plan said? Each pupil gives one star (something that works well) and one wish (something to improve), then makes one improvement.</p>' },
+      { min: 6, title: 'Plenary', html: '<p>Two or three pupils show their zones on the board and read their plan, then their code. Celebrate the end of Block 1: algorithms, sequence, events, timing and physics. Next block: rides that move, with loops.</p>' }
+    ],
+    support: 'Use the planning sheet with a ready choice: “When I click the host, it waves and says hello. When I click the bell, the gift falls.” Pupils copy the mascot code from lesson 2 as a model.',
+    stretch: 'Add a third event and a conversation between two characters. Use push to send something flying across the zone, and a sound when it starts.',
+    assess: ['Writes a plan with two “When I click …, then …” events', 'Builds two working click events with animation, speech and physics', 'Tests against the plan and the goals, and makes an improvement'],
+    steps: [
+      { t: 'Plan it', d: 'On paper, draw your welcome zone. Write two lines: “When I click …, then …”.' },
+      { t: 'Add a character', d: 'From Characters, drag “make character …” inside “when Run is clicked”. Create a variable for its name, like host. Put it in front of the gate, at z 2.' },
+      { t: 'First click', d: 'From Events, add “when … is clicked” and choose your character. Inside, add an animation and a “says … for … seconds” block.' },
+      { t: 'Something to drop', d: 'Make a second thing up in the air (y 3) and a thing to click, like a bell. Give each its own name.' },
+      { t: 'Second click', d: 'Add another “when … is clicked” for the bell. Inside, use “make … fall and bump” or “push … by x y z”.' },
+      { t: 'Test it', d: 'Press Run and click both things. Use the Goals list to check every part of your design.' },
+      { t: 'Swap and try', d: 'Let a partner try your zone. What did they like? What will you improve?' },
+      { t: 'Challenge', d: 'Add a third click event, or a sound from the Sound category.' }
+    ]
+  },
+  {
+    id: 'park-7-spinner', unit: 'Park Designers · Block 2 · Lesson 1', title: 'The spinner', ks: 'ks2', years: 'Year 4', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The first lesson on repetition. The spinner ride only turns a quarter of the way round, because its code copies the same two blocks three times. Pupils replace the copies with a repeat loop and work out how many 30° turns make one full spin.',
+    objective: 'We are learning to use a repeat loop to run the same blocks a set number of times.',
+    success: ['I can spot blocks that repeat in a program.', 'I can put blocks inside a repeat loop.', 'I can work out how many times the loop needs to repeat.', 'I can explain why the wait goes inside the loop.'],
+    curriculum: ['ssr', 'design', 'reason'],
+    words: [['loop', 'code that runs again and again'], ['repeat', 'a loop that runs a set number of times'], ['inside', 'the blocks in the loop’s mouth are the ones that repeat'], ['degrees', 'how far something turns: 360 degrees is a full circle']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Optional: a paper clock face or protractor to show 30° turns'],
+    plan: [
+      { min: 8, title: 'Turn on the spot', html: '<p>Everyone stands up. Say: “Turn a small step to the right… and again… and again.” Tell them each small step is <b>30 degrees</b>. <b>Ask:</b> how many small steps until you are facing the front again? Count it out together: 12. Write on the board: <b>turn 30, turn 30, turn 30…</b> (twelve times). <b>Ask:</b> how could I write that in a shorter way? (“Repeat 12 times: turn 30.”) That is a <b>loop</b>.</p>' },
+      { min: 10, title: 'Meet the spinner', html: '<p>Introduce Block 2: last block we opened the park; now we build rides that move, and every ride needs a loop. Open the starter on the board. Before Run you see the edit view: the world as it starts. Press <b>Run</b>, then click the pink arm. It only turns a quarter of the way. Show the code under <b>when arm is clicked</b>: <b>turn arm by x 0 y 30 z 0 degrees</b>, <b>wait 0.1 seconds</b>, three times over. <b>Ask:</b> how many more copies would a full spin need? (Nine more pairs: 24 blocks in all.) Point out the Goals checklist at the top right: “One full spin”.</p>' },
+      { min: 10, title: 'Show me a repeat', html: '<p>Model it on the board. Open <b>Control</b> and drag out <b>repeat 10 times</b>. Drag ONE turn block and ONE wait block <b>inside</b> its mouth. Delete the other copies (drag them to the bin). Put the repeat inside <b>when arm is clicked</b>. <b>Ask:</b> what number goes in the repeat? (12, because 12 × 30 = 360.) Press Run and click the arm. Watch the first goal tick as soon as the turn is inside the repeat: goals about which blocks you used tick straight away.</p>' },
+      { min: 22, title: 'Your turn', html: '<p>Pupils follow the steps. All three goals tick when the arm makes one full spin with a wait inside the loop.</p><p>Common bugs: the repeat still says 10, so it turns 300° and stops just short (the spin goal stays empty); the wait is left outside the loop, so the arm flicks round in a blink (the third goal stays empty); old copies of the turn are still under the loop, so it turns too far. Pressing Run again starts the ticks again, so pupils can test after every change.</p><p>Answer: when arm is clicked → repeat 12 times { turn arm by x 0 y 30 z 0 degrees; wait 0.1 seconds }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p><b>Ask:</b> if each turn was 15 degrees, how many times would we repeat? (24.) If each turn was 90? (4.) What would happen with repeat 24 and turn 30? (Two full spins.) Which is easier to change: 24 copied blocks or one repeat? Next lesson: a loop with a whole sequence inside it.</p>' }
+    ],
+    support: 'Give pupils the repeat already joined under “when arm is clicked”; they move the turn and wait inside and choose the number from a card showing 30 + 30 + 30… = 360.',
+    stretch: 'Make the spinner go two full spins, then spin back the other way (try y -30). Change the wait to make it faster or slower. Add a “play sound” before the loop.',
+    assess: ['Identifies the turn and wait as the repeating part', 'Puts blocks inside a repeat loop and removes the copies', 'Works out 12 × 30 = 360 to choose the loop count'],
+    steps: [
+      { t: 'Try the ride', d: 'Press Run, then click the pink arm. How far does it turn? Press Stop.' },
+      { t: 'Read the code', d: 'Look under “when arm is clicked”. Which two blocks are copied again and again?' },
+      { t: 'Get a loop', d: 'Open Control and drag “repeat 10 times” into the code area.' },
+      { t: 'Put them inside', d: 'Drag one “turn arm by …” block and one “wait 0.1 seconds” block INSIDE the repeat. Drag the other copies to the bin.' },
+      { t: 'Join it up', d: 'Put the repeat inside “when arm is clicked”.' },
+      { t: 'How many times?', d: 'Each turn is 30 degrees. A full circle is 360. Change 10 to the right number.' },
+      { t: 'Test it', d: 'Press Run and click the arm. Keep changing and testing until all the Goals tick.' },
+      { t: 'Challenge', d: 'Make it spin twice, then spin back the other way.' }
+    ]
+  },
+  {
+    id: 'park-8-droptower', unit: 'Park Designers · Block 2 · Lesson 2', title: 'The drop tower', ks: 'ks2', years: 'Year 4', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'A loop can repeat a whole sequence, not just one block. The drop tower’s seat rises slowly and drops fast, but only once. Pupils put the up-wait-drop sequence inside a repeat so the ride goes three times, and predict what happens when the order inside the loop changes.',
+    objective: 'We are learning to repeat a sequence of steps, in the right order, with a loop.',
+    success: ['I can put a sequence of several blocks inside a loop.', 'I can predict what will happen if the order inside the loop changes.', 'I can use a wait to make a ride pause at the right moment.'],
+    curriculum: ['ssr', 'predict', 'design'],
+    words: [['sequence', 'steps that run one after another, in order'], ['loop', 'code that runs again and again'], ['glide', 'move smoothly to a place over some seconds'], ['predict', 'say what you think will happen before you test']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Mini whiteboards for predictions (optional)'],
+    plan: [
+      { min: 7, title: 'Body loop', html: '<p>Play a “drop tower” game. Everyone crouches. Say: “Rise up slowly… wait at the top… drop down fast!” Do it again, and again. <b>Ask:</b> what were the steps? Write them as a sequence: <b>rise, wait, drop</b>. <b>Ask:</b> how can I say “do it three times” without writing it out three times? (Repeat 3 times: rise, wait, drop.) Recap last lesson: the blocks inside the loop are the ones that repeat.</p>' },
+      { min: 8, title: 'Predict the starter', html: '<p>Open the starter on the board. Read the code under <b>when seat is clicked</b>: <b>glide seat to x 0 y 9 z 3 in 3 secs</b>, then <b>glide seat to x 0 y 0 z 3 in 0.5 secs</b>. <b>Ask:</b> predict: what will the seat do? Why is one glide 3 seconds and the other 0.5? (Up slowly, down fast.) Press <b>Run</b> and click the yellow seat to check. Show the Goals: “Three drops”.</p>' },
+      { min: 10, title: 'Show me', html: '<p>On the board, drag <b>repeat 10 times</b> from <b>Control</b> into <b>when seat is clicked</b> and move BOTH glides inside it. Change 10 to 3. Then add <b>wait 1 seconds</b> between the two glides so riders wait at the top. Read the loop aloud as a sequence: “up, wait, drop; up, wait, drop; up, wait, drop.” Mention that <b>play sound</b> (in <b>Sound</b>) can go inside the loop too: a scream at the top!</p>' },
+      { min: 25, title: 'Your turn and predict', html: '<p>Pupils follow the steps until the three Goals tick. Then set a predict task: “Move the wait so it comes AFTER the drop. Predict, then test.” (The seat waits at the bottom instead of the top.) “Put only the up-glide inside the loop. Predict.” (It rises once, the next two glides go to the same place so nothing moves, then it drops once.)</p><p>Common bugs: the wait is outside the loop (the second goal stays empty); one glide is left outside the loop (the first goal stays empty); the seat goes up and down so fast you cannot see it (a glide time of 0).</p><p>Answer: when seat is clicked → repeat 3 times { glide seat to x 0 y 9 z 3 in 2 secs; wait 1 seconds; play sound boing; glide seat to x 0 y 0 z 3 in 0.5 secs }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Show two loops on the board with the same blocks in a different order. <b>Ask:</b> do they do the same thing? Why not? The order inside a loop matters just as much as in any sequence. Next lesson: a loop that never stops.</p>' }
+    ],
+    support: 'Give pupils a card with the loop drawn out: repeat 3 → glide up → wait 1 → glide down. They match the blocks to the card.',
+    stretch: 'Make each drop a surprise: different wait times at the top. Make the seat stop halfway down for a moment before the final drop. Add a second seat on the other side of the tower.',
+    assess: ['Puts a multi-block sequence inside a repeat', 'Writes a prediction before testing a change in order', 'Explains why the wait must be between the two glides'],
+    steps: [
+      { t: 'Predict', d: 'Read the code under “when seat is clicked”. What will the seat do? Press Run and click the seat to check.' },
+      { t: 'Get a loop', d: 'Open Control. Drag “repeat 10 times” inside “when seat is clicked”.' },
+      { t: 'Both glides inside', d: 'Drag BOTH “glide seat to …” blocks inside the repeat, up first, then down.' },
+      { t: 'Three drops', d: 'Change 10 to 3.' },
+      { t: 'Wait at the top', d: 'Put a “wait 1 seconds” block between the two glides.' },
+      { t: 'Test it', d: 'Press Run and click the seat. Keep testing until all the Goals tick.' },
+      { t: 'Add a sound', d: 'Open Sound and put “play sound” inside the loop, just before the drop.' },
+      { t: 'Challenge', d: 'Move the wait to after the drop. Predict what will happen, then test it.' }
+    ]
+  },
+  {
+    id: 'park-9-lights', unit: 'Park Designers · Block 2 · Lesson 3', title: 'Carousel lights', ks: 'ks2', years: 'Year 4', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Pupils meet the forever loop. The carousel’s bulbs light up once and then stay the same. Pupils use a forever loop with random colours and a wait so the lights keep changing for as long as the park is open, and compare forever with repeat.',
+    objective: 'We are learning to use a forever loop, and to choose between forever and repeat.',
+    success: ['I can use a forever loop to keep something happening.', 'I can explain the difference between forever and repeat.', 'I can use a wait so I can see each change.'],
+    curriculum: ['ssr', 'reason', 'design'],
+    words: [['forever', 'a loop that never stops until you press Stop'], ['repeat', 'a loop that runs a set number of times'], ['random', 'picked by chance, so you can’t know it before'], ['wait', 'pause for some seconds before the next block']],
+    need: ['A device per pupil or pair, with CodeJump open'],
+    plan: [
+      { min: 6, title: 'What never stops?', html: '<p><b>Ask:</b> what things go round and round and never stop while they are switched on? (Traffic lights, a lighthouse, a clock’s second hand, fairground lights.) Last two lessons our loops had a number. <b>Ask:</b> what number would a lighthouse need? There isn’t one: it should go on <b>forever</b>.</p>' },
+      { min: 8, title: 'The carousel', html: '<p>Open the starter. The code under <b>when Run is clicked</b> makes the carousel, its roof and three white bulbs (bulb1, bulb2, bulb3), then <b>set colour of bulb1 to</b> yellow. Press <b>Run</b>. <b>Ask:</b> how many times does bulb1 change? (Once.) Point out that nothing flashes in the edit view before Run; loops only run when you press Run.</p>' },
+      { min: 10, title: 'Show me forever', html: '<p>Open <b>Control</b> and drag <b>forever</b> to the very bottom of <b>when Run is clicked</b>, after the make blocks. Show that forever has no bump underneath: nothing can come after it, because it never finishes. Open <b>Looks</b> and drag the ready-made <b>set colour of … to random colour</b> block inside, and pick bulb1 in its drop-down. Add copies for bulb2 and bulb3, then <b>wait 0.3 seconds</b>. Press Run.</p>' },
+      { min: 26, title: 'Your turn', html: '<p>Pupils follow the steps. The Goals tick when there is a forever loop with a wait inside it and bulb1 and bulb3 have each changed colour five times.</p><p>Common bugs: the colour blocks are under the forever, not inside it (they cannot join there, so they are not part of the program); no wait, so the bulbs flicker too fast to see and the wait goal stays empty; the old “set colour of bulb1 to yellow” is left above the loop: that is fine, it just runs once first. <b>Ask:</b> would “repeat 10 times” work instead? (Yes, but the lights would stop after 3 seconds.)</p><p>Answer: at the end of when Run is clicked → forever { set colour of bulb1 to random colour; set colour of bulb2 to random colour; set colour of bulb3 to random colour; wait 0.3 seconds }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Sort examples on the board into “repeat” or “forever”: brushing teeth 30 times, a heartbeat, clapping 5 times, a lighthouse, a spinner that spins once. <b>Ask:</b> how do you stop a forever loop in CodeJump? (Press Stop.) Next lesson: a ride whose loop has bugs in it.</p>' }
+    ],
+    support: 'Pupils start with just bulb1: a forever loop with one “set colour” and one wait. When that works, add the others.',
+    stretch: 'Make the bulbs take turns: bulb1 yellow, wait, bulb2 yellow, wait… Make the whole carousel turn forever too (turn carousel by y 2, inside the loop). Add more bulbs round the edge.',
+    assess: ['Places a forever loop at the end of a script', 'Explains when to choose forever and when to choose repeat', 'Keeps a wait inside the loop so each change can be seen'],
+    steps: [
+      { t: 'Look at the lights', d: 'Press Run. bulb1 turns yellow once and then stays yellow. Press Stop.' },
+      { t: 'Get forever', d: 'Open Control. Drag “forever” to the very bottom of “when Run is clicked”.' },
+      { t: 'Random colours', d: 'Open Looks. Drag “set colour of … to random colour” inside the forever. Choose bulb1 in the drop-down.' },
+      { t: 'All the bulbs', d: 'Add two more, for bulb2 and bulb3.' },
+      { t: 'Slow it down', d: 'Put “wait 0.3 seconds” inside the forever, after the colours.' },
+      { t: 'Test it', d: 'Press Run and watch the Goals tick. Press Stop to make it stop.' },
+      { t: 'Challenge', d: 'Make the whole carousel turn round forever as well.' }
+    ]
+  },
+  {
+    id: 'park-10-wheel', unit: 'Park Designers · Block 2 · Lesson 4', title: 'Fix the big wheel', ks: 'ks2', years: 'Year 4', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'A debugging lesson. The big wheel’s code has three bugs: it turns the wrong way (like a door, not a wheel), it stops after 100 degrees, and its wait is outside the loop. Pupils predict, run, describe what really happens and fix one bug at a time.',
+    objective: 'We are learning to find and fix bugs in a loop by testing and comparing what happens with what should happen.',
+    success: ['I can say what a program should do and what it really does.', 'I can find a bug in a loop and fix it.', 'I can fix one bug at a time and test after each fix.'],
+    curriculum: ['reason', 'debug1', 'predict'],
+    words: [['bug', 'a mistake in the code'], ['debug', 'find and fix the mistakes'], ['axis', 'the line something turns around: x, y or z'], ['test', 'run the code to check what it really does']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A paper plate with a pencil through the middle, to show turning on different axes (optional)'],
+    plan: [
+      { min: 8, title: 'Spot the bug', html: '<p>Write a dance loop on the board: <b>repeat 3 times: clap, jump</b>, then <b>spin</b>. Say the dance should be “clap, jump, spin” three times. Do it wrong as written. <b>Ask:</b> what went wrong? (The spin is outside the loop.) A <b>bug</b> is a mistake; to <b>debug</b> is to find and fix it. Teach the steps: 1. What should it do? 2. What does it really do? 3. Which block makes the difference? 4. Fix one thing, then test.</p>' },
+      { min: 10, title: 'Predict and run', html: '<p>Open the starter. Read <b>when wheel is clicked</b>: <b>repeat 10 times { turn wheel by x 0 y 10 z 0 degrees }</b> then <b>wait 0.1 seconds</b>. <b>Ask:</b> predict: how far will it turn? Press <b>Run</b> and click the blue wheel. Describe together: it swings round like a door, very fast, and stops part of the way. Show the paper plate: spinning round the pencil held upright is <b>y</b>; held pointing at you it turns like a wheel: <b>z</b>.</p>' },
+      { min: 25, title: 'Bug hunt', html: '<p>Pairs find and fix the bugs one at a time, pressing Run and clicking the wheel after each fix. The Goals help: “It turns round like a wheel, all the way (360°)” and “It turns slowly: the wait is inside the loop”.</p><p>Common mistakes: fixing the axis but leaving 10 repeats (it only turns 100°, so the first goal stays empty); putting 10 in both y and z (it wobbles in two directions); changing the turn to 36 instead of the repeat (a big jump each time). <b>Ask:</b> 10 degrees each time; how many times for 360? Pupils can test their thinking: 10 × 10 = 100, 10 × 36 = 360.</p>' },
+      { min: 7, title: 'The fixes', html: '<p>Go through the three bugs on the board.</p><p>Answer: when wheel is clicked → repeat 36 times { turn wheel by x 0 y 0 z 10 degrees; wait 0.1 seconds }. Bug 1: the turn was on y (like a door) — move the 10 to z. Bug 2: 10 repeats only make 100° — repeat 36 times. Bug 3: the wait was after the loop — drag it inside, under the turn.</p>' },
+      { min: 10, title: 'Plenary', html: '<p><b>Ask:</b> which bug was hardest to spot? Why does fixing one bug at a time help? (You know which change made the difference.) What would 12 repeats of 30 degrees do? (Also a full turn, but jumpier.) Next lesson: a loop that makes lots of new things.</p>' }
+    ],
+    support: 'Give pupils a bug card with three boxes: “Which way does it turn?”, “How far does it turn?”, “Can you see it move?”. Fix one box at a time.',
+    stretch: 'Make the wheel go round twice, slowly. Add a seat to the wheel and make the wheel turn forever when Run is clicked. Write a buggy loop for a partner to fix.',
+    assess: ['Describes the difference between what the program should do and what it does', 'Finds and fixes the axis, the loop count and the misplaced wait', 'Tests after each single change'],
+    steps: [
+      { t: 'Predict', d: 'Read the code under “when wheel is clicked”. How far will the wheel turn? Which way?' },
+      { t: 'Test it', d: 'Press Run and click the blue wheel. What does it really do? Say it out loud. Press Stop.' },
+      { t: 'Bug 1: which way?', d: 'It turns like a door. A wheel turns round z. In the turn block, change y to 0 and z to 10.' },
+      { t: 'Bug 2: how far?', d: '10 turns of 10 degrees is only 100. Change the repeat so it adds up to 360.' },
+      { t: 'Bug 3: too fast', d: 'The wait is outside the loop. Drag “wait 0.1 seconds” inside the repeat, under the turn.' },
+      { t: 'Test after each fix', d: 'Press Run and click the wheel after every change. Watch the Goals.' },
+      { t: 'Challenge', d: 'Make the wheel go round twice, slowly. Then write a buggy loop for a partner to fix.' }
+    ]
+  },
+  {
+    id: 'park-11-fireworks', unit: 'Park Designers · Block 2 · Lesson 5', title: 'Fireworks finale', ks: 'ks2', years: 'Year 4', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Loops can make things, not just move them. It is night at the park, and clicking the launcher makes just one firework. Pupils put the “make ball” block inside a repeat to make 12 fireworks, each with a pop and a short wait, then use “pick random” and “random colour” so every firework bursts in a different place and colour.',
+    objective: 'We are learning to use a loop to make many objects, and random numbers to make each one different.',
+    success: ['I can use a loop to make lots of objects.', 'I can use “pick random” to choose a number by chance.', 'I can predict what happens with and without random.'],
+    curriculum: ['ssr', 'predict', 'design'],
+    words: [['random', 'picked by chance, so you can’t know it before'], ['pick random', 'a block that gives a different number each time, between two numbers'], ['loop', 'code that runs again and again'], ['variable', 'a name that stands for something: here, the newest firework']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A dice (for the warm-up)'],
+    plan: [
+      { min: 7, title: 'Roll the dice', html: '<p>Roll a dice a few times. <b>Ask:</b> can you predict the next number? (No: it is <b>random</b>.) What numbers could it be? (1 to 6.) Explain that the 3D World has a dice block: <b>pick random 1 to 6</b> in <b>Operators</b>. You choose the smallest and biggest number; the computer picks one each time.</p>' },
+      { min: 8, title: 'One firework', html: '<p>Open the starter: the park at night with a purple launcher. Under <b>when launcher is clicked</b>: <b>make ball firework colour</b> yellow <b>size 0.6 at x 0 y 10 z 9</b>, then <b>play sound pop</b>. Press <b>Run</b> and click the launcher: one firework. Recap: so far our loops moved and turned things. <b>Ask:</b> what would happen if “make ball” was inside a repeat 12 times? Explain that each new ball is also called firework: the name always means the newest one. There is no physics here, so the fireworks hang in the sky.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Drag <b>repeat 10 times</b> into <b>when launcher is clicked</b>, put both blocks inside and change 10 to 12. Add <b>wait 0.15 seconds</b> inside, under the pop. <b>Ask:</b> predict: where will the 12 fireworks be? Run and click: they all appear in the same spot, on top of each other, so it looks like one. Now drag <b>pick random 1 to 10</b> from <b>Operators</b> into the <b>x</b> hole of the make ball block and change it to <b>-8 to 8</b>. Run again.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the steps. Goals tick when “make ball” is inside a repeat, two “pick random” blocks are used, and 12 fireworks appear after clicking the launcher.</p><p>Common bugs: only the make block is inside the loop and the pop and wait are outside (all 12 appear at once with one pop); the repeat is still 10 (only 10 fireworks); “pick random” from 0 in the y hole, so some fireworks are in the ground; a huge range like -100 to 100, so most fireworks are off the screen. The random colour block is at the bottom of <b>Operators</b> and fits the colour hole.</p><p>Answer: when launcher is clicked → repeat 12 times { make ball firework colour (random colour) size 0.6 at x (pick random -8 to 8) y (pick random 7 to 14) z (pick random 6 to 12); play sound pop; wait 0.15 seconds }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Run the launcher twice on the board. <b>Ask:</b> are the fireworks in the same places both times? Why not? Where else could a park use random? (Which ride a visitor picks, where a prize appears, the weather.) Next lesson you design your own ride using everything from this block.</p>' }
+    ],
+    support: 'Pupils first get 12 fireworks in one spot (loop only). Then they add one “pick random” to x. Give the numbers on a card: x -8 to 8, y 7 to 14.',
+    stretch: 'Make 30 fireworks. Make the size random too (pick random 1 to 3). Add a grand finale: a second repeat after the first that makes 5 big white fireworks.',
+    assess: ['Puts a make block inside a repeat, with a wait so each one can be seen', 'Uses pick random with a sensible range in a position input', 'Predicts the difference random makes before testing'],
+    steps: [
+      { t: 'Try the launcher', d: 'Press Run and click the purple launcher. How many fireworks? Press Stop.' },
+      { t: 'Get a loop', d: 'Open Control. Drag “repeat 10 times” inside “when launcher is clicked”.' },
+      { t: 'Make lots', d: 'Drag “make ball firework …” and “play sound pop” inside the repeat. Change 10 to 12. Add “wait 0.15 seconds” inside too.' },
+      { t: 'Predict', d: 'Where will the 12 fireworks be? Press Run and click the launcher to check.' },
+      { t: 'Spread them out', d: 'Open Operators. Drag “pick random” into the x hole of “make ball”. Make it -8 to 8.' },
+      { t: 'Up in the sky', d: 'Put another “pick random” in the y hole. Make it 7 to 14. Try one in the z hole too: 6 to 12.' },
+      { t: 'Bright colours', d: 'Drag “random colour” from Operators into the colour hole. Press Run and click the launcher until all the Goals tick.' },
+      { t: 'Challenge', d: 'Make 30 fireworks, or make the size random too.' }
+    ]
+  },
+  {
+    id: 'park-12-ride', unit: 'Park Designers · Block 2 · Lesson 6', title: 'Project: design a ride', ks: 'ks2', years: 'Year 4', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The Block 2 project. Starting from an empty base, pupils design their own ride on paper, then build it with shapes and code it with loops: it starts when clicked or when a key is pressed, something moves inside a loop, and it plays a sound. The Goals checklist is the success criteria.',
+    objective: 'We are learning to design, build, test and improve our own ride using loops and events.',
+    success: ['I can plan my ride and its algorithm before I code it.', 'I can use a loop to make part of my ride move.', 'I can start my ride with a click or a key.', 'I can test my ride and make it better.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['design', 'a plan of what you will make and how it will work'], ['loop', 'code that runs again and again'], ['event', 'something that happens, like a click or a key press, that starts code'], ['evaluate', 'say what works well and what could be better']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Paper and pencils for the ride design'],
+    plan: [
+      { min: 8, title: 'Remember the rides', html: '<p>Recap the block on the board: the spinner (repeat a turn), the drop tower (repeat a sequence), the carousel lights (forever), the big wheel (debugging a loop), the fireworks finale (a loop that makes things, with random). <b>Ask:</b> which loop did each ride use, and what was inside it? Show the starter: just a grey base. Read the four Goals together: they are today’s success criteria.</p>' },
+      { min: 10, title: 'Design on paper', html: '<p>Pupils sketch their ride and label its parts and names (e.g. arm, car, seat). Underneath they write the algorithm: <b>What starts it?</b> (a click or a key) <b>What repeats?</b> <b>How many times, or forever?</b> <b>What sound?</b> Show how a new object gets a name: <b>Variables → Create variable</b>, then pick that name in the make block’s drop-down.</p>' },
+      { min: 27, title: 'Build and test', html: '<p>Pupils build in the edit view first: make blocks under <b>when Run is clicked</b>; click a shape to move it with the Move and Resize tools, or change the numbers. Then they code the ride under <b>when … is clicked</b> or <b>when … key pressed</b>, with a loop from <b>Control</b>, a move from <b>Motion</b> inside it and a <b>play sound</b> from <b>Sound</b>. They press Run, try it and improve it.</p><p>Common problems: the loop is under “when Run is clicked” but the goal wants a click or key event to start the ride (move it into a “when … is clicked” block); the wait is missing so the ride is a blur; the wrong name is picked in a drop-down, so a different shape moves.</p><p>One example answer: an arm (box) on the base and a car (ball). When arm is clicked → play sound magic; repeat 24 times { turn arm by x 0 y 15 z 0 degrees; wait 0.05 seconds }. When space key pressed → repeat 3 times { glide car up; glide car down }.</p>' },
+      { min: 10, title: 'Share and evaluate', html: '<p>Gallery ride test: pupils try each other’s rides. Each designer says: <b>“My ride starts when… My loop repeats… times. Inside the loop…”</b> Visitors give one thing that works well and one idea to improve it. Pupils make one improvement if there is time.</p>' },
+      { min: 5, title: 'Block 2 review', html: '<p>Recap: repeat, sequences inside loops, forever, debugging loops, loops that make things, random. Block 3 brings the fairground games: rides and stalls that make decisions with <b>if</b>.</p>' }
+    ],
+    support: 'Pupils remake the spinner from lesson 1 on the base (a box arm, repeat and turn), then add a sound and a key to start it.',
+    stretch: 'Add a second part that moves in a different way (a glide inside a forever). Use pick random so the ride is different each time. Add riders with characters and make them wave.',
+    assess: ['Produces a labelled design and algorithm before coding', 'Uses a loop with motion inside it, started by an event', 'Tests, takes feedback and improves the ride'],
+    steps: [
+      { t: 'Design it', d: 'Draw your ride on paper. Label the parts. Write: what starts it, what repeats, how many times.' },
+      { t: 'Name your parts', d: 'Open Variables and press Create variable for each part, like arm or car.' },
+      { t: 'Build it', d: 'Add shapes from Shapes under “when Run is clicked”. Pick your names in their drop-downs. Click a shape to move it.' },
+      { t: 'Start it', d: 'Open Events. Use “when … is clicked” or “when … key pressed” to start your ride.' },
+      { t: 'Make it move', d: 'Put a repeat or a forever from Control inside it. Put a turn, glide or move from Motion inside the loop.' },
+      { t: 'Add a sound', d: 'Open Sound and add “play sound” to your ride.' },
+      { t: 'Test it', d: 'Press Run and try your ride. Check every Goal ticks.' },
+      { t: 'Improve it', d: 'Ask a partner to try your ride. Make one change to make it better.' }
+    ]
+  },
+  {
+    id: 'park-13-bell', unit: 'Park Designers · Block 3 · Lesson 1', title: 'Ring the bell', ks: 'ks2', years: 'Year 5', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The first lesson on selection. The fairground’s “test your strength” game has a red puck and a gold bell, but nothing happens when the puck reaches the bell. Pupils add an if inside a forever loop that keeps asking “is the puck touching the bell?” and makes the bell say DING!, then tune the push so the puck gets there.',
+    objective: 'We are learning to use an if block so a program can make a decision.',
+    success: ['I can explain that an if block only runs its blocks when the question is true.', 'I can use a sensing block (touching) as the question in an if.', 'I can explain why the if goes inside a forever loop.', 'I can test and change a number until my game works.'],
+    curriculum: ['ssr', 'reason', 'design'],
+    words: [['selection', 'the program chooses whether to run some blocks or not'], ['if', 'a block that runs the blocks inside it only when its question is true'], ['condition', 'the question an if asks; the answer is true or false'], ['sensing', 'blocks that find something out about the world, like what is touching what']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Optional: a picture of a “test your strength” fairground game'],
+    plan: [
+      { min: 8, title: 'Stand up if…', html: '<p>Play “Stand up if…”: “Stand up <b>if</b> you have a pet. Stand up <b>if</b> you are wearing blue.” Everyone hears the same instruction, but only some stand. <b>Ask:</b> why did some people stand and not others? (The answer to the question was true for them.) Introduce <b>selection</b>: the program makes a decision. The question is a <b>condition</b>: its answer is true or false.</p>' },
+      { min: 8, title: 'Meet the game', html: '<p>Introduce Block 3: last block we built rides that move with loops; now we build fairground games that make decisions. Open the starter on the board. In the edit view, point out the tall purple pole, the gold <b>bell</b> at the top and the red <b>puck</b> at the bottom. Press <b>Run</b> and press <b>space</b>: the puck jumps, but not very high. Show the code: <b>when space key pressed → push puck by x 0 y 5 z 0</b> (the same push as the star launcher in Block 1). <b>Ask:</b> even if the puck reaches the bell, how would the computer know? Read the Goals checklist “Ring it!” together.</p>' },
+      { min: 10, title: 'Show me an if', html: '<p>Model it on the board. From <b>Control</b>, drag out <b>forever</b> and put it at the bottom of <b>when Run is clicked</b>. Drag the <b>if</b> block inside it. From <b>Sensing</b>, drag <b>… touching … ?</b> into the if’s gap and choose <b>puck</b> and <b>bell</b> in its drop-downs. Inside the if, put <b>bell says DING!</b> from <b>Looks</b>. Read it aloud: “Forever: if the puck is touching the bell, the bell says DING!” <b>Ask:</b> why do we need forever? (Without it, the if asks its question once, at the very start, when the puck is on the ground: the answer is false and it never asks again.)</p>' },
+      { min: 24, title: 'Your turn', html: '<p>Pupils follow the steps. The first two goals tick as soon as the blocks are in place (goals about which blocks you used follow the blocks all the time). The last two tick while the game runs, when the puck really reaches the bell.</p><p>Common bugs: the if is under the forever instead of inside it, or the forever is missing, so the question is asked only once; the touching block still says <b>player</b> in a drop-down; the push is too small. Encourage pupils to change the push a bit at a time and test: pressing Run again starts the ticks again.</p><p>Answer: at the end of when Run is clicked: forever { if puck touching bell ? do: bell says DING!; set colour of bell to green }. Under when space key pressed: push puck by x 0 y 14 z 0.</p>' },
+      { min: 10, title: 'Plenary', html: '<p><b>Ask:</b> what is the condition in our game? When is it true? When is it false? What does the program do when it is false? (Nothing: it skips the blocks inside the if.) Write on the board: <b>if [condition] then [do this]</b>. Next lesson: the dodgems, where the question is about a number.</p>' }
+    ],
+    support: 'Give pupils the forever and the if already joined under “when Run is clicked”; they choose puck and bell in the touching block and add the say block.',
+    stretch: 'Make the bell change colour as well as speaking. Add a play sound inside the if. Make the pole taller and move the bell up: how big does the push need to be now?',
+    assess: ['Places an if inside a forever so the condition is checked again and again', 'Uses a touching block as the condition and explains when it is true', 'Tests and adjusts the push until the game works'],
+    steps: [
+      { t: 'Try the game', d: 'Press Run, then press space. Does the puck reach the gold bell? Press Stop.' },
+      { t: 'Keep checking', d: 'Open Control. Drag “forever” to the bottom of “when Run is clicked”. Drag the “if” block INSIDE the forever.' },
+      { t: 'Ask a question', d: 'Open Sensing. Drag “… touching … ?” into the gap in the if. Choose puck and bell in the drop-downs.' },
+      { t: 'Ring the bell', d: 'Open Looks. Put “bell says …” inside the if and type DING!' },
+      { t: 'Push harder', d: 'Under “when space key pressed”, change the y in “push puck by …” to a bigger number. Try 14.' },
+      { t: 'Test it', d: 'Press Run, then space. Keep changing and testing until all the Goals tick.' },
+      { t: 'Challenge', d: 'Inside the if, add “set colour of bell to …” and a sound. Can you make it ring only with a really big push?' }
+    ]
+  },
+  {
+    id: 'park-14-dodgems', unit: 'Park Designers · Block 3 · Lesson 2', title: 'Dodgem rules', ks: 'ks2', years: 'Year 5', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Selection with a number. Pupils drive a dodgem car with the arrow keys, but it can drive straight off the purple floor. They use the car’s x position and a comparison (greater than, less than) in two if blocks inside a forever loop to bump it back at each side.',
+    objective: 'We are learning to use a comparison as the condition in an if block.',
+    success: ['I can use a position block (x of car) in a condition.', 'I can choose between greater than (>) and less than (<).', 'I can use two if blocks to check two different things.', 'I can find and fix a bug in a condition.'],
+    curriculum: ['ssr', 'reason', 'design'],
+    words: [['condition', 'the question an if asks; the answer is true or false'], ['compare', 'check if one number is bigger, smaller or the same as another'], ['greater than (>)', 'bigger than'], ['less than (<)', 'smaller than'], ['position', 'where something is: its x, y and z']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Mini whiteboards for the number line (optional)'],
+    plan: [
+      { min: 7, title: 'The number line', html: '<p>Draw a number line on the board from −11 to 11 and mark it “purple floor”. Put a car in the middle at 0. <b>Ask:</b> if the car moves right, does its x get bigger or smaller? (Bigger.) Left? (Smaller, then negative.) Write <b>x > 10</b> and <b>x < −10</b>. <b>Ask:</b> where on the line is each one true? Shade the two ends. Recap last lesson: an if runs its blocks only when its condition is true.</p>' },
+      { min: 8, title: 'Meet the dodgems', html: '<p>Open the starter on the board. In the edit view, show the purple floor and the red <b>car</b>. Show the code: <b>control car with the arrow keys speed 6</b> and an empty <b>forever</b> at the end of <b>when Run is clicked</b>. Press <b>Run</b> and drive off the edge. <b>Ask:</b> what rule does the dodgem need? (If the car gets too close to a side, push it back.) Read the Goals checklist “Stay in the arena”.</p>' },
+      { min: 10, title: 'Show me a comparison', html: '<p>Model the right-hand side. Drag an <b>if</b> from <b>Control</b> into the forever. From <b>Operators</b>, drag the compare block (<b>0 = 0</b>) into the if and change = to <b>></b>. From <b>Sensing</b>, drag <b>x of …</b> into the left side and choose <b>car</b>; type <b>10</b> on the right. Inside the if: <b>move car by x −0.5 y 0 z 0</b> (Motion) and <b>car says Bump!</b> (Looks). Read it aloud: “Forever: if the car’s x is greater than 10, move it back a little and say Bump!” <b>Ask:</b> why 10 and not 11? (The x is the middle of the car; the car is 1.6 wide, so its edge is still on the floor at 10.)</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils build the right-hand rule, test it, then add a second if for the left-hand side. The “stay” goal checks the car all the time while it runs: after 3 seconds of driving it ticks only while the car is on the floor, and unticks if it escapes.</p><p>Common bugs: the second if is a copy that still says <b>> 10</b>, so the left side leaks (it should be <b>< −10</b>); the move goes the wrong way (+0.5 at the right side pushes the car further out); the if is outside the forever. <b>Ask:</b> which side does the car escape from? That tells you which if to look at.</p><p>Answer: forever { if x of car > 10 do: move car by x −0.5 y 0 z 0; car says Bump! · if x of car < −10 do: move car by x 0.5 y 0 z 0; car says Bump! }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Put a buggy program on the board with both ifs saying <b>> 10</b>. <b>Ask:</b> predict: which side will the car escape from? Fix it together. <b>Ask:</b> what about the front and back walls? Which position would we use? (z.) Next lesson: an if with an <b>else</b>, so the program chooses between two things.</p>' }
+    ],
+    support: 'Give pupils the finished right-hand if on a card to copy; they make the left-hand one by duplicating it (right-click, Duplicate) and changing > to < and 10 to −10.',
+    stretch: 'Add two more ifs using z of car so the front and back walls bump too. Add a sound inside each if. Make the car change colour when it bumps.',
+    assess: ['Uses x of car with > or < as the condition', 'Writes two separate ifs for two sides, with the right numbers and directions', 'Predicts which side a buggy rule will fail on and fixes it'],
+    steps: [
+      { t: 'Drive off', d: 'Press Run and drive the red car with the arrow keys. Can you drive off the purple floor? Press Stop.' },
+      { t: 'An if in the loop', d: 'Open Control. Drag an “if” INSIDE the “forever” at the bottom of “when Run is clicked”.' },
+      { t: 'Ask about x', d: 'Open Operators. Drag the compare block into the if and choose >. Open Sensing. Drag “x of …” into its left side, choose car, and type 10 on the right.' },
+      { t: 'Bump back', d: 'Inside the if, put “move car by x -0.5 y 0 z 0” from Motion and “car says Bump!” from Looks.' },
+      { t: 'Test one side', d: 'Press Run and drive into the right side. Does it bump you back? If it pushes you out, check the -0.5.' },
+      { t: 'The other side', d: 'Add a second if in the forever: x of car < -10. Move the car by x 0.5 and say Bump!' },
+      { t: 'Test it', d: 'Drive into both sides for a few seconds. Keep fixing until all the Goals tick.' },
+      { t: 'Challenge', d: 'Use z of car to make the front and back walls bump too.' }
+    ]
+  },
+  {
+    id: 'park-15-weather', unit: 'Park Designers · Block 3 · Lesson 3', title: 'Sunny or rainy?', ks: 'ks2', years: 'Year 5', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'If … else with random. Each time the park opens, the program picks a random number to decide the weather: 1 means a grey, foggy, rainy day and the mascot says the rides are closed; otherwise the sky is blue and the rides are open. Pupils learn that an if … else always does exactly one of its two parts.',
+    objective: 'We are learning to use if … else so a program chooses between two things.',
+    success: ['I can explain that if … else always runs one part or the other, never both.', 'I can use pick random as part of a condition.', 'I can test a program with a random part by running it many times.'],
+    curriculum: ['ssr', 'predict', 'reason'],
+    words: [['if … else', 'if the condition is true, do the first part; if not, do the second part'], ['random', 'chosen by chance, so you cannot know it before'], ['condition', 'the question an if asks; the answer is true or false'], ['outcome', 'what happens in the end']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A coin or a dice (for the warm-up)'],
+    plan: [
+      { min: 8, title: 'Heads or tails', html: '<p>Toss a coin. Say: “<b>If</b> it is heads, we line up for play first; <b>else</b> we line up last.” Toss it a few times. <b>Ask:</b> could both things happen at once? Could neither happen? (No: exactly one, every time.) That is <b>if … else</b>. Recap: last lesson each if did something or nothing. Now there is always a second choice.</p>' },
+      { min: 8, title: 'Meet the weather', html: '<p>Open the starter on the board: the park gate and the <b>mascot</b>. The code ends with <b>sky colour</b> blue: it is always sunny. <b>Ask:</b> real weather is not the same every day. How could the computer choose? Show <b>pick random 1 to 2</b> in <b>Operators</b>: like a coin, it gives 1 or 2. Read the Goals checklist “Weather report”.</p>' },
+      { min: 10, title: 'Show me if … else', html: '<p>Model it. From <b>Control</b>, drag the second if block (the one with <b>else</b>) to the bottom of <b>when Run is clicked</b>. From <b>Operators</b>, drag the compare block (<b>0 = 0</b>) into the if; drag <b>pick random 1 to 2</b> into its left side and type <b>1</b> on the right. In the first part, put a new <b>sky colour</b> (Scene) set to grey, and <b>fog 40</b>. Drag the old blue <b>sky colour</b> block into the <b>else</b> part. Add <b>mascot says … for 3 seconds</b> (Looks) to each part. Read it aloud: “If the random number is 1, it rains; else it is sunny.” <b>Ask:</b> predict: if we press Run ten times, how many rainy days? (About half, but we can’t be sure.)</p>' },
+      { min: 24, title: 'Your turn', html: '<p>Pupils follow the steps. Three goals are about the blocks, so they tick as soon as the blocks are in place; the mascot goal ticks when the program runs. Pupils should press Run many times to see both outcomes: testing a random program means testing it more than once.</p><p>Common bugs: the old blue sky is left under the if … else, so it is always sunny in the end (it runs last and paints over the grey); both skies are in the same part; the number on the right is 3, which pick random 1 to 2 never gives, so it is always sunny.</p><p>Answer: if pick random 1 to 2 = 1 do: sky colour grey; fog 40; mascot says “The rides are closed. It’s raining!” for 3 seconds · else: sky colour blue; mascot says “All the rides are open!” for 3 seconds.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Tally on the board: each pair runs it ten times and counts rainy days. <b>Ask:</b> did everyone get the same? Why not? How could we make rain rarer? (pick random 1 to 4 = 1: rain only one time in four.) Next lesson: the ghost train has bugs, and we will hunt them down.</p>' }
+    ],
+    support: 'Give pupils the if … else with the condition already built; they put one sky block in each part and add the mascot’s words.',
+    stretch: 'Make rain rarer: pick random 1 to 4. Use a second if … else inside the else to add a third kind of weather (snowy: a white ground colour). Make the mascot do a different animation for each.',
+    assess: ['Builds an if … else and explains that exactly one part runs', 'Uses pick random in a condition', 'Runs a random program many times to test both outcomes'],
+    steps: [
+      { t: 'Always sunny', d: 'Press Run a few times. Is the weather ever different? Press Stop.' },
+      { t: 'Get if … else', d: 'Open Control. Drag the if block that has “else” to the bottom of “when Run is clicked”.' },
+      { t: 'Toss a coin', d: 'Open Operators. Drag the compare block into the if. Put “pick random 1 to 2” in its left side and type 1 on the right.' },
+      { t: 'Rainy day', d: 'Open Scene. Put a “sky colour” block in the first part and make it grey. Add “fog 40” too.' },
+      { t: 'Sunny day', d: 'Drag the old blue “sky colour” block into the else part.' },
+      { t: 'Tell the visitors', d: 'Open Looks. Put “mascot says … for 3 seconds” in each part, with different words.' },
+      { t: 'Test it', d: 'Press Run lots of times. Do you see both kinds of weather? Check every Goal ticks.' },
+      { t: 'Challenge', d: 'Make rain rarer by changing the random numbers. Can you add a snowy day too?' }
+    ]
+  },
+  {
+    id: 'park-16-ghost', unit: 'Park Designers · Block 3 · Lesson 4', title: 'Debug the ghost train', ks: 'ks2', years: 'Year 5', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Testing and debugging. The ghost train has three bugs: the cart goes the wrong way, the ghost waits for the wrong thing, and the wrong object says Boo! Pupils test, compare what happens with what should happen, and fix one bug at a time, using the Goals checklist to see which bug they have fixed.',
+    objective: 'We are learning to test a program, find the bugs and fix them one at a time.',
+    success: ['I can describe what a program should do and what it actually does.', 'I can find the block that causes a bug.', 'I can fix one bug at a time and test after each fix.'],
+    curriculum: ['debug1', 'reason', 'ssr'],
+    words: [['bug', 'a mistake in a program'], ['debug', 'find and fix the mistakes'], ['test', 'run the program to check what it does'], ['expected', 'what should happen'], ['actual', 'what really happens']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A bug-hunt sheet with three columns: expected, actual, fix (optional)'],
+    plan: [
+      { min: 7, title: 'Expected and actual', html: '<p>Read out a buggy recipe: “Put the bread in the toaster, butter it, then take it out.” <b>Ask:</b> what did you expect? What would actually happen? Introduce the words <b>expected</b> and <b>actual</b>. A <b>bug</b> is where they are different. Good debuggers change one thing at a time and test again.</p>' },
+      { min: 10, title: 'Ride the ghost train', html: '<p>Open the starter on the board. In the edit view, show the grey track, the dark <b>tunnel</b> at the far end, the red <b>cart</b>, a <b>tree</b> by the track (the ghost is hidden). Describe what SHOULD happen: the cart rolls into the tunnel, the ghost appears there and the ghost says Boo! Press <b>Run</b>. <b>Ask:</b> what actually happened? (The cart rolled backwards away from the tunnel and nothing else happened.) Read the Goals checklist “Find the three bugs”: each goal is one bug.</p>' },
+      { min: 8, title: 'Read the code', html: '<p>Show both <b>when Run is clicked</b> blocks: they both start at Run. The first builds the ride and glides the cart. The second has <b>forever</b> with an <b>if cart touching tree ?</b> that shows the ghost and makes the cart say Boo! <b>Ask:</b> which numbers tell us where the cart goes? Where is the tunnel? (Click the tunnel in the edit view: it is at the far end, where z is about 10.) Pupils fill in the expected / actual columns for bug 1 before they touch the code.</p>' },
+      { min: 25, title: 'Bug hunt', html: '<p>Pupils fix one bug at a time and press Run after each fix. The goals show their progress: bug 1 ticks when the cart touches the tunnel; bug 2 when the ghost appears; bug 3 when the ghost says Boo! Bug 2 can’t be seen until bug 1 is fixed, which is a good point to make: one bug can hide another.</p><p>The three bugs and fixes: <b>1.</b> glide cart to x 0 y 0.1 z <b>−9</b> → z <b>9</b> (it went the wrong way). <b>2.</b> if cart touching <b>tree</b> ? → <b>tunnel</b> (the cart never goes near the tree). <b>3.</b> <b>cart</b> says Boo! → <b>ghost</b> says Boo! (change the drop-down).</p><p>Common mistake: changing several things at once, then not knowing what fixed it. Another: deleting the forever, so the ghost check happens only once, at the start.</p>' },
+      { min: 10, title: 'Plenary', html: '<p><b>Ask:</b> which bug was hardest to find? Why couldn’t we see bug 2 at first? What is a good way to hunt bugs? Collect a class list: run it, say expected and actual, find the block, change one thing, test again. Next lesson: the splash fountain, where the if … else asks how far away the player is.</p>' }
+    ],
+    support: 'Tell pupils which block each bug is in; they work out what to change. Or work on bug 1 together first.',
+    stretch: 'Make the ghost do something more: an animation, a sound, or glide towards the cart. Put a new bug in your program for a partner to find, and write the expected and actual for it.',
+    assess: ['Describes the expected and actual behaviour for each bug', 'Finds the block that causes each bug', 'Fixes one bug at a time and tests after each change'],
+    steps: [
+      { t: 'What should happen?', d: 'Read the Goals. The cart should go into the tunnel, the ghost should appear and the ghost should say Boo!' },
+      { t: 'What does happen?', d: 'Press Run and watch. What is different? Press Stop.' },
+      { t: 'Bug 1', d: 'Find “glide cart to …”. The tunnel is at the far end. Which number sends the cart the wrong way? Fix it and press Run.' },
+      { t: 'Bug 2', d: 'Look in the other “when Run is clicked”. The if asks about the wrong thing. Change the drop-down so it asks about the tunnel. Test.' },
+      { t: 'Bug 3', d: 'Who says Boo! now? Change the say block so the ghost says it. Test.' },
+      { t: 'All fixed?', d: 'Press Run again and check all three Goals tick.' },
+      { t: 'Challenge', d: 'Add one new bug to your ride and swap with a partner. Can they find it?' }
+    ]
+  },
+  {
+    id: 'park-17-splash', unit: 'Park Designers · Block 3 · Lesson 5', title: 'The splash fountain', ks: 'ks2', years: 'Year 5', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'If … else with distance. Pupils walk a character around the park with the arrow keys. They code the fountain so that, when the player is close to the pond, the water appears and the player says Splash!, and when they walk away, the water disappears again. They see why else matters: without it, the water never goes away.',
+    objective: 'We are learning to use if … else with a distance check, so a program reacts to where the player is.',
+    success: ['I can use “distance from … to …” in a condition.', 'I can use if … else inside a forever loop to keep checking.', 'I can explain what the else part is for in my program.'],
+    curriculum: ['ssr', 'reason', 'design'],
+    words: [['distance', 'how far apart two things are'], ['if … else', 'if the condition is true, do the first part; if not, do the second part'], ['less than (<)', 'smaller than'], ['input', 'something the user does, like pressing a key, that the program reacts to']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Optional: a metre stick or a hoop for the warm-up'],
+    plan: [
+      { min: 7, title: 'Hot or cold', html: '<p>Put a hoop on the floor as the “pond”. A pupil walks towards it. The class says “<b>Splash!</b>” when they are closer than one big step, and “dry” when they are further away. <b>Ask:</b> what is the rule? (If the distance is less than one step, splash; else, dry.) Recap: last time if … else chose the weather; today the condition is about how far away something is.</p>' },
+      { min: 8, title: 'Meet the fountain', html: '<p>Open the starter on the board. Show the <b>player</b> (a character you walk with the arrow keys), the <b>pond</b>, and the code: <b>make water …</b> then <b>hide water</b>, and an empty <b>forever</b> at the bottom of <b>when Run is clicked</b>. Press <b>Run</b> and walk to the pond: nothing happens. Read the Goals checklist “Get splashed”.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Model it. Drag the if block with <b>else</b> from <b>Control</b> into the forever. From <b>Operators</b>, drag the compare block in and choose <b><</b>. From <b>Sensing</b>, drag <b>distance from … to …</b> into the left side and choose <b>player</b> and <b>pond</b>; type <b>4</b> on the right. In the first part: <b>show water</b> and <b>player says Splash!</b>. In the else: <b>hide water</b> and <b>player says</b> with nothing in the box (saying nothing takes the bubble away). <b>Ask:</b> what would go wrong without the else? (Once the water appears, nothing ever hides it again.)</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the steps, then experiment with the number: 4 is about right; try 2 and 8. The block goals tick as soon as the blocks are in place; the water and Splash! goals tick when they walk up to the pond while it runs.</p><p>Common bugs: the compare is <b>></b>, so it splashes everywhere except near the pond; the distance drop-downs still say the wrong objects; the number is too small, so you have to stand in the very middle; show and hide are in the wrong parts. <b>Ask:</b> “Walk towards it slowly: where does it change?” to help pupils find the number.</p><p>Answer: forever { if distance from player to pond < 4 do: show water; player says Splash! · else: hide water; player says (nothing) }.</p>' },
+      { min: 10, title: 'Plenary', html: '<p>Show two versions on the board: with else and without. <b>Ask:</b> predict what each does when you walk away. Run them to check. <b>Ask:</b> what other park things could use distance? (A shop that says hello when you get close, a gate that opens.) Next lesson is the Block 3 project: design your own game stall.</p>' }
+    ],
+    support: 'Give pupils the if … else with the condition already built; they put show and hide in the right parts and add the speech.',
+    stretch: 'Add a second if … else so the player says something different when they are a medium distance away (“I can hear water!”). Make the water a different colour each time it appears. Make a bench that says “Have a rest” when you are close.',
+    assess: ['Uses distance from … to … with < in a condition', 'Uses if … else inside forever, with the right blocks in each part', 'Explains why the else is needed to hide the water'],
+    steps: [
+      { t: 'Walk to the pond', d: 'Press Run. Walk with the arrow keys to the pond. Does anything happen? Press Stop.' },
+      { t: 'Keep checking', d: 'Open Control. Drag the if block with “else” INSIDE the forever at the bottom of “when Run is clicked”.' },
+      { t: 'How far?', d: 'Open Operators. Drag the compare block into the if and choose <. Open Sensing. Put “distance from … to …” on the left. Choose player and pond. Type 4 on the right.' },
+      { t: 'Splash!', d: 'Open Looks. In the first part put “show water” and “player says Splash!”.' },
+      { t: 'Dry again', d: 'In the else part put “hide water” and “player says” with nothing in the box.' },
+      { t: 'Test it', d: 'Press Run. Walk up to the pond, then walk away. Keep testing until all the Goals tick.' },
+      { t: 'Change the number', d: 'Try 2 and 8 instead of 4. Which feels best?' },
+      { t: 'Challenge', d: 'Add a second if … else so the player says “I can hear water!” when they are a bit further away.' }
+    ]
+  },
+  {
+    id: 'park-18-stall', unit: 'Park Designers · Block 3 · Lesson 6', title: 'Project: a game stall', ks: 'ks2', years: 'Year 5', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The Block 3 project. Starting from an empty pink stall, pupils design their own fairground game (a coconut shy, a hoopla, a high striker…) on paper, then build and code it: the player presses a key or clicks to play, an if … else checks something in the world, and the game tells the player how they did. The Goals checklist is the success criteria.',
+    objective: 'We are learning to design, build, test and improve our own game that uses selection.',
+    success: ['I can plan my game and write its rule as “if … else …” before I code it.', 'I can start my game with a key press or a click.', 'I can use if … else with a sensing block to decide if the player wins.', 'I can test my game and make it better.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['design', 'a plan of what you will make and how it will work'], ['selection', 'the program chooses what to do with if or if … else'], ['condition', 'the question an if asks; the answer is true or false'], ['evaluate', 'say what works well and what could be better']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Paper and pencils for the game design'],
+    plan: [
+      { min: 8, title: 'Remember the games', html: '<p>Recap the block on the board: the bell (if + touching), the dodgems (if + x position and > <), the weather (if … else + random), the ghost train (debugging), the fountain (if … else + distance). <b>Ask:</b> what question did each if ask? Show the starter: just a pink stall. Read the four Goals together: they are today’s success criteria. Show one example idea: a tin can on the stall and a ball you throw with space; “if y of can < 2, You win a prize!, else Knock me off!”.</p>' },
+      { min: 10, title: 'Design on paper', html: '<p>Pupils sketch their stall and label every object with a name (e.g. can, ball, hoop). Underneath they write: <b>How do you play?</b> (a key or a click) <b>What is the rule?</b> as “if … else …” <b>What does the game say?</b> Show how a new object gets a name: <b>Variables → Create variable</b>, then pick that name in the make block’s drop-down. Remind them of useful blocks: <b>make … fall and bump</b> and <b>push … by</b> (Physics), and the Sensing blocks <b>touching</b>, <b>distance from … to …</b>, <b>x / y / z of …</b>, <b>key … pressed?</b></p>' },
+      { min: 30, title: 'Build and test', html: '<p>Pupils build in the edit view first: make blocks under <b>when Run is clicked</b>; click a shape to move it with the Move and Resize tools, or change the numbers. Then they add the way to play (<b>when … key pressed</b> or <b>when … is clicked</b>), and a <b>forever</b> with an <b>if … else</b> that checks something and uses <b>says</b> to tell the player. They press Run, play, and improve.</p><p>Common problems: the if … else is not inside a forever, so it checks once at the start and never again; a thrown ball has no <b>fall and bump</b>, so push does nothing; a target with no physics floats in the air; the condition never becomes true (test it by moving the thing by hand in the edit view and reading its numbers). Pressing Run again starts the ticks again.</p><p>Example answer: stall solid but still; a can on top that falls and bumps; a ball that falls and bumps; when space key pressed → push ball by x 0 y 10 z 6; forever { if y of can < 2 do: can says You win a prize! · else: can says Knock me off! }.</p>' },
+      { min: 8, title: 'Share and evaluate', html: '<p>Fairground walk: pupils play each other’s stalls. Each designer explains: <b>“To play, you… My if checks… If it is true… Else…”</b> Visitors give one thing that works well and one idea to make it better or fairer. Pupils make one improvement if there is time.</p>' },
+      { min: 4, title: 'Block 3 review', html: '<p>Recap: if, conditions from sensing (touching, position, distance), comparisons, if … else, random, debugging. Block 4 is about running the park: counting visitors, keeping score and timing with <b>variables</b>.</p>' }
+    ],
+    support: 'Pupils remake the bell game from lesson 1 on the stall (a puck, a bell, space to push), then change the if into an if … else so it also says “Try again!”.',
+    stretch: 'Give the player three goes, or more than one target. Add a sound for winning and a different one for losing. Use an if … else inside the else for three outcomes (win, nearly, try again).',
+    assess: ['Plans a game rule as if … else before coding', 'Uses a sensing block in the condition of an if … else inside a forever', 'Tests the game, evaluates a partner’s and makes an improvement'],
+    steps: [
+      { t: 'Plan it', d: 'On paper, draw your stall. Name every object. Write your rule: “if … then the player wins, else …”.' },
+      { t: 'Build it', d: 'Make your objects under “when Run is clicked”. Make a variable for each name first (Variables → Create variable).' },
+      { t: 'Add physics', d: 'Anything that is thrown or knocked over needs “make … fall and bump”. The stall can be “solid but still”.' },
+      { t: 'Play button', d: 'Add “when … key pressed” or “when … is clicked” from Events, with a block that starts the game, like “push … by”.' },
+      { t: 'The rule', d: 'Add a forever. Put an if … else inside it. Use a Sensing block in the condition: touching, distance, x/y/z of, or key pressed?' },
+      { t: 'Tell the player', d: 'Use a “says” block from Looks in each part, so the player knows how they did.' },
+      { t: 'Test and improve', d: 'Play it lots of times. Use the Goals as your checklist. Then let a partner play and listen to their ideas.' }
+    ]
+  },
+  {
+    id: 'park-19-tickets', unit: 'Park Designers · Block 4 · Lesson 1', title: 'The ticket counter', ks: 'ks2', years: 'Year 6', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Variables: the park is open and the gate has a green turnstile. Pupils make a tickets variable count up by 1 each time the turnstile is clicked and show “Tickets:” and the number on the screen, then let 5 visitors in.',
+    objective: 'We are learning to use a variable to store a number and change it while a program runs.',
+    success: ['I can explain what a variable is and why it needs a starting value.', 'I can change a variable by 1 when an event happens.', 'I can join words and a variable to show its value on the screen.'],
+    curriculum: ['ssr', 'design', 'predict'],
+    words: [['variable', 'a named box that remembers a value, like the number of tickets'], ['set', 'give a variable a value (often a starting value)'], ['change by', 'add to (or take from) a variable'], ['join', 'stick words and a value together to show them']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A clicker counter or a tally on the board for the warm-up (optional)'],
+    plan: [
+      { min: 8, title: 'Counting visitors', html: '<p>Welcome to Block 4: the park is built, the rides move and the games work. Now we must <b>run</b> it, and that means keeping track of numbers. Click a clicker counter (or add a tally mark) each time a pupil “walks through the gate”. <b>Ask:</b> what does the counter remember? What should it say at the start of the day? What happens if nobody resets it?</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter on the board. Point out <b>set tickets to 0</b> at the end of <b>when Run is clicked</b>: this is the starting value. Then find <b>when turnstile is clicked</b>, which only plays a click. Press Run and click the turnstile: it clicks but nothing counts. Open <b>Variables</b> and show <b>change tickets by 1</b> and the round <b>tickets</b> value block.</p><p>Show the ready-made <b>show … on the screen</b> block in Looks, the one that already says “Score: ”. Change the words to <b>Tickets: </b> and drop the <b>tickets</b> value block into the gap where the 0 is.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the Lesson card. The Goals checklist at the top right of the world ticks as they go.</p><p><b>The answer:</b> when turnstile is clicked { play sound click · change tickets by 1 · show (create text with “Tickets: ”, tickets) on the screen }. Then press Run and click the turnstile 5 times. Putting the same show block under set tickets to 0 as well makes “Tickets: 0” appear at the start.</p><p><b>Common bugs:</b> the change block placed in when Run is clicked (it counts once, not per click); “Tickets: tickets” typed as words, so the number never appears (the round variable block must go in the gap); the show block put before the change block, so the screen is always one behind. <b>Ask:</b> “Your screen says 4 but you clicked 5 times. Read your blocks in order: what happens first?”</p>' },
+      { min: 10, title: 'Predict', html: '<p>On the board write: set tickets to 0, then click 3 times, then change tickets by 2 on each click instead. <b>Ask:</b> what will the screen show after 3 clicks? (6.) What if we forgot set tickets to 0? (The program would not know where to start; in many languages that is an error.) Pupils try “change tickets by -1” to make a counter that goes down.</p>' },
+      { min: 7, title: 'Plenary', html: '<p><b>Ask:</b> where else in a theme park would you need a variable? (Money taken, people on a ride, queue time, scores at a stall.) Next lesson: we film a ride with a camera and use messages to start the ending.</p>' }
+    ],
+    support: 'Give pupils the show block already joined to the tickets variable; they only add “change tickets by 1” and put the blocks in order.',
+    stretch: 'Make a second variable called people that counts down from 20 places left in the park. Show both on the screen with one join (use the gear on the join block to add more gaps).',
+    assess: ['Explains that a variable is a named value that can change', 'Changes the variable inside the click event', 'Shows the variable’s value by joining it to words'],
+    steps: [
+      { t: 'Try it', d: 'Press Run and click the green turnstile. You hear a click, but nothing is counted. Press Stop.' },
+      { t: 'Find the variable', d: 'Find “set tickets to 0” in “when Run is clicked”. That is the starting value. Open Variables to see the tickets blocks.' },
+      { t: 'Count', d: 'From Variables, drag “change tickets by 1” into “when turnstile is clicked”, under the sound.' },
+      { t: 'Show it', d: 'From Looks, drag the “show … on the screen” block that says “Score: ” under the change block. Change Score to Tickets.' },
+      { t: 'Show the number', d: 'From Variables, drag the round tickets block into the gap where the 0 is.' },
+      { t: 'Let them in', d: 'Press Run and click the turnstile 5 times. Watch the number go up and the Goals tick.' },
+      { t: 'Challenge', d: 'Show “Tickets: 0” at the start too. Then make each click count 2 people. What does the screen say after 5 clicks?' }
+    ]
+  },
+  {
+    id: 'park-20-coastercam', unit: 'Park Designers · Block 4 · Lesson 2', title: 'Coaster cam', ks: 'ks2', years: 'Year 6', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Cameras and messages: the coaster car already rides over the hill to the end of the track. Pupils make the camera ride along behind the car, then broadcast a message at the end so a “when I receive” script films the mascot clapping.',
+    objective: 'We are learning to control the camera with code and to use messages (broadcast and when I receive) so one script can start another.',
+    success: ['I can make the camera follow an object from behind.', 'I can broadcast a message when something has finished.', 'I can start a new script with “when I receive”.', 'I can explain why messages help to split a program into parts.'],
+    curriculum: ['ssr', 'design', 'alg'],
+    words: [['camera', 'the view you see the world through'], ['broadcast', 'send a message to every “when I receive” block'], ['message', 'a word one script sends to start another script'], ['script', 'a stack of blocks under one event']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A phone or toy camera for the warm-up (optional)'],
+    plan: [
+      { min: 8, title: 'Lights, camera…', html: '<p>Show a ride video filmed from the front seat, or act it out: one pupil is the coaster, another holds a “camera” and must follow. <b>Ask:</b> where should the camera be to make the ride exciting? When should the film cut to the crowd? Last lesson a variable remembered a number; today our code moves the camera and sends a message.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter and press Run: the car waits 1 second, glides up the hill and down to the end. The view stays still. Open <b>Camera</b>: show <b>camera follows car from behind</b> and <b>camera distance</b> (3 = close, 80 = far). Put them before the wait and Run again.</p><p>Then open <b>Events</b>. Show <b>broadcast</b> and <b>when I receive</b>. Both have a word box that says “go”: type <b>finish</b> in both. The words must match exactly.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the Lesson card and watch the Goals tick.</p><p><b>The answer:</b> in when Run is clicked, before the wait: camera follows car from behind · camera distance 8. After the last glide: broadcast finish. A new script: when I receive finish { point camera at x 3 y 1 z 18 · camera distance 10 · mascot clap once · mascot says “What a ride!” for 3 seconds }.</p><p><b>Common bugs:</b> “Finish” in one block and “finish” in the other, or a space after the word, so the message never arrives; broadcast put at the top, so the mascot claps before the ride; the camera still follows the car at the end, so the mascot is hard to see (point camera at stops the following). <b>Ask:</b> “Which block sends the message? Which block is listening? Do they say exactly the same word?”</p>' },
+      { min: 10, title: 'Why messages?', html: '<p>Draw two boxes on the board: the ride script and the ending script, with an arrow labelled <b>finish</b>. <b>Ask:</b> could we put the ending blocks straight after the glides instead? (Yes, but messages keep each job in its own script, and many scripts can listen to one message: the lights, a sound and the mascot could all start on finish.) Pupils add a second when I receive finish that plays the win sound.</p>' },
+      { min: 7, title: 'Plenary', html: '<p><b>Ask:</b> which camera view would be best for a game where you walk around the park? Next lesson we use a score variable in a star hunt, with the camera following the player.</p>' }
+    ],
+    support: 'Give pupils the when I receive script ready-made; they add the camera blocks and the broadcast, and check the words match.',
+    stretch: 'Try the camera from above and from the side. Add a sound and a colour change to the ending, each in its own “when I receive finish” script.',
+    assess: ['Uses a camera block to follow an object', 'Broadcasts a message at the right point in the sequence', 'Starts a second script with a matching “when I receive”'],
+    steps: [
+      { t: 'Watch the ride', d: 'Press Run. The car rides to the end, but the camera stays still. Press Stop.' },
+      { t: 'Ride along', d: 'From Camera, put “camera follows car from behind” inside “when Run is clicked”, before the wait. Choose car in the drop-down.' },
+      { t: 'Get closer', d: 'Add “camera distance” under it and make it 8. Press Run. Do you feel like you are on the ride?' },
+      { t: 'Send a message', d: 'From Events, put “broadcast” after the last glide. Click its word and type finish.' },
+      { t: 'Listen for it', d: 'Drag “when I receive” into an empty space. Type finish, exactly the same.' },
+      { t: 'The ending', d: 'Inside it, add “point camera at x 3 y 1 z 18”, then a Characters block set to mascot, clap, once. Add “mascot says What a ride! for 3 seconds”.' },
+      { t: 'Run it', d: 'Press Run. When the car reaches the end, does the camera turn to the mascot clapping? Check the Goals.' },
+      { t: 'Challenge', d: 'Add another “when I receive finish” that plays a sound. One message can start lots of scripts!' }
+    ]
+  },
+  {
+    id: 'park-21-stars', unit: 'Park Designers · Block 4 · Lesson 3', title: 'Star hunt', ks: 'ks2', years: 'Year 6', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'A score variable: a player walks down the park path (with the arrow keys) towards a star. Pupils make the score go up by 1 each time the player touches the star, show the score, and move the star on by z 4 so it can be caught again, then catch 5 stars.',
+    objective: 'We are learning to use a variable as a score that changes when an event happens in a game.',
+    success: ['I can add 1 to a score when two objects touch.', 'I can show the score on the screen after it changes.', 'I can move an object on so the game keeps going.'],
+    curriculum: ['ssr', 'design', 'reason'],
+    words: [['score', 'a variable that counts how well you are doing'], ['event', 'something that happens, like touching, that starts code'], ['update', 'show the new value after it changes'], ['reset', 'put a variable back to its starting value']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Mini whiteboards for the trace table (optional)'],
+    plan: [
+      { min: 7, title: 'Keeping score', html: '<p>Recap: in lesson 1 a click changed tickets by 1. <b>Ask:</b> what in a game should change the score? (Catching something, reaching a place, hitting a target.) Today the event is a <b>touch</b>: when the player touches a star.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter and press Run. Walk forward with the up arrow: the camera follows the player, the player reaches the star and you hear a magic sound, but the score stays at 0 and the player walks straight past. Find <b>set score to 0</b> and <b>show (Score: score) on the screen</b> in when Run is clicked. <b>Ask:</b> why does the screen say 0? Then find <b>when player touches star</b>: this is where the scoring goes.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the Lesson card and watch the Goals tick.</p><p><b>The answer:</b> when player touches star { play sound magic · change score by 1 · show (create text with “Score: ”, score) on the screen · move star by x 0 y 0 z 4 }. Press Run and hold the up arrow: the star keeps moving 4 ahead, and 5 catches tick the last goal.</p><p><b>Common bugs:</b> no show block after the change, so the score changes but the screen still says 0 (the screen only updates when you show it again); the star is not moved, so the player stands on it and only scores once; the star is moved behind or sideways, so it can’t be reached by walking forward. <b>Ask:</b> “The variable changed. Has anything told the screen?”</p>' },
+      { min: 11, title: 'Trace the score', html: '<p>Trace table on the board: stars caught, score, star’s z. Start at score 0, z −2. After 1 catch: 1, 2. After 2: 2, 6. <b>Ask:</b> where is the star after 5 catches? (z 18.) What happens to the score when you press Stop and Run again? (set score to 0 resets it.)</p>' },
+      { min: 7, title: 'Plenary', html: '<p><b>Ask:</b> is this a fun game yet? What is missing? (A time limit, a way to win.) Next lesson: a countdown clock and a decision at the end.</p>' }
+    ],
+    support: 'Give pupils the show block ready (from the when Run script, right-click → Duplicate); they add the change block and the move block.',
+    stretch: 'Instead of moving the star straight ahead, use “move star by” with x “pick random -3 to 3”, so the player has to steer. Add a second star that is worth 5 points.',
+    assess: ['Changes the score in the touch event', 'Updates the display after the variable changes', 'Moves the star so the game can continue'],
+    steps: [
+      { t: 'Play it', d: 'Press Run and hold the up arrow. The star makes a magic sound, but the score stays at 0. Press Stop.' },
+      { t: 'Find the event', d: 'Find “when player touches star”. Everything inside runs each time they touch.' },
+      { t: 'Score a point', d: 'From Variables, put “change score by 1” under the magic sound.' },
+      { t: 'Show the score', d: 'Right-click the “show … on the screen” block in “when Run is clicked” and choose Duplicate. Put the copy under the change block.' },
+      { t: 'Move the star on', d: 'From Motion, add “move star by x 0 y 0 z 4” at the end, so the star jumps further along the path.' },
+      { t: 'Catch 5', d: 'Press Run and walk forward with the arrow keys. Catch 5 stars and watch the Goals tick.' },
+      { t: 'Challenge', d: 'Put “pick random -3 to 3” (Operators) in the x of the move block, so you have to steer to catch the star.' }
+    ]
+  },
+  {
+    id: 'park-22-clock', unit: 'Park Designers · Block 4 · Lesson 4', title: 'Beat the clock', ks: 'ks2', years: 'Year 6', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'A countdown and decisions: the star hunt from last lesson now has a clock variable set to 10. Pupils count it down to 0 with “repeat until”, show the time left, and then use if … else to make the player say whether they won.',
+    objective: 'We are learning to use a variable as a countdown and to make a decision with its value at the end of a game.',
+    success: ['I can make a variable count down using “repeat until”.', 'I can show the time left on the screen.', 'I can use if … else with a variable to decide who won.', 'I can explain how two scripts can run at the same time.'],
+    curriculum: ['ssr', 'reason', 'design'],
+    words: [['countdown', 'a number that goes down to 0, like a timer'], ['repeat until', 'keep repeating until something is true'], ['condition', 'a question with a yes or no answer, like clock = 0'], ['decrement', 'take 1 away from a variable']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A stopwatch or a countdown on the board (optional)'],
+    plan: [
+      { min: 7, title: 'Ten seconds!', html: '<p>Count down from 10 together, one number a second. <b>Ask:</b> what did we do each second? (Wait, take 1 away, say the number.) When did we stop? (When we reached 0.) That is a loop with a condition, and the number is a variable.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter. It is last lesson’s finished star hunt, plus <b>set clock to 10</b> at the end of when Run is clicked. From Control, drag out <b>repeat while</b> and change its drop-down to <b>repeat until</b>. From Operators, drag the <b>=</b> block into it; put the <b>clock</b> value block on the left and type 0 on the right.</p><p>Model the inside: <b>wait 1 seconds</b>, <b>change clock by -1</b>, then a show block with “Time: ” and clock.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the Lesson card and watch the Goals tick.</p><p><b>The answer:</b> after set clock to 10: repeat until clock = 0 { wait 1 seconds · change clock by -1 · show (create text with “Time: ”, clock) on the screen }. Then: if score ≥ 5 { player says “I win!” for 3 seconds } else { player says “Time’s up!” for 3 seconds }.</p><p><b>Common bugs:</b> change clock by 1 instead of -1 (the clock goes up forever and the game never ends); no wait inside the loop (the clock reaches 0 at once); the if … else put inside the loop (the player talks every second). <b>Ask:</b> “Read the condition out loud. Will clock ever equal 0 with your blocks?”</p><p>Point out that the touch script and the countdown run at the same time: catching a star shows the score, and the next second shows the time again.</p>' },
+      { min: 11, title: 'Make it fair', html: '<p>Pupils play each other’s games. <b>Ask:</b> is 10 seconds and 5 stars too easy or too hard? Change one number to make it fairer and test again. The stretch shows the score and the time together: click the gear on the join block to add more gaps.</p>' },
+      { min: 7, title: 'Plenary', html: '<p><b>Ask:</b> which variables does our game use now, and what is each one for? (score counts up, clock counts down.) Next lesson: two variables and a decision together, at the ice cream stand.</p>' }
+    ],
+    support: 'Give pupils the repeat until loop with its condition ready; they add the three blocks inside and the if … else after it.',
+    stretch: 'Show both at once: “Score: ” score “  Time: ” clock (use the gear to give the join block four gaps). Add a bonus: catching a star adds 2 seconds to the clock.',
+    assess: ['Builds a countdown with a variable and repeat until', 'Shows the changing value on the screen', 'Uses if … else on the score after the loop'],
+    steps: [
+      { t: 'Find the clock', d: 'Find “set clock to 10” at the end of “when Run is clicked”.' },
+      { t: 'Repeat until', d: 'From Control, drag “repeat while” under it. Change while to until.' },
+      { t: 'The condition', d: 'From Operators, put the = block in the gap. Put the clock block (Variables) on the left and 0 on the right.' },
+      { t: 'Tick down', d: 'Inside the loop: “wait 1 seconds”, then “change clock by -1”.' },
+      { t: 'Show the time', d: 'Under them, add a “show … on the screen” block. Make it join “Time: ” and the clock block.' },
+      { t: 'Who won?', d: 'After the loop (not inside it), add “if … else” from Control. If score ≥ 5, the player says I win! for 3 seconds. Else the player says Time’s up! for 3 seconds.' },
+      { t: 'Play it', d: 'Press Run and catch stars before the clock reaches 0. Check the Goals.' },
+      { t: 'Challenge', d: 'Show the score and the time together. Or give 2 extra seconds for each star.' }
+    ]
+  },
+  {
+    id: 'park-23-icecream', unit: 'Park Designers · Block 4 · Lesson 5', title: 'The ice cream stand', ks: 'ks2', years: 'Year 6', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'Variables and decisions together: the ice cream stand shows two variables on the screen, stock (5 ice creams) and sold (0). Clicking the stand sells one, but it has a bug: it keeps selling when there are none left, so stock goes below 0. Pupils use if stock > 0 … else to say “Sold out!”, make clicking the van deliver 10 more, then sell 8 ice creams.',
+    objective: 'We are learning to use if … else to check a variable before changing it, and to make two variables work together.',
+    success: ['I can use if … else to check a variable before something happens.', 'I can change two variables when something is sold.', 'I can find a bug by watching a variable on the screen.', 'I can add to a variable with a second event.'],
+    curriculum: ['ssr', 'reason', 'debug1'],
+    words: [['stock', 'how many things a shop has left to sell'], ['condition', 'a question with a yes or no answer, like stock > 0'], ['if … else', 'do one thing if the condition is true, and something else if it is not'], ['bug', 'a mistake in the code that makes it do the wrong thing']],
+    need: ['A device per pupil or pair, with CodeJump open', 'Five counters or paper “ice creams” for the warm-up'],
+    plan: [
+      { min: 8, title: 'The ice cream seller', html: '<p>One pupil is the seller with 5 counters (ice creams). Others come up one at a time to buy one, while the class keeps two tallies on the board: <b>left</b> and <b>sold</b>. When the counters run out, one more pupil asks. <b>Ask:</b> what should the seller say? (Sorry, sold out!) What does a real seller check before every sale? (Have I got any left?) That check is a <b>condition</b>.</p>' },
+      { min: 10, title: 'Show me', html: '<p>Open the starter and press Run. The screen shows <b>Ice creams left: 5  Sold: 0</b>. Click the pink stand: left 4, sold 1, and the stand says Enjoy!. Keep clicking: 0, then −1, −2. <b>Ask:</b> what is wrong? (It sells ice creams it hasn’t got.) Read the code under <b>when stand is clicked</b>: change stock by -1, change sold by 1, show, says Enjoy!. Nothing checks the stock. Model: from <b>Control</b>, drag <b>if … else</b> into when stand is clicked; from <b>Operators</b>, the compare block with <b>stock</b> on the left, <b>&gt;</b> and <b>0</b> on the right.</p>' },
+      { min: 25, title: 'Your turn', html: '<p>Pupils follow the Lesson card and watch the Goals tick. To tick the Sold out goal they must click the stand until the stock runs out.</p><p><b>The answer:</b> when stand is clicked { if stock &gt; 0 { change stock by -1 · change sold by 1 · show (create text with “Ice creams left: ”, stock, “  Sold: ”, sold) on the screen · stand says “Enjoy!” } else { stand says “Sold out!” } }. when van is clicked { change stock by 10 · show (the same) on the screen · van says “Delivery!” for 2 seconds }. Then sell 5, see Sold out!, click the van and sell 3 more.</p><p><b>Common bugs:</b> the selling blocks left under the if … else instead of inside the if part (it still sells when sold out); the condition the wrong way round (0 &gt; stock), so it never sells; stock ≥ 0, so it sells one too many and stock reaches −1; the van changes stock by -10, or changes sold; no show block in the van event, so the screen is out of date until the next sale. <b>Ask:</b> “Is stock &gt; 0 true or false right now? So which part runs?”</p>' },
+      { min: 10, title: 'Trace it', html: '<p>Trace table on the board: click, stock &gt; 0?, stock, sold, the stand says. Start: 5, 0. After each sale stock goes down and sold goes up. On the 6th click: stock &gt; 0 is false, so the else part runs: Sold out!, and stock stays 0. The van: stock 10, sold 5. <b>Ask:</b> how many more clicks to reach 8 sold? (3.) What if the van brought only 2?</p>' },
+      { min: 7, title: 'Plenary', html: '<p><b>Ask:</b> which variables does the stand use, and which events change each one? Why must the check come before the sale? Next lesson is the grand opening: you design your own park game with everything from Block 4.</p>' }
+    ],
+    support: 'Give pupils the if … else with stock > 0 already in it; they drag the four selling blocks into the if part and add “stand says Sold out!” in the else part.',
+    stretch: 'Add a money variable that goes up by 2 for every ice cream sold, and show it on the screen too. Make the van only deliver when stock is less than 3; otherwise the van says “You still have some!”.',
+    assess: ['Finds the bug by watching the variable on the screen', 'Checks a variable with if … else before changing it', 'Changes stock and sold correctly, and adds a delivery with a second event'],
+    steps: [
+      { t: 'Find the bug', d: 'Press Run and click the pink stand 7 times. Watch “Ice creams left”. What goes wrong? Press Stop.' },
+      { t: 'If … else', d: 'From Control, drag “if … else” into “when stand is clicked”, above the other blocks.' },
+      { t: 'The condition', d: 'From Operators, put a compare block in the if. Make it stock > 0 (the stock block from Variables, then >, then 0).' },
+      { t: 'Sell one', d: 'Drag the two change blocks, the show block and “stand says Enjoy!” into the top gap of the if.' },
+      { t: 'Sold out', d: 'In the else gap, add “… says …”. Choose stand and type Sold out! Press Run and click the stand until it says Sold out!' },
+      { t: 'A delivery', d: 'Drag “when … is clicked” into an empty space and choose van. Inside: “change stock by 10”, a copy of the show block, and “van says Delivery! for 2 seconds”.' },
+      { t: 'Sell 8', d: 'Press Run. Sell until it is sold out, click the van, then sell again until 8 are sold. Check the Goals.' },
+      { t: 'Challenge', d: 'Add a money variable that goes up by 2 for every ice cream sold.' }
+    ]
+  },
+  {
+    id: 'park-24-opening', unit: 'Park Designers · Block 4 · Lesson 6', title: 'Project: the grand opening', ks: 'ks2', years: 'Year 6', minutes: 60, type: '3d', tool: '3D World (blocks)',
+    summary: 'The final project of Park Designers: pupils plan, build and test their own park game for the grand opening, using a variable, an if, an event, a camera block and something shown on the screen, then share it and evaluate a partner’s game.',
+    objective: 'We are learning to design, write, test and improve our own game that uses variables, selection, events and the camera.',
+    success: ['I can plan a game and decide which variables it needs.', 'I can use a variable, an if and an event in my own game.', 'I can use the camera and the screen to help the player.', 'I can test my game, get feedback and improve it.'],
+    curriculum: ['design', 'ssr', 'reason'],
+    words: [['design', 'a plan for what you will make'], ['variable', 'a named value that changes, like a score, money or time'], ['test', 'try your game to check it works as planned'], ['evaluate', 'judge how well it works and what to improve']],
+    need: ['A device per pupil or pair, with CodeJump open', 'A planning sheet or paper for the design', 'Sticky notes for feedback (optional)'],
+    plan: [
+      { min: 10, title: 'Plan on paper', html: '<p>Open the starter: the park gate and two trees, ready for the grand opening. Pupils plan a small game on paper: what the player does, how you win, and a table of variables (name, starting value, what changes it). <b>Ask:</b> which event starts the action: a click, a key, a touch or a message? Where will the camera be?</p><p>Remind them of Block 4: tickets (counting), coaster cam (camera, messages), star hunt (score), beat the clock (countdown, if … else), the ice cream stand (stock, sold and if … else).</p>' },
+      { min: 30, title: 'Build and test', html: '<p>Pupils build their game. The Goals checklist is the success criteria: a variable changes, an if decides something, an event starts the action, a camera block, and something shown on the screen. Encourage Run after every few blocks.</p><p><b>Example answer:</b> a player (Characters, “make … fall and bump”, “control player with the arrow keys”, camera follows player from behind), a Diamond called prize, set gems to 0 and show “Gems: ” gems. When player touches prize { change gems by 1 · show the gems · move prize by x 0 y 0 z 5 · if gems = 3 { player says “Park complete!” for 3 seconds } }.</p><p><b>Common bugs:</b> a new object that has no name (each needs its own variable, made with Variables → Create variable); a variable never set at the start; the show block not repeated after a change. <b>Ask:</b> “Show me in your plan which block changes this variable.”</p>' },
+      { min: 13, title: 'Grand opening', html: '<p>Pupils swap seats and play a partner’s game. They leave one star (what works well) and one wish (one thing to improve), naming a block if they can. Pupils then make one improvement from their feedback.</p>' },
+      { min: 7, title: 'Evaluate', html: '<p>Pupils finish the sentence: “My game uses the variable … which changes when … My if decides … I improved …”. Celebrate the Park Designers: sequence and events, loops, selection and now variables, cameras and messages.</p>' }
+    ],
+    support: 'Start from the star hunt idea: one player, one thing to collect and a score. Add an if when the score reaches 3.',
+    stretch: 'Use two variables that work together (a score and a clock, or stock and sold) and a broadcast to start a winning ending.',
+    assess: ['Plans the game and its variables before coding', 'Uses a variable, selection, an event and the camera purposefully', 'Tests, responds to feedback and improves the game'],
+    steps: [
+      { t: 'Plan it', d: 'On paper: what does the player do? How do you win? Which variables do you need, and what changes them?' },
+      { t: 'Build your park', d: 'Add a player or rides, things to catch or click. Give each new thing its own name with Variables → Create variable.' },
+      { t: 'A variable', d: 'Set your variable at the start of “when Run is clicked”, then change it when something happens.' },
+      { t: 'An event and an if', d: 'Use a “when … is clicked”, “when … key pressed” or “when … touches …” event. Put an if inside to decide something, like if score = 3.' },
+      { t: 'Camera and screen', d: 'Add a block from Camera, and show your variable with “show … on the screen”.' },
+      { t: 'Check the Goals', d: 'Press Run and play. Do all five Goals tick? Fix anything that doesn’t.' },
+      { t: 'Grand opening', d: 'Let a partner play. Ask for one star and one wish, then make one improvement.' }
+    ]
   }
 ];
 
@@ -1427,6 +2112,197 @@ const SLIDES = {
     { t: 'Counting across', lead: 'A variable can change each time round the loop.', table: [['Time round', 'across', 'Pillar at x'], ['1', '-6', '-6'], ['2', '-3', '-3'], ['3', '0', '0'], ['4', '3', '3'], ['5', '6', '6']], notes: 'across starts at -6. The box uses it for x, then change across by 3 adds 3. Trace it together.' },
     { use: 'steps' },
     { t: 'Think', q: 'How many blocks for 5 pillars? How many for 50?', b: ['repeat stops by itself.', 'forever keeps going until Stop.'], notes: 'With a loop it is the same number of blocks: just change 5 to 50. Next time (Years 5–6): add a player and events to make a game.' }
+  ],
+  'park-1-gate': [
+    { t: 'Welcome, park designers!', pic: true, b: ['This year we design and run a theme park', 'Every lesson adds something new', 'Today: the park gate'], notes: 'Open the starter and drag on the world to look around. Point out the blocks on the left and the world on the right.' },
+    { t: 'How do you build a gate?', q: 'What are the steps, in order?', b: ['1. A post on the left', '2. A post on the right', '3. A bar across the top'], notes: 'Build it with pencils and a ruler. Could the bar go first? Not in real life.' },
+    { t: 'Algorithm', lead: 'An algorithm is a set of exact steps, in the right order, to do a job.', notes: 'Say the word together. The order of the steps is the sequence.' },
+    { t: 'x, y and z', table: [['Number', 'Direction'], ['x', 'across (left and right)'], ['y', 'up and down'], ['z', 'forwards and backwards']], notes: 'Stand up and point each way. A shape’s y is where its bottom sits, so a bar on 4-tall posts needs y 4.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'What number would put the star on top of the left post?', b: ['Every new thing needs its own name'], notes: 'x −3, y 4. Next lesson: a mascot who does something when you click it.' }
+  ],
+  'park-2-mascot': [
+    { t: 'Ding dong!', q: 'What happens when someone rings your doorbell?', notes: 'Ring a bell or knock. The ring starts an action: someone answers.' },
+    { t: 'Event', lead: 'An event is something that happens, like a click, that starts some code.', b: ['when Run is clicked', 'when mascot is clicked'], notes: 'We have been using an event already: when Run is clicked.' },
+    { t: 'Meet the mascot', pic: true, b: ['Click the mascot: nothing happens', 'Make it wave', 'Make it say “Welcome to the park!”'], notes: 'Press Run and click the mascot in the starter. Clicks only work while the program is running.' },
+    { use: 'steps' },
+    { t: 'Input and output', table: [['Input', 'Code', 'Output'], ['Click the mascot', 'when mascot is clicked', 'Wave and a speech bubble']], notes: 'Ask pupils to name the input and output of their own program.' },
+    { t: 'Think', q: 'What is different about “when Run is clicked” and “when mascot is clicked”?', notes: 'One runs at the start; one waits for a click and runs every time. Next lesson: a conversation.' }
+  ],
+  'park-3-chat': [
+    { t: 'Can you help me?', q: 'What goes wrong if everyone says their lines at once?', notes: 'Act out a visitor asking the way. Try the lines in the wrong order, then all at once.' },
+    { t: 'Sequence and timing', lead: 'Steps run one after another. Some steps wait before the next one starts.', b: ['“says … for 2 seconds” waits 2 seconds', '“says …” does not wait'], notes: 'This is why the conversation needs the “for … seconds” block.' },
+    { t: 'Help a visitor', pic: true, b: ['The visitor asks the way', 'The guide answers', 'The visitor says thank you and walks through the gate'], notes: 'Press Run and click the visitor in the starter.' },
+    { t: 'Predict', q: 'The guide uses “says” with no seconds. What will happen?', notes: 'Both bubbles appear at once. Swap it for “says … for … seconds” and run again.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'What would happen if the glide block came first?', notes: 'The visitor would walk away before the guide answers. Next lesson: physics.' }
+  ],
+  'park-4-balloons': [
+    { t: 'Pop!', q: 'If a balloon holding a toy pops, what happens to the toy?', notes: 'Hold up a balloon or a ball. It falls: gravity pulls it down.' },
+    { t: 'Physics', lead: 'Physics makes things move like real things: falling, bumping, bouncing.', b: ['make … fall and bump: gravity pulls it down', 'make … solid but still: things bump into it, but it never moves'], notes: 'In the 3D World, things only fall when we tell them to.' },
+    { t: 'Pop the balloons', pic: true, b: ['Click a balloon: it pops and hides', 'Its gift falls to the ground', 'A heart and a doughnut'], notes: 'Press Run and click the red balloon in the starter: it pops, but the balloon stays and the heart floats.' },
+    { t: 'Predict', q: 'We hide balloon1. Will the heart fall now?', b: ['The computer only does what our blocks say'], notes: 'No: the heart needs its own block, make gift1 fall and bump, inside when balloon1 is clicked. In when Run is clicked it would fall before the click.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'Why does each gift need its own block to fall?', notes: 'Each object only does what its blocks say. Next lesson: a penalty kick.' }
+  ],
+  'park-5-kick': [
+    { t: 'Kick it!', q: 'How do you make a ball go further? How do you make it go up as well as forwards?', notes: 'Roll a soft ball gently, then harder. Then roll it along the floor, then throw it up and forwards.' },
+    { t: 'Force', lead: 'A force is a push or a pull. It has a direction and a size.', b: ['push football by x … y … z …', 'z pushes forwards, y pushes up', 'A bigger number is a stronger push'], notes: 'Only things with “fall and bump” can be pushed.' },
+    { t: 'Penalty kick', pic: true, b: ['Click the football', 'Lift it off the ground', 'Get it in the goal'], notes: 'Press Run and click the ball in the starter: it only rolls a little. Press Run again to put the ball back on the spot.' },
+    { t: 'Fair test', lead: 'Predict first. Change only one number at a time.', table: [['push y', 'push z', 'I predict…', 'What happened?'], ['0', '2', '', 'a little roll'], ['0', '6', '', ''], ['?', '?', '', '']], notes: 'Pupils copy this table and fill it in as they test.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'Which number made the ball go further? Which made it lift?', notes: 'z pushes forwards, y pushes up. Did changing one number at a time help? Next lesson: your own welcome zone.' }
+  ],
+  'park-6-welcome': [
+    { t: 'Project: the welcome zone', pic: true, b: ['A character who moves and speaks when clicked', 'Something that falls or flies when clicked', 'Your own design'], notes: 'Show the starter and its Goals list: these are the success criteria.' },
+    { t: 'What we know', table: [['Lesson', 'Skill'], ['The gate', 'make blocks and x, y, z'], ['The mascot', 'when … is clicked'], ['The visitor', 'says … for … seconds, in order'], ['The balloons and the football', 'hide, fall and bump, push']], notes: 'Recap Block 1 quickly.' },
+    { t: 'Design first', lead: 'When I click …, then …', b: ['Draw your zone', 'Write two click events', 'Give everything you click a name'], notes: 'A falling thing must start up in the air: y bigger than 0.' },
+    { use: 'steps' },
+    { t: 'Swap and try', b: ['Try your partner’s zone', 'Can you find what to click?', 'One star and one wish'], notes: 'Each pupil then makes one improvement.' },
+    { t: 'Block 1 done!', b: ['Algorithms and sequence', 'Events', 'Timing', 'Physics and forces'], notes: 'Celebrate! Next block: rides that move, with loops.' }
+  ],
+  'park-7-spinner': [
+    { t: 'Turn on the spot', q: 'How many small turns of 30 degrees make a full circle?', notes: 'Everyone stands and turns in small steps. Count together: 12 turns of 30 is 360.' },
+    { t: 'Loop', lead: 'A loop runs the same blocks again and again.', b: ['repeat 12 times:', 'turn arm by y 30 degrees', 'wait 0.1 seconds'], notes: 'The blocks INSIDE the loop are the ones that repeat. Block 2 is all about loops.' },
+    { t: 'The spinner', pic: true, b: ['Press Run, then click the arm', 'It only turns a quarter of the way', 'The same two blocks are copied three times'], notes: 'Open the starter. Ask how many more copies a full spin would need (24 blocks in all).' },
+    { use: 'steps' },
+    { t: 'Common bugs', b: ['Repeat 10: it stops just short (300°)', 'Wait outside the loop: it spins in a blink', 'Old copies left over: it turns too far'], notes: 'Pressing Run again starts the Goal ticks again.' },
+    { t: 'Think', q: 'If each turn was 15 degrees, how many repeats? And 90 degrees?', notes: '24 and 4. Next lesson: a whole sequence inside a loop.' }
+  ],
+  'park-8-droptower': [
+    { t: 'Rise, wait, drop!', q: 'How can we say “do it three times” without writing it three times?', notes: 'Play the body loop game: crouch, rise slowly, wait, drop fast.' },
+    { t: 'A sequence in a loop', lead: 'A loop can repeat a whole sequence, in order.', b: ['repeat 3 times:', 'glide up slowly', 'wait at the top', 'glide down fast'], notes: 'Read it aloud: up, wait, drop; up, wait, drop; up, wait, drop.' },
+    { t: 'The drop tower', pic: true, b: ['Click the yellow seat', 'Up in 3 seconds, down in 0.5', 'Only one ride so far'], notes: 'Ask pupils to predict before you press Run and click the seat.' },
+    { use: 'steps' },
+    { t: 'Predict', q: 'What if the wait comes AFTER the drop?', b: ['Write your prediction', 'Then test it'], notes: 'It waits at the bottom instead of the top. The order inside a loop matters.' },
+    { t: 'Think', q: 'Same blocks, different order: does the ride do the same thing?', notes: 'No. Next lesson: a loop that never stops.' }
+  ],
+  'park-9-lights': [
+    { t: 'What never stops?', q: 'Traffic lights, a lighthouse, a clock. What number of repeats would they need?', notes: 'None: they go on forever while switched on.' },
+    { t: 'Forever', lead: 'A forever loop never stops, until you press Stop.', b: ['Nothing can go after it', 'Put it at the very end', 'Keep a wait inside'], notes: 'Show that the forever block has no bump underneath.' },
+    { t: 'Carousel lights', pic: true, b: ['Three bulbs: bulb1, bulb2, bulb3', 'bulb1 changes colour once', 'Make them change forever'], notes: 'Loops do not run in the edit view: press Run to see the lights.' },
+    { use: 'steps' },
+    { t: 'Repeat or forever?', table: [['Repeat', 'Forever'], ['Clap 5 times', 'A heartbeat'], ['Spin once', 'A lighthouse'], ['Three drops', 'Carousel lights']], notes: 'Sort more examples together.' },
+    { t: 'Think', q: 'What happens if you take the wait out?', notes: 'The lights flicker too fast to see. Next lesson: a ride with bugs in its loop.' }
+  ],
+  'park-10-wheel': [
+    { t: 'Spot the bug', q: 'Repeat 3 times: clap, jump. Then spin. What went wrong?', notes: 'The spin is outside the loop. A bug is a mistake; to debug is to find and fix it.' },
+    { t: 'How to debug', b: ['1. What should it do?', '2. What does it really do?', '3. Which block makes the difference?', '4. Fix one thing, then test'], notes: 'Keep this slide up during the bug hunt.' },
+    { t: 'Fix the big wheel', pic: true, b: ['It should turn round like a wheel', 'All the way round, slowly', 'It has three bugs'], notes: 'Predict first, then press Run and click the wheel. Show the paper plate to explain the y and z axes.' },
+    { use: 'steps' },
+    { t: 'The three bugs', table: [['Bug', 'Fix'], ['Turns like a door (y)', 'Turn on z instead'], ['Only 100° (10 × 10)', 'Repeat 36 times'], ['Wait after the loop', 'Wait inside the loop']], notes: 'Show this at the end, or as hints for pairs who are stuck.' },
+    { t: 'Think', q: 'Why does fixing one bug at a time help?', notes: 'You know which change made the difference. Next lesson: a loop that makes things.' }
+  ],
+  'park-11-fireworks': [
+    { t: 'Roll the dice', q: 'Can you predict the next number?', notes: 'No: it is random. Introduce “pick random 1 to 6” in Operators.' },
+    { t: 'Loops can make things', lead: 'Put a “make” block inside a loop to make lots of objects.', b: ['Each new ball is called firework', 'The name means the newest one', 'A wait lets you see each one appear'], notes: 'The goal counts 12 fireworks.' },
+    { t: 'Fireworks finale', pic: true, b: ['Click the launcher', 'Only one firework so far', 'Make 12, all over the sky'], notes: 'Ask: predict where 12 fireworks will appear without random. (All in one spot, so it looks like one.)' },
+    { use: 'steps' },
+    { t: 'Random', lead: 'pick random -8 to 8', b: ['A different number every time', 'Put it in the x hole and the y hole', '“random colour” for the colour'], notes: 'Run it twice: the fireworks burst in different places each time.' },
+    { t: 'Think', q: 'Where else could a park use random?', notes: 'Prizes, the weather, which ride a visitor chooses. Next lesson: design your own ride.' }
+  ],
+  'park-12-ride': [
+    { t: 'Design a ride!', pic: true, b: ['Start from the empty base', 'Build it with shapes', 'Code it with loops'], notes: 'The Goals checklist is the success criteria for today.' },
+    { t: 'Our rides so far', table: [['Ride', 'Loop'], ['Spinner', 'repeat a turn'], ['Drop tower', 'repeat a sequence'], ['Carousel lights', 'forever'], ['Fireworks finale', 'repeat a make block']], notes: 'Recap the block. Which would you like to build on?' },
+    { t: 'Plan first', b: ['What starts it? A click or a key', 'What repeats?', 'How many times, or forever?', 'What sound does it make?'], notes: 'Pupils sketch and label the ride and write the algorithm. New names: Variables → Create variable.' },
+    { use: 'steps' },
+    { t: 'Ride test', lead: '“My ride starts when… My loop repeats… times. Inside the loop…”', q: 'What works well? What could be better?', notes: 'Pupils try each other’s rides and give one star and one wish.' },
+    { t: 'Block 2 done!', b: ['repeat', 'A sequence in a loop', 'forever', 'Debugging loops', 'Loops that make things, and random'], notes: 'Celebrate. Block 3: fairground games that decide with “if”.' }
+  ],
+  'park-13-bell': [
+    { t: 'Stand up if…', q: 'Why did some people stand up and others stay sitting?', b: ['Stand up if you have a pet.', 'Stand up if you are wearing blue.'], notes: 'Everyone hears the same instruction, but only those for whom it is true stand. That is selection.' },
+    { t: 'Selection', lead: 'An if block runs the blocks inside it only when its question is true.', b: ['The question is called a condition.', 'Its answer is true or false.'], notes: 'Block 3 is all about programs that make decisions.' },
+    { t: 'Ring the bell', pic: true, b: ['Press space to push the puck', 'The gold bell is at the top', 'Nothing knows when the puck gets there'], notes: 'Open the starter. Press Run, then space: the puck does not reach. Read the Goals “Ring it!”.' },
+    { t: 'Keep checking', table: [['Code', 'Means'], ['forever', 'keep asking, again and again'], ['if puck touching bell ?', 'is the puck at the bell?'], ['bell says DING!', 'only when the answer is true']], notes: 'Without forever the if asks once, at the start, when the answer is false.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'What does the program do when the condition is false?', notes: 'Nothing: it skips the blocks inside the if. Next lesson: a condition about a number.' }
+  ],
+  'park-14-dodgems': [
+    { t: 'The number line', q: 'Where on the line is x > 10 true? And x < -10?', b: ['-11 … 0 … 11', 'The purple floor'], notes: 'Draw the line on the board and shade the two ends.' },
+    { t: 'Compare', lead: 'A comparison asks about two numbers. The answer is true or false.', table: [['Block', 'Means'], ['x of car > 10', 'the car is near the right side'], ['x of car < -10', 'the car is near the left side']], notes: 'The compare block is in Operators; “x of …” is in Sensing.' },
+    { t: 'Dodgem rules', pic: true, b: ['Drive with the arrow keys', 'The car can drive off the floor', 'It needs a rule for each side'], notes: 'Open the starter and drive off the edge. Read the Goals “Stay in the arena”.' },
+    { use: 'steps' },
+    { t: 'Common bugs', b: ['Both ifs say > 10: the left side leaks', 'Move by +0.5 on the right: the car is pushed out', 'The if is outside the forever'], notes: 'Ask which side the car escapes from: that tells you which if to look at.' },
+    { t: 'Think', q: 'How would we stop the car leaving by the front or back?', notes: 'Use z of car. Next lesson: if … else.' }
+  ],
+  'park-15-weather': [
+    { t: 'Heads or tails', q: 'If heads we go first, else we go last. Could both happen?', notes: 'Toss a coin a few times. Exactly one thing happens every time.' },
+    { t: 'If … else', lead: 'If the condition is true, do the first part. If not, do the else part.', b: ['Always one part.', 'Never both. Never neither.'], notes: 'Last lesson each if did something or nothing; now there is always a second choice.' },
+    { t: 'Sunny or rainy?', pic: true, b: ['The sky is always blue', 'pick random 1 to 2 is like a coin', '1 = rain, 2 = sun'], notes: 'Open the starter. Find pick random in Operators. Read the Goals “Weather report”.' },
+    { use: 'steps' },
+    { t: 'Test it lots', table: [['Run', 'Weather'], ['1', ''], ['2', ''], ['3', ''], ['…', '']], q: 'How many rainy days in ten runs?', notes: 'A random program must be tested many times. Tally the class results.' },
+    { t: 'Think', q: 'How could we make rain happen less often?', notes: 'pick random 1 to 4 = 1. Next lesson: debugging the ghost train.' }
+  ],
+  'park-16-ghost': [
+    { t: 'Expected and actual', q: 'Put the bread in, butter it, take it out. What goes wrong?', b: ['Expected: what should happen', 'Actual: what really happens'], notes: 'A bug is where expected and actual are different.' },
+    { t: 'The ghost train', pic: true, b: ['The cart should roll into the tunnel', 'The ghost should appear', 'The ghost should say Boo!'], notes: 'Open the starter and press Run. The cart rolls backwards and nothing else happens.' },
+    { t: 'Bug hunt sheet', table: [['Bug', 'Expected', 'Actual', 'Fix'], ['1', '', '', ''], ['2', '', '', ''], ['3', '', '', '']], notes: 'Pupils fill in expected and actual before changing any code.' },
+    { use: 'steps' },
+    { t: 'How to hunt bugs', b: ['Run it. Say expected and actual.', 'Find the block that does it.', 'Change one thing.', 'Test again.'], notes: 'One bug can hide another: the ghost bug can’t be seen until the cart goes the right way.' },
+    { t: 'Think', q: 'Which bug was hardest to find, and why?', notes: 'Answers: z -9 to 9; tree to tunnel; cart says to ghost says. Next lesson: the splash fountain.' }
+  ],
+  'park-17-splash': [
+    { t: 'Hot or cold', q: 'What is the rule for “Splash!”?', notes: 'A pupil walks towards a hoop. The class says Splash! when they are closer than one big step.' },
+    { t: 'Distance', lead: '“distance from player to pond” tells you how far apart they are.', b: ['Close: a small number', 'Far away: a big number'], notes: 'It is in Sensing. The compare block is in Operators.' },
+    { t: 'The splash fountain', pic: true, b: ['Walk with the arrow keys', 'The water is hidden', 'Close to the pond: Splash!'], notes: 'Open the starter and walk to the pond. Read the Goals “Get splashed”.' },
+    { use: 'steps' },
+    { t: 'Why else?', table: [['Without else', 'With else'], ['The water appears', 'The water appears'], ['It never goes away', 'It hides when you walk off']], notes: 'Predict first, then run both versions on the board.' },
+    { t: 'Think', q: 'What else in a park could react when you get close?', notes: 'A shop that says hello, a gate that opens. Next lesson: design your own game stall.' }
+  ],
+  'park-18-stall': [
+    { t: 'Your game stall', pic: true, b: ['Design your own fairground game', 'A key or a click to play', 'An if … else decides who wins'], notes: 'Show the starter: just a pink stall. Read the four Goals: they are the success criteria.' },
+    { t: 'Ideas', b: ['Knock the can off the stall', 'Throw a ball into a hoop', 'Ring a bell', 'Get close enough to win'], notes: 'Each idea needs a Sensing block: touching, distance, x/y/z of, or key pressed?' },
+    { t: 'Plan first', lead: 'Name every object. Write your rule as “if … else …”.', b: ['How do you play?', 'What is the rule?', 'What does the game say?'], notes: 'Pupils plan on paper before coding. New names: Variables, Create variable.' },
+    { use: 'steps' },
+    { t: 'Share', lead: '“To play, you… My if checks… If it is true… Else…”', q: 'What works well? What would make it better or fairer?', notes: 'Fairground walk, then recap Block 3: if, conditions, comparisons, if … else, random, debugging. Block 4: variables.' }
+  ],
+  'park-19-tickets': [
+    { t: 'Running the park', lead: 'The park is open! Now we need to keep track of numbers.', b: ['How many visitors came in?', 'How much money did we take?', 'How long is the queue?'], notes: 'Introduce Block 4: variables, cameras and messages. Use a clicker counter or a tally.' },
+    { t: 'A variable', lead: 'A variable is a named box that remembers a value.', b: ['Set it: set tickets to 0 (at the start)', 'Change it: change tickets by 1 (each click)', 'Use it: show Tickets: and the number'], notes: 'The starter already has the tickets variable and set tickets to 0.' },
+    { t: 'The ticket counter', pic: true, b: ['Click the green turnstile', 'Count every visitor', 'Let 5 visitors in'], notes: 'The Goals checklist at the top right ticks as pupils work.' },
+    { use: 'steps' },
+    { t: 'Predict', q: 'Each click does change tickets by 2. What does the screen say after 3 clicks?', b: ['Start: set tickets to 0', 'Click, click, click'], notes: '6. What if the show block was before the change block? It would always be one click behind.' },
+    { t: 'Think', q: 'Where else does a theme park need a variable?', notes: 'Money, people on a ride, queue time, scores. Next lesson: a camera and messages.' }
+  ],
+  'park-20-coastercam': [
+    { t: 'Film the ride', q: 'Where should the camera be to make a ride exciting?', notes: 'Act it out: one pupil is the coaster, one follows with a “camera”.' },
+    { t: 'Camera blocks', b: ['camera follows car from behind', 'camera distance 8 (3 = close, 80 = far)', 'point camera at x y z (stops following)'], notes: 'All in the Camera category.' },
+    { t: 'Coaster cam', pic: true, b: ['The car rides over the hill', 'Ride along with it', 'Then cut to the mascot clapping'], notes: 'In the starter the car moves but the camera stays still.' },
+    { t: 'Messages', lead: 'One script can start another.', code: 'ride script:   … glide … glide → broadcast finish\nending script: when I receive finish → camera, clap, say', notes: 'The words must match exactly: finish and finish. Many scripts can listen for one message.' },
+    { use: 'steps' },
+    { t: 'Think', q: 'Which camera view would suit a walking game?', b: ['From behind', 'From above', 'From the side'], notes: 'Next lesson: a score in a star hunt, with the camera following the player.' }
+  ],
+  'park-21-stars': [
+    { t: 'Keeping score', q: 'What in a game should make the score go up?', notes: 'Catching, reaching, hitting. Today: touching a star.' },
+    { t: 'Star hunt', pic: true, b: ['Walk forward with the up arrow', 'Each star = 1 point', 'Catch 5'], notes: 'In the starter the star makes a magic sound but the score stays at 0.' },
+    { t: 'When the player touches the star', b: ['change score by 1', 'show Score: and the score', 'move the star on by z 4'], notes: 'The screen only changes when you show it again. If the star isn’t moved, the player stands on it.' },
+    { use: 'steps' },
+    { t: 'Trace the score', table: [['Stars caught', 'score', 'star’s z'], ['0', '0', '-2'], ['1', '1', '2'], ['2', '2', '6'], ['5', '5', '?']], notes: 'After 5 catches the star is at z 18.' },
+    { t: 'Think', q: 'Is it a fun game yet? What is missing?', notes: 'A time limit and a way to win. Next lesson: beat the clock.' }
+  ],
+  'park-22-clock': [
+    { t: 'Ten seconds!', q: 'Count down from 10. What do we do each second? When do we stop?', notes: 'Wait, take 1 away, say it; stop at 0.' },
+    { t: 'Beat the clock', pic: true, b: ['10 seconds on the clock', 'Catch 5 stars', 'Did you win?'], notes: 'The starter is last lesson’s finished game plus set clock to 10.' },
+    { t: 'Count down', code: 'set clock to 10\nrepeat until clock = 0:\n    wait 1 seconds\n    change clock by -1\n    show Time: clock\nif score ≥ 5:\n    player says I win!\nelse:\n    player says Time’s up!', notes: 'The if … else goes after the loop, not inside it. Change by -1, not 1.' },
+    { use: 'steps' },
+    { t: 'Make it fair', q: 'Too easy or too hard? Change one number and test again.', b: ['The time on the clock', 'The stars you need', 'How far the star moves on'], notes: 'Pupils play each other’s games.' },
+    { t: 'Think', q: 'Which variables does our game use, and what does each one do?', notes: 'score counts up, clock counts down. Next lesson: the ice cream stand.' }
+  ],
+  'park-23-icecream': [
+    { t: 'The ice cream seller', q: 'The seller has 5 ice creams. What should happen when the sixth person asks?', notes: 'Act it out with counters. Before every sale the seller checks: have I got any left?' },
+    { t: 'The ice cream stand', pic: true, b: ['Two variables on the screen: stock and sold', 'Click the stand to sell one', 'Click the van for a delivery'], notes: 'In the starter, keep clicking the stand: stock goes to -1, -2… That is the bug.' },
+    { t: 'Check first', code: 'when stand is clicked:\n    if stock > 0:\n        change stock by -1\n        change sold by 1\n        show the stock and sold\n        stand says Enjoy!\n    else:\n        stand says Sold out!', notes: 'The check comes before the sale. stock > 0, not 0 > stock.' },
+    { use: 'steps' },
+    { t: 'Trace it', table: [['Click', 'stock > 0?', 'stock', 'sold'], ['start', '', '5', '0'], ['1st sale', 'yes', '4', '1'], ['6th click', 'no: Sold out!', '0', '5'], ['the van', '', '10', '5']], notes: 'On the 6th click the else part runs. Three more sales after the delivery make 8.' },
+    { t: 'Think', q: 'Why must the check come before the sale?', notes: 'Otherwise it sells an ice cream it hasn’t got. Next lesson: the grand opening.' }
+  ],
+  'park-24-opening': [
+    { t: 'The grand opening', pic: true, b: ['Design your own park game', 'Plan it, build it, test it', 'Then open it to a partner'], notes: 'The starter is the park gate and two trees.' },
+    { t: 'Plan first', b: ['What does the player do?', 'How do you win?', 'Which variables? What changes them?', 'Which event starts the action?', 'Where is the camera?'], notes: 'Plan on paper with a table of variables: name, starting value, what changes it.' },
+    { t: 'Your Goals', b: ['A variable changes', 'An if decides something', 'An event starts the action', 'A camera block', 'Something shown on the screen'], notes: 'The Goals checklist is the success criteria and ticks while the game runs.' },
+    { use: 'steps' },
+    { t: 'Star and wish', lead: '“My game uses the variable … My if decides … I improved …”', notes: 'Partners play each other’s games and leave one star and one wish.' },
+    { t: 'Park Designers!', b: ['Sequence and events', 'Loops', 'Selection and debugging', 'Variables, cameras and messages'], notes: 'Celebrate the whole unit.' }
   ]
 };
 for (const l of LESSONS) l.slides = SLIDES[l.id] || [];

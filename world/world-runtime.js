@@ -119,6 +119,9 @@ export function createWorld(B, opts) {
   const objs = new Map();          // id -> {id, name, mesh, kind, size:{w,h,d}, color, phys:'none'|'dynamic'|'static', agg, bounce}
   let run = null;                  // {token, hats:{start,click,key,touch,msg}, frameWaiters, timeWaiters, ...}
   let token = 0, time = 0, timerBase = 0, created = 0, tooMany = false;
+  // what happened while playing (for lesson goals): words said, text shown, animations played, colours, clicks
+  let rec = newRec();
+  function newRec() { return { said: [], shown: [], anims: [], colours: {}, clicks: [] }; }
   const keysDown = new Set();
   const padKeys = new Set();       // on-screen pad presses
   let follow = null, followView = 'orbit', control = null;
@@ -422,6 +425,7 @@ export function createWorld(B, opts) {
     A.playAnimation = async (id, name, mode) => {
       const o = obj(id); if (!o || o.kind !== 'character') return;
       o.userAnim = true; o.autoName = null;
+      if (!r.layout && rec.anims.length < 500) rec.anims.push({ id: o.id, name: String(name) });
       const m = mode === 'wait' ? 'wait' : mode === 'once' ? 'once' : 'loop';
       try {
         const done = playAnim(o, String(name), m);
@@ -462,6 +466,7 @@ export function createWorld(B, opts) {
       const o = obj(id); if (!o) return;
       const q = B.Quaternion.FromEulerAngles(num(x, 0) * DEG, num(y, 0) * DEG, num(z, 0) * DEG);
       o.mesh.rotationQuaternion = q.multiply(quat(o)); syncBody(o);
+      if (!r.layout) { const s = o.spun || (o.spun = { x: 0, y: 0, z: 0 }); s.x += num(x, 0); s.y += num(y, 0); s.z += num(z, 0); }
     };
     A.turnTo = (id, x, y, z) => { const o = obj(id); if (!o) return; o.mesh.rotationQuaternion = B.Quaternion.FromEulerAngles(num(x, 0) * DEG, num(y, 0) * DEG, num(z, 0) * DEG); syncBody(o); };
     A.face = (id, other) => {
@@ -480,6 +485,7 @@ export function createWorld(B, opts) {
     A.setColor = (id, c) => {
       const o = obj(id); if (!o) return;
       o.color = c;
+      if (!r.layout) { const l = rec.colours[o.id] || (rec.colours[o.id] = []); if (l.length < 50 && l[l.length - 1] !== String(c)) l.push(String(c)); }
       if (o.kind === 'character') return setPart(o, 'tshirt', c);
       if (o.holder) return materials(o).forEach(m => paint(m, c));
       const [x, y, z] = hexToRgb(c); o.mesh.material.diffuseColor = new B.Color3(x, y, z);
@@ -510,15 +516,20 @@ export function createWorld(B, opts) {
     };
 
     // looks: speech bubbles and a line of text on the screen
-    A.say = (id, text) => { const o = obj(id); if (o) bubble(o, text); };
+    const said = (o, text) => { if (!r.layout && text != null && String(text) !== '' && rec.said.length < 500) rec.said.push({ id: o.id, text: String(text).slice(0, 120) }); };
+    A.say = (id, text) => { const o = obj(id); if (o) { bubble(o, text); said(o, text); } };
     A.sayFor = async (id, text, secs) => {
       const o = obj(id); if (!o) return;
       const mine = bubble(o, text);
+      said(o, text);
       if (r.layout) return;
       await after(clampN(secs, 0, 600, 2)); alive(r);
       if (o.bubbleId === mine) clearBubble(o);
     };
-    A.showText = text => onBanner(text == null ? '' : String(text).slice(0, 120));
+    A.showText = text => {
+      const t = text == null ? '' : String(text).slice(0, 120);
+      onBanner(t); if (!r.layout && t && rec.shown.length < 500) rec.shown.push(t);
+    };
 
     // sound (silent in the edit view, so rebuilding the layout never beeps)
     A.playSound = name => { if (sound && !r.layout) sound.play(String(name)); };
@@ -550,6 +561,7 @@ export function createWorld(B, opts) {
 
     // events (hats) — handlers are kept for this run only
     A.__start = fn => r.hats.start.push(fn);
+    A.__vars = fn => { r.vars = fn; }; // the program's variables, read by vars() (lesson goals)
     A.__forever = async fn => { if (r.layout) return; while (true) { alive(r); await fn(); alive(r); await nextFrame(); } };
     A.__onClick = (getId, fn) => r.hats.click.push({ getId, fn, busy: false });
     A.__onKey = (key, fn) => r.hats.key.push({ key: String(key), fn, busy: false });
@@ -601,6 +613,7 @@ export function createWorld(B, opts) {
     const layout = !!(ro && ro.layout);
     stop();
     reset();
+    rec = newRec();
     const r = run = { token: ++token, stopped: false, errors: 0, layout, budget: LAYOUT_BUDGET, hats: { start: [], click: [], key: [], touch: [], msg: [] }, frameWaiters: [], timeWaiters: [] };
     if (physicsOn) scene.physicsEnabled = !layout;
     const api = makeApi(r);
@@ -656,6 +669,14 @@ export function createWorld(B, opts) {
         if (now && !h.was && !h.busy) { h.busy = true; guarded(r, h.fn).then(() => { h.busy = false; }); }
         h.was = now;
       }
+    }
+    // how high / low / far each thing has been while playing (lesson goals read these)
+    if (r && !r.stopped && !r.layout) for (const o of objs.values()) {
+      if (!o.mesh || o.gone || !o.mesh.isEnabled()) continue;
+      const p = o.mesh.position;
+      if (!o.lo) { o.lo = { x: p.x, y: p.y, z: p.z }; o.hi = { x: p.x, y: p.y, z: p.z }; continue; }
+      if (p.x < o.lo.x) o.lo.x = p.x; if (p.y < o.lo.y) o.lo.y = p.y; if (p.z < o.lo.z) o.lo.z = p.z;
+      if (p.x > o.hi.x) o.hi.x = p.x; if (p.y > o.hi.y) o.hi.y = p.y; if (p.z > o.hi.z) o.hi.z = p.z;
     }
     // player control
     if (control && !control.gone) {
@@ -766,6 +787,7 @@ export function createWorld(B, opts) {
     placeBubbles();
     scene.render();
     afterFrame();
+    if (opts.onFrame) { try { opts.onFrame(); } catch (e) { /* the app's own business */ } }
   }
 
   // ── input from the app ──
@@ -781,6 +803,7 @@ export function createWorld(B, opts) {
   function pad(name, down) { if (down) { padKeys.add(name); key(name, true); keysDown.delete(name); } else padKeys.delete(name); }
   function click(id) {
     const r = run; if (!r || r.layout || id == null) return;
+    if (rec.clicks.length < 500) rec.clicks.push(String(id));
     for (const h of r.hats.click) {
       let target; try { target = h.getId(); } catch (e) { target = null; }
       if (target === id && !h.busy) { h.busy = true; guarded(r, h.fn).then(() => { h.busy = false; }); }
@@ -871,7 +894,14 @@ export function createWorld(B, opts) {
     running: () => !!(run && !run.layout),
     bubbleOf: id => { const o = get(id); return o ? o.bubbleText || '' : ''; },
     camera_: () => ({ follow: follow ? follow.id : null, view: followView, radius: camera.radius }),
-    objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled(), blockId: o.blockId })),
+    objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled(), blockId: o.blockId,
+      model: o.model || null, color: o.color || null, anim: o.curName || null, spun: o.spun ? Object.assign({}, o.spun) : { x: 0, y: 0, z: 0 },
+      lo: o.lo ? Object.assign({}, o.lo) : null, hi: o.hi ? Object.assign({}, o.hi) : null, size: o.size ? { w: round(o.size.w * o.mesh.scaling.x), h: round(o.size.h * o.mesh.scaling.y), d: round(o.size.d * o.mesh.scaling.z) } : null })),
+    // what happened while playing, and the program's variables (lesson goals)
+    record: () => rec,
+    playTime: () => (run && !run.layout ? time : 0),
+    vars: () => { const r = run; if (!r || !r.vars) return {}; try { return r.vars() || {}; } catch (e) { return {}; } },
+    touchingIds: (a, b) => { const p = get(a), q = get(b); return !!(p && q && p !== q && p.mesh.isEnabled() && q.mesh.isEnabled() && touching(p, q)); },
     _gizmo: () => gm, // for tests
     dispose: () => { stop(); pauseLoop(); scene.dispose(); engine.dispose(); }
   };

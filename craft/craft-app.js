@@ -236,7 +236,7 @@ export function mount(root, host) {
     if (code !== codeRule) { codeRule = code; if (ws) { try { ws.updateToolbox(L.toolbox(code === 'none' ? 'all' : code)); } catch (e) { /* older Blockly */ } } }
     if (view) setTimeout(() => view.resize(), 0);
   }
-  const mk = createMakerUI({ $, root, world, player, runner, view: () => view, changed, log, status, toast, programState,
+  const mk = createMakerUI({ $, root, world, player, runner, view: () => view, changed, log, status, toast, programState, done: () => { if (host.onLessonDone) host.onLessonDone(); },
     confirm: msg => (host.confirm ? host.confirm(msg) : Promise.resolve(window.confirm(msg))),
     prompt: (msg, d) => (host.prompt ? host.prompt(msg, d) : Promise.resolve(window.prompt(msg, d))),
     modal, closeModal, applyRules, focus: () => cv.focus({ preventScroll: true }),

@@ -9,7 +9,7 @@
 // The Turtle Lab has no events or messages (a program runs from top to bottom when Run is pressed), so the unit teaches
 // sequence, repetition, selection, condition-checked loops, variables, procedures with inputs and data instead.
 const N = 'Driftwood Bay Artists';
-const u = (b, m) => `${N} · Block ${b} · Lesson ${m}`;
+const u = (b, m) => `${N} · Block ${b} · Lesson ${(b - 1) * 6 + m}`; // m = the lesson in its block; the unit counts on through every block
 const T = { ks: 'ks2', minutes: 60, type: 'turtle', tool: 'Turtle Lab (typed Logo)' };
 const B1 = { ...T, years: 'Years 3–4' }, B2 = { ...T, years: 'Years 4–5' }, B3 = { ...T, years: 'Years 5–6' };
 const DEV = ['A device per pupil or pair, with CodeJump open', 'The board, to show the class'];

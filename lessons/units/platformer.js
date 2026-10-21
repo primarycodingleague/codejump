@@ -136,7 +136,7 @@ export const LESSONS = [
     ]
   },
   {
-    id: 'sky-5-keys', unit: u(1, 5), title: 'Pip’s new controls', ...KS1, tool: 'Platformer Lab (Code picture blocks)',
+    id: 'sky-5-keys', unit: u(1, 5), title: 'Pip’s new controls', ...KS1, tool: 'Platformer Lab (Code blocks)',
     summary: 'Events. Captain Wren’s game pad uses the W, A and D keys, like lots of computer games. In Code, the A key already moves Pip left, but nothing happens when you press D or W. Pupils learn that “when … is pressed” is an event that starts an action, add events for D (move right) and W (jump), discover that the Right Arrow stops working, then use the “when game starts” event to play music and set a win message.',
     objective: 'We are learning that an event, like pressing a key, makes something happen in a program.',
     success: ['I can say what happens when a key is pressed.', 'I can join an event block to an action block.', 'I can use “when game starts” to make something happen at the start.'],

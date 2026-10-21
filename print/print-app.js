@@ -832,7 +832,7 @@ export function mount(root, host) {
     const b = proj.brief ? clone(proj.brief) : { title: '', text: '', rules: [{ k: 'ready' }] };
     const KINDS_OPT = PM.KINDS.map(k => `<option value="${k[0]}">${esc(k[1])}</option>`).join('');
     const ruleRow = (r, i) => `<div class="pl-rrow" data-i="${i}"><select data-rk>${Object.keys(PM.RULES).map(k => `<option value="${k}"${r.k === k ? ' selected' : ''}>${esc(PM.ruleText({ k, v: k === 'uses' ? 'box' : 'N' }).replace(' N ', ' … '))}</option>`).join('')}</select>
-      ${['hole', 'text', 'ready'].includes(r.k) ? '<span></span>' : r.k === 'uses' ? `<select data-rv>${KINDS_OPT.replace(`value="${r.v}"`, `value="${r.v}" selected`)}</select>` : `<input type="number" data-rv min="1" max="1000" value="${r.v || 50}">`}
+      ${PM.RULE_NOV.includes(r.k) ? '<span></span>' : r.k === 'uses' ? `<select data-rv>${KINDS_OPT.replace(`value="${r.v}"`, `value="${r.v}" selected`)}</select>` : `<input type="number" data-rv min="1" max="1000" value="${r.v || 50}">`}
       <button type="button" data-rdel title="Take this rule away" aria-label="Take this rule away">${ic('i-x')}</button></div>`;
     const draw = () => {
       modal(`<h2 id="plMTitle">${proj.brief ? 'Change the challenge' : 'Make a challenge'}</h2>

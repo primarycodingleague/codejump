@@ -644,15 +644,21 @@ export const RULES = {
   hole: () => 'Has a hole cut out of it (a hole grouped with a shape)', text: () => 'Has some writing on it',
   colours: v => 'Uses at least ' + v + ' colours', shapes: v => 'Made from at least ' + v + ' shapes',
   uses: v => 'Uses ' + ((KIND[v] || [0, v])[1] === 'My drawing' ? 'a shape you drew' : 'a ' + (KIND[v] || [0, v])[1].toLowerCase()),
-  ready: () => 'Ready to print (Check & print finds nothing to fix)'
+  ready: () => 'Ready to print (Check & print finds nothing to fix)',
+  // added for the Maple Street Makers lessons (lessons/units/print.js)
+  holes: v => 'Has at least ' + v + ' holes cut into it', repeat: v => 'Uses the same shape at least ' + v + ' times',
+  maxg: v => 'Uses no more than ' + v + ' g of plastic', wall: v => 'Every wall round a hole is at least ' + v + ' mm thick',
+  parts: v => 'Uses the same group at least ' + v + ' times (any size)', mesh: () => 'Every gear has the same size teeth, so they mesh'
 };
+// rules that have no number
+export const RULE_NOV = ['hole', 'text', 'ready', 'mesh'];
 export function ruleText(r) { const f = RULES[r.k]; return f ? f(r.v) : ''; }
 export function cleanBrief(b) {
   if (!b || typeof b !== 'object') return null;
   const rules = (Array.isArray(b.rules) ? b.rules : []).slice(0, 12).map(r => {
     if (!r || !RULES[r.k]) return null;
     if (r.k === 'uses') return KIND[r.v] ? { k: 'uses', v: r.v } : null;
-    if (['hole', 'text', 'ready'].includes(r.k)) return { k: r.k };
+    if (RULE_NOV.includes(r.k)) return { k: r.k };
     const v = Math.round(num(r.v, 1, 1000, NaN)); return Number.isFinite(v) ? { k: r.k, v } : null;
   }).filter(Boolean);
   const title = typeof b.title === 'string' ? b.title.slice(0, 60) : '', text = typeof b.text === 'string' ? b.text.slice(0, 400) : '';
@@ -677,7 +683,33 @@ export function briefCheck(model, project, brief) {
   const prims = all.filter(x => x.o.kind !== 'group');
   const cutting = all.some(x => x.o.kind === 'group' && x.o.children.some(c => c.hole));
   const cols = new Set(prims.filter(x => !x.o.hole).map(x => x.o.color));
-  let ready = null;
+  let ready = null, grams = null;
+  // holes that cut: hole parts inside a group that has solid parts
+  const cutters = all.filter(x => x.o.kind === 'group' && x.o.children.some(c => !c.hole)).flatMap(x => x.o.children.filter(c => c.hole && c.kind !== 'group'));
+  // the same shape: kind, solid/hole, size (and text) all the same
+  const sig = o => [o.kind, o.hole ? 1 : 0, r1(o.w), r1(o.d), r1(o.h), o.text || '', o.wall || '', o.teeth || ''].join('|');
+  const most = keys => { const n = new Map(); let m = 0; for (const k of keys) { const c = (n.get(k) || 0) + 1; n.set(k, c); m = Math.max(m, c); } return m; };
+  const strip = os => os.map(o => { const c = Object.assign({}, o); delete c.id; if (c.children) c.children = strip(c.children); return c; });
+  // the thinnest wall between a hole and the outside of the solid parts of its group (a hole that cuts right through a side doesn't count there)
+  function thinnest() {
+    let t = Infinity;
+    for (const x of all) {
+      const g = x.o; if (g.kind !== 'group') continue;
+      const sol = g.children.filter(c => !c.hole).map(c => model.bounds(c)).filter(Boolean);
+      if (!sol.length) continue;
+      const s = { min: [0, 1, 2].map(i => Math.min(...sol.map(q => q.min[i]))), max: [0, 1, 2].map(i => Math.max(...sol.map(q => q.max[i]))) };
+      const k = [g.w / (g.bw || g.w), g.d / (g.bd || g.d), g.h / (g.bh || g.h)];
+      for (const hc of g.children.filter(c => c.hole)) {
+        const q = model.bounds(hc); if (!q) continue;
+        for (let i = 0; i < 3; i++) {
+          const lo = q.min[i] - s.min[i], hi = s.max[i] - q.max[i];
+          if (lo > -0.01 && hi > -0.01 && i < 2) t = Math.min(t, lo * k[i], hi * k[i]); // a hole inside the shape on this axis
+          else if (i === 2 && lo > 0.01) t = Math.min(t, lo * k[i]); // a hole that doesn't go through the bottom: the floor
+        }
+      }
+    }
+    return t;
+  }
   return brief.rules.map(r => {
     let ok = false; const e = 0.05;
     if (r.k === 'maxw') ok = !!b && size[0] <= r.v + e; else if (r.k === 'maxd') ok = !!b && size[1] <= r.v + e; else if (r.k === 'maxh') ok = !!b && size[2] <= r.v + e;
@@ -686,6 +718,12 @@ export function briefCheck(model, project, brief) {
     else if (r.k === 'colours') ok = cols.size >= r.v; else if (r.k === 'shapes') ok = prims.filter(x => !x.o.hole).length >= r.v;
     else if (r.k === 'uses') ok = prims.some(x => x.o.kind === r.v && !x.o.hole);
     else if (r.k === 'ready') { if (ready == null) ready = !model.check(project).some(c => c.level === 'stop' || c.level === 'warn'); ok = ready; }
+    else if (r.k === 'holes') ok = cutters.length >= r.v;
+    else if (r.k === 'repeat') ok = most(prims.map(x => sig(x.o))) >= r.v;
+    else if (r.k === 'maxg') { if (grams == null) { const e = solids.length ? model.estimate(project) : null; grams = e ? e.grams : Infinity; } ok = grams <= r.v + 1e-9; }
+    else if (r.k === 'wall') { const t = thinnest(); ok = Number.isFinite(t) && t >= r.v - e; }
+    else if (r.k === 'parts') ok = most(all.filter(x => x.o.kind === 'group').map(x => JSON.stringify(strip(x.o.children)))) >= r.v;
+    else if (r.k === 'mesh') { const gs = prims.filter(x => x.o.kind === 'gear' && !x.o.hole).map(x => x.o.w / x.o.teeth); ok = gs.length >= 2 && gs.every(m => Math.abs(m - gs[0]) <= gs[0] * 0.02); }
     return { text: ruleText(r), ok, k: r.k };
   });
 }

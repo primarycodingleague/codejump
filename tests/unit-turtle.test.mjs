@@ -204,6 +204,23 @@ const sum = r => JSON.stringify({ status: r.status, x: r.x, y: r.y, h: r.h, segs
   const [s, a] = await both('bay-18-postcard');
   ok(crit(ANSWERS['bay-18-postcard'], a) && !crit(STARTERS['bay-18-postcard'], s), 'Project — a postcard from Driftwood Bay: an example meets every success criterion; the bare starter (just the edge) doesn’t');
 }
+// ── every starter opens in the real app with its Lesson card, and Next lesson follows the unit ──
+if (!ONLY_CODE) {
+  for (const l of UNIT) {
+    if (!l) continue;
+    await page.evaluate(id => { clearDirty(); lessonOpenStarter(id); }, l.id); // not returned: a big starter’s promise can be collected
+    await page.waitForFunction(id => lessonActive && lessonActive.id === id && projectType === 'turtle', l.id, { timeout: 30000 });
+    await page.waitForFunction(() => !document.getElementById('lesson-guide').classList.contains('hide'), null, { timeout: 10000 }).catch(() => {});
+    const st = await page.evaluate(() => ({ card: !document.getElementById('lesson-guide').classList.contains('hide'), title: document.querySelector('#lesson-guide')?.textContent || '',
+      code: document.getElementById('turtle-code').value }));
+    const want = /^bay-/.test(l.id) ? STARTERS[l.id] : null;
+    ok(st.card && st.title.includes(l.title) && (!want || st.code === want), `${l.id}: the starter opens in the Turtle Lab with its Lesson card${want ? ' and the unit’s program' : ''}`);
+    const r = await run(st.code);
+    ok(done1(r), `${l.id}: the starter runs without an error (${r.status})`);
+  }
+  const chain = await page.evaluate(ids => ids.map(id => { const n = lessonNeighbours(lessonsMod.lesson(id)).next; return n.length ? n[0].id : ''; }), UNIT.map(l => l.id));
+  ok(chain.slice(0, -1).join() === UNIT.slice(1).map(l => l.id).join() && chain[17] === '', 'Next lesson goes through the unit in order: ' + chain.slice(0, 4).join(' → ') + ' …');
+}
 await ctx.close(); await b.close(); site.close();
 ok(!errors.length, 'no page errors: ' + errors.join(' | '));
 done();

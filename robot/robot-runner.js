@@ -25,6 +25,7 @@ export function createRunner(view, io = {}) {
   let fibers = [], ws = null, vars = Object.create(null), t = 0, timerBase = 0, answer = '', voice = 'robot', live = false;
   let talk = null; // {text, i, next, done, handle}
   const hats = { tap: [], key: [], msg: [] };
+  let procs = Object.create(null); // My blocks: name (lower case) → its "to …" block
 
   const field = (b, n) => b.getFieldValue(n);
   const input = (b, n) => b.getInputTargetBlock(n);
@@ -92,7 +93,7 @@ export function createRunner(view, io = {}) {
   function* waitSecs(s) { const end = t + Math.max(0, s); while (t < end) yield; }
   function* moveAndWait(m, v) { view.setTarget(m, v); while (!view.arrived(m)) yield; }
 
-  function* run(b) { // one statement
+  function* run(b, d) { // one statement
     switch (b.type) {
       // moves
       case 'rb_move': { const m = field(b, 'M'); if (MOTOR_IDS.has(m)) yield* moveAndWait(m, numOf(val(input(b, 'N')))); break; }
@@ -128,23 +129,35 @@ export function createRunner(view, io = {}) {
       // control
       case 'rb_wait': yield* waitSecs(numOf(val(input(b, 'S')))); break;
       case 'rb_wait_until': while (!val(input(b, 'COND'))) yield; break;
-      case 'rb_forever': for (;;) { yield* seq(input(b, 'DO')); yield; }
-      case 'controls_repeat_ext': { const n = Math.floor(numOf(val(input(b, 'TIMES')))); for (let i = 0; i < n; i++) { yield* seq(input(b, 'DO')); yield; } break; }
-      case 'controls_whileUntil': { const until = field(b, 'MODE') === 'UNTIL'; while (until ? !val(input(b, 'BOOL')) : !!val(input(b, 'BOOL'))) { yield* seq(input(b, 'DO')); yield; } break; }
+      case 'rb_forever': for (;;) { yield* seq(input(b, 'DO'), d); yield; }
+      case 'controls_repeat_ext': { const n = Math.floor(numOf(val(input(b, 'TIMES')))); for (let i = 0; i < n; i++) { yield* seq(input(b, 'DO'), d); yield; } break; }
+      case 'controls_whileUntil': { const until = field(b, 'MODE') === 'UNTIL'; while (until ? !val(input(b, 'BOOL')) : !!val(input(b, 'BOOL'))) { yield* seq(input(b, 'DO'), d); yield; } break; }
       case 'controls_if': {
-        for (let i = 0; b.getInput('IF' + i); i++) if (val(input(b, 'IF' + i))) { yield* seq(input(b, 'DO' + i)); return; }
-        if (b.getInput('ELSE')) yield* seq(input(b, 'ELSE'));
+        for (let i = 0; b.getInput('IF' + i); i++) if (val(input(b, 'IF' + i))) { yield* seq(input(b, 'DO' + i), d); return; }
+        if (b.getInput('ELSE')) yield* seq(input(b, 'ELSE'), d);
         break;
       }
       case 'rb_stop': throw STOP;
       case 'rb_send': broadcast(field(b, 'MSG')); break;
+      // My blocks (Blockly's own "to do something" blocks): the inputs are variables while the block runs
+      case 'procedures_callnoreturn': {
+        const def = procs[String(field(b, 'NAME') || '').trim().toLowerCase()];
+        if (!def) break;
+        if (d >= 40) throw new Error('One of your own blocks keeps using itself, so the program stopped.');
+        const ids = def.getVarModels ? def.getVarModels().map(v => v.getId()) : [];
+        const vals = ids.map((id, i) => val(input(b, 'ARG' + i)));
+        const saved = ids.map(id => vars[id]);
+        ids.forEach((id, i) => { vars[id] = vals[i]; });
+        try { yield* seq(input(def, 'STACK'), d + 1); } finally { ids.forEach((id, i) => { if (saved[i] === undefined) delete vars[id]; else vars[id] = saved[i]; }); }
+        break;
+      }
       // variables
       case 'variables_set': vars[field(b, 'VAR')] = val(input(b, 'VALUE')); break;
       case 'math_change': vars[field(b, 'VAR')] = numOf(vars[field(b, 'VAR')]) + numOf(val(input(b, 'DELTA'))); break;
       default: break;
     }
   }
-  function* seq(b) { while (b) { if (!b.isEnabled || b.isEnabled()) yield* run(b); b = b.getNextBlock(); } }
+  function* seq(b, d = 0) { while (b) { if (!b.isEnabled || b.isEnabled()) yield* run(b, d); b = b.getNextBlock(); } }
 
   function spawn(hat) {
     // starting a script that is already running starts it again from the top (like Scratch)
@@ -158,8 +171,9 @@ export function createRunner(view, io = {}) {
       api.stop(true);
       ws = workspace; live = true; t = 0; timerBase = 0; answer = ''; voice = 'robot'; vars = Object.create(null);
       for (const v of ws.getAllVariables()) vars[v.getId()] = 0;
-      hats.tap = []; hats.key = []; hats.msg = [];
+      hats.tap = []; hats.key = []; hats.msg = []; procs = Object.create(null);
       for (const top of ws.getTopBlocks(true)) {
+        if (top.type === 'procedures_defnoreturn' && (!top.isEnabled || top.isEnabled())) { procs[String(top.getFieldValue('NAME') || '').trim().toLowerCase()] = top; continue; }
         if (!HATS.includes(top.type) || (top.isEnabled && !top.isEnabled())) continue;
         if (top.type === 'rb_when_run') spawn(top);
         else if (top.type === 'rb_when_tapped') hats.tap.push(top);

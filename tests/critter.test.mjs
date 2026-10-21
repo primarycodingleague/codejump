@@ -18,4 +18,11 @@ const sprint = Z.runHeadless(R, scuttler(), 'sprint');
 ok(sprint && sprint.score > 0.3, 'the Scuttler makes progress in the Sprint (' + (sprint && sprint.text) + ')');
 const again = Z.runHeadless(R, scuttler(), 'sprint');
 ok(again && again.score === sprint.score, 'contests are deterministic (same score twice)');
+// lesson goals + the Results log (critter-goals.js) travel with the Critter
+const G = await import(join(ROOT, 'critter', 'critter-goals.js'));
+const withGoals = Z.normalise(Object.assign(scuttler(), { goals: { title: 'Go', list: [{ type: 'score', contest: 'sprint', min: 5, text: 'Sprint 5 m' }] } }));
+ok(withGoals.goals && !G.allDone(withGoals.goals, withGoals), 'a Critter keeps its lesson goals, not yet done');
+G.addLog(withGoals, G.logRow(withGoals, 'sprint', sprint, 'self'));
+const back = Z.normalise(JSON.parse(JSON.stringify(withGoals)));
+ok(back.log.length === 1 && G.allDone(back.goals, back), 'a logged Sprint result ticks the goal and survives a save (' + back.log[0].s + ' m)');
 done();

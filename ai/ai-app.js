@@ -15,6 +15,7 @@
 import * as M from './ai-model.js';
 import * as AB from './ai-blocks.js';
 import { createRunner } from './ai-runner.js';
+import * as AG from './ai-goals.js';
 import { createSound } from '../world/world-sound.js';
 
 const CSS_URL = new URL('./ai-app.css', import.meta.url).href;
@@ -30,6 +31,7 @@ const TEMPLATE = `
     <button type="button" role="tab" class="al-tab" data-tab="code" id="alTabCode"><span class="al-n">3</span> Code it</button>
     <span class="al-status" id="alStatus" role="status" aria-live="polite"></span>
   </div>
+  <div class="al-goals" id="alGoals" hidden></div>
 
   <div class="al-view" data-view="teach">
     <div class="al-col al-labels-col">
@@ -213,6 +215,8 @@ export function mount(root, host) {
   const touchy = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   let kind = 'draw', labels = [], target = 0, tab = 'teach', ws = null, runner = null, brain = null, training = null, alive = true, quiet = false;
   let raf = 0, last = 0, changeTimer = 0, lastGuess = null, idleTimer = 0, savedBlocks = null, wantTrained = false;
+  // lesson goals (ai-goals.js): the checklist, what the last run did, and how many drawings were tested
+  let goals = null, checker = null, rec = AG.newRecord(), tested = 0, testMark = false, goalsDone = false, goalsOpen = true, goalsTimer = 0, blocksJSON = null, frames = 0;
   const sound = createSound();
   const ask = (msg) => (host.confirm ? host.confirm(msg) : Promise.resolve(window.confirm(msg)));
 
@@ -277,7 +281,7 @@ export function mount(root, host) {
     if (ws) { // blocks that used the old name follow the new one
       quiet = true; try { for (const b of ws.getAllBlocks(false)) { const f = b.getField('LABEL'); if (f && f.getValue() === old) { f.getOptions(false); f.setValue(n); } } } finally { quiet = false; }
     }
-    syncNames(); renderLabels(); changed();
+    syncNames(); renderLabels(); changed(); goalsSoon();
   }
   function addLabel() {
     if (labels.length >= M.MAX_LABELS) return;
@@ -297,7 +301,7 @@ export function mount(root, host) {
     if (T()) $('alTeachText').focus();
     status(l.ex.length < M.MIN_EXAMPLES ? 'Added! ' + (T() ? 'Type ' : 'Draw ') + (M.MIN_EXAMPLES - l.ex.length) + ' more of “' + l.name + '” at least.' : 'Added! ' + l.ex.length + ' ' + noun(2) + ' of “' + l.name + '”.', 'ok');
   }
-  function afterExamples() { syncNames(); changed(); showTrainState(); }
+  function afterExamples() { syncNames(); changed(); showTrainState(); goalsSoon(); }
   function showKind() {
     root.querySelector('.ailab').classList.toggle('k-text', T());
     root.querySelectorAll('.al-kind button').forEach(b => { const on = b.dataset.kind === kind; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
@@ -397,7 +401,7 @@ export function mount(root, host) {
     const why = M.canTrain(labels, kind); if (why) { if (!silent) status(why, 'bad'); return; }
     if (training) training.cancel = true;
     const me = { g: M.trainer(labels.map(l => ({ name: l.name, color: l.color, ex: l.ex })), { kind }), cancel: false, pts: [] };
-    training = me;
+    training = me; tested = 0; testMark = false;
     $('alTrain').disabled = true;
     if (!silent) { $('alProgress').hidden = false; $('alResult').innerHTML = '<p>' + (T() ? 'Practising… it reads every example many times, sometimes with a word left out.' : 'Practising… it looks at every drawing many times, a little bit turned and stretched each time.') + '</p>'; $('alInside').innerHTML = ''; status('Training…'); }
     else status('Waking up your AI…');
@@ -413,7 +417,7 @@ export function mount(root, host) {
       brain = r.value; training = null; wantTrained = true;
       $('alProgress').hidden = true;
       status(silent ? 'Your AI is ready.' : 'Trained! Now test it.', 'ok');
-      showTrainState(); testGuess(); changed();
+      showTrainState(); testGuess(); changed(); goalsSoon();
     };
     setTimeout(step, silent ? 30 : 60);
   }
@@ -430,6 +434,7 @@ export function mount(root, host) {
     if (testPad.empty()) return;
     if (!brain) { box.innerHTML = '<p class="al-warn">Train your AI first.</p>'; return; }
     const d = testPad.get(), g = M.guess(brain, d); if (!g) return;
+    if (!stale() && !testMark) { testMark = true; tested++; goalsSoon(); } // one more drawing (or message) tried, until the pad is cleared
     const L = labels[g.index], sure = g.conf >= 60;
     box.insertAdjacentHTML('beforeend', '<p class="al-big">' + (sure ? 'I think it’s a <b style="color:' + L.color + '">' + esc(g.label) + '</b>' : 'I’m not sure… maybe a <b style="color:' + L.color + '">' + esc(g.label) + '</b>?') + ' <small>(' + g.conf + '% sure)</small></p>');
     box.appendChild(bars(g));
@@ -456,14 +461,15 @@ export function mount(root, host) {
     if (playPad.empty()) { status(T() ? 'Type something first.' : 'Draw something first.', 'bad'); return; }
     lastGuess = brain ? M.guess(brain, playPad.get()) : null;
     $('alSeen').textContent = lastGuess ? 'AI’s guess: ' + lastGuess.label + ' (' + lastGuess.conf + '% sure)' : 'Your AI hasn’t been trained yet (step 2), so it can’t guess.';
-    if (runner && runner.running()) runner.guessed();
+    if (runner && runner.running()) { rec.guesses++; runner.guessed(); goalsSoon(); }
   }
   function run() {
     unlockSpeech(); if (sound.unlock) sound.unlock();
     if (!ws) return;
     if (training) { status('Wait a moment: your AI is still training.', 'bad'); return; }
     playPad.clear(); playPad.colour('#ffffff'); bubble(''); showScore(null); lastGuess = null; $('alSeen').textContent = '';
-    runner.start(ws);
+    rec = AG.newRecord(); if (checker) checker.reset();
+    runner.start(ws); goalsSoon();
     status(brain && !stale() ? (T() ? 'Running · type in the box and press Enter' : 'Running · draw on the pad') : brain ? 'Running · (you changed your examples: train again in step 2 to use them)' : 'Running · but your AI hasn’t been trained yet (step 2)', brain ? 'ok' : 'bad');
   }
   function stop() { if (runner) runner.stop(); }
@@ -472,6 +478,43 @@ export function mount(root, host) {
     const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
     if (runner) runner.tick(dt);
     $('alRun').classList.toggle('on', !!(runner && runner.running()));
+    if (checker && runner && runner.running() && ++frames % 10 === 0) updateGoals();
+  }
+
+  // ── lesson goals: a checklist under the steps that ticks itself (ai-goals.js)
+  function progVars() { // the program's variables by name (the runner keeps them by id)
+    const out = {}; if (!ws || !runner) return out; const v = runner._vars();
+    for (const id in v) { const x = ws.getVariableById(id); if (x) out[x.name] = v[id]; }
+    return out;
+  }
+  function goalState() {
+    const fresh = !!brain && !stale();
+    if (!blocksJSON) blocksJSON = ws ? Blockly.serialization.workspaces.save(ws) : savedBlocks;
+    return {
+      kind, labels, trained: fresh, check: fresh ? brain.check : null, tested, blocks: blocksJSON,
+      readAs: t => { const g = fresh && T() ? M.guess(brain, t) : null; return g ? g.label : null; }, rec, vars: progVars()
+    };
+  }
+  function goalsSoon() { if (!checker || goalsTimer) return; goalsTimer = setTimeout(() => { goalsTimer = 0; updateGoals(); }, 120); }
+  function updateGoals() {
+    const box = $('alGoals');
+    if (!checker) { box.hidden = true; box.innerHTML = ''; return; }
+    const ticks = checker.update(goalState()), n = ticks.filter(Boolean).length, all = checker.allDone();
+    const sig = ticks.join() + '|' + goalsOpen;
+    if (box.dataset.sig !== sig) {
+      box.dataset.sig = sig; box.hidden = false; box.classList.toggle('all', all); box.classList.toggle('shut', !goalsOpen);
+      box.innerHTML = '<button type="button" class="al-ghead" aria-expanded="' + goalsOpen + '">' + ic(all ? 'i-check' : 'i-target') + ' <b>' + esc(goals.title) + '</b> <span class="al-gn">' + n + ' / ' + ticks.length + '</span>' +
+        '<span class="al-gfold">' + (goalsOpen ? 'Hide' : 'Show') + '</span></button>' +
+        '<ul class="al-glist">' + goals.list.map((x, i) => '<li class="' + (ticks[i] ? 'ok' : '') + '"><span class="al-gtick" aria-hidden="true">' + (ticks[i] ? ic('i-check') : '') + '</span>' + esc(x.text) +
+        '<span class="sr-only">' + (ticks[i] ? ' (done)' : ' (not done yet)') + '</span></li>').join('') + '</ul>';
+      box.querySelector('.al-ghead').onclick = () => { goalsOpen = !goalsOpen; updateGoals(); };
+    }
+    if (all && !goalsDone) {
+      goalsDone = true;
+      if (host.toast) host.toast('Every goal done: well done!', '#3fae5e');
+      try { sound.play('win'); } catch (e) { /* no sound */ }
+      if (host.onGoalsDone) host.onGoalsDone();
+    }
   }
 
   // ── tabs
@@ -507,7 +550,8 @@ export function mount(root, host) {
     status('Loaded ' + labels.length + ' labels with ' + labels[0].ex.length + ' ' + noun(2) + ' each. Add some of your own, then train it!', 'ok');
   };
   $('alTrain').onclick = () => startTraining(false);
-  $('alTestClear').onclick = () => { testPad.clear(); testGuess(); };
+  $('alTestClear').onclick = () => { testPad.clear(); testMark = false; testGuess(); };
+  $('alTestText').addEventListener('input', () => { if (!M.words($('alTestText').value).length) testMark = false; });
   $('alRun').onclick = run; $('alStop').onclick = stop;
   $('alPlayClear').onclick = () => { clearTimeout(idleTimer); playPad.clear(); };
   $('alDone').onclick = () => { unlockSpeech(); playGuess(); };
@@ -526,7 +570,9 @@ export function mount(root, host) {
       return { name: n, color: M.COLOURS[(labels.length + i) % M.COLOURS.length], ex: [] };
     }));
     brain = null; target = 0; lastGuess = null; wantTrained = !!p.trained;
-    savedBlocks = p.blocks && typeof p.blocks === 'object' ? p.blocks : null;
+    savedBlocks = p.blocks && typeof p.blocks === 'object' ? p.blocks : null; blocksJSON = null;
+    goals = AG.cleanGoals(p.goals); checker = goals ? AG.createGoals(goals) : null;
+    rec = AG.newRecord(); tested = 0; testMark = false; goalsDone = false; goalsOpen = true;
     syncNames();
     if (ws) loadBlocks();
     teachPad.clear(); testPad.clear(); playPad.clear(); playPad.colour('#ffffff'); bubble(''); showScore(null);
@@ -536,6 +582,7 @@ export function mount(root, host) {
     // it was trained when it was saved: train it again (same examples → the same brain)
     if (p.trained && !M.canTrain(labels, kind)) startTraining(true);
     show(labels.some(l => l.ex.length) ? (p.trained ? 'code' : 'teach') : 'teach');
+    updateGoals();
   }
   const LOAD = 'alload'; let groupN = 0;
   function loadBlocks() {
@@ -548,13 +595,15 @@ export function mount(root, host) {
       }
     } finally { quiet = false; Blockly.Events.setGroup(false); }
     try { ws.scroll(20, 20); } catch (e) { /* hidden */ }
+    blocksJSON = null; goalsSoon();
   }
   function getProject() {
     return {
       kind,
       labels: labels.map(l => ({ name: l.name, color: l.color, ex: l.ex })),
       blocks: ws ? Blockly.serialization.workspaces.save(ws) : savedBlocks,
-      trained: (!!brain && !stale()) || (!brain && wantTrained && !M.canTrain(labels, kind))
+      trained: (!!brain && !stale()) || (!brain && wantTrained && !M.canTrain(labels, kind)),
+      ...(goals ? { goals } : {})
     };
   }
 
@@ -570,12 +619,15 @@ export function mount(root, host) {
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
     loadBlocks();
     ws.addChangeListener(e => {
-      if (quiet || e.isUiEvent || String(e.group || '').startsWith(LOAD)) return;
+      if (e.isUiEvent) return;
+      blocksJSON = null; if (checker) goalsSoon();
+      if (quiet || String(e.group || '').startsWith(LOAD)) return;
       changed();
       if (runner && runner.running()) status('You changed your blocks: press Run to try them.');
     });
     runner = createRunner({
-      say: bubble, speak, sound: n => sound.play(n), colour: c => playPad.colour(c), score: showScore,
+      say: t => { bubble(t); if (t) rec.said.push(String(t)); }, speak, sound: n => sound.play(n), colour: c => playPad.colour(c),
+      score: n => { showScore(n); if (n != null) rec.score = rec.score == null ? n : Math.max(rec.score, n); }, sent: m => rec.msgs.push(m),
       clear: () => { clearTimeout(idleTimer); playPad.clear(); }, guess: () => lastGuess, labels: names,
       onError: err => { console.error(err); status('Something went wrong in one of your scripts.', 'bad'); },
       onStop: () => status('Stopped. Press Run to start again.')
@@ -609,6 +661,7 @@ export function mount(root, host) {
       }
     },
     liveBusy() { return !!training || !!(ws && ws.isDragging && ws.isDragging()); },
+    _goals: () => (checker ? { title: goals.title, list: goals.list, ticks: checker.ticks(), done: checker.allDone() } : null), _rec: () => rec,
     _brain: () => brain, _labels: () => labels, _ws: () => ws, _runner: () => runner, _training: () => !!training,
     _pads: { teach: teachPad, test: testPad, play: playPad }, _playGuess: playGuess, _testGuess: testGuess, _addExample: addExample
   };

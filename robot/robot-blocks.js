@@ -4,7 +4,7 @@
  */
 import { MOTORS } from './robot-model.js';
 
-const C = { events: '#d9a43a', moves: '#4c97ff', face: '#9966ff', speech: '#cf63cf', sensing: '#4cb0d4', control: '#e8a33c', ops: '#59c059', vars: '#ff8c1a' };
+const C = { events: '#d9a43a', moves: '#4c97ff', face: '#9966ff', speech: '#cf63cf', sensing: '#4cb0d4', control: '#e8a33c', ops: '#59c059', vars: '#ff8c1a', procs: '#ff6680' };
 const MOTOR_OPTS = MOTORS.map(([id, label]) => [label, id]);
 const LIGHT_OPTS = [['eyes', 'eyes'], ['ears', 'ears'], ['chest', 'chest'], ['antenna', 'antenna'], ['all', 'all']];
 export const FACES = {
@@ -99,7 +99,8 @@ export function toolbox() {
       { kind: 'category', name: 'Operators', colour: C.ops, contents: [blk('math_number'), blk('math_arithmetic', { A: N(1), B: N(1) }), blk('rb_random', { A: N(1), B: N(10) }),
         blk('logic_compare', { A: N(0), B: N(5) }), blk('logic_operation'), blk('logic_negate'), blk('logic_boolean'), blk('text'), blk('text_join'),
         blk('math_round'), blk('math_modulo', { DIVIDEND: N(10), DIVISOR: N(3) })] },
-      { kind: 'category', name: 'Variables', colour: C.vars, custom: 'VARIABLE' }
+      { kind: 'category', name: 'Variables', colour: C.vars, custom: 'VARIABLE' },
+      { kind: 'category', name: 'My blocks', colour: C.procs, custom: 'RB_PROCS' }
     ]
   };
 }

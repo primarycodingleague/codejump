@@ -7,7 +7,7 @@
  *
  * A Critter is one JSON document, the single source of truth (units: centimetres, degrees, seconds):
  *   { version: 3, id, name, motion: { period, sharpness, smoothness, power }, blocks: [...], joints: [...],
- *     best: { contest: score } }
+ *     best: { contest: score }, goals?, log? }   (goals = a lesson checklist, log = test results: see critter-goals.js)
  *   block = { id, kind, size: [length, height, width], square (0–1), point (0–1), friction, colour, eyes,
  *             twin?, mount: { parent, face, at: [a, b], lean, splay, hinge }, path?: { points: [[u, v], …], phase } }
  *   joint = { id, blockA (parent), blockB (child), minAngle, maxAngle, motion: { amplitude, phase }, aim: { on, angle } }
@@ -27,6 +27,8 @@
  *    of the turn (turning sharpness: down to walking backwards, i.e. pivoting) and by bending any joint
  *    with aim.on towards the target ("part targeting").
  */
+
+import { cleanGoals, cleanLog } from './critter-goals.js';
 
 export var VERSION = 3;
 export var DEG = Math.PI / 180;
@@ -682,6 +684,9 @@ export function normalise(src) {
     if (!j) { j = { id: nextId(z.joints, 'j'), blockB: b.id, minAngle: -20, maxAngle: 20, motion: { amplitude: 0, phase: 0 }, aim: { on: false, angle: 30 } }; z.joints.push(j); }
     j.blockA = b.mount.parent;
   });
+  // lesson goals and the results log (critter-goals.js): only kept when there are some
+  var goals = cleanGoals(src.goals); if (goals) z.goals = goals;
+  var log = cleanLog(src.log); if (log.length) z.log = log;
   return z;
 }
 

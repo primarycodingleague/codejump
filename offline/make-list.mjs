@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DIRS = ['home', 'craft', 'critter', 'world', 'robot', 'ai', 'train', 'lessons'];
+const DIRS = ['home', 'vendor', 'craft', 'critter', 'world', 'robot', 'ai', 'train', 'lessons'];
 const FILES = ['index.html', 'app.webmanifest', 'microbit-micropython-v2.hex'];
 // left out: the Critter video guides (15 MB; iPad video needs the internet anyway), lesson build scripts, notes
 const SKIP = p => /^critter\/guides\//.test(p) || /^lessons\/(builds\/|make-starters)/.test(p) || /\.(md|txt|license)$/i.test(p) || /(^|\/)\./.test(p);

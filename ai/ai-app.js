@@ -563,7 +563,7 @@ export function mount(root, host) {
     if (!defined) { AB.defineBlocks(Blockly); defined = true; }
     syncNames();
     ws = Blockly.inject($('alBlocks'), {
-      toolbox: AB.toolbox(), renderer: 'zelos', theme: alTheme(Blockly), scrollbars: true, trashcan: true, media: 'https://unpkg.com/blockly@10.4.3/media/',
+      toolbox: AB.toolbox(), renderer: 'zelos', theme: alTheme(Blockly), scrollbars: true, trashcan: true, media: window.CJ_BLOCKLY_MEDIA || 'https://unpkg.com/blockly@10.4.3/media/',
       zoom: { controls: true, wheel: true, startScale: touchy ? 0.85 : 0.72, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 },
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
@@ -582,7 +582,7 @@ export function mount(root, host) {
     });
     raf = requestAnimationFrame(tick);
     if (tab === 'code') Blockly.svgResize(ws);
-  })().catch(e => { status('The AI Lab needs the internet the first time it opens.', 'bad'); console.error(e); });
+  })().catch(e => { console.error(e); if (host.failed) host.failed(e); else status('The AI Lab could not start. Try again, or refresh the page.', 'bad'); });
 
   return {
     ready,

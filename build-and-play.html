@@ -25,6 +25,11 @@ if(CJ_IPAD&&/^https?:$/.test(location.protocol))(function(h){function add(t,a){v
 <script src="https://unpkg.com/blockly@10.4.3/blockly_compressed.js"></script>
 <script src="https://unpkg.com/blockly@10.4.3/blocks_compressed.js"></script>
 <script src="https://unpkg.com/blockly@10.4.3/msg/en.js"></script>
+<script>/* School filters sometimes block unpkg.com: fall back to our own copy of Blockly (vendor/blockly/, same version) */
+(function(){var v=/^https?:/.test(location.protocol)?'vendor/blockly/':'https://codejump.co.uk/vendor/blockly/',w=function(f){document.write('<script src="'+v+f+'"><\/script>');};
+window.CJ_BLOCKLY_MEDIA='https://unpkg.com/blockly@10.4.3/media/';
+if(!window.Blockly){w('blockly_compressed.js');w('blocks_compressed.js');w('msg/en.js');}else{if(!Blockly.Blocks||!Blockly.Blocks.controls_if)w('blocks_compressed.js');if(!Blockly.Msg||!Blockly.Msg.CONTROLS_IF_MSG_IF)w('msg/en.js');}
+if(!window.Blockly||!Blockly.Blocks||!Blockly.Blocks.controls_if){window.CJ_BLOCKLY_FALLBACK=true;window.CJ_BLOCKLY_MEDIA=new URL(v+'media/',location.href).href;}})();</script>
 <style>
 @import url('https://fonts.cdnfonts.com/css/lazy-dog');
 @font-face{font-family:'Lazydog';src:url('home/Lazydog.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
@@ -804,6 +809,7 @@ body.robot-mode #t-cave,body.robot-mode #t-mute,body.robot-mode #t-hand,body.rob
 body.robot-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.robot-mode #robot-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #robot-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
+.lab-fail>div{max-width:560px;line-height:1.45}.lab-fail p{margin:0 0 14px}.lab-fail b{color:#f5c76b}.lab-fail .lab-retry{font:inherit;font-size:16px;padding:9px 22px;border-radius:999px;border:0;background:#ae853e;color:#141018;cursor:pointer}.lab-fail small{display:block;margin-top:14px;font-size:12px;font-weight:600;color:#8d8799;word-break:break-word}
 @media(max-width:820px){body.robot-mode #cwrap{overflow:auto;}body.robot-mode #robot-ui{min-height:700px;}}
 /* ── AI Lab (ai/ai-app.js + ai-app.css, lazy-loaded) ── */
 #ai-ui{display:none;}
@@ -3355,7 +3361,7 @@ function enterCritterUI(){
     try{critterApp=mod.mount(holder,{critter:critterData,onChange:()=>{if(!_critterQuiet&&projectType==='critter')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
       cloud:cloudOn()?critterCloud:null,confirm:q=>cjConfirm(q,{title:'Critter Showdown',danger:true,okLabel:'End it'})});}
     finally{_critterQuiet=false;}
-  }).catch(()=>{holder.innerHTML='<div id="critter-loading">The Critter Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+  }).catch(e=>labFailed(holder,'critter-loading','Critter Lab','critter',e,2,()=>enterCritterUI()));
 }
 function exitCritterUI(){
   if(!document.body.classList.contains('critter-mode'))return;
@@ -3868,9 +3874,9 @@ function enter3DUI(){
   holder.innerHTML='<div id="world-loading">Getting the 3D world ready…</div>';
   loadWorldEngine().then(mod=>{
     if(worldApp){_worldQuiet=true;try{worldApp.setProject(worldData);}finally{_worldQuiet=false;}return;}
-    worldApp=mod.mount(holder,{project:worldData,onChange:()=>{if(!_worldQuiet&&projectType==='3d')markDirty();},onGoalsDone:()=>{if(projectType==='3d')lessonDone();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    worldApp=mod.mount(holder,{failed:e=>{try{if(worldApp)worldApp.destroy();}catch(_){}worldApp=null;labFailed(holder,'world-loading','3D world','world',e,1,()=>enter3DUI());},project:worldData,onChange:()=>{if(!_worldQuiet&&projectType==='3d')markDirty();},onGoalsDone:()=>{if(projectType==='3d')lessonDone();},toast:(m,c)=>toast(m,c||'#ae853e'),
       collab:{active:()=>typeof collabActive!=='undefined'&&collabActive&&projectType==='3d',send:op=>collabSend({type:'op',op})}});
-  }).catch(()=>{holder.innerHTML='<div id="world-loading">The 3D world needs the internet the first time it opens. Check your connection and try again.</div>';});
+  }).catch(e=>labFailed(holder,'world-loading','3D world','world',e,1,()=>enter3DUI()));
 }
 function exit3DUI(){
   if(!document.body.classList.contains('threed-mode'))return;
@@ -3878,6 +3884,21 @@ function exit3DUI(){
   document.body.classList.remove('threed-mode');
 }
 
+// A lab that wouldn't open: say WHY (a school filter, no 3D in this browser, an old browser…) instead of always blaming
+// the internet, log the real error, and offer Try again. gl = 2 for the Three.js labs (WebGL 2), 1 for the 3D World.
+function labHasGL(v){try{const c=document.createElement('canvas');return !!(v===2?c.getContext('webgl2'):(c.getContext('webgl2')||c.getContext('webgl')));}catch(e){return false;}}
+function labFailed(holder,id,name,folder,err,gl,retry){
+  console.error('CodeJump: the '+name+' did not open',err);
+  const m=String(err&&(err.message||err)||'');let why,reload=false;
+  if(typeof Blockly==='undefined'||!Blockly.Blocks)why='The blocks editor couldn’t load. A school internet filter may be blocking it: ask your IT team to allow <b>codejump.co.uk</b> and <b>unpkg.com</b>, then refresh the page.';
+  else if(gl&&(!labHasGL(gl)||/webgl|context/i.test(m)))why='This browser can’t show 3D at the moment (WebGL is switched off or not supported). Try the latest Chrome, Edge or Safari, or turn on “hardware acceleration” in the browser’s settings.';
+  else if(err&&err.name==='SyntaxError')why='This browser is too old for the '+name+'. Update it, or try the latest Chrome, Edge or Safari.';
+  else if(/fetch|import|module|load|network/i.test(m)&&(reload=true))why='The '+name+' couldn’t download. Check the internet connection. On a school network, a filter may be blocking <b>codejump.co.uk/'+folder+'/</b>: ask your IT team to allow codejump.co.uk.';
+  else why='Something went wrong opening the '+name+'. Try again, or refresh the page.';
+  holder.innerHTML='<div id="'+id+'" class="lab-fail"><div><p>'+why+'</p><button type="button" class="lab-retry">'+(reload?'Refresh the page':'Try again')+'</button><small>'+cesc(m.slice(0,160))+'</small></div></div>';
+  // a module that failed to download stays failed until the page reloads (browsers remember it)
+  holder.querySelector('.lab-retry').onclick=()=>{if(reload){location.reload();return;}holder.innerHTML='';retry();};
+}
 // ═══════════════════════════════════════════════════════════════════════
 // ROBOT LAB — code a 3D robot bust with blocks (projectType==='robot'). Our own robot design (robot/robot-model.js:
 // Three.js, the same bundle as the Critter Lab), its own Blockly workspace and a generator runner (robot-runner.js).
@@ -3909,9 +3930,9 @@ function enterRobotUI(){
   holder.innerHTML='<div id="robot-loading">Getting the Robot Lab ready…</div>';
   loadRobotLab().then(mod=>{
     if(robotApp){_robotQuiet=true;try{robotApp.setProject(robotData);}finally{_robotQuiet=false;}return;}
-    robotApp=mod.mount(holder,{project:robotData,onChange:()=>{if(!_robotQuiet&&projectType==='robot')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    robotApp=mod.mount(holder,{failed:e=>{try{if(robotApp)robotApp.destroy();}catch(_){}robotApp=null;labFailed(holder,'robot-loading','Robot Lab','robot',e,2,()=>enterRobotUI());},project:robotData,onChange:()=>{if(!_robotQuiet&&projectType==='robot')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
       collab:{active:()=>typeof collabActive!=='undefined'&&collabActive&&projectType==='robot',send:op=>collabSend({type:'op',op})}});
-  }).catch(()=>{holder.innerHTML='<div id="robot-loading">The Robot Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+  }).catch(e=>labFailed(holder,'robot-loading','Robot Lab','robot',e,2,()=>enterRobotUI()));
 }
 function exitRobotUI(){
   if(!document.body.classList.contains('robot-mode'))return;
@@ -3953,9 +3974,9 @@ function enterAIUI(){
   loadAiLab().then(mod=>{
     if(aiApp){_aiQuiet=true;try{aiApp.setProject(aiData);}finally{_aiQuiet=false;}return;}
     _aiQuiet=true;
-    try{aiApp=mod.mount(holder,{project:aiData,onChange:()=>{if(!_aiQuiet&&projectType==='ai')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    try{aiApp=mod.mount(holder,{failed:e=>{try{if(aiApp)aiApp.destroy();}catch(_){}aiApp=null;labFailed(holder,'ai-loading','AI Lab','ai',e,0,()=>enterAIUI());},project:aiData,onChange:()=>{if(!_aiQuiet&&projectType==='ai')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
       confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'})});}finally{_aiQuiet=false;}
-  }).catch(()=>{holder.innerHTML='<div id="ai-loading">The AI Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+  }).catch(e=>labFailed(holder,'ai-loading','AI Lab','ai',e,0,()=>enterAIUI()));
 }
 function exitAIUI(){
   if(!document.body.classList.contains('ai-mode'))return;
@@ -3998,9 +4019,9 @@ function enterTrainUI(){
   loadTrainLab().then(mod=>{
     if(trainApp){_trainQuiet=true;try{trainApp.setProject(trainData);}finally{_trainQuiet=false;}return;}
     _trainQuiet=true;
-    try{trainApp=mod.mount(holder,{project:trainData,onChange:()=>{if(!_trainQuiet&&projectType==='train')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    try{trainApp=mod.mount(holder,{failed:e=>{try{if(trainApp)trainApp.destroy();}catch(_){}trainApp=null;labFailed(holder,'train-loading','Train Lab','train',e,0,()=>enterTrainUI());},project:trainData,onChange:()=>{if(!_trainQuiet&&projectType==='train')markDirty();},toast:(m,c)=>toast(m,c||'#ae853e'),
       confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),print:html=>doPrint(html)});}finally{_trainQuiet=false;}
-  }).catch(()=>{holder.innerHTML='<div id="train-loading">The Train Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+  }).catch(e=>labFailed(holder,'train-loading','Train Lab','train',e,0,()=>enterTrainUI()));
 }
 function exitTrainUI(){
   if(!document.body.classList.contains('train-mode'))return;
@@ -4043,10 +4064,10 @@ function enterCraftUI(){
   loadCraftLab().then(mod=>{
     if(craftApp){_craftQuiet=true;try{craftApp.setProject(craftData);}finally{_craftQuiet=false;}return;}
     _craftQuiet=true;
-    try{craftApp=mod.mount(holder,{project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},onLessonDone:()=>{if(projectType==='craft')lessonDone();},toast:(m,c)=>toast(m,c||'#ae853e'),
+    try{craftApp=mod.mount(holder,{failed:e=>{try{if(craftApp)craftApp.destroy();}catch(_){}craftApp=null;labFailed(holder,'craft-loading','Build Lab','craft',e,2,()=>enterCraftUI());},project:craftData,onChange:()=>{if(!_craftQuiet&&projectType==='craft')markDirty();},onLessonDone:()=>{if(projectType==='craft')lessonDone();},toast:(m,c)=>toast(m,c||'#ae853e'),
       confirm:msg=>cjConfirm(msg,{title:'Are you sure?',okLabel:'Yes',cancelLabel:'No'}),prompt:(msg,d)=>cjPrompt(msg,d,{okLabel:'OK'}),cloud:cloudOn()?critterCloud:null,
       live:{active:()=>collabActive&&projectType==='craft',send:op=>collabSend({type:'op',op}),me:()=>collabMe&&collabMe.uid,members:()=>collabMembers}});}finally{_craftQuiet=false;}
-  }).catch(()=>{holder.innerHTML='<div id="craft-loading">The Build Lab needs the internet the first time it opens. Check your connection and try again.</div>';});
+  }).catch(e=>labFailed(holder,'craft-loading','Build Lab','craft',e,2,()=>enterCraftUI()));
 }
 function exitCraftUI(){
   if(!document.body.classList.contains('craft-mode'))return;
@@ -4328,7 +4349,7 @@ function offPrepare(){if(offBusy)return offBusy;offErr='';
         if(/fonts\.googleapis\.com/.test(u)){const css=await r.clone().text();
           for(const m of css.matchAll(/url\((https:[^)]+)\)/g)){try{if(!(await cache.match(m[1])))await cache.put(m[1],await getExt(m[1]));}catch(e){}}}
         await cache.put(u,r);}}
-      catch(e){if(/unpkg\.com\/blockly@[^/]+\/(blockly_|blocks_|msg\/)/.test(u))throw e;} // the fonts and micro:bit tools are nice to have
+      catch(e){} // nice to have: Blockly has its own copy in vendor/blockly/ (a school filter may block unpkg.com)
       step(40000);}));
     await offPool(jobs,4);
     await meta.put('list',new Response(JSON.stringify(list),{headers:{'Content-Type':'application/json'}}));
@@ -7308,7 +7329,7 @@ function initBlockly(){
     grid:{spacing:24,length:3,colour:'rgba(255,255,255,0.08)',snap:true},
     theme:cjTheme,
     renderer:'zelos',
-    media:'https://unpkg.com/blockly@10.4.3/media/',
+    media:window.CJ_BLOCKLY_MEDIA||'https://unpkg.com/blockly@10.4.3/media/',
   });
   _cjBaseTheme=cjTheme;applyBlocklyTheme();
   // Relax type-checking so any value/reporter block can plug into any value
@@ -8349,7 +8370,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <h3>iPads without Wi-Fi</h3>
  <p>On an iPad, CodeJump can go on the Home Screen and then works with <b>no internet</b>, which helps where a school network blocks it. Once per iPad, on a network that doesn't block CodeJump (home Wi-Fi or a phone hotspot): open codejump.co.uk in Safari, tap <b>Use offline</b> at the top of the home page and follow the steps (Share, <b>Add to Home Screen</b>, then open the new icon and wait until it says <b>Ready offline</b>, about 31 MB). After that, open CodeJump from the icon. Every lab, saving on the iPad, the lessons and this guide work offline; signing in, handing in, share links and working together still need the internet, and the Critter Lab video guides don't play offline. It updates itself whenever it has internet. The Home Screen app keeps its <b>own saves</b>, separate from Safari's, so pupils should always use the icon. This is for iPads only; other devices use the website as normal.</p>
   <h3>Troubleshooting</h3>
- <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>Can't press Play?</b> Add a Finish — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
+ <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>A lab won’t open?</b> It now says why. <b>Can’t show 3D</b>: the Robot, Critter, Build and Print Labs and the 3D World need 3D graphics (WebGL), so use an up-to-date Chrome, Edge or Safari and switch on “hardware acceleration” in the browser’s settings; some older laptops and remote desktops can’t. <b>Couldn’t download</b> or <b>blocks editor couldn’t load</b>: ask your IT team to allow <b>codejump.co.uk</b> and <b>unpkg.com</b> (and codejump-cloud.primarycodingleague.workers.dev for accounts and sharing).</li><li><b>Can't press Play?</b> Add a Finish — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
   <h3>Curriculum links</h3>
   <p>Sequence, selection, repetition, variables and decomposition (functions); design, write and debug programs; use logical reasoning to predict behaviour. KS1 focuses on algorithms, predicting, and debugging simple programs.</p>
 </div>`;}
@@ -10398,12 +10419,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.16';
+const CJ_VERSION='2026.10.21';
 const CJ_WHATSNEW=[
- "New in the 3D World: Park Designers! 24 lessons where you design and run a 3D theme park: build the gate, pop balloons, score a penalty, code spinning rides and fireworks, fairground games, an ice cream stand and a whole park game.",
- "Goals that tick themselves: lesson worlds in the 3D World now have a checklist at the top left. Press Run and watch each goal tick as your program works.",
- "Finished a lesson? The Lesson card now has a Next lesson button, so you can carry straight on without going back to the home page. Your work is saved first.",
- "Teachers: the 24 Park Designers lessons (Years 3, 4, 5 and 6, a block of six for each year) are in Ready-made lessons, with lesson plans, slides and a Lesson card for pupils.",
+ "Labs now open on more school networks (even when a filter blocks the site the blocks come from), and if a lab can’t open it now says why and what to do about it.",
 ];
 // the iPad line is only for iPads (the offline mode is iPad-only)
 function cjWhatsNewLines(){return (typeof CJ_IPAD!=='undefined'&&CJ_IPAD)?CJ_WHATSNEW:CJ_WHATSNEW.filter(t=>!/^iPads:/.test(t));}

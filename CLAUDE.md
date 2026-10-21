@@ -31,6 +31,18 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Labs that won't open (21 Oct 2026, CJ_VERSION 2026.10.21) — a teacher (Dubai) got "The Robot Lab needs the internet the first time it opens" while online
+- That message was shown for ANY failure, including inside each lab's own `mount` (robot-app's start-up catch), so a browser without
+  WebGL 2 (Three.js r186) looked like "no internet". Now: `labFailed(holder, id, name, folder, err, gl, retry)` (build-and-play.html,
+  above ROBOT LAB) says why: blocks editor didn't load (filter) · can't show 3D (`labHasGL(2|1)`) · old browser (SyntaxError) ·
+  couldn't download (names codejump.co.uk/<folder>/; button = Refresh, browsers remember a failed module) · else Try again. Every lab
+  passes it: the loader's `.catch` AND mount option `failed` (robot/ai/train/craft/world/print apps call `host.failed(e)` from their
+  start-up catch; the host destroys the half-made app and nulls it). `.lab-fail` CSS.
+- **Blockly fallback:** after the three unpkg `<script>` tags an inline script `document.write`s our own copy `vendor/blockly/`
+  (10.4.3, byte-identical, + media) if Blockly/blocks/msg didn't load; `window.CJ_BLOCKLY_MEDIA` (unpkg, or vendor when it fell back)
+  is the `media` every Blockly inject uses. `vendor/` is in the offline list and an unpkg failure no longer stops the iPad download.
+  Keep `vendor/blockly/` in step with the unpkg version. Test: tests/lab-fail.test.mjs.
+
 ## Next lesson button (16 Oct 2026, CJ_VERSION 2026.10.16; LIVE on main since 16 Oct 2026) — Charlie: "when a student completes a lesson they need a button that says next lesson"
 - Lesson card `#lg-go` ("Next lesson: <title>") shows on the last step and once `lessonDone()` runs (Finish on the last step, every goal
   ticked in a 3D World lesson via world-app `host.onGoalsDone`, every task done in a Build Lab world via craft-maker-ui `app.done` →

@@ -440,7 +440,7 @@ export function mount(root, host) {
   const ready = (async () => {
     if (!defined) { L.defineBlocks(Blockly.common || Blockly); defined = true; }
     ws = Blockly.inject($('crBlocks'), {
-      toolbox: L.toolbox(), renderer: 'zelos', theme: crTheme(Blockly), scrollbars: true, trashcan: true, media: 'https://unpkg.com/blockly@10.4.3/media/',
+      toolbox: L.toolbox(), renderer: 'zelos', theme: crTheme(Blockly), scrollbars: true, trashcan: true, media: window.CJ_BLOCKLY_MEDIA || 'https://unpkg.com/blockly@10.4.3/media/',
       zoom: { controls: true, wheel: true, startScale: touchy ? 0.8 : 0.68, maxScale: 2.5, minScale: 0.3, scaleSpeed: 1.1 },
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
@@ -451,7 +451,7 @@ export function mount(root, host) {
     view = createView(THREE, cv, world);
     setProject(pending); pending = null; mk.viewReady();
     $('crLoading').hidden = true; view.resize(); raf = requestAnimationFrame(tick);
-  })().catch(e => { console.error(e); $('crLoading').textContent = 'The Build Lab needs the internet the first time it opens. Check your connection and try again.'; });
+  })().catch(e => { console.error(e); if (host.failed) host.failed(e); else $('crLoading').textContent = 'The Build Lab could not start. Try again, or refresh the page.'; });
 
   return {
     ready, getProject, ...liveApi,

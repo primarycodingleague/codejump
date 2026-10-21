@@ -426,8 +426,9 @@ export function mount(root, host) {
     world.start(); world.resize();
     edit();
   })().catch(e => {
-    $('w3Loading').textContent = 'The 3D world needs the internet the first time it opens. Check your connection and try again.';
     console.error(e);
+    if (host.failed) host.failed(e);
+    else $('w3Loading').textContent = 'The 3D world could not start. Try again, or refresh the page.';
   });
 
   return {

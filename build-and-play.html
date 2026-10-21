@@ -8451,6 +8451,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
  <p>If your organisation sets up the (free) cloud backend, an <b> Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes a class a child their work</b>. <b>Pupils</b> join classes in <b> Cloud Settings</b> (a child can be in several), then when saving choose <b> My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
   <h3>Managing your classes</h3>
  <p>In <b>Teacher Hub My classes &amp; pupils' work</b> you can <b>make a class</b> (share its code so pupils self-join), <b>rename</b> or <b>delete</b> a class, <b>remove</b> a pupil, open any child's <b>handed-in work</b>, and <b> send the game you're building straight to a whole class</b> (it lands in every pupil's class work — handy for starters/templates). Pupils show by <b>real name + display name</b>.</p>
+ <p><b>Add pupils</b> (in a class): choose a spreadsheet saved as CSV, or copy the rows from Excel / Google Sheets and paste them in. One pupil per row: their name, then a display name and password if you have them (first and last name columns are fine, and a header row is spotted). Anything missing is made for you: display names can only use letters, numbers, - and _, so names with spaces are tidied. You see the whole list before any accounts are made, and if a display name is already taken you can give those pupils new ones in one tap. Then print their <b>login cards</b>.</p>
  <h3> Live collaboration</h3>
  <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game <b>Share Collaborate</b> invites classmates by display name; everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b> Cloud Collaborations</b>. This works in the <b>Build Lab</b>, <b>Critter Lab</b>, <b>AI Lab</b>, <b>Train Lab</b>, <b>Robot Lab</b> and <b>3D World</b> too: everyone sees the same project, while Run (or Test it!) plays on each pupil's own screen. In the Build Lab, pupils share one world and can see each other walking round it. Great for pair-programming and group projects. <i>(Needs the optional cloud backend — including its Durable Object “rooms” setup; see <code>cloud/COLLAB.md</code>.)</i></p>
   <h3>Saving, sharing &amp; safety</h3>
@@ -9202,25 +9203,117 @@ function cloudTeacherMakeClass(){_cb().innerHTML=`<button class="cloud-back" id=
   document.getElementById('c-bk').onclick=cloudTeacherClasses;
   document.getElementById('mc-go').onclick=async()=>{const name=document.getElementById('mc').value.trim()||'My Class';try{const res=await cloudApi('/class/create',{token:cloudToken,name});await cloudRefresh();cloudClassMade(res);}catch(e){cloudError(e);}};}
 function cloudClassMade(res){_cb().innerHTML=`<h2> Class made!</h2><p style="text-align:center">Class code:</p><div class="cloud-code-big">${cesc(res.code)}</div><p>Pupils sign in Settings Join a class type <b>${cesc(res.code)}</b>. Then they can hand work in to your class.</p><button class="cloud-btn gold" id="c-done">See my classes</button>`;document.getElementById('c-done').onclick=cloudTeacherClasses;}
-// ── Bulk add pupils from a CSV (Name, Display name, Password) ──
-function _splitCSVLine(line){const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}out.push(cur);return out;}
-function parseStudentCSV(text){const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);const out=[];let start=0;
-  if(lines[0]&&/name/i.test(lines[0])&&/pass/i.test(lines[0]))start=1; // skip a header row
-  for(let i=start;i<lines.length;i++){const c=_splitCSVLine(lines[i]);if(c.length<3)continue;const realName=(c[0]||'').trim(),displayName=(c[1]||'').trim(),password=(c[2]||'').trim();if(realName&&displayName&&password)out.push({realName,displayName,password});}
-  return out;}
-function teacherBulkCSV(code){const inp=document.createElement('input');inp.type='file';inp.accept='.csv,text/csv,text/plain';
-  inp.onchange=()=>{const f=inp.files&&inp.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const students=parseStudentCSV(String(rd.result||''));if(!students.length){toast('No pupils found. Use 3 columns: Name, Display name, Password','#ef4444');return;}teacherBulkConfirm(code,students);};rd.readAsText(f);};
-  inp.click();}
-function teacherBulkConfirm(code,students){
- let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> Add ${students.length} pupil${students.length===1?'':'s'}</h2><p style="text-align:center">From your file. Each gets an account and joins this class.</p>
-   <div style="max-height:230px;overflow:auto;text-align:left;font-size:13px;background:var(--black);border-radius:8px;padding:8px">${students.slice(0,150).map(s=>`<div class="cloud-pinrow"><span>${cesc(s.realName)} · @${cesc(s.displayName)} · ${cesc(s.password)}</span></div>`).join('')}${students.length>150?'<div class="cloud-pinrow"><span>…and more</span></div>':''}</div>
+// ── Bulk add pupils from a file or pasted from a spreadsheet (Name, Display name, Password) ──
+// Copes with what spreadsheets really save: Excel's byte-order mark, UTF-16 "Unicode text", old Mac line endings, commas /
+// semicolons / tabs (a paste from Excel or Google Sheets is tab-separated), any header row or none, first + last name columns,
+// and missing or unusable display names / passwords (made for the pupil, shown in gold before anything is created).
+// The cloud only takes display names of 3–20 letters, numbers, - or _ (no spaces) and passwords of 4+ characters.
+const BULK_WORDS=['apple','tiger','rocket','panda','comet','maple','otter','pixel','river','cloud','robin','lemon','zebra','koala','mango','planet','banjo','cactus','dragon','meadow'];
+let _bulkText='';
+function _bulkDecode(buf){const u=new Uint8Array(buf);
+  if(u[0]===0xFF&&u[1]===0xFE)return new TextDecoder('utf-16le').decode(u.subarray(2));
+  if(u[0]===0xFE&&u[1]===0xFF)return new TextDecoder('utf-16be').decode(u.subarray(2));
+  const n=Math.min(u.length,400);let z=0;for(let i=1;i<n;i+=2)if(u[i]===0)z++;
+  if(n>4&&z>n/4)return new TextDecoder('utf-16le').decode(u);
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(u).replace(/^﻿/,'');}catch(e){return new TextDecoder('windows-1252').decode(u);}}
+function _splitCSVLine(line,sep){sep=sep||',';const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}else{if(ch==='"'&&!cur.trim())q=true;else if(ch===sep){out.push(cur);cur='';}else cur+=ch;}}out.push(cur);return out.map(c=>c.trim());}
+function _bulkSep(lines){const count=(l,s)=>_splitCSVLine(l,s).length-1;const sample=lines.slice(0,8);
+  for(const s of ['\t',';',',']){if(sample.some(l=>count(l,s)>0)&&(s===','||sample.filter(l=>count(l,s)>0).length>=Math.ceil(sample.length/2)))return s;}
+  return ',';}
+const BULK_HEAD=/\b(name|names|full ?name|real ?name|password|pass ?word|pass|pw|pin|user ?name|user|display|login|pupil|student|child|first|forename|given|last|surname|family|handle|nickname)\b/i;
+function _bulkCols(head){const used=new Set(),pick=re=>{const i=head.findIndex((h,k)=>!used.has(k)&&re.test(h));if(i>=0)used.add(i);return i;};
+  const c={};c.pass=pick(/pass|^pw$|\bpin\b|secret/i);c.disp=pick(/display|user|login|handle|nick|screen|code ?name/i);
+  c.first=pick(/first|fore|given|christian/i);c.last=pick(/last|sur|family/i);
+  c.name=pick(/name|pupil|student|child|real/i);if(c.name<0&&c.first<0)c.name=head.findIndex((h,k)=>!used.has(k));
+  return c;}
+function _bulkHandle(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9_-]/g,'').replace(/^[_-]+/,'').slice(0,20);}
+function _bulkMakeHandle(realName,taken){const w=String(realName||'').normalize('NFD').replace(/[̀-ͯ]/g,'').split(/\s+/).map(x=>x.replace(/[^A-Za-z0-9]/g,'')).filter(Boolean);
+  let base=((w[0]||'pupil').slice(0,12))+(w.length>1?w[w.length-1][0].toUpperCase():'');base=base.charAt(0).toUpperCase()+base.slice(1);
+  for(let t=0;t<200;t++){const h=(base+(10+Math.floor(Math.random()*(t<50?90:9990)))).slice(0,20);if(!taken.has(h.toLowerCase()))return h;}
+  return base.slice(0,10)+Date.now().toString(36).slice(-6);}
+function _bulkMakePass(){return BULK_WORDS[Math.floor(Math.random()*BULK_WORDS.length)]+(10+Math.floor(Math.random()*90));}
+// text → {students:[{realName,displayName,password,made:{disp,pass},was}], skipped:[row text], header:bool}
+function parseStudentCSV(text){
+  const lines=String(text||'').replace(/^﻿/,'').replace(/\r\n?/g,'\n').split('\n').filter(l=>l.replace(/[,;\t\s"]/g,''));
+  const res={students:[],skipped:[],header:false};if(!lines.length)return res;
+  const sep=_bulkSep(lines),rows=lines.map(l=>_splitCSVLine(l,sep));
+  let cols;
+  if(rows[0].some(c=>BULK_HEAD.test(c))&&!rows[0].some(c=>/@|\d{3,}/.test(c))){cols=_bulkCols(rows[0].map(c=>c.toLowerCase()));res.header=true;rows.shift();}
+  else{const w=Math.max(...rows.map(r=>r.filter(Boolean).length));cols={name:0,disp:w>=2?1:-1,pass:w>=3?2:-1,first:-1,last:-1};}
+  const cell=(r,i)=>i>=0?(r[i]||'').trim():'';
+  const taken=new Set();
+  for(const r of rows){
+    let realName=cols.first>=0?[cell(r,cols.first),cell(r,cols.last)].filter(Boolean).join(' '):cell(r,cols.name);
+    if(cols.first<0&&cols.last>=0&&cell(r,cols.last)&&realName&&!realName.includes(' '))realName+=' '+cell(r,cols.last);
+    let disp=cell(r,cols.disp),pass=cell(r,cols.pass);
+    if(!realName)realName=disp;
+    realName=realName.replace(/\s+/g,' ').slice(0,40);
+    if(!realName){res.skipped.push(r.filter(Boolean).join(', '));continue;}
+    const s={realName,displayName:'',password:'',made:{},was:''};
+    let h=_bulkHandle(disp);
+    if(disp&&h!==disp){s.was=disp;}
+    if(h.length<3||taken.has(h.toLowerCase())){if(disp)s.was=disp;h=_bulkMakeHandle(realName,taken);s.made.disp=true;}
+    else if(s.was)s.made.disp=true;
+    taken.add(h.toLowerCase());s.displayName=h;
+    if(pass.length>=4)s.password=pass.slice(0,40);else{s.password=_bulkMakePass();s.made.pass=true;}
+    res.students.push(s);
+    if(res.students.length>=300)break;
+  }
+  return res;}
+function _bulkSpreadsheetFile(name){return /\.(xlsx|xlsm|xls|numbers|ods)$/i.test(name||'');}
+function teacherBulkCSV(code){
+  _cb().innerHTML=`<button class="cloud-back" id="c-bk"> Back</button><h2> Add pupils</h2>
+ <p>Choose a spreadsheet saved as <b>CSV</b>, or copy the rows from your spreadsheet and paste them in the box. One pupil per row: their <b>name</b>, then a <b>display name</b> and <b>password</b> if you have them. Anything missing is made for you, and you see it all before any accounts are made.</p>
+ <div class="cloud-row" style="gap:8px"><button class="cloud-btn gold" id="bk-file" style="margin:0;flex:1"> Choose a file</button><button class="cloud-btn" id="bk-tpl" style="margin:0;flex:1"> Download a template</button></div>
+ <textarea class="cloud-input" id="bk-paste" rows="7" style="font-size:15px;margin-top:10px;resize:vertical" placeholder="Sam Jones&#10;Priya Patel&#9;PriyaP&#9;tiger42&#10;…or drop a CSV file here"></textarea>
+ <button class="cloud-btn gold" id="bk-check" style="margin-top:0">Check the list</button>
+ <p class="cloud-note" id="bk-msg" role="status"></p>
+ <input type="file" id="bk-input" accept=".csv,.txt,.tsv,.xlsx,.xls,.numbers,.ods,text/csv,text/plain,text/tab-separated-values,application/vnd.ms-excel" style="display:none">`;
+  const $=id=>document.getElementById(id),ta=$('bk-paste'),msg=t=>{$('bk-msg').innerHTML=t;$('bk-msg').style.color=t?'#f5c76b':'';};
+  ta.value=_bulkText;
+  $('c-bk').onclick=()=>cloudTeacherRoster(code);
+  const check=()=>{_bulkText=ta.value;const res=parseStudentCSV(ta.value);
+    if(!res.students.length){msg(ta.value.trim()?'I couldn’t find any pupils’ names in that. Put one pupil on each row with their name first.':'Choose a file or paste some names first.');return;}
+    teacherBulkConfirm(code,res);};
+  const takeFile=f=>{if(!f)return;
+    if(_bulkSpreadsheetFile(f.name)){msg('“'+cesc(f.name)+'” is a spreadsheet file, not a CSV. Either copy the rows in your spreadsheet and paste them in the box, or save it as CSV (Excel: File → Save As → CSV; Google Sheets: File → Download → CSV) and choose that.');return;}
+    if(f.size>2e6){msg('That file is too big to be a class list. Choose the CSV with your pupils’ names in it.');return;}
+    const rd=new FileReader();rd.onload=()=>{ta.value=_bulkDecode(rd.result);check();};rd.onerror=()=>msg('That file couldn’t be read. Try saving it again as CSV, or paste the names in the box.');rd.readAsArrayBuffer(f);};
+  $('bk-file').onclick=()=>{const inp=$('bk-input');inp.value='';inp.click();};
+  $('bk-input').onchange=e=>takeFile(e.target.files&&e.target.files[0]);
+  ta.addEventListener('dragover',e=>{e.preventDefault();});
+  ta.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f){e.preventDefault();takeFile(f);}});
+  $('bk-tpl').onclick=()=>{const blob=new Blob(['﻿Name,Display name,Password\r\nSam Jones,SamJ,tiger42\r\nPriya Patel,,\r\n'],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='codejump-pupils.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);};
+  $('bk-check').onclick=check;
+}
+function teacherBulkConfirm(code,res){
+  const students=res.students,nd=students.filter(s=>s.made.disp).length,np=students.filter(s=>s.made.pass).length,gold=(t,on)=>on?`<b style="color:#f5c76b">${cesc(t)}</b>`:cesc(t);
+  let h=`<button class="cloud-back" id="c-bk"> Back</button><h2> Add ${students.length} pupil${students.length===1?'':'s'}</h2>
+   <p style="text-align:center">Each gets an account and joins this class.${nd||np?' Made for you (in gold): '+[nd?nd+' display name'+(nd===1?'':'s'):'',np?np+' password'+(np===1?'':'s'):''].filter(Boolean).join(' and ')+'. Display names can only use letters, numbers, - and _.':''}</p>
+   <div style="max-height:260px;overflow:auto;text-align:left;font-size:13px;background:var(--black);border-radius:8px;padding:8px">${students.map(s=>`<div class="cloud-pinrow"><span>${cesc(s.realName)} · @${gold(s.displayName,s.made.disp)} · ${gold(s.password,s.made.pass)}${s.was?` <small style="color:#9aa4b2">(was “${cesc(s.was)}”)</small>`:''}</span></div>`).join('')}</div>
+   ${res.skipped.length?`<p class="cloud-note">${res.skipped.length} row${res.skipped.length===1?' has':'s have'} no name and will be left out.</p>`:''}
  <button class="cloud-btn gold" id="bk-go"> Create ${students.length} account${students.length===1?'':'s'}</button>`;
-  _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>cloudTeacherRoster(code);
-  document.getElementById('bk-go').onclick=async()=>{try{_cb().innerHTML='<h2>⏳ Creating accounts…</h2>';const res=await cloudApi('/class/bulk',{token:cloudToken,code,students});
- _cb().innerHTML=`<h2> Done!</h2><p style="text-align:center"><b>${res.created}</b> created${res.exists?` · <b>${res.exists}</b> already had an account`:''}${res.skipped?` · <b>${res.skipped}</b> skipped (name 3+ chars, password 4+ chars)`:''}.</p>${res.exists?`<p class="cloud-note">${res.exists} pupil${res.exists===1?'':'s'} already use CodeJump — they can't be added by name. Ask them to sign in and join with the class code <b>${cesc(code)}</b>.</p>`:''}
- <button class="cloud-btn gold" id="bk-cards"> Print login cards now</button><button class="cloud-btn" id="bk-back">Back to class</button>`;
-    document.getElementById('bk-cards').onclick=()=>teacherPrintCards(code);document.getElementById('bk-back').onclick=()=>cloudTeacherRoster(code);
-  }catch(err){cloudError(err);}};}
+  _cb().innerHTML=h;document.getElementById('c-bk').onclick=()=>teacherBulkCSV(code);
+  document.getElementById('bk-go').onclick=()=>teacherBulkSend(code,students,0);}
+async function teacherBulkSend(code,students,madeBefore){
+  try{_cb().innerHTML='<h2>Creating accounts…</h2>';
+    const res=await cloudApi('/class/bulk',{token:cloudToken,code,students:students.map(s=>({realName:s.realName,displayName:s.displayName,password:s.password}))});
+    const byName=new Map(students.map(s=>[s.displayName,s]));
+    const taken=(res.results||[]).filter(r=>r.status==='exists').map(r=>byName.get(r.displayName)).filter(Boolean);
+    const skipped=(res.results||[]).filter(r=>r.status==='skipped').map(r=>byName.get(r.displayName)).filter(Boolean);
+    const made=madeBefore+(res.created||0);
+    if(made)_bulkText='';
+    _cb().innerHTML=`<h2> ${made?'Done!':'No accounts made'}</h2><p style="text-align:center"><b>${made}</b> account${made===1?'':'s'} made${taken.length?` · <b>${taken.length}</b> display name${taken.length===1?' was':'s were'} already taken`:''}${skipped.length?` · <b>${skipped.length}</b> left out`:''}.</p>
+   ${taken.length?`<p class="cloud-note">Taken: ${taken.map(s=>cesc(s.realName)+' (@'+cesc(s.displayName)+')').join(', ')}. If one of these pupils already uses CodeJump, ask them to sign in and join with the class code <b>${cesc(code)}</b>. Otherwise give them new display names:</p><button class="cloud-btn gold" id="bk-retry">Give them new display names and try again</button>`:''}
+   ${skipped.length?`<p class="cloud-note">Left out: ${skipped.map(s=>cesc(s.realName)).join(', ')}.</p>`:''}
+   ${made?'<button class="cloud-btn gold" id="bk-cards"> Print login cards now</button>':''}<button class="cloud-btn" id="bk-back">Back to class</button>`;
+    const q=id=>document.getElementById(id);
+    if(q('bk-cards'))q('bk-cards').onclick=()=>teacherPrintCards(code);q('bk-back').onclick=()=>cloudTeacherRoster(code);
+    if(q('bk-retry'))q('bk-retry').onclick=()=>{const used=new Set(students.map(s=>s.displayName.toLowerCase()));
+      const again=taken.map(s=>{const d=_bulkMakeHandle(s.realName,used);used.add(d.toLowerCase());return Object.assign({},s,{displayName:d,made:Object.assign({},s.made,{disp:true})});});
+      teacherBulkSend(code,again,made);};
+  }catch(err){cloudError(err);}}
 // ── Printable login cards (always reflect each pupil's current name / display name / password) ──
 async function teacherPrintCards(code){try{const data=await cloudApi('/class/cards',{token:cloudToken,code});
   if(!(data.students||[]).length){toast('No pupils in this class yet.','#ae853e');return;}
@@ -9244,7 +9337,7 @@ async function cloudTeacherRoster(code){try{const data=await cloudApi('/class/ro
  let h=`<button class="cloud-back" id="c-bk"> Back</button><h2>‍ ${cesc(data.name||'Class')}</h2><p style="text-align:center">Code: <b style="color:var(--gold)">${cesc(code)}</b> · ${(data.pupils||[]).length} pupil${(data.pupils||[]).length===1?'':'s'}</p>
  <button class="cloud-btn gold" id="cr-send"> Give a game to this class</button>
  <button class="cloud-btn" id="cr-showdown"><svg class="ic"><use href="#i-critter"></use></svg> Critter Showdown — race up to 4 pupils’ Critters</button>
- <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-bulk" style="margin:0;flex:1"> Add pupils (CSV)</button><button class="cloud-btn" id="cr-cards" style="margin:0;flex:1"> Login cards</button></div>
+ <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-bulk" style="margin:0;flex:1"> Add pupils</button><button class="cloud-btn" id="cr-cards" style="margin:0;flex:1"> Login cards</button></div>
  <div class="cloud-row" style="gap:8px"><button class="cloud-btn" id="cr-rename" style="margin:0;flex:1"> Rename</button><button class="cloud-btn" id="cr-del" style="margin:0;flex:1"> Delete class</button></div>`;
   if(!(data.pupils||[]).length)h+='<p style="text-align:center;margin-top:10px">No pupils have joined yet — share the class code!</p>';
  (data.pupils||[]).forEach(pu=>{const done=(pu.projects||[]).filter(p=>p.handedIn||!p.fromTeacher).length;const waiting=(pu.projects||[]).filter(p=>p.fromTeacher&&!p.handedIn).length;const sub=done+' handed in'+(waiting?(' · '+waiting+' not started'):'');h+=`<div class="cloud-list-item"><div class="ci-main" data-uid="${cesc(pu.uid)}"><b>${cesc(pu.realName||pu.displayName)}</b><small>@${cesc(pu.displayName)} · ${sub}</small></div><button data-remove="${cesc(pu.uid)}" title="Remove from class"></button></div>`;});
@@ -10515,8 +10608,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.21';
+const CJ_VERSION='2026.10.21.2';
 const CJ_WHATSNEW=[
+ "Teachers: Add pupils now reads class lists however your spreadsheet saved them (Excel on Mac or Windows, Google Sheets, with or without a header), or just paste the names in. Missing display names and passwords are made for you, and you see the list before any accounts are made.",
  "Labs now open on more school networks (even when a filter blocks the site the blocks come from), and if a lab can’t open it now says why and what to do about it.",
  "New: the Print Lab! Design real things to 3D print: drag shapes onto a build plate, size them in millimetres, cut holes, draw your own shapes, add parts like hinges and gears, then check it and download it for a 3D printer. Key Stage 2 and 3.",
  "Print Lab challenges: design briefs whose rules tick themselves as you design, five ready-made or write your own. Teachers: two new ready-made Print Lab lessons (Years 3–4 and 5–6).",

@@ -31,6 +31,19 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Add pupils from a list (21 Oct 2026, CJ_VERSION 2026.10.21.2) — a teacher: "it's not picking up the CSV file"
+- The old parser split lines only on \n (Excel for Mac's CSV uses \r → one line → "No pupils found"), only knew commas, needed a header
+  with both "name" and "pass", dropped rows without all 3 columns, and the cloud skipped display names with spaces (handle rule
+  `^[a-z0-9][a-z0-9_-]{2,19}$`, password 4+) with a misleading message. The input was also a detached `<input type=file>`.
+- Now (build-and-play.html "Bulk add pupils"): `teacherBulkCSV(code)` = a panel in the cloud modal: Choose a file (input inside the
+  modal; .xlsx/.numbers/.ods → "save as CSV or paste" message), Download a template, a paste box (tab-separated from Excel/Sheets; also
+  takes a dropped file), Check the list. `_bulkDecode` (UTF-8 BOM, UTF-16 LE/BE, else windows-1252), `parseStudentCSV(text)` →
+  `{students:[{realName,displayName,password,made:{disp,pass},was}], skipped, header}`: \r/\n/\r\n, `_bulkSep` tab/;/, ,
+  `BULK_HEAD` header spotting + `_bulkCols` (any order, First/Surname joined), no header = name[, display[, password]];
+  `_bulkHandle` tidies display names (accents off, no spaces), `_bulkMakeHandle` (First + surname initial + digits, unique in the
+  list), `_bulkMakePass` (word + 2 digits). `teacherBulkConfirm` shows made items in gold; `teacherBulkSend` posts `/class/bulk` (no
+  worker change) and offers "Give them new display names and try again" for `exists`. Test: tests/bulk.test.mjs.
+
 ## Labs that won't open (21 Oct 2026, CJ_VERSION 2026.10.21) — a teacher (Dubai) got "The Robot Lab needs the internet the first time it opens" while online
 - That message was shown for ANY failure, including inside each lab's own `mount` (robot-app's start-up catch), so a browser without
   WebGL 2 (Three.js r186) looked like "no internet". Now: `labFailed(holder, id, name, folder, err, gl, retry)` (build-and-play.html,

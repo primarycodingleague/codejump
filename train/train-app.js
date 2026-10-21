@@ -709,7 +709,7 @@ export function mount(root, host) {
   const ready = (async () => {
     if (!defined) { TB.defineBlocks(Blockly); defined = true; }
     ws = Blockly.inject($('tlBlocks'), {
-      toolbox: TB.toolbox(proj.trains), renderer: 'zelos', theme: tlTheme(Blockly), scrollbars: true, trashcan: true, media: 'https://unpkg.com/blockly@10.4.3/media/',
+      toolbox: TB.toolbox(proj.trains), renderer: 'zelos', theme: tlTheme(Blockly), scrollbars: true, trashcan: true, media: window.CJ_BLOCKLY_MEDIA || 'https://unpkg.com/blockly@10.4.3/media/',
       zoom: { controls: true, wheel: true, startScale: touchy ? 0.85 : 0.72, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 },
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
@@ -723,7 +723,7 @@ export function mount(root, host) {
     $('tlLoading').hidden = true;
     raf = requestAnimationFrame(tick);
     status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
-  })().catch(e => { $('tlLoading').textContent = 'The Train Lab could not start. Check your connection and try again.'; console.error(e); });
+  })().catch(e => { console.error(e); if (host.failed) host.failed(e); else $('tlLoading').textContent = 'The Train Lab could not start. Try again, or refresh the page.'; });
 
   // ── challenges: the checklist on the board, the Challenges panel and the printable challenge card
   const STEP_WORDS = { start: 'Start at the', pass: 'Go past the', stop: 'Stop at the', reverse: 'Turn back at the', pickup: 'Pick up the wagon at the', drop: 'Drop off the wagon at the', end: 'End your route at the' };

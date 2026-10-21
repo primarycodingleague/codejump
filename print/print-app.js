@@ -911,7 +911,7 @@ export function mount(root, host) {
     $('plLoading').hidden = true;
     shapePanel(); afterLoad(); resize(); setView('home');
   })();
-  ready.catch(e => { console.warn(e); $('plLoading').textContent = 'The Print Lab needs the internet the first time it opens. Check your connection and try again.'; });
+  ready.catch(e => { console.warn(e); if (host.failed) host.failed(e); else $('plLoading').textContent = 'The Print Lab could not start. Try again, or refresh the page.'; });
   $('plTitle').value = proj.title || '';
   raf = requestAnimationFrame(tick);
 

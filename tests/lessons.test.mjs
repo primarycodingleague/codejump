@@ -542,7 +542,7 @@ try {
   await page.waitForFunction(id => lessonActive && lessonActive.id === id, 'robot-storyteller', { timeout: 60000 });
     await page.waitForFunction(() => projectType === 'robot' && robotApp && robotApp._view() && robotApp._ws() && robotApp._ws().getTopBlocks().length === 1 &&
       robotApp._ws().getAllBlocks(false).some(x => x.type === 'rb_light_off'), null, { timeout: 30000 });
-    ok(await page.evaluate(() => /Robot storyteller/.test(document.getElementById('lesson-guide').textContent)), 'Robot storyteller: the starter opens with its Lesson card');
+    ok(await page.evaluate(() => document.getElementById('lesson-guide').textContent.includes(lessonsMod.lesson('robot-storyteller').title)), 'Robot storyteller: the starter opens with its Lesson card');
     const rbRecord = () => page.evaluate(() => new Promise(res => {
       const log = []; let idle = 0;
       const iv = setInterval(() => {
@@ -585,7 +585,7 @@ try {
     await page.evaluate(() => { clearDirty(); window.__lsOpen = lessonOpenStarter('robot-quiz'); });
   await page.waitForFunction(id => lessonActive && lessonActive.id === id, 'robot-quiz', { timeout: 60000 });
     await page.waitForFunction(() => projectType === 'robot' && robotApp && robotApp._view() && robotApp._ws() && robotApp._ws().getAllBlocks(false).some(x => x.type === 'rb_ask'), null, { timeout: 30000 });
-    ok(await page.evaluate(() => /Robot quiz/.test(document.getElementById('lesson-guide').textContent)), 'Robot quiz: the starter opens with its Lesson card');
+    ok(await page.evaluate(() => document.getElementById('lesson-guide').textContent.includes(lessonsMod.lesson('robot-quiz').title)), 'Robot quiz: the starter opens with its Lesson card');
     const quizAnswer = async a => {
       await page.waitForSelector('#rbAsk:not([hidden])', { timeout: 30000 });
       const q = await page.textContent('#rbAskQ');

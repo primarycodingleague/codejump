@@ -1,107 +1,107 @@
-/* CodeJump · 3D World — the model library: characters, objects and animations (files in world/assets/,
- * from Flock XR under the MIT licence; see assets/README.md). Shared by world-blocks.js (dropdowns) and
- * world-runtime.js (loading). Every character uses the same skeleton, so every animation fits every character.
+/* CodeJump · 3D World — the model library: characters, objects and animations. The files in world/assets/ are made from
+ * Kenney's free CC0 packs (www.kenney.nl; see assets/README.md) by tools/world-assets/. Shared by world-blocks.js
+ * (dropdowns) and world-runtime.js (loading).
+ * The ids are the ones saved projects already use (Block5, tree, Gem2…), so old projects still open; only the pictures changed.
  */
 
-// lightest first: the Blocky characters are ~5k vertices, Ponytail 222k and Spiky hair 128k (slow on Chromebooks)
 export const CHARACTERS = [
-  ['Block5', 'Blocky short hair'], ['Block1', 'Blocky bunches'], ['Block2', 'Blocky long bunches'], ['Block3', 'Blocky ponytail'],
-  ['Block4', 'Blocky curly hair'], ['Block6', 'Blocky long hair'],
-  ['Liz1', 'Cat'], ['Liz2', 'Monkey'], ['Liz5', 'Alien'], ['Liz6', 'Elf'], ['Liz4', 'Spiky hair'], ['Liz3', 'Ponytail']
+  ['Block5', 'Glasses and green top'], ['Block1', 'Bunches and yellow top'], ['Block2', 'Headband and blue top'], ['Block3', 'Hair bun and grey jacket'],
+  ['Block4', 'White sports kit'], ['Block6', 'Long hair and black top'], ['Liz1', 'Hair bun and purple top'], ['Liz2', 'Red beard'],
+  ['Liz5', 'Police officer'], ['Liz6', 'Smart suit'], ['Liz4', 'Builder'], ['Liz3', 'Green T-shirt']
 ];
 
 export const OBJECTS = [
-  ['Star', 'Star'], ['Heart', 'Heart'], ['Coin', 'Coin'], ['Gem1', 'Square gem'], ['Gem2', 'Diamond'], ['Gem3', 'Long gem'],
-  ['Key', 'Key'], ['Wand', 'Wand'], ['Hat', 'Hat'], ['egg', 'Egg'], ['apple', 'Apple'], ['pumpkin', 'Pumpkin'], ['donut', 'Donut'],
-  ['starboppers', 'Starboppers'], ['headphones', 'Headphones'],
-  ['tree', 'Tree'], ['tree2', 'Two-branch tree'], ['tree3', 'Winter tree'], ['tree4', 'Fir tree'],
-  ['flower', 'Flower'], ['flower2', 'Tulip'], ['mushroom', 'Mushroom'], ['mushroom_2', 'Toadstool'],
-  ['rocks', 'Rock platform'], ['rocks2', 'Corner rock'], ['rocks3', 'Rock steps'], ['rocks4', 'Waterfall'],
-  ['icecrystals', 'Ice crystals'], ['stalagmite', 'Stalagmite'], ['pond', 'Pond'],
-  ['hut', 'Round hut'], ['hut2', 'Cabin'], ['hut3', 'Festival tent'], ['hut4', 'Toadstool hut'],
-  ['window_window', 'Wall with windows'], ['window_only', 'Wall with a window'], ['window_door', 'Wall with a door'],
-  ['window_door_reversed', 'Wall with a door (flipped)'], ['window_stairs', 'Wall with stairs'],
-  ['humped', 'Humped bridge'], ['jetty', 'Jetty'], ['boardwalk_straight', 'Boardwalk'],
-  ['boat', 'Ship'], ['airplane', 'Aeroplane'], ['airplane2', 'Aeroplane with a seat'], ['skateboard', 'Skateboard']
+  ['Star', 'Star'], ['Heart', 'Heart'], ['Coin', 'Coin'], ['Gem1', 'Jewel'], ['Gem2', 'Purple jewel'],
+  ['Gem3', 'Red jewel'], ['Key', 'Key'], ['Wand', 'Lantern'], ['Hat', 'Teddy bear'], ['egg', 'Egg'],
+  ['apple', 'Apple'], ['pumpkin', 'Pumpkin'], ['donut', 'Donut'], ['starboppers', 'Cupcake'], ['headphones', 'Radio'],
+  ['tree', 'Tree'], ['tree2', 'Oak tree'], ['tree3', 'Snowy tree'], ['tree4', 'Fir tree'], ['flower', 'Red flowers'],
+  ['flower2', 'Purple flowers'], ['mushroom', 'Mushroom'], ['mushroom_2', 'Toadstools'], ['rocks', 'Big rock'],
+  ['rocks2', 'Tall rock'], ['rocks3', 'Rock steps'], ['rocks4', 'Cliff'], ['icecrystals', 'Cactus'],
+  ['stalagmite', 'Stone pillar'], ['pond', 'Fountain'], ['hut', 'House'], ['hut2', 'Cottage'], ['hut3', 'Tent'],
+  ['hut4', 'Market stall'], ['window_window', 'Wall with a window'], ['window_only', 'Wall with shutters'],
+  ['window_door', 'Wall with a door'], ['window_door_reversed', 'Wooden wall with a door'],
+  ['window_stairs', 'Stone steps'], ['humped', 'Stone bridge'], ['jetty', 'Wooden bridge'],
+  ['boardwalk_straight', 'Stepping stones'], ['boat', 'Canoe'], ['airplane', 'Flag'], ['airplane2', 'Treasure chest'],
+  ['skateboard', 'Spring'], ['cart', 'Cart'], ['barrel', 'Barrel'], ['crate', 'Crate'], ['sign', 'Sign'],
+  ['ladder', 'Ladder'], ['trophy', 'Trophy'], ['statue', 'Statue'], ['palm', 'Palm tree'], ['pine', 'Pine tree'],
+  ['bush', 'Bush'], ['log', 'Log'], ['campfire', 'Campfire'], ['hedge', 'Hedge'], ['fence', 'Fence'],
+  ['house2', 'Big house'], ['bench', 'Bench'], ['table', 'Table'], ['chair', 'Chair'], ['sofa', 'Sofa'],
+  ['cake', 'Birthday cake'], ['pizza', 'Pizza'], ['icecream', 'Ice cream'], ['watermelon', 'Watermelon'],
+  ['banana', 'Banana'], ['burger', 'Burger'], ['carrot', 'Carrot'], ['bomb', 'Bomb']
 ];
 
+// [id, label, the character file's own clip | null = made by the runtime from PROC_ANIMS]
 export const ANIMATIONS = [
-  ['Idle', 'stand still'], ['Walk', 'walk'], ['Run', 'run'], ['Jump', 'jump'], ['JumpUp', 'jump up'], ['JumpIdle', 'in the air'],
-  ['JumpLand', 'land'], ['Fall', 'fall'], ['Wave', 'wave'], ['Clap', 'clap'], ['Yes', 'nod yes'], ['No', 'shake head'],
-  ['Dance1', 'dance 1'], ['Dance2', 'dance 2'], ['Dance3', 'dance 3'], ['Dance4', 'dance 4'], ['Flip', 'flip'], ['Duck', 'duck'],
-  ['Punch', 'punch'], ['HitReact', 'ouch'], ['Wobble', 'wobble'], ['Fly', 'fly'], ['Swim', 'swim'], ['Tread_Water', 'tread water'],
-  ['Skate', 'skate'], ['Climb_wall', 'climb wall'], ['Climb_rope', 'climb rope'], ['Sit_Down', 'sit down'], ['Sitting', 'sitting'],
-  ['Stand_Up', 'stand up'], ['Push_button', 'push a button'], ['Idle_Hold', 'hold'], ['Walk_Hold', 'walk holding'],
-  ['Run_Hold', 'run holding'], ['Idle_Attack', 'reach'], ['Walk_Attack', 'walk reaching'], ['Run_Attack', 'run reaching']
+  ['Idle', 'stand still', 'idle'], ['Walk', 'walk', 'walk'], ['Run', 'run', 'sprint'], ['Jump', 'jump', 'jump'], ['JumpUp', 'jump up', 'jump'],
+  ['JumpIdle', 'in the air', 'fall'], ['JumpLand', 'land', 'crouch'], ['Fall', 'fall', 'fall'], ['Wave', 'wave', null], ['Clap', 'clap', null],
+  ['Cheer', 'cheer', null], ['Yes', 'nod yes', 'emote-yes'], ['No', 'shake head', 'emote-no'], ['Dance1', 'dance 1', null], ['Dance2', 'dance 2', null],
+  ['Dance3', 'dance 3', null], ['Dance4', 'dance 4', null], ['Spin', 'spin round', null], ['Flip', 'flip', null], ['Duck', 'duck', 'crouch'],
+  ['Kick', 'kick', 'attack-kick-right'], ['Punch', 'punch', 'attack-melee-right'], ['HitReact', 'ouch', null], ['Wobble', 'wobble', null],
+  ['Fly', 'fly', null], ['Swim', 'swim', null], ['Tread_Water', 'tread water', null], ['Skate', 'skate', null], ['Climb_wall', 'climb wall', null],
+  ['Climb_rope', 'climb rope', null], ['Sit_Down', 'sit down', 'sit'], ['Sitting', 'sitting', 'sit'], ['Stand_Up', 'stand up', null],
+  ['Pick_Up', 'pick up', 'pick-up'], ['Drive', 'drive', 'drive'], ['Push_button', 'push a button', 'interact-right'], ['Idle_Hold', 'hold', 'holding-both'],
+  ['Walk_Hold', 'walk holding', 'walk'], ['Run_Hold', 'run holding', 'sprint'], ['Idle_Attack', 'reach', 'interact-right'],
+  ['Walk_Attack', 'walk reaching', 'walk'], ['Run_Attack', 'run reaching', 'sprint']
 ];
+export const clipOf = a => (ANIMATIONS.find(c => c[0] === a) || [])[2];
 
-// Flock's default colours for each object, applied to its materials in order (root mesh first, then the meshes below it
-// sorted by name; one colour per material, repeating). Objects not listed keep the colours in their file.
-export const OBJECT_COLOURS = {
-  Star: ["#FFD700", "#FFD700", "#FFD700"],
-  Heart: ["#FF69B4", "#FF69B4", "#FF69B4"],
-  Coin: ["#A47E1B", "#C9A227", "#76520E"],
-  Gem1: ["#00BFFF", "#00BFFF", "#00BFFF"],
-  Gem2: ["#8A2BE2", "#8A2BE2", "#8A2BE2"],
-  Gem3: ["#FF4500", "#FF4500", "#FF4500"],
-  Key: ["#A47E1B", "#C9A227", "#76520E"],
-  Wand: ["#FF4500", "#8A2BE2", "#92614A"],
-  Hat: ["#9D3F72", "#B5FDFD", "#3D0073"],
-  egg: ["#fffcec", "#fffcec", "#fffcec"],
-  apple: ["#3FAF45", "#A9323F", "#624A20"],
-  pumpkin: ["#E78632", "#75430F"],
-  donut: ["#f9cb9c", "#fba0c3"],
-  starboppers: ["#FFD700", "#FFD700", "#FFD700", "#f9f9f9"],
-  headphones: ["#53E0E7", "#3291E7", "#7D7D7D"],
-  tree: ["#66CDAA", "#CD853F"],
-  tree2: ["#7F9F7F", "#A1623B"],
-  tree3: ["#403C3C", "#312616"],
-  tree4: ["#0D5B28", "#6D6C51"],
-  flower: ["#E73F9F", "#4AB700", "#E7D535"],
-  flower2: ["#7C38E7", "#4AB700", "#E7D535"],
-  mushroom: ["#ffffff", "#E73A49", "#8F7A61"],
-  mushroom_2: ["#ffffff", "#E73A49", "#8F7A61"],
-  rocks: ["#898D86", "#99a83d"],
-  rocks2: ["#898D86", "#99a83d"],
-  rocks3: ["#898D86", "#99a83d"],
-  rocks4: ["#898D86", "#99a83d", "#6BC6EF", "#f9f9f9"],
-  pond: ["#00E704", "#5A91E7", "#9A9A9A"],
-  hut: ["#B66946", "#5F2524", "#C25A5C", "#E1B46E", "#3BACBA", "#878787"],
-  hut2: ["#814C22", "#231E1D", "#FFF6A6", "#E7AF3A", "#E73627", "#878787"],
-  hut3: ["#F6DAB6", "#6CC3C1", "#9DC45C", "#EEB975", "#F3B4BE", "#878787"],
-  hut4: ["#F2E8CF", "#BC4749", "#EEB975", "#AF1B3F", "#6A994E", "#878787"],
-  window_window: ["#E7A988", "#E74E5F", "#E7E7E7"],
-  window_only: ["#E7A988", "#E74E5F", "#E7E7E7"],
-  window_door: ["#E7A988", "#E74E5F", "#E7E7E7"],
-  window_door_reversed: ["#E7A988", "#E74E5F", "#E7E7E7"],
-  window_stairs: ["#E7A988", "#E74E5F", "#E7E7E7"],
-  humped: ["#FFA869", "#E76F31", "#7E5024"],
-  jetty: ["#FFA869", "#7E5024", "#E76F31"],
-  boardwalk_straight: ["#7E5024", "#7E5024", "#7E5024"],
-  boat: ["#4F8A46", "#E7D48E", "#E76635", "#E76C69", "#5E64E7", "#4A4A4A", "#AAAAAA", "#E711CD"],
-  airplane: ["#E75D43", "#6A6A6A", "#E7C777", "#979797", "#A033E7"],
-  airplane2: ["#E75D43", "#6A6A6A", "#E7C777", "#979797", "#A033E7"],
-  skateboard: ["#E769D3", "#484848", "#251BE7"]
+/* Animations the character files don't have, as key poses: seconds, then degrees for the joints (x, y, z) and the
+ * body's lift (m, before the 2.8 m scale). Joints not given keep the standing pose. The arms hang at z = ±45;
+ * a right arm straight up is z = -130 (left +130); y = ±60 swings an arm forwards; x < 0 swings a leg forwards;
+ * the torso leans forwards with x > 0. "turn" spins the whole body round y (degrees). */
+const UP = 85;
+export const PROC_ANIMS = {
+  Wave: [[0, { armR: [0, 0, 45] }], [0.25, { armR: [0, 0, -78] }], [0.45, { armR: [0, 0, -98], head: [0, 0, -6] }], [0.65, { armR: [0, 0, -69] }],
+    [0.85, { armR: [0, 0, -98], head: [0, 0, -6] }], [1.05, { armR: [0, 0, -72] }], [1.3, { armR: [0, 0, 45] }]],
+  Clap: [[0, {}], [0.15, { armR: [0, 70, 0], armL: [0, -70, 0] }], [0.3, { armR: [0, 95, 0], armL: [0, -95, 0] }], [0.45, { armR: [0, 70, 0], armL: [0, -70, 0] }],
+    [0.6, { armR: [0, 95, 0], armL: [0, -95, 0] }], [0.75, { armR: [0, 70, 0], armL: [0, -70, 0] }], [0.9, { armR: [0, 95, 0], armL: [0, -95, 0] }], [1.1, {}]],
+  Cheer: [[0, {}], [0.2, { armR: [0, 0, -UP], armL: [0, 0, UP], lift: 0.06 }], [0.4, { armR: [0, 0, -72], armL: [0, 0, 72] }],
+    [0.6, { armR: [0, 0, -UP], armL: [0, 0, UP], lift: 0.06 }], [0.8, { armR: [0, 0, -72], armL: [0, 0, 72] }], [1, {}]],
+  Dance1: [[0, {}], [0.25, { armR: [0, 0, -UP], armL: [0, 0, 20], torso: [0, 0, 8], lift: 0.03 }], [0.5, {}],
+    [0.75, { armL: [0, 0, UP], armR: [0, 0, -20], torso: [0, 0, -8], lift: 0.03 }], [1, {}]],
+  Dance2: [[0, { armR: [0, 0, 0], armL: [0, 0, 0] }], [0.3, { torso: [0, 25, 0], head: [0, -15, 0], armR: [0, 0, -15], armL: [0, 0, -15] }],
+    [0.6, { torso: [0, -25, 0], head: [0, 15, 0], armR: [0, 0, 15], armL: [0, 0, 15] }], [0.9, { armR: [0, 0, 0], armL: [0, 0, 0] }]],
+  Dance3: [[0, {}], [0.2, { legR: [-50, 0, 0], armR: [0, 60, 0], armL: [0, 0, 10] }], [0.4, { lift: 0.03 }], [0.6, { legL: [-50, 0, 0], armL: [0, -60, 0], armR: [0, 0, -10] }], [0.8, {}]],
+  Dance4: [[0, { armR: [0, 0, -UP], armL: [0, 0, UP], turn: 0 }], [0.5, { armR: [0, 0, -65], armL: [0, 0, 65], turn: 180, lift: 0.04 }],
+    [1, { armR: [0, 0, -UP], armL: [0, 0, UP], turn: 360 }]],
+  Spin: [[0, { armR: [0, 0, 0], armL: [0, 0, 0], turn: 0 }], [0.8, { armR: [0, 0, 0], armL: [0, 0, 0], turn: 360 }]],
+  Flip: [[0, { flip: 0 }], [0.15, { lift: 0.05, legR: [-40, 0, 0], legL: [-40, 0, 0], flip: 0 }], [0.45, { lift: 0.35, legR: [-90, 0, 0], legL: [-90, 0, 0], armR: [0, 60, 0], armL: [0, -60, 0], flip: -180 }],
+    [0.75, { lift: 0.1, legR: [-40, 0, 0], legL: [-40, 0, 0], flip: -360 }], [0.9, { flip: -360 }]],
+  HitReact: [[0, {}], [0.12, { torso: [-25, 0, 0], head: [-20, 0, 0], armR: [0, 0, 0], armL: [0, 0, 0] }], [0.5, { torso: [-10, 0, 0] }], [0.7, {}]],
+  Wobble: [[0, {}], [0.2, { torso: [0, 0, 15], head: [0, 0, -10], armR: [0, 0, 10], armL: [0, 0, 10] }], [0.4, {}],
+    [0.6, { torso: [0, 0, -15], head: [0, 0, 10], armR: [0, 0, -10], armL: [0, 0, -10] }], [0.8, {}]],
+  Fly: [[0, { armR: [0, 0, -10], armL: [0, 0, 10], legR: [20, 0, 0], legL: [20, 0, 0], torso: [15, 0, 0] }],
+    [0.3, { armR: [0, 0, 25], armL: [0, 0, -25], legR: [25, 0, 0], legL: [25, 0, 0], torso: [15, 0, 0], lift: 0.04 }],
+    [0.6, { armR: [0, 0, -10], armL: [0, 0, 10], legR: [20, 0, 0], legL: [20, 0, 0], torso: [15, 0, 0] }]],
+  Swim: [[0, { torso: [40, 0, 0], armR: [0, 0, -65], armL: [0, 0, 65], legR: [20, 0, 0], legL: [-10, 0, 0] }],
+    [0.35, { torso: [40, 0, 0], armR: [0, 60, 20], armL: [0, -60, -20], legR: [-10, 0, 0], legL: [20, 0, 0] }],
+    [0.7, { torso: [40, 0, 0], armR: [0, 0, -65], armL: [0, 0, 65], legR: [20, 0, 0], legL: [-10, 0, 0] }]],
+  Tread_Water: [[0, { armR: [0, 0, 5], armL: [0, 0, -5], legR: [-20, 0, 0], legL: [10, 0, 0] }],
+    [0.5, { armR: [0, 0, 25], armL: [0, 0, -25], legR: [10, 0, 0], legL: [-20, 0, 0], lift: 0.03 }], [1, { armR: [0, 0, 5], armL: [0, 0, -5], legR: [-20, 0, 0], legL: [10, 0, 0] }]],
+  Skate: [[0, { torso: [20, 15, 0], legR: [-15, 0, 0], legL: [25, 0, 0], armR: [0, -30, 30], armL: [0, -30, -40] }],
+    [0.5, { torso: [20, -15, 0], legR: [25, 0, 0], legL: [-15, 0, 0], armR: [0, 30, 40], armL: [0, 30, -30] }], [1, { torso: [20, 15, 0], legR: [-15, 0, 0], legL: [25, 0, 0], armR: [0, -30, 30], armL: [0, -30, -40] }]],
+  Climb_wall: [[0, { armR: [0, 40, -72], armL: [0, -40, 39], legR: [-50, 0, 0], legL: [0, 0, 0] }],
+    [0.4, { armR: [0, 40, -39], armL: [0, -40, 72], legR: [0, 0, 0], legL: [-50, 0, 0], lift: 0.03 }], [0.8, { armR: [0, 40, -72], armL: [0, -40, 39], legR: [-50, 0, 0], legL: [0, 0, 0] }]],
+  Climb_rope: [[0, { armR: [0, 20, -UP], armL: [0, -20, 59], legR: [-40, 0, 0], legL: [-40, 0, 0] }],
+    [0.4, { armR: [0, 20, -59], armL: [0, -20, UP], legR: [-20, 0, 0], legL: [-20, 0, 0], lift: 0.03 }], [0.8, { armR: [0, 20, -UP], armL: [0, -20, 59], legR: [-40, 0, 0], legL: [-40, 0, 0] }]],
+  Stand_Up: [[0, { lift: -0.15, legR: [-75, 0, 0], legL: [-75, 0, 0] }], [0.3, { lift: -0.08, legR: [-45, 0, 0], legL: [-45, 0, 0], torso: [20, 0, 0] }], [0.6, {}]]
 };
+export const PROC_LOOP = ['Spin', 'Dance4']; // these turn the whole body: "over and over" keeps going round
 
-// colours a character can be given (glTF material names -> part)
-export const CHARACTER_PARTS = [['hair', 'hair'], ['skin', 'skin'], ['eyes', 'eyes'], ['tshirt', 'T-shirt'], ['shorts', 'shorts'], ['sleeves', 'sleeves and shoes']];
+// colours a character can be given: [label, value] (the values are the ones saved projects already have)
+export const CHARACTER_PARTS = [['hair or hat', 'hair'], ['skin', 'skin'], ['eyes and mouth', 'eyes'], ['top', 'T-shirt'], ['shorts or trousers', 'shorts'], ['shoes', 'sleeves and shoes']];
+const PART = { 'T-shirt': 'tshirt', 'sleeves and shoes': 'shoes', sleeves: 'shoes' };
+// each part's 32×128 slots in the character's colour map (slot s: x = (s % 16) × 32, y = floor(s / 16) × 128)
+export const CHARACTER_SLOTS = {"Block5":{"shoes":[0,2],"shorts":[1,5],"skin":[3,4],"tshirt":[6,7],"eyes":[8],"hair":[9,10,11]},"Block1":{"shorts":[0,3],"shoes":[1,4,5],"tshirt":[2,8],"skin":[6,7],"hair":[9,11,12],"eyes":[10]},"Block2":{"skin":[0,1],"shoes":[2],"shorts":[3,4],"tshirt":[5,6,7],"hair":[8,10,11],"eyes":[9]},"Block3":{"shorts":[0,2],"tshirt":[1,4],"shoes":[3],"skin":[5],"eyes":[6],"hair":[7,8,9]},"Block4":{"tshirt":[0,3,5,6],"shorts":[1,7],"shoes":[2,4,8],"hair":[9],"eyes":[10],"skin":[11]},"Block6":{"shorts":[0,2],"shoes":[1,3,4],"tshirt":[5,6,9,10],"skin":[7,8],"hair":[11,12,14],"eyes":[13]},"Liz1":{"shorts":[0,2],"shoes":[1,3,4],"tshirt":[5,6],"skin":[7,8],"hair":[9],"eyes":[10]},"Liz2":{"tshirt":[0,5],"shorts":[1,6],"shoes":[2,7],"skin":[3,4],"eyes":[8],"hair":[9,10,11]},"Liz5":{"tshirt":[0,3,5],"shorts":[1],"shoes":[2,6],"skin":[4],"hair":[7,9,10,11],"eyes":[8]},"Liz6":{"tshirt":[0,4,5],"shorts":[1],"shoes":[2],"skin":[3],"eyes":[6],"hair":[7]},"Liz4":{"shorts":[0,2,5],"tshirt":[1,4,7],"shoes":[3,6,8],"eyes":[9],"skin":[10],"hair":[11,12,13]},"Liz3":{"shorts":[0],"shoes":[1,4],"tshirt":[2,5,6,7],"skin":[3],"hair":[8],"eyes":[9]}};
+export const partId = p => PART[p] || p;
+export const slotsOf = (model, part) => (CHARACTER_SLOTS[model] || {})[partId(part)] || [];
 
-export function partOfMaterial(name) {
-  const s = String(name || '').toLowerCase();
-  if (s.includes('hair')) return 'hair';
-  if (s.includes('skin')) return 'skin';
-  if (s.includes('eyes')) return 'eyes';
-  if (s.includes('shorts')) return 'shorts';
-  if (s.includes('tshirt') || s.includes('t-shirt') || s.includes('tee')) return 'tshirt';
-  if (s.includes('sleeve') || s.includes('detail') || s.includes('shoes')) return 'sleeves';
-  return null;
-}
+// objects that start in another colour than their file (one colour per material, in order)
+export const OBJECT_COLOURS = { Gem2: ['#8A2BE2'], Gem3: ['#E8402A'] };
 
 export const isCharacter = m => CHARACTERS.some(c => c[0] === m);
 export const isObject = m => OBJECTS.some(c => c[0] === m);
 export const isAnimation = a => ANIMATIONS.some(c => c[0] === a);
 export const characterFile = m => 'characters/' + m + '.glb';
 export const objectFile = m => 'objects/' + m + '.glb';
-export const animationFile = a => 'animations/' + a + '.glb';
-export const THUMBLESS = ['icecrystals', 'stalagmite'];
+export const THUMBLESS = [];

@@ -31,6 +31,27 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## 3D World models replaced with Kenney CC0 packs (23 Oct 2026, CJ_VERSION 2026.10.23; branch `claude/vibrant-cori-tho25y`) — Charlie: "the 3D models used in the 3D world lab need to be changed" (licence worry: Flock's files, possibly Mixamo clips)
+- **All Flock assets are gone** (characters, objects, the 37 animation files, thumbs). New files in `world/assets/` come from Kenney's
+  CC0 packs (Mini Characters, Platformer, Nature, Food, Fantasy Town, City Suburban, Furniture, Mini Arena). Made by
+  `tools/world-assets/` (packchars.mjs, packobjs.mjs + objmap.mjs list/labels/heights, measure.mjs; Kenney zips unpacked into
+  `tools/world-assets/kenney/`, gitignored). See its README. Every .glb is self-contained (texture embedded) and scaled.
+- **Ids kept** (Block1–6, Liz1–6, Star, tree, Gem2, hut…) so saved projects and lessons still open; labels changed (Gem2 = Purple jewel,
+  pond = Fountain, hut = House, Hat = Teddy bear, airplane = Flag…). 73 objects (27 new: barrel, crate, palm, bench, pizza…).
+  Characters = the 12 Kenney mini characters, scaled to 2.8 m; Liz1 (female-a) had a toy blaster in the mesh — packchars drops it (`DROP`).
+- **Animations:** each character file has its own 32 clips; `ANIMATIONS` rows are [id, label, clip | null] (`clipOf`). Missing ones
+  (Wave, Clap, Cheer, Dance1–4, Spin, Flip, HitReact, Wobble, Fly, Swim, Tread_Water, Skate, Climb_wall/rope, Stand_Up) are built by
+  the runtime (`makeClip`) from key poses in `PROC_ANIMS` (joints arm/leg/torso/head on the 7-joint skeleton; arms hang at z ±45,
+  straight up = ∓90; `turn`/`flip`/`lift` move the root). `restPose` runs before every clip. Animation group names = `<id>.<Name>`.
+  New: Cheer, Spin, Kick, Pick_Up, Drive.
+- **Part recolouring:** packchars gives every (part, swatch) its own 32×128 slot in the unused top half of the colour map
+  (`CHARACTER_SLOTS`, `slotsOf`, `partId`; part values kept: hair, skin, eyes, 'T-shirt', shorts, 'sleeves and shoes' = shoes). The runtime
+  reads the PNG out of the GLB (`pngOf`; `files` keeps a COPY of each character's bytes — loading detaches the buffer), and paints a
+  per-object `DynamicTexture` (`repaint`, keeps the shading). Headless (no createImageBitmap) it only records `o.parts`.
+- **Bundle gotcha:** babylon-world.min.js exports no `Animation`, `Axis` or `Texture` — `makeClip` takes Animation from a file clip's
+  constructor; sampling/wrap modes are numbers.
+- Lesson pictures (3D) and `home/world3d.jpg` regenerated; help/Teacher Guide credit Kenney. `make-starters.mjs` takes a comma list of ids.
+
 ## Lesson units for every lab (21 Oct 2026, CJ_VERSION 2026.10.21.3; branch `claude/vibrant-cori-tho25y`) — Charlie: "proper units" for all the labs
 - Built by 8 parallel agents (a multi-agent workflow), one per lab, then merged and re-tested. 18 lessons per lab (3 blocks of 6: Years 3–4,
   4–5, 5–6), 24 for the Platformer and Stage Labs (+ a Years 1–2 block in their KS1 editors). Each lab's existing lessons were ADOPTED into

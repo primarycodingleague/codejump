@@ -51,4 +51,19 @@ const z0 = get('player').z;
 w.key('up', true); await T(40); w.key('up', false);
 ok(playing().includes('player.Walk') || get('player').z !== z0, 'arrow keys walk the player');
 ok(errs.length === 0, 'no errors from the program' + (errs.length ? ': ' + errs.join(' | ') : ''));
+// the model library (Kenney CC0 files): every model has its file and picture, every character every part, and animations play
+{
+  const { existsSync } = await import('node:fs');
+  const LIB = await import(W + 'world-assets.js');
+  const miss = [...LIB.CHARACTERS.map(c => LIB.characterFile(c[0])), ...LIB.OBJECTS.map(o => LIB.objectFile(o[0])), ...[...LIB.CHARACTERS, ...LIB.OBJECTS].map(c => 'thumbs/' + c[0] + '.png')].filter(f => !existsSync(W + 'assets/' + f));
+  ok(miss.length === 0 && LIB.OBJECTS.length >= 70, LIB.OBJECTS.length + ' objects, 12 characters: every file and picture is there' + (miss.length ? ': missing ' + miss : ''));
+  const parts = LIB.CHARACTERS.filter(c => LIB.CHARACTER_PARTS.filter(p => p[1] !== 'eyes').some(p => !LIB.slotsOf(c[0], p[1]).length));
+  ok(parts.length === 0, 'every character can recolour hair, skin, top, shorts and shoes' + (parts.length ? ': not ' + parts.map(c => c[0]) : ''));
+  ok(LIB.ANIMATIONS.every(([id, , clip]) => clip || LIB.PROC_ANIMS[id]), 'every animation is a file clip or made from key poses');
+  await w.run(`const k = await createCharacter('k', { model: 'Liz2' }); playAnimation(k, 'Wave', 'loop'); const j = await createCharacter('j', { model: 'Block3', x: 3 }); playAnimation(j, 'Kick', 'loop'); setPartColor(j, 'T-shirt', '#ff0000'); await createObject('g', { model: 'Gem2', x: -3 });`);
+  await T(30);
+  const groups = w.scene.animationGroups.filter(g => g.isPlaying).map(g => g.name);
+  ok(groups.includes('k.Wave') && groups.includes('j.Kick'), 'a made animation (Wave) and a file clip (Kick) play: ' + groups.filter(n => /^[kj]\./.test(n)));
+  ok(w.objects().find(o => o.id === 'j').parts.tshirt === '#ff0000' && w.objects().some(o => o.id === 'g' && o.model === 'Gem2'), 'part colours are kept; old ids (Gem2) still load');
+}
 done();

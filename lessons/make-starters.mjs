@@ -145,7 +145,7 @@ const site = await serve();
 const b = await browser();
 const errors = [];
 for (const id of Object.keys(BUILD)) {
-  if (only && id !== only) continue;
+  if (only && !only.split(',').includes(id)) continue;
   const { ctx, page } = await openApp(b, site.url, { errors }); // a fresh page each time, so nothing carries over
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.evaluate(([src, args]) => (0, eval)('(' + src + ')')(args), [BUILD[id].toString(), BUILD_ARGS[id] || ARGS]);

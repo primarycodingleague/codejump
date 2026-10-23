@@ -43,6 +43,16 @@ export function keyName(k) {
 
 function num(v, d) { v = Number(v); return Number.isFinite(v) ? v : d; }
 function clampN(v, lo, hi, d) { return Math.min(hi, Math.max(lo, num(v, d))); }
+// the first picture inside a .glb file (a character's colour map)
+function pngOf(buf) {
+  try {
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), jl = dv.getUint32(12, true);
+    const j = JSON.parse(new TextDecoder().decode(buf.subarray(20, 20 + jl))), im = (j.images || [])[0];
+    if (!im || im.bufferView == null) return null;
+    const v = j.bufferViews[im.bufferView], bin = 20 + jl + 8;
+    return buf.subarray(bin + (v.byteOffset || 0), bin + (v.byteOffset || 0) + v.byteLength);
+  } catch (e) { return null; }
+}
 function hexToRgb(c) {
   const m = /^#?([0-9a-f]{6})$/i.exec(String(c || '').trim());
   if (!m) return [0.6, 0.4, 0.8];
@@ -152,8 +162,9 @@ export function createWorld(B, opts) {
     if (o.agg) { try { o.agg.dispose(); } catch (e) { /* already gone */ } o.agg = null; }
     if (shadows) { try { shadows.removeShadowCaster(o.mesh, true); } catch (e) { /* not a caster */ } }
     if (o.inst) {
-      for (const k in o.anims) o.anims[k].dispose();
+      for (const k in o.anims) o.anims[k].dispose(); // made clips and the file's own (disposing twice is fine)
       o.inst.animationGroups.forEach(g => g.dispose());
+      if (o.tex) { o.tex.dispose(); o.tex = null; }
       o.inst.skeletons.forEach(sk => sk.dispose());
       const mats = new Set(); o.mesh.getChildMeshes(false).forEach(m => { if (m.material) mats.add(m.material); });
       mats.forEach(m => m.dispose()); // the copy's own materials (cloned per object); textures are shared
@@ -246,6 +257,7 @@ export function createWorld(B, opts) {
 
   // ── characters and objects ──
   const containers = new Map(); // file -> Promise<AssetContainer>, kept for the whole session
+  const files = new Map(); // file -> its bytes (a character's colour map is read from them for recolouring)
   let pending = 0;
   function loading(d) { pending += d; if (opts.onLoading) opts.onLoading(pending); }
   function container(file) {
@@ -254,8 +266,9 @@ export function createWorld(B, opts) {
         if (!loadAsset) throw new Error('no asset loader');
         loading(1);
         try {
-          const buf = await loadAsset(file);
-          return await B.LoadAssetContainerAsync(new Uint8Array(buf), scene, { pluginExtension: '.glb', pluginOptions: { gltf: { animationStartMode: 0 } } });
+          const buf = new Uint8Array(await loadAsset(file));
+          if (/^characters\//.test(file)) files.set(file, buf.slice()); // a copy: loading can hand the buffer on
+          return await B.LoadAssetContainerAsync(buf, scene, { pluginExtension: '.glb', pluginOptions: { gltf: { animationStartMode: 0 } } });
         } finally { loading(-1); }
       })();
       pr.catch(() => containers.delete(file)); // try again next time (e.g. back online)
@@ -280,18 +293,21 @@ export function createWorld(B, opts) {
     }
     if (r.stopped || r !== run || o.gone) { if (objs.get(id) === o) objs.delete(id); throw STOP; }
     const inst = cont.instantiateModelsToScene(n => n, true, { doNotInstantiate: true });
-    inst.skeletons.forEach(sk => { sk.useTextureToStoreBoneMatrices = true; }); // 155 bones: too many for vertex uniforms on some tablets
+    inst.animationGroups.forEach(g => g.stop());
     const root = inst.rootNodes[0];
     const holder = new B.TransformNode(id + '_model', scene);
     for (const n of inst.rootNodes) n.parent = holder;
     const sc = clampN(p.scale, 0.05, 20, 1);
     holder.scaling.set(sc, sc, sc);
+    if (kind === 'character') { // measure standing up, not in the arms-out pose the file is saved in
+      o.nodes = {}; for (const n of holder.getDescendants(false)) if (!o.nodes[n.name]) o.nodes[n.name] = n;
+      const idle = inst.animationGroups.find(g => g.name === 'idle'); if (idle) { idle.start(false); idle.goToFrame(0); idle.stop(); }
+    }
     holder.computeWorldMatrix(true);
     const bb = holder.getHierarchyBoundingVectors(true);
     const h = Math.max(0.05, bb.max.y - bb.min.y);
-    // characters are measured in their T-pose, so give them a body-sized box instead of the arm span
-    const w = kind === 'character' ? h * 0.32 : Math.max(0.05, bb.max.x - bb.min.x);
-    const d = kind === 'character' ? h * 0.32 : Math.max(0.05, bb.max.z - bb.min.z);
+    const w = kind === 'character' ? h * 0.42 : Math.max(0.05, bb.max.x - bb.min.x);
+    const d = kind === 'character' ? h * 0.42 : Math.max(0.05, bb.max.z - bb.min.z);
     const mesh = B.MeshBuilder.CreateBox(id, { width: w, height: h, depth: d }, scene);
     mesh.bakeTransformIntoVertices(B.Matrix.Translation(0, h / 2, 0));
     mesh.isVisible = false;
@@ -306,7 +322,6 @@ export function createWorld(B, opts) {
     Object.assign(o, { mesh, inst, root, holder, size: { w, h, d } });
     if (kind === 'object' && LIB.OBJECT_COLOURS[model]) colourInOrder(o, LIB.OBJECT_COLOURS[model]);
     if (kind === 'character') {
-      o.nodes = {}; for (const n of holder.getDescendants(false)) if (!o.nodes[n.name]) o.nodes[n.name] = n;
       if (p.colors) for (const part in p.colors) setPart(o, part, p.colors[part]);
       playAnim(o, 'Idle', 'loop').catch(() => {});
     }
@@ -314,9 +329,9 @@ export function createWorld(B, opts) {
     return id;
   }
 
-  function materials(o, part) {
+  function materials(o) {
     const mats = new Set();
-    o.holder.getChildMeshes(false).forEach(m => { if (m.material && (!part || LIB.partOfMaterial(m.material.name) === part)) mats.add(m.material); });
+    o.holder.getChildMeshes(false).forEach(m => { if (m.material) mats.add(m.material); });
     return mats;
   }
   function paint(mat, c) {
@@ -332,33 +347,104 @@ export function createWorld(B, opts) {
       seen.set(m.material, true);
     }
   }
-  function setPart(o, part, c) { if (o.holder && c) materials(o, part).forEach(m => paint(m, c)); }
+  // A character's parts each have their own 32×128 slots in its colour map (see world-assets.js), so a part is
+  // recoloured by repainting its slots in the object's own copy of the map, keeping the shading.
+  const basePics = new Map(); // model -> Promise<ImageBitmap | null>
+  function basePic(model) {
+    if (!basePics.has(model)) basePics.set(model, (async () => {
+      if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return null; // headless: nothing to draw
+      const png = pngOf(files.get(LIB.characterFile(model)));
+      return png ? createImageBitmap(new Blob([png], { type: 'image/png' })) : null;
+    })().catch(() => null));
+    return basePics.get(model);
+  }
+  function setPart(o, part, c) {
+    if (!o.holder || !c || !LIB.slotsOf(o.model, part).length) return;
+    o.parts = o.parts || {};
+    o.parts[LIB.partId(part)] = String(c);
+    const job = (o.paintJob || Promise.resolve()).then(() => repaint(o));
+    o.paintJob = job.catch(() => {});
+  }
+  async function repaint(o) {
+    const pic = await basePic(o.model);
+    if (!pic || o.gone) return;
+    if (!o.tex) {
+      o.tex = new B.DynamicTexture(o.id + '_colours', { width: pic.width, height: pic.height }, scene, false, 1); // 1 = nearest (the bundle has no Texture)
+      o.tex.wrapU = o.tex.wrapV = 0; // clamp
+      materials(o).forEach(m => { if ('albedoTexture' in m) m.albedoTexture = o.tex; else m.diffuseTexture = o.tex; });
+    }
+    const ctx = o.tex.getContext();
+    ctx.clearRect(0, 0, pic.width, pic.height);
+    ctx.drawImage(pic, 0, 0);
+    for (const part in o.parts) {
+      const [cr, cg, cb] = hexToRgb(o.parts[part]);
+      for (const s of LIB.slotsOf(o.model, part)) {
+        const x = (s % 16) * 32, y = (s >> 4) * 128, img = ctx.getImageData(x, y, 32, 128), d = img.data;
+        let top = 1; for (let i = 0; i < d.length; i += 4) top = Math.max(top, d[i] + d[i + 1] + d[i + 2]);
+        for (let i = 0; i < d.length; i += 4) { const k = (d[i] + d[i + 1] + d[i + 2]) / top; d[i] = cr * 255 * k; d[i + 1] = cg * 255 * k; d[i + 2] = cb * 255 * k; }
+        ctx.putImageData(img, x, y);
+      }
+    }
+    o.tex.update(false);
+  }
 
   async function playAnim(o, name, mode) {
     if (!o.nodes || !LIB.isAnimation(name)) return;
     let g = o.anims[name];
     if (!g) {
-      const cont = await container(LIB.animationFile(name));
-      if (o.gone) return;
-      g = o.anims[name];
-      if (!g) {
-        const src = cont.animationGroups[0];
-        g = new B.AnimationGroup(o.id + '.' + name, scene);
-        if (src) for (const ta of src.targetedAnimations) {
-          const t = o.nodes[ta.target && ta.target.name];
-          if (t && ta.animation.targetProperty !== 'scaling') g.addTargetedAnimation(ta.animation, t);
-        }
-        o.anims[name] = g;
-      }
+      const clip = LIB.clipOf(name);
+      g = clip ? o.inst.animationGroups.find(x => x.name === clip || x.metadata?.clip === clip) : makeClip(o, name);
+      if (!g) return;
+      if (clip && !g.metadata) { g.metadata = { clip }; g.name = o.id + '.' + name; }
+      o.anims[name] = g;
     }
     if (o.gone) return;
     if (o.cur && o.cur !== g) o.cur.stop();
     o.cur = g; o.curName = name;
+    restPose(o); // clips only move some joints: start the rest from standing
     g.stop(); g.start(mode === 'loop', 1);
     if (mode === 'loop') return;
     // a one-off animation goes back to standing still when it finishes (unless something else has started)
     await new Promise(res => g.onAnimationGroupEndObservable.addOnce(() => res()));
     if (!o.gone && o.cur === g && name !== 'Idle') { o.autoName = 'Idle'; playAnim(o, 'Idle', 'loop').catch(() => {}); }
+  }
+  // an animation the character file doesn't have, from the key poses in LIB.PROC_ANIMS
+  const JOINTS = { armR: ['arm-right', [0, 0, 45]], armL: ['arm-left', [0, 0, -45]], legR: ['leg-right', [0, 0, 0]], legL: ['leg-left', [0, 0, 0]], torso: ['torso', [0, 0, 0]], head: ['head', [0, 0, 0]] };
+  const D2R = Math.PI / 180;
+  const AX = { x: new B.Vector3(1, 0, 0), y: new B.Vector3(0, 1, 0), z: new B.Vector3(0, 0, 1) };
+  const jointQ = ([x, y, z]) => B.Quaternion.RotationAxis(AX.z, z * D2R).multiply(B.Quaternion.RotationAxis(AX.y, y * D2R)).multiply(B.Quaternion.RotationAxis(AX.x, x * D2R));
+  function restPose(o) {
+    for (const j in JOINTS) { const n = o.nodes[JOINTS[j][0]]; if (n) n.rotationQuaternion = jointQ(JOINTS[j][1]); }
+    const root = o.nodes.root; if (root) { root.position.set(0, 0, 0); root.rotationQuaternion = B.Quaternion.Identity(); }
+  }
+  function makeClip(o, name) {
+    const keys = LIB.PROC_ANIMS[name], FPS = 60;
+    // the bundle doesn't export Animation, so take it from one of the file's own clips
+    const Anim = o.inst.animationGroups[0]?.targetedAnimations[0]?.animation.constructor;
+    if (!keys || !Anim) return null;
+    const g = new B.AnimationGroup(o.id + '.' + name, scene);
+    const track = (node, prop, type, val) => {
+      if (!node) return;
+      const a = new Anim(o.id + '.' + name + '.' + node.name + '.' + prop, prop, FPS, type, Anim.ANIMATIONLOOPMODE_CYCLE);
+      a.setKeys(keys.map(([t, pose]) => ({ frame: Math.round(t * FPS), value: val(pose) })));
+      g.addTargetedAnimation(a, node);
+    };
+    for (const j in JOINTS) {
+      const [nm, rest] = JOINTS[j], node = o.nodes[nm];
+      if (node && !node.rotationQuaternion) node.rotationQuaternion = B.Quaternion.FromEulerVector(node.rotation);
+      track(node, 'rotationQuaternion', Anim.ANIMATIONTYPE_QUATERNION, pose => jointQ(pose[j] || rest));
+    }
+    const root = o.nodes.root;
+    if (root) {
+      if (!root.rotationQuaternion) root.rotationQuaternion = B.Quaternion.Identity();
+      track(root, 'position', Anim.ANIMATIONTYPE_VECTOR3, pose => new B.Vector3(0, pose.lift || 0, 0));
+      if (keys.some(([, p]) => p.turn != null || p.flip != null)) {
+        let turn = 0, flip = 0;
+        track(root, 'rotationQuaternion', Anim.ANIMATIONTYPE_QUATERNION, pose => { turn = pose.turn ?? turn; flip = pose.flip ?? flip;
+          return B.Quaternion.RotationAxis(AX.y, turn * D2R).multiply(B.Quaternion.RotationAxis(AX.x, flip * D2R)); });
+      } else track(root, 'rotationQuaternion', Anim.ANIMATIONTYPE_QUATERNION, () => B.Quaternion.Identity());
+    }
+    return g;
   }
 
   // ── frame clock ──
@@ -895,7 +981,7 @@ export function createWorld(B, opts) {
     bubbleOf: id => { const o = get(id); return o ? o.bubbleText || '' : ''; },
     camera_: () => ({ follow: follow ? follow.id : null, view: followView, radius: camera.radius }),
     objects: () => [...objs.values()].filter(o => o.mesh).map(o => ({ id: o.id, kind: o.kind, x: round(o.mesh.position.x), y: round(o.mesh.position.y), z: round(o.mesh.position.z), phys: o.phys, visible: o.mesh.isEnabled(), blockId: o.blockId,
-      model: o.model || null, color: o.color || null, anim: o.curName || null, spun: o.spun ? Object.assign({}, o.spun) : { x: 0, y: 0, z: 0 },
+      model: o.model || null, color: o.color || null, parts: o.parts ? Object.assign({}, o.parts) : null, anim: o.curName || null, spun: o.spun ? Object.assign({}, o.spun) : { x: 0, y: 0, z: 0 },
       lo: o.lo ? Object.assign({}, o.lo) : null, hi: o.hi ? Object.assign({}, o.hi) : null, size: o.size ? { w: round(o.size.w * o.mesh.scaling.x), h: round(o.size.h * o.mesh.scaling.y), d: round(o.size.d * o.mesh.scaling.z) } : null })),
     // what happened while playing, and the program's variables (lesson goals)
     record: () => rec,
@@ -903,6 +989,7 @@ export function createWorld(B, opts) {
     vars: () => { const r = run; if (!r || !r.vars) return {}; try { return r.vars() || {}; } catch (e) { return {}; } },
     touchingIds: (a, b) => { const p = get(a), q = get(b); return !!(p && q && p !== q && p.mesh.isEnabled() && q.mesh.isEnabled() && touching(p, q)); },
     _gizmo: () => gm, // for tests
+    _obj: id => objs.get(String(id)),
     dispose: () => { stop(); pauseLoop(); scene.dispose(); engine.dispose(); }
   };
 }

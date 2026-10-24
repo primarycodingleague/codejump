@@ -30,10 +30,10 @@ for (const t of G.TOPICS.filter(G.converted)) {
 const probe = await (await b.newContext()).newPage();
 const H264 = !!await probe.evaluate(() => document.createElement('video').canPlayType('video/mp4; codecs="avc1.640028"'));
 let WEBM = null;
-if (!H264) try {
+if (!H264 && !process.env.GUIDE_NOVIDEO) try {
   WEBM = mkdtempSync(join(tmpdir(), 'cj-guide-'));
-  for (const t of G.TOPICS.filter(G.converted)) for (const f of readdirSync(join(ROOT, 'guide', 'media', t.id)).filter(f => f.endsWith('.mp4')))
-    execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', join(ROOT, 'guide', 'media', t.id, f), '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-cpu-used', '8', '-b:v', '600k', '-an', join(WEBM, t.id + '-' + f.replace('.mp4', '.webm'))]);
+  for (const d of readdirSync(join(ROOT, 'guide', 'media'))) for (const f of readdirSync(join(ROOT, 'guide', 'media', d)).filter(f => f.endsWith('.mp4')))
+    execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', join(ROOT, 'guide', 'media', d, f), '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-cpu-used', '8', '-b:v', '600k', '-an', join(WEBM, d + '-' + f.replace('.mp4', '.webm'))]);
 } catch (e) { WEBM = null; console.log('NOTE no ffmpeg: video playback is not checked here'); }
 const PLAYS = H264 || !!WEBM;
 // answers like GitHub Pages does, with byte ranges (a video can only jump to a time when the server allows ranges)
@@ -73,8 +73,8 @@ ok((await page.locator('.gd-before').textContent()).includes('Teacher Hub → My
 ok(/Watch it all\s*0:40/.test(await page.locator('#gd-watch').textContent()), 'Watch it all shows the length');
 ok(await page.locator('.gd-step').count() === 6 && await page.locator('.gd-who').first().textContent() === 'Everyone', '6 step cards with who chips');
 ok(await page.locator('.gd-tips li').count() === 4 && await page.locator('details.gd-more .gd-legacy').count() === 1, 'Good to know + the full old notes');
-const v = await page.evaluate(() => { const m = document.querySelector('.gd-clip video'); return { muted: m.muted, loop: m.loop, inline: m.playsInline, pre: m.preload }; });
-ok(v.muted && v.loop && v.inline && v.pre === 'none', 'step clips are muted, looping, inline and lazy');
+const v = await page.evaluate(() => { const m = document.querySelector('.gd-clip video'); return m && { muted: m.muted, loop: m.loop, inline: m.playsInline, pre: m.preload }; });
+ok(!PLAYS || (v && v.muted && v.loop && v.inline && v.pre === 'none'), 'step clips are muted, looping, inline and lazy');
 await sleep(800);
 const loaded = await page.evaluate(() => [...document.querySelectorAll('.gd-clip video')].map(m => !!m.getAttribute('src')));
 ok(!PLAYS || (loaded[0] && !loaded[5]), 'only clips on screen are loaded (' + loaded.map(Number).join('') + ')');

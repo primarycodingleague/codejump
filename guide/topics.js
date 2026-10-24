@@ -172,7 +172,26 @@ export const TOPICS = [
       'Teammates can share one world live (Share → Collaborate) and see each other walking round it.'
     ]
   },
-  { id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'] },
+  {
+    id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'],
+    summary: 'A 3D robot head and shoulders to code with blocks: eight motors, lights, faces and a voice. Great for conversations, quizzes and short robot plays.',
+    before: 'Key Stage 2 and 3. The robot uses the browser’s own speech, so no recordings are made or sent. The computer needs 3D graphics (WebGL).',
+    video: { src: 'media/robot/full.mp4', poster: 'media/robot/full.jpg', captions: 'media/robot/full.vtt', length: 36.4 },
+    steps: [
+      { who: 'all', title: 'Start a Robot Lab project', text: 'Press Start building, choose Key Stage 2 (or 3), then Robot Lab. It opens with a program to try.', clip: 'media/robot/step1', at: 2.4 },
+      { who: 'all', title: 'Name it and choose its colours', text: 'Type a name for its nameplate, and pick Body and Trim colours.', clip: 'media/robot/step2', at: 8.6 },
+      { who: 'all', title: 'Snap blocks together', text: 'Blocks cover moves (eight motors from 0 to 10), faces, lights, speech, sensing, loops, if, maths, text and variables.', clip: 'media/robot/step3', at: 13.4 },
+      { who: 'all', title: 'Press Run', text: 'Run resets the robot and starts the program; Stop and Reset are beside it.', clip: 'media/robot/step4', at: 16.4 },
+      { who: 'all', title: 'Tap the robot', text: '“When the robot is tapped” scripts run when a pupil taps it; keys and messages are events too.', clip: 'media/robot/step5', at: 21.4 },
+      { who: 'all', title: 'Ask a question', text: '“ask … and wait” shows an answer box, and the answer block holds what was typed: input and output.', clip: 'media/robot/step6', at: 26.4 }
+    ],
+    tips: [
+      'Faces: happy, sad, surprised, angry, sleepy and thinking; voices change its pitch and speed.',
+      'My blocks lets pupils make their own blocks (procedures), with inputs.',
+      'The Robot Librarian unit has 18 ready-made Robot Lab lessons for Years 3–6 (Ready-made lessons).',
+      'Pupils can build a robot together live (Share → Collaborate); Run plays on each pupil’s own screen.'
+    ]
+  },
   // Coding
   { id: 'tiles', group: 2, title: 'Every block & tile', legacy: ['Every block'] },
   { id: 'blocks', group: 2, title: 'Coding blocks (Key Stage 2)', legacy: ['Coding blocks'] },

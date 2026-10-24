@@ -153,5 +153,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Open a ready-made world', sub: 'Worlds: the Robot Helper Academy lessons and example worlds.',
         beats: [['s6a', 2.2], ['s6b', 3]] }
     ]
+  },
+  robot: {
+    title: 'Robot Lab', sub: 'Code a talking robot with blocks', outroText: 'Beep boop, well done!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a Robot Lab project', sub: 'Start building → Key Stage 2 → Robot Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Name it and choose its colours', sub: 'The name goes on its plinth; Body and Trim change its colours.',
+        beats: [['s2a', 2.4], ['s2b', 2.4]] },
+      { n: 3, who: 'Everyone', title: 'Snap blocks together', sub: 'Moves, faces, lights, speech, sensing, loops and variables.',
+        beats: [['s3', 3, { type: 'look' }]] },
+      { n: 4, who: 'Everyone', title: 'Press Run', sub: 'It talks with the browser’s own voice. Nothing is recorded or sent.',
+        beats: [['s4a', 2.2], ['s4b', 2.8, { type: 'look' }]] },
+      { n: 5, who: 'Everyone', title: 'Tap the robot', sub: '“When the robot is tapped” scripts react to a tap.',
+        beats: [['s5a', 2.4], ['s5b', 2.6, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Ask a question', sub: '“ask and wait” shows a box; the answer block holds what was typed.',
+        beats: [['s6a', 2.6, { type: 'look' }], ['s6b', 2.4], ['s6c', 2.6, { type: 'look' }]] }
+    ]
   }
 };

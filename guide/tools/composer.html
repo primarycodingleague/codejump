@@ -40,6 +40,8 @@ function cam(b, k, from) {
   // keep the target near the middle, but never show past the picture's edges
   let ox = lerp(W / 2, tx, 0.85 * ease(k)), oy = lerp(H / 2, ty, 0.85 * ease(k));
   const half = W / 2 / z, halfH = H / 2 / z; ox = Math.min(Math.max(ox, half), W - half); oy = Math.min(Math.max(oy, halfH), H - halfH);
+  // with captions, lift a target that would sit under the caption bar (the picture may then end above the bar)
+  if (SPEC.captions && b.box) { const bar = 132 * H / 720, need = ty + (b.box.h * sx) / 2 + 14 * sx - (H / 2 - bar) / z; if (oy < need) oy = lerp(oy, Math.min(need, H - halfH + bar / z), ease(k)); }
   return { z, ox, oy };
 }
 // where a beat's camera ends up (the next beat in the same step starts from here)

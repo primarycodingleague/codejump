@@ -18,7 +18,26 @@ export const TOPICS = [
   { id: 'size', group: 0, title: 'Game size', legacy: ['Game size'] },
   // The labs
   { id: 'stage', group: 1, title: 'Platformer, Stage & Turtle Labs', legacy: ['The Platformer Lab, Stage Lab'] },
-  { id: 'turtle', group: 1, title: 'Turtle Lab (Logo)', legacy: ['Turtle Lab (Logo)'] },
+  {
+    id: 'turtle', group: 1, title: 'Turtle Lab (Logo)', legacy: ['Turtle Lab (Logo)'],
+    summary: 'Pupils type Logo commands on the left and a turtle draws them on the right. A gentle bridge from blocks to typed code, full of maths: angles, repeats and shapes.',
+    before: 'The Turtle Lab is for Key Stage 2 upward (it isn’t offered for Key Stage 1, because it needs typing). Nothing to set up.',
+    video: { src: 'media/turtle/full.mp4', poster: 'media/turtle/full.jpg', captions: 'media/turtle/full.vtt', length: 35.6 },
+    steps: [
+      { who: 'all', title: 'Start a Turtle Lab project', text: 'Press Start building, choose Key Stage 2, then Turtle Lab. It opens empty, ready to type.', clip: 'media/turtle/step1', at: 2.4 },
+      { who: 'all', title: 'Type commands and press Run', text: 'fd 100 moves forward 100 steps and rt 90 turns right; press Run to draw, Stop or Clear to start again.', clip: 'media/turtle/step2', at: 8.6 },
+      { who: 'all', title: 'Repeat to make shapes', text: 'repeat 4 [fd 150 rt 90] draws a square, and a repeat inside a repeat makes a pattern.', clip: 'media/turtle/step3', at: 13.8 },
+      { who: 'all', title: 'Find ideas in Commands and Examples', text: 'Commands explains every command; Examples loads a ready-made drawing to run and change.', clip: 'media/turtle/step4', at: 19.4 },
+      { who: 'all', title: 'Slow the turtle down', text: 'Drag the Speed slider down to watch each move, or up to draw at once.', clip: 'media/turtle/step5', at: 24.8 },
+      { who: 'all', title: 'Teach it your own command', text: 'to star :size … end makes a new command; then star 150 and star 60 draw two sizes.', clip: 'media/turtle/step6', at: 27.8 }
+    ],
+    tips: [
+      'It also knows pu / pd, setpencolor, setpensize, setbg, setxy, seth, home, if / ifelse, make "x with :x, sums and random.',
+      'Mistakes get a friendly message, such as I don’t understand "x" or a missing ] or end.',
+      'The Driftwood Bay Artists unit has 18 ready-made Turtle Lab lessons for Years 3–6 (Ready-made lessons).',
+      'Teammates can type one drawing together live (Share → Collaborate).'
+    ]
+  },
   { id: 'critter', group: 1, title: 'Critter Lab', legacy: ['Critter Lab'] },
   { id: 'world3d', group: 1, title: '3D World', legacy: ['3D World'] },
   { id: 'ai', group: 1, title: 'AI Lab', legacy: ['AI Lab'] },

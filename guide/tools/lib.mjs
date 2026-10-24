@@ -30,7 +30,7 @@ export async function openPage({ scale = 1.5, width = 1280, height = 720 } = {})
     return route.abort(); // the real cloud is never called
   });
   await page.route(/\/__font\/(\d+)\.woff2$/, r => r.fulfill({ body: readFileSync(join(FONTS, `montserrat-latin-${/(\d+)\.woff2$/.exec(r.request().url())[1]}-normal.woff2`)), contentType: 'font/woff2' }));
-  await page.addInitScript(() => { localStorage.setItem('bap_seen_version', 'x'); setInterval(() => { for (const id of ['whatsnew', 'promo-modal']) { const w = document.getElementById(id); if (w) w.classList.add('hide'); } }, 50); });
+  await page.addInitScript(() => { localStorage.setItem('bap_seen_version', 'x'); localStorage.setItem('cj_country', 'england'); setInterval(() => { for (const id of ['whatsnew', 'promo-modal']) { const w = document.getElementById(id); if (w) w.classList.add('hide'); } }, 50); });
   await page.goto(site.url + '/build-and-play.html');
   await page.waitForFunction(() => typeof startNewProject === 'function' && typeof openShareModal === 'function');
   await page.evaluate(() => { document.getElementById('splash')?.remove(); document.getElementById('wn-close')?.click(); });
@@ -61,3 +61,16 @@ export async function shot(page, dir, name, target, opts = {}) {
   return { img: name + '.png', box, ...(opts.type ? { type: opts.type } : {}) };
 }
 export function saveShots(dir, shots) { writeFileSync(join(dir, 'shots.json'), JSON.stringify(shots, null, 1)); }
+
+// Step "start a project in this lab": home → Start building → Key Stage 2 → the lab's tile (real clicks). Adds shots
+// <p>a/<p>b/<p>c to S and leaves the lab open.
+export async function startLab(page, dir, S, p, pt, ks = 'ks2') {
+  S[p + 'a'] = await shot(page, dir, p + 'a', '#h-new');
+  await page.click('#h-new');
+  await page.waitForSelector('#ks-modal:not(.hide) [data-ks=' + ks + ']');
+  S[p + 'b'] = await shot(page, dir, p + 'b', '#ks-modal [data-ks=' + ks + ']');
+  await page.click('#ks-modal [data-ks=' + ks + ']');
+  await page.waitForSelector('#pt-modal:not(.hide) .ks-opt[data-pt="' + pt + '"]');
+  S[p + 'c'] = await shot(page, dir, p + 'c', '#pt-modal .ks-opt[data-pt="' + pt + '"]');
+  await page.click('#pt-modal .ks-opt[data-pt="' + pt + '"]');
+}

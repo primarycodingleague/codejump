@@ -152,7 +152,26 @@ export const TOPICS = [
       'While a program runs, its variables show in the top-right corner of the board.'
     ]
   },
-  { id: 'build', group: 1, title: 'Build Lab', legacy: ['Build Lab'] },
+  {
+    id: 'build', group: 1, title: 'Build Lab', legacy: ['Build Lab'],
+    summary: 'A world made of blocks that pupils walk round and build in by hand. Their code drives a robot helper and builder commands, in blocks or in real Python.',
+    before: 'Key Stage 2 and 3. The computer needs 3D graphics (WebGL); the lab downloads the first time it opens.',
+    video: { src: 'media/build/full.mp4', poster: 'media/build/full.jpg', captions: 'media/build/full.vtt', length: 39.2 },
+    steps: [
+      { who: 'all', title: 'Start a Build Lab project', text: 'Press Start building, choose Key Stage 2 (or 3), then Build Lab.', clip: 'media/build/step1', at: 2.4 },
+      { who: 'all', title: 'Walk round and build by hand', text: 'Pick a block in the hotbar and click to place it (right-click or press and hold breaks one); W A S D walk and F flies.', clip: 'media/build/step2', at: 8.6 },
+      { who: 'all', title: 'Code it and press Run', text: 'Builder blocks fill, outline and draw at positions right / up / ahead of the pupil, so a build appears in front of them; the helper moves, places and digs.', clip: 'media/build/step3', at: 13.6 },
+      { who: 'all', title: 'See it as Python', text: 'The Python tab shows the same program as real Python, and edited Python turns back into blocks, with friendly error messages.', clip: 'media/build/step4', at: 21 },
+      { who: 'all', title: 'Type a chat command', text: 'Typing “tower 6” runs the “when I type tower” script with 6 in its variable: events with a value.', clip: 'media/build/step5', at: 26.2 },
+      { who: 'all', title: 'Open a ready-made world', text: 'Worlds holds the Robot Helper Academy (18 lessons with characters and tasks that tick themselves) and five example worlds.', clip: 'media/build/step6', at: 31.6 }
+    ],
+    tips: [
+      'Make lets you build your own lesson worlds: characters who talk, areas, tasks that tick themselves, rules and timed challenges.',
+      'Compete runs building competitions and coding contests, even between schools; other schools only see pupils’ usernames.',
+      'Undo build takes back any build, and New world starts again without losing the code.',
+      'Teammates can share one world live (Share → Collaborate) and see each other walking round it.'
+    ]
+  },
   { id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'] },
   // Coding
   { id: 'tiles', group: 2, title: 'Every block & tile', legacy: ['Every block'] },

@@ -136,5 +136,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Print the challenge card', sub: 'Then build the same challenge with real smart-train track.',
         beats: [['s6', 3]] }
     ]
+  },
+  build: {
+    title: 'Build Lab', sub: 'A block world to build in, and a robot helper to code', outroText: 'Happy building!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a Build Lab project', sub: 'Start building → Key Stage 2 → Build Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Walk round and build by hand', sub: 'Pick a block, click to place it. W A S D to walk, F to fly.',
+        beats: [['s2a', 2.4], ['s2b', 2.6, { type: 'look' }]] },
+      { n: 3, who: 'Everyone', title: 'Code it and press Run', sub: 'Builder blocks build right / up / ahead of where you stand.',
+        beats: [['s3a', 2.6, { type: 'look' }], ['s3b', 2.2], ['s3c', 2.6, { type: 'look' }]] },
+      { n: 4, who: 'Everyone', title: 'See it as Python', sub: 'The Python tab is the same program, and edits turn back into blocks.',
+        beats: [['s4a', 2.2], ['s4b', 3, { type: 'look' }]] },
+      { n: 5, who: 'Everyone', title: 'Type a chat command', sub: 'tower 6 runs “when I type tower”, with the 6 in a variable.',
+        beats: [['s5a', 2.6], ['s5b', 2.8, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Open a ready-made world', sub: 'Worlds: the Robot Helper Academy lessons and example worlds.',
+        beats: [['s6a', 2.2], ['s6b', 3]] }
+    ]
   }
 };

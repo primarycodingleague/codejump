@@ -112,7 +112,26 @@ export const TOPICS = [
       'The characters and models come from Kenney’s free CC0 packs, so schools can use them freely, and they are light enough for Chromebooks.'
     ]
   },
-  { id: 'ai', group: 1, title: 'AI Lab', legacy: ['AI Lab'] },
+  {
+    id: 'ai', group: 1, title: 'AI Lab', legacy: ['AI Lab'],
+    summary: 'Pupils teach a computer to recognise their own drawings or words (machine learning), test how well it learned, then use it in a block-coded game.',
+    before: 'Key Stage 2 and 3. Drawings and typed words only: no camera, no microphone, and training happens in the browser.',
+    video: { src: 'media/ai/full.mp4', poster: 'media/ai/full.jpg', captions: 'media/ai/full.vtt', length: 35.2 },
+    steps: [
+      { who: 'all', title: 'Start an AI Lab project', text: 'Press Start building, choose Key Stage 2 (or 3), then AI Lab.', clip: 'media/ai/step1', at: 2.4 },
+      { who: 'all', title: 'Make labels', text: 'Choose Drawings or Words, then make 2–6 labels with New label, or load a Ready-made examples set.', clip: 'media/ai/step2', at: 8.6 },
+      { who: 'all', title: 'Draw examples and Add them', text: 'Draw on the pad and press Add; under the pad pupils see what the computer sees, a 20 × 20 grid.', clip: 'media/ai/step3', at: 13.8 },
+      { who: 'all', title: 'Train it', text: 'On Train & test press Train; with 4 or more examples a label is also checked on drawings it never practised with.', clip: 'media/ai/step4', at: 19 },
+      { who: 'all', title: 'Test it with a new drawing', text: 'Draw something new: a bar for every label shows how sure it is, plus the examples it thinks are most alike.', clip: 'media/ai/step5', at: 24.2 },
+      { who: 'all', title: 'Code it', text: 'On Code it, blocks such as “when the AI makes a guess” react to its guesses; press Run, then draw.', clip: 'media/ai/step6', at: 27.4 }
+    ],
+    tips: [
+      'Big ideas: it finds patterns in examples rather than following rules, more varied examples help, and it gives a confidence, not a certainty.',
+      'The Kind or unkind messages set is deliberately unbalanced, to show bias: “I love your drawing” comes out unkind.',
+      'The Wildwood Spotters unit has 18 ready-made AI Lab lessons for Years 3–6 (Ready-made lessons).',
+      'A team can teach and code one AI together live (Share → Collaborate).'
+    ]
+  },
   { id: 'train', group: 1, title: 'Train Lab', legacy: ['Train Lab'] },
   { id: 'build', group: 1, title: 'Build Lab', legacy: ['Build Lab'] },
   { id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'] },

@@ -102,5 +102,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Stop puts everything back', sub: 'Stop returns to the start, ready to change one thing and run again.',
         beats: [['s6a', 2.2], ['s6b', 2.6, { type: 'look' }]] }
     ]
+  },
+  ai: {
+    title: 'AI Lab', sub: 'Teach a computer to recognise drawings or words', outroText: 'Your AI is ready!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start an AI Lab project', sub: 'Start building → Key Stage 2 → AI Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Make labels', sub: 'New label for each thing to recognise, or Ready-made examples.',
+        beats: [['s2a', 2.4], ['s2b', 2.8, { type: 'look' }]] },
+      { n: 3, who: 'Everyone', title: 'Draw examples and Add them', sub: 'Under the pad: what the computer sees, a 20 × 20 grid.',
+        beats: [['s3a', 2.8, { type: 'look' }], ['s3b', 2.4]] },
+      { n: 4, who: 'Everyone', title: 'Train it', sub: 'It practises, then is checked on drawings it never saw.',
+        beats: [['s4a', 2.2], ['s4b', 3, { type: 'look' }]] },
+      { n: 5, who: 'Everyone', title: 'Test it with a new drawing', sub: 'A bar for every label shows how sure it is.',
+        beats: [['s5', 3.2, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Code it', sub: 'Blocks react to its guesses. Press Run, then draw.',
+        beats: [['s6a', 2.4], ['s6b', 3, { type: 'look' }]] }
+    ]
   }
 };

@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:02.400 --> 00:00:08.600
+Step 1: Start a Turtle Lab project. Start building → Key Stage 2 → Turtle Lab.
+
+00:00:08.600 --> 00:00:13.800
+Step 2: Type commands and press Run. fd 100 goes forward 100 steps; rt 90 turns right.
+
+00:00:13.800 --> 00:00:19.400
+Step 3: Repeat to make shapes. repeat 4 [fd 150 rt 90] draws a square. A repeat inside a repeat makes a pattern.
+
+00:00:19.400 --> 00:00:24.800
+Step 4: Find ideas in Commands and Examples. Every command explained, and examples to load and run.
+
+00:00:24.800 --> 00:00:27.800
+Step 5: Slow the turtle down. The Speed slider shows each move, or draws at once.
+
+00:00:27.800 --> 00:00:33.200
+Step 6: Teach it your own command. to star :size … end, then star 150.

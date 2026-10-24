@@ -9,3 +9,4 @@ node_modules/
 *.pptx
 *.xlsx
 tests/node_modules
+guide/tools/out/

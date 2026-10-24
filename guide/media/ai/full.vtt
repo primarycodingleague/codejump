@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:02.400 --> 00:00:08.600
+Step 1: Start an AI Lab project. Start building → Key Stage 2 → AI Lab.
+
+00:00:08.600 --> 00:00:13.800
+Step 2: Make labels. New label for each thing to recognise, or Ready-made examples.
+
+00:00:13.800 --> 00:00:19.000
+Step 3: Draw examples and Add them. Under the pad: what the computer sees, a 20 × 20 grid.
+
+00:00:19.000 --> 00:00:24.200
+Step 4: Train it. It practises, then is checked on drawings it never saw.
+
+00:00:24.200 --> 00:00:27.400
+Step 5: Test it with a new drawing. A bar for every label shows how sure it is.
+
+00:00:27.400 --> 00:00:32.800
+Step 6: Code it. Blocks react to its guesses. Press Run, then draw.

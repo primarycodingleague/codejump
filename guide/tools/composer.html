@@ -1,0 +1,119 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Guide composer</title>
+<style>
+@font-face{font-family:'Montserrat';font-weight:500;src:url(fonts/montserrat-latin-500-normal.woff2) format('woff2');}
+@font-face{font-family:'Montserrat';font-weight:700;src:url(fonts/montserrat-latin-700-normal.woff2) format('woff2');}
+@font-face{font-family:'Montserrat';font-weight:800;src:url(fonts/montserrat-latin-800-normal.woff2) format('woff2');}
+html,body{margin:0;background:#111;}canvas{display:block;}
+</style></head>
+<body><canvas id="c" width="1280" height="720"></canvas>
+<script>
+// A deterministic video composer for the Teacher Guide. load(spec) once, then render(t) draws frame t (seconds).
+// spec = { w, h, captions, title, sub, steps:[{n, title, sub, beats:[{img, box:{x,y,w,h} in 1280×720 CSS px, dur}]}] }
+// A beat: the screen slowly zooms towards the target, the pointer glides to it and clicks, and a gold ring marks it.
+const GOLD = '#ae853e', INK = '#0e0d12';
+const cv = document.getElementById('c'), cx = cv.getContext('2d');
+let SPEC = null, IMGS = {}, TL = [];
+const ease = x => x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x);
+const lerp = (a, b, k) => a + (b - a) * k;
+window.load = async (spec, base) => {
+  SPEC = spec; cv.width = spec.w; cv.height = spec.h;
+  const names = new Set(); spec.steps.forEach(s => s.beats.forEach(b => names.add(b.img)));
+  await Promise.all([...names].map(n => new Promise((res, rej) => { const i = new Image(); i.onload = () => { IMGS[n] = i; res(); }; i.onerror = rej; i.src = base + n; })));
+  await document.fonts.load('800 20px Montserrat'); await document.fonts.load('500 20px Montserrat'); await document.fonts.load('700 20px Montserrat');
+  // timeline: [intro], then every beat; returns the start time of each step (the chapters)
+  TL = []; let t = 0; const starts = [];
+  if (spec.intro) { TL.push({ kind: 'intro', t0: 0, dur: spec.intro }); t = spec.intro; }
+  spec.steps.forEach((s, si) => { starts.push(+t.toFixed(2)); s.beats.forEach((b, bi) => { TL.push({ kind: 'beat', step: s, si, b, bi, t0: t, dur: b.dur, prev: TL.filter(x => x.kind === 'beat').slice(-1)[0] || null }); t += b.dur; }); });
+  if (spec.outro) { TL.push({ kind: 'outro', t0: t, dur: spec.outro, prev: TL.filter(x => x.kind === 'beat').slice(-1)[0] }); t += spec.outro; }
+  return { length: +t.toFixed(2), starts };
+};
+// where a beat's camera ends: zoomed towards its target
+function cam(b, k, from) {
+  const W = SPEC.w, H = SPEC.h, sx = W / 1280;
+  if (from) { // carry on smoothly from where the last beat's camera stopped
+    const e = cam(b, 1), q = ease(k);
+    return { z: lerp(from.z, e.z, q), ox: lerp(from.ox, e.ox, q), oy: lerp(from.oy, e.oy, q) };
+  }
+  const z = lerp(1, b.box ? (b.zoom || 1.32) : 1.06, ease(k));
+  const tx = b.box ? (b.box.x + b.box.w / 2) * sx : W / 2, ty = b.box ? (b.box.y + b.box.h / 2) * sx : H / 2;
+  // keep the target near the middle, but never show past the picture's edges
+  let ox = lerp(W / 2, tx, 0.85 * ease(k)), oy = lerp(H / 2, ty, 0.85 * ease(k));
+  const half = W / 2 / z, halfH = H / 2 / z; ox = Math.min(Math.max(ox, half), W - half); oy = Math.min(Math.max(oy, halfH), H - halfH);
+  return { z, ox, oy };
+}
+// where a beat's camera ends up (the next beat in the same step starts from here)
+function endCam(seg) { return cam(seg.b, 1); }
+function toScreen(c, x, y) { return [(x - c.ox) * c.z + SPEC.w / 2, (y - c.oy) * c.z + SPEC.h / 2]; }
+function drawShot(img, c, alpha = 1) {
+  const W = SPEC.w, H = SPEC.h;
+  cx.save(); cx.globalAlpha = alpha; cx.translate(W / 2, H / 2); cx.scale(c.z, c.z); cx.translate(-c.ox, -c.oy);
+  cx.imageSmoothingQuality = 'high'; cx.drawImage(img, 0, 0, W, H); cx.restore();
+}
+function rrect(x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
+function pointer(x, y, press) {
+  const s = SPEC.w / 1280 * 1.15;
+  cx.save(); cx.translate(x, y); cx.scale(s * (1 - 0.12 * press), s * (1 - 0.12 * press));
+  cx.shadowColor = 'rgba(0,0,0,.45)'; cx.shadowBlur = 8; cx.shadowOffsetY = 2;
+  cx.beginPath(); cx.moveTo(0, 0); cx.lineTo(0, 26); cx.lineTo(7, 20); cx.lineTo(12, 31); cx.lineTo(17, 29); cx.lineTo(12, 18); cx.lineTo(21, 18); cx.closePath();
+  cx.fillStyle = '#fff'; cx.fill(); cx.shadowColor = 'transparent'; cx.lineWidth = 2; cx.strokeStyle = INK; cx.stroke(); cx.restore();
+}
+function caption(step, a) {
+  if (!SPEC.captions) return;
+  const W = SPEC.w, H = SPEC.h, bh = 92;
+  cx.save(); cx.globalAlpha = a;
+  const g = cx.createLinearGradient(0, H - bh - 30, 0, H); g.addColorStop(0, 'rgba(14,13,18,0)'); g.addColorStop(0.3, 'rgba(14,13,18,.92)'); g.addColorStop(1, 'rgba(14,13,18,.97)');
+  cx.fillStyle = g; cx.fillRect(0, H - bh - 30, W, bh + 30);
+  cx.fillStyle = GOLD; cx.fillRect(0, H - 4, W, 4);
+  // badge
+  cx.font = '800 17px Montserrat'; const lab = 'STEP ' + step.n; const bw = cx.measureText(lab).width + 28;
+  rrect(40, H - bh + 6, bw, 34, 17); cx.fillStyle = GOLD; cx.fill(); cx.fillStyle = '#1b140a'; cx.textBaseline = 'middle'; cx.fillText(lab, 54, H - bh + 24);
+  cx.fillStyle = '#fff'; cx.font = '800 26px Montserrat'; cx.fillText(step.title, 40 + bw + 18, H - bh + 22);
+  cx.fillStyle = 'rgba(255,255,255,.82)'; cx.font = '500 19px Montserrat'; cx.fillText(step.sub, 40 + bw + 18, H - bh + 54);
+  if (step.who) { cx.font = '700 15px Montserrat'; const ww = cx.measureText(step.who).width + 22; rrect(W - 40 - ww, H - bh + 9, ww, 28, 14); cx.strokeStyle = GOLD; cx.lineWidth = 2; cx.stroke(); cx.fillStyle = '#e9d3a5'; cx.fillText(step.who, W - 40 - ww + 11, H - bh + 24); }
+  cx.restore();
+}
+function card(title, sub, a) {
+  const W = SPEC.w, H = SPEC.h;
+  cx.save(); cx.globalAlpha = a; cx.fillStyle = INK; cx.fillRect(0, 0, W, H);
+  cx.fillStyle = GOLD; cx.fillRect(W / 2 - 60, H / 2 - 70, 120, 5);
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillStyle = '#e9d3a5'; cx.font = '700 20px Montserrat'; cx.fillText('CODEJUMP TEACHER GUIDE', W / 2, H / 2 - 36);
+  cx.fillStyle = '#fff'; cx.font = '800 54px Montserrat'; cx.fillText(title, W / 2, H / 2 + 18);
+  cx.fillStyle = 'rgba(255,255,255,.78)'; cx.font = '500 22px Montserrat'; cx.fillText(sub, W / 2, H / 2 + 72);
+  cx.restore();
+}
+window.render = t => {
+  const W = SPEC.w, H = SPEC.h, sx = W / 1280;
+  cx.fillStyle = INK; cx.fillRect(0, 0, W, H);
+  const seg = TL.find(s => t >= s.t0 && t < s.t0 + s.dur) || TL[TL.length - 1];
+  if (seg.kind === 'intro') { card(SPEC.title, SPEC.sub, 1); return; }
+  if (seg.kind === 'outro') { const p = seg.prev; drawShot(IMGS[p.b.img], endCam(p)); card(SPEC.title, SPEC.outroText || 'That’s it!', ease((t - seg.t0) / 0.6)); return; }
+  const b = seg.b, k = (t - seg.t0) / seg.dur, c = cam(b, k, seg.prev && seg.si === seg.prev.si ? endCam(seg.prev) : null);
+  // cross-fade from the previous beat's last frame
+  const fade = 0.4, inT = t - seg.t0;
+  if (seg.prev && inT < fade && seg.prev.b.img !== b.img) { drawShot(IMGS[seg.prev.b.img], endCam(seg.prev)); drawShot(IMGS[b.img], c, ease(inT / fade)); }
+  else drawShot(IMGS[b.img], c);
+  if (seg.kind === 'beat' && !seg.prev && !SPEC.intro && inT < fade && SPEC.loop) { /* loops start on their own first frame */ }
+  // ring + pointer
+  if (b.box) {
+    const [x1, y1] = toScreen(c, b.box.x * sx, b.box.y * sx), [x2, y2] = toScreen(c, (b.box.x + b.box.w) * sx, (b.box.y + b.box.h) * sx);
+    const ringA = ease((k - 0.12) / 0.2), pad = 7 * sx;
+    if (ringA > 0) {
+      const pulse = 1 + 0.06 * Math.sin(Math.max(0, k - 0.32) * 18) * Math.exp(-Math.max(0, k - 0.32) * 4);
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, hw = (x2 - x1) / 2 * pulse + pad, hh = (y2 - y1) / 2 * pulse + pad;
+      cx.save(); cx.globalAlpha = ringA; cx.lineWidth = 4 * sx; cx.strokeStyle = GOLD; cx.shadowColor = 'rgba(174,133,62,.9)'; cx.shadowBlur = 16 * sx;
+      rrect(mx - hw, my - hh, hw * 2, hh * 2, 10 * sx); cx.stroke(); cx.restore();
+    }
+    // pointer: glides in from where the last beat ended (or from the lower right), clicks at 55%
+    const tgt = [(x1 + x2) / 2 + Math.min(18 * sx, (x2 - x1) / 4), (y1 + y2) / 2 + Math.min(8 * sx, (y2 - y1) / 4)];
+    let from = [W * 0.72, H * 0.86];
+    if (seg.prev && seg.prev.b.box && seg.prev.b.img === b.img) { const pc = endCam(seg.prev), pb = seg.prev.b.box; from = toScreen(pc, (pb.x + pb.w / 2) * sx, (pb.y + pb.h / 2) * sx); }
+    const mv = ease((k - 0.05) / 0.4), px = lerp(from[0], tgt[0], mv), py = lerp(from[1], tgt[1], mv) - Math.sin(mv * Math.PI) * 30 * sx;
+    const click = k > 0.52 && k < 0.66 ? Math.sin((k - 0.52) / 0.14 * Math.PI) : 0;
+    if (k > 0.52 && b.type !== 'look') { const r = (k - 0.52) / 0.3; if (r < 1) { cx.save(); cx.globalAlpha = (1 - r) * 0.6; cx.strokeStyle = '#fff'; cx.lineWidth = 3 * sx; cx.beginPath(); cx.arc(tgt[0], tgt[1], 8 * sx + r * 34 * sx, 0, Math.PI * 2); cx.stroke(); cx.restore(); } }
+    if (b.type !== 'look') pointer(px, py, click);
+  }
+  caption(seg.step, 1);
+};
+</script></body></html>

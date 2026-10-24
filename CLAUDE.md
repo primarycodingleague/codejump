@@ -31,6 +31,25 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Teacher Guide = video-led dashboard (24 Oct 2026, branch `claude/teacher-guide-video`, PR — not merged) — Charlie: "Rebuild the CodeJump Teacher Guide as a video-led, step-by-step guide"
+- `#t-guide` (Teacher Hub → Teacher Guide, home `#h-guide`, links `#guide/<id>`) is now a dark dashboard (`.gd`): topic list left in 5 groups
+  (phones: a sideways strip), one topic page right. Code: "TEACHER GUIDE dashboard" in build-and-play.html (`guideBase`, `loadGuide`,
+  `openTeacherGuide(id)`, `guideBuild`, `guideShow`, `guideWire`, `guideLeave`, `guidePrintHTML`, hashchange listener; `thGo`/`hideTeacher`
+  call `guideLeave`). Data = `guide/topics.js` (`GROUPS`, `WHO`, `TOPICS` {id, group, title, legacy:[h3 prefixes], summary?, before?,
+  video?, steps?, tips?}, `converted`). If topics.js can't load, the whole old guide shows.
+- **The old text is still the source for every unconverted topic**: `teacherGuideHTML()` is cut at its h3s (`guideLegacy`) and each topic
+  shows the sections its `legacy` names; converted topics keep it under "Full notes"; "The whole guide on one page" shows all of it.
+  Keep editing `teacherGuideHTML()` for facts; tests/guide.test.mjs fails if an h3 belongs to no topic (or two).
+- Converted topic: summary, Before you start, Watch it all (full video + chapter buttons; `preload=none` until opened, then `load()` and
+  seek to the step's `at`), step cards (loop `<video muted loop playsinline>` loaded/played only on screen via IntersectionObserver;
+  click = full video at that step; the playing step + chapter get `.now`), Good to know, Full notes. Reduced motion (OS or `a11y-reduce`)
+  = poster stills. Media that fails is removed, so the text stands alone (iPad offline list leaves `guide/media` + `guide/tools` out).
+  Print = every topic's words (`guidePrintHTML`), no videos.
+- **Media tools `guide/tools/`** (README): capture-<topic>.mjs (real UI, stubbed cloud, sample pupils) → specs.mjs → render.mjs (composer.html
+  `render(t)` at 25 fps → ffmpeg). Outputs full.mp4/jpg/vtt + timing.json + step<n>.mp4/jpg. Playwright's Chromium has no H.264, so the
+  test serves WebM copies (made with ffmpeg) with byte ranges.
+- Converted: Live collaboration. Text-only by design: topics needing a real teacher account (Managing your classes …).
+
 ## 3D World models replaced with Kenney CC0 packs (23 Oct 2026; LIVE on main since 24 Oct 2026, CJ_VERSION 2026.10.24) — Charlie: "the 3D models used in the 3D world lab need to be changed" (licence worry: Flock's files, possibly Mixamo clips)
 - **All Flock assets are gone** (characters, objects, the 37 animation files, thumbs). New files in `world/assets/` come from Kenney's
   CC0 packs (Mini Characters, Platformer, Nature, Food, Fantasy Town, City Suburban, Furniture, Mini Arena). Made by

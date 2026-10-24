@@ -1547,6 +1547,81 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
 .tg-doc code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:12px;background:rgba(255,255,255,.08);color:#9ad1ff;padding:1px 5px;border-radius:4px;}
 @media print{#print-area .tg-doc code{background:#eee;color:#000;}}
 @media print{#print-area .tg-doc{color:#000;max-width:none;}#print-area .tg-doc h3{color:#000;}#print-area .tg-doc h4{opacity:1;color:#333;}#print-area .tg-doc b{color:#000;}}
+/* Teacher Guide dashboard (.gd): dark, gold, Montserrat — topic list left, one topic page right; phones get a scrolling topic strip */
+#t-guide.on{background:#111;min-height:100%;}
+#teacher:has(#t-guide.on){background:#111;}
+.th-guide-body{overflow:visible;}
+.gd{display:grid;grid-template-columns:260px minmax(0,1fr);gap:clamp(18px,3vw,40px);max-width:1240px;margin:0 auto;padding:clamp(18px,3vw,36px) clamp(16px,3vw,40px) 60px;color:var(--white);font-family:var(--font);}
+.gd .hide{display:none!important;}
+.gd :focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:8px;}
+.gd-nav{position:sticky;top:76px;align-self:start;max-height:calc(100vh - 96px);overflow-y:auto;padding-right:6px;}
+.gd-group{margin-bottom:16px;}
+.gd-group h2{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 6px 10px;}
+.gd-topic{display:flex;align-items:center;gap:8px;color:#d9d6d0;text-decoration:none;font-weight:600;font-size:14px;line-height:1.3;padding:8px 10px;border-radius:10px;border:1px solid transparent;min-height:40px;}
+.gd-topic:hover{background:#1e1e1e;color:#fff;}
+.gd-topic.on{background:#1f1a11;border-color:var(--gold);color:#fff;}
+.gd-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex:0 0 8px;margin-left:auto;box-shadow:0 0 0 3px rgba(174,133,62,.22);}
+.gd-all{font-size:13px;color:#a9a39a;border:1px dashed #3a3a3a;}
+.gd-main{min-width:0;outline:none;}
+.gd-main h1{font-family:var(--font);font-weight:800;font-size:clamp(26px,3.4vw,38px);line-height:1.1;margin:0 0 10px;color:#fff;}
+.gd-eyebrow{font-weight:800;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:4px 0 8px;}
+.gd-sum{font-size:17px;line-height:1.55;color:#e8e4dc;max-width:62ch;margin:0 0 16px;}
+.gd-before{background:#1a1712;border:1px solid #4a3c22;border-left:5px solid var(--gold);border-radius:12px;padding:12px 16px;margin:0 0 18px;max-width:72ch;}
+.gd-before b{display:block;color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
+.gd-before p{margin:0;line-height:1.5;color:#e8e4dc;}
+.gd-watch{display:inline-flex;align-items:center;gap:9px;background:var(--gold);color:#000;border:none;border-radius:999px;padding:0 20px;min-height:46px;font-family:var(--font);font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 8px 24px rgba(174,133,62,.3);}
+.gd-watch span{background:rgba(0,0,0,.18);border-radius:999px;padding:2px 9px;font-size:13px;}
+.gd-watch .ic{width:20px;height:20px;}
+.gd-player{margin:16px 0 4px;background:#000;border:2px solid #2a2a2a;border-radius:16px;overflow:hidden;}
+.gd-player video{display:block;width:100%;aspect-ratio:16/9;background:#000;}
+.gd-vmsg{padding:14px 16px;color:#f0c987;margin:0;}
+.gd-chapters{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:#141414;border-top:1px solid #2a2a2a;}
+.gd-chap{font-family:var(--font);font-weight:700;font-size:13px;color:#ddd;background:#1f1f1f;border:1px solid #333;border-radius:999px;padding:0 12px;min-height:36px;cursor:pointer;}
+.gd-chap span{color:var(--gold);font-variant-numeric:tabular-nums;margin-right:4px;}
+.gd-chap:hover{border-color:var(--gold);}
+.gd-chap.now{background:var(--gold);color:#000;border-color:var(--gold);}.gd-chap.now span{color:#000;}
+.gd-steps{list-style:none;padding:0;margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
+.gd-step{background:#1a1a1a;border:2px solid #2b2b2b;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s,box-shadow .2s;}
+.gd-step.now{border-color:var(--gold);box-shadow:0 0 0 4px rgba(174,133,62,.25);}
+.gd-clip{display:block;padding:0;border:none;background:#000;cursor:pointer;aspect-ratio:16/9;width:100%;position:relative;}
+.gd-clip video,.gd-clip img{display:block;width:100%;height:100%;object-fit:cover;}
+.gd-clip::after{content:'▶ Watch';position:absolute;right:8px;bottom:8px;font:800 11px var(--font);letter-spacing:.06em;color:#000;background:var(--gold);border-radius:999px;padding:4px 9px;opacity:0;transition:opacity .2s;}
+.gd-clip:hover::after,.gd-clip:focus-visible::after{opacity:1;}
+.gd-stxt{padding:12px 14px 16px;}
+.gd-shead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.gd-n{font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);}
+.gd-who{font-weight:700;font-size:12px;color:#e9d3a5;border:1.5px solid var(--gold);border-radius:999px;padding:2px 9px;white-space:nowrap;}
+.gd-stxt h3{font-size:17px;font-weight:800;margin:0 0 4px;color:#fff;line-height:1.25;}
+.gd-stxt p{margin:0;font-size:14px;line-height:1.5;color:#cfcac2;}
+.gd-tips{margin:26px 0 0;background:#161616;border:1px solid #2b2b2b;border-radius:16px;padding:16px 20px;}
+.gd-tips h2{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 8px;}
+.gd-tips ul{margin:0;padding-left:20px;}.gd-tips li{margin:0 0 6px;line-height:1.5;color:#e8e4dc;}
+.gd-more{margin-top:22px;border-top:1px solid #2b2b2b;padding-top:14px;}
+.gd-more summary{cursor:pointer;font-weight:800;color:var(--gold);min-height:40px;display:flex;align-items:center;gap:8px;list-style:none;}
+.gd-more summary::-webkit-details-marker{display:none;}
+.gd-more summary::before{content:'';width:0;height:0;border-left:7px solid var(--gold);border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .15s;}
+.gd-more[open] summary::before{transform:rotate(90deg);}
+.gd-legacy{max-width:760px;margin:0;}
+.gd-legacy h4{color:var(--gold)!important;}
+#teacher .gd .tg-doc,.gd-fallback.tg-doc{color:#e8e4dc;}
+#teacher .gd .tg-doc b{color:#fff;}
+#teacher .gd .tg-doc h3{color:var(--gold);border-bottom-color:#333;}
+#teacher .gd .tg-doc h4{color:#bbb;}
+#teacher .gd .tg-doc code{background:#262626;color:#f0c987;}
+.gd-fallback{padding:clamp(18px,3vw,36px);}
+.gd-load{padding:60px 20px;text-align:center;color:#bbb;font-family:var(--font);}
+@media (max-width:760px){
+  #t-guide .th-bar{position:relative;}
+  .gd{grid-template-columns:1fr;padding-top:0;}
+  .gd-nav{position:sticky;top:0;z-index:4;max-height:none;display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;margin:0 -16px;padding:10px 16px;background:#111;border-bottom:1px solid #2b2b2b;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .gd-nav::-webkit-scrollbar{display:none;}
+  .gd-group{display:flex;align-items:center;gap:4px;margin:0;flex:0 0 auto;}
+  .gd-group h2{margin:0 2px 0 8px;white-space:nowrap;font-size:10px;}
+  .gd-topic{white-space:nowrap;font-size:13px;padding:6px 12px;border:1px solid #333;border-radius:999px;min-height:38px;}
+  .gd-dot{margin-left:2px;}
+  .gd-steps{grid-template-columns:1fr;}
+}
+@media (prefers-reduced-motion: reduce){.gd-step,.gd-clip::after{transition:none;}}
 /* Tooltips */
 #tip{position:fixed;z-index:1700;max-width:230px;background:#1a1a1a;color:#fff;border:1px solid var(--gold);border-radius:8px;padding:8px 11px;font-family:var(--font);font-size:12px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.5);pointer-events:none;}
 #tip.hide{display:none;}
@@ -2092,7 +2167,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
     <div class="th-bar"><span class="th-logo">CODE<span class="g">JUMP</span></span><span class="lbl">Teacher Guide</span><span class="spacer"></span>
       <button class="th-chip" onclick="printGuide()"><svg class="ic"><use href="#i-print"></use></svg> Print</button>
       <button class="th-chip gold" onclick="thGo('t-hub')"><svg class="ic"><use href="#i-arr-l"></use></svg> Back to the Hub</button></div>
-    <div class="th-wrap"><div class="th-paper th-guide-body" id="th-guide-body"></div></div>
+    <div class="th-guide-body" id="th-guide-body"></div>
   </div>
 </div>
 
@@ -3094,6 +3169,7 @@ document.querySelectorAll('#home [data-start]').forEach(b=>b.onclick=()=>{_pendi
 document.getElementById('h-myprojects').onclick=()=>{const el=document.getElementById('home-projects');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 document.getElementById('h-setup-class').onclick=()=>openTeacherHubGated();
 document.getElementById('h-guide').onclick=()=>{showTeacher();openTeacherGuide();};
+{const gm=location.hash.match(/^#guide\/([\w-]+)/);if(gm)setTimeout(()=>{showTeacher();openTeacherGuide(gm[1]);},0);} // a link straight to a guide topic
 document.getElementById('h-lessons').onclick=()=>{_lsCurrent=null;openLessons();};
 document.getElementById('h-showdown-lesson').onclick=()=>{_lsCurrent='critter-engineers';openLessons();};
 // a few lessons as pictures on the home page (from lessons/lessons.js; the strip stays empty if it can't load)
@@ -6540,8 +6616,8 @@ const TH_UNITS={
 let thYear=1, thCurrent=null;
 function thLessons(){return TH_UNITS[thYear].lessons;}
 function showTeacher(){document.getElementById('teacher').classList.remove('hide');{const lg=document.getElementById('lesson-guide');if(lg)lg.classList.add('hide');}const rp=document.getElementById('resume-pill');if(rp)rp.classList.add('hide');thGo('t-hub');thRenderHub();}
-function hideTeacher(){document.getElementById('teacher').classList.add('hide');if(typeof lessonGuideRender==='function')lessonGuideRender();}
-function thGo(id){document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
+function hideTeacher(){if(typeof guideLeave==='function')guideLeave();document.getElementById('teacher').classList.add('hide');if(typeof lessonGuideRender==='function')lessonGuideRender();}
+function thGo(id){if(id!=='t-guide'&&typeof guideLeave==='function')guideLeave();document.querySelectorAll('#teacher .th-screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.getElementById('teacher').scrollTo(0,0);}
 function thRenderHub(){
   const who=document.getElementById('th-who');
   if(who)who.textContent=(typeof isSignedIn==='function'&&isSignedIn()&&cloudMe)?'Teacher Hub · signed in as '+(cloudMe.realName||cloudMe.displayName||''):'Teacher Hub';
@@ -8320,7 +8396,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>CodeJump is a browser-based game maker for primary children, part of <b>Primary Coding League CIC</b>. Pupils <b>build</b> a platform level, <b>design</b> their own artwork, <b>code</b> the rules with snap-together blocks, then <b>play</b> and share their game — all in one screen, nothing to install.</p>
   <h3>Ready-made lessons</h3>
   <p><b>A unit for every lab.</b> Each lab has a full unit of ready-made lessons that build on each other, in blocks of six (the sixth is a design project). Every lesson has a plan, slides, a starter and a Lesson card with a <b>Next lesson</b> button. <b>Platformer Lab — Sky Isles Explorers</b> (24 lessons, Years 1–6) · <b>Stage Lab — Lantern Street Theatre</b> (24, Years 1–6) · <b>Turtle Lab — Driftwood Bay Artists</b> (18, Years 3–6) · <b>Critter Lab — Critter Workshop</b> (18) · <b>3D World — Park Designers</b> (24) · <b>Build Lab — Robot Helper Academy</b> (18) · <b>Robot Lab — Robot Librarian</b> (18) · <b>AI Lab — Wildwood Spotters</b> (18) · <b>Train Lab — Brindlewick Railway</b> (18). Each runs from algorithms, sequence and loops (Years 3–4) through selection and debugging (Years 4–5) to variables, messages and functions (Years 5–6), with the Years 1–2 blocks using the picture-block editors. In the Critter and AI Labs the same order is taught through testing and data.</p>
-  <p>Press <b>Ready-made lessons</b> on the home page (teacher section) or in the Teacher Hub. Each lesson is a complete, no-preparation computing lesson for ages 5–11: a plan with timings and what to say, curriculum links for your country (pick it with <b>Curriculum</b> at the top of the lessons: England, Scotland, Wales, Northern Ireland, Ireland, Cyprus, the United States, Australia or New Zealand; it also renames the age groups when pupils start a project), key words, support and stretch ideas, what to look for, and a <b>starter project</b>. Press <b>Present the slides</b> to show the pupil slides on the board (full screen; arrow keys, space or a clicker move on; <b>N</b> shows your notes under the slide; <b>Presenter view</b> opens a second window with your notes, the next slide and a timer, for a laptop plus a board; <b>Print / PDF</b> prints them or saves a PDF), <b>Open the starter</b> to show the project, <b>Give to my class</b> to send every pupil their own copy (they open it from Cloud → My games), or <b>Print lesson plan</b>. When a pupil opens the starter, a <b>Lesson</b> card in the corner takes them through the task step by step (it can read itself aloud, folds away, and remembers their step when they save). Lessons: Get the cat to the star, Fix the dance, Make a level for a friend (KS1); Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course (KS2).</p>
+  <p>Press <b>Ready-made lessons</b> on the home page (teacher section) or in the Teacher Hub. Each lesson is a complete, no-preparation computing lesson for ages 5–11: a plan with timings and what to say, curriculum links for your country (pick it with <b>Curriculum</b> at the top of the lessons: England, Scotland, Wales, Northern Ireland, Ireland, Cyprus, the United States, Australia or New Zealand; it also renames the age groups when pupils start a project), key words, support and stretch ideas, what to look for, and a <b>starter project</b>. Press <b>Present the slides</b> to show the pupil slides on the board (full screen; arrow keys, space or a clicker move on; <b>N</b> shows your notes under the slide; <b>Presenter view</b> opens a second window with your notes, the next slide and a timer, for a laptop plus a board; <b>Print / PDF</b> prints them or saves a PDF), <b>Open the starter</b> to show the project, <b>Give to my class</b> to send every pupil their own copy (they open it from Cloud → My games), or <b>Print lesson plan</b>. When a pupil opens the starter, a <b>Lesson</b> card in the corner takes them through the task step by step (it can read itself aloud, folds away, and remembers their step when they save). The first lessons (Get the cat to the star, Fix the dance, Make a level for a friend for KS1; Shapes with repeat, Catch the stars, Rock paper scissors on a micro:bit, Critter engineers, 3D obstacle course for KS2) are now part of these units.</p>
   <h3>The four modes</h3>
  <ul><li><b> Build</b> — place blocks on a 20×12 grid. Tools: Paint, Fill Row, Erase, Undo/Redo, Clear, and “This Page” to test a single page.</li><li><b>▶ Play</b> — test instantly (arrow keys + Space, or on-screen buttons on tablets).</li><li><b>&lt;/&gt; Code</b> — set the rules with blocks.</li><li><b> Design</b> — draw 16×16 pictures for the player, blocks, keys and background.</li></ul>
  <h3> The Platformer Lab, Stage Lab &amp; Turtle Lab</h3>
@@ -8332,18 +8408,18 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   </ul>
  <p>Hover (or tap-and-hold) any Stage block for a plain-English description, in every key stage. The <b> Help</b> guide automatically shows pages matched to the project type and key stage.</p>
  <h3> Critter Lab (Key Stage 2 &amp; 3)</h3>
- <p>The <b>Critter Lab</b> project is a 3D creature builder: pupils build a creature from shaped <b>blobs</b> (length, height, width, squareness, pointiness) and ready-made <b>limbs</b>, give each joint a <b>swing</b> or a limb a <b>motion path</b> of draggable IK points, then release it into real <b>physics</b> (gravity, friction, momentum) where it heads for a red target. Movement is never scripted, so pupils learn by predicting, testing and tweaking: rhythm and timing (phase), symmetry, grip, balance and steering. <b>Contests:</b> Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head race, Super Sumo and Free roam, with a best score saved per contest. Critters save, share and hand in like every other project. The 3D engine downloads the first time a Critter opens, so it needs internet then; live collaboration isn't available for Critters yet.</p>
+ <p>The <b>Critter Lab</b> project is a 3D creature builder: pupils build a creature from shaped <b>blobs</b> (length, height, width, squareness, pointiness) and ready-made <b>limbs</b>, give each joint a <b>swing</b> or a limb a <b>motion path</b> of draggable IK points, then release it into real <b>physics</b> (gravity, friction, momentum) where it heads for a red target. Movement is never scripted, so pupils learn by predicting, testing and tweaking: rhythm and timing (phase), symmetry, grip, balance and steering. <b>Contests:</b> Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head race, Super Sumo and Free roam, with a best score saved per contest. Critters save, share and hand in like every other project, and a team can build one Critter together live (Share → Collaborate). The 3D engine downloads the first time a Critter opens, so it needs internet then.</p>
  <p><b>Video guides:</b> the <b>Guides</b> button in the Critter Lab plays three short captioned videos (no sound needed, about a minute and a half each) that take pupils from an empty body to a walking Critter: <i>Build your first walking Critter</i> (two pairs of Walking legs, 1.0 m in the Sprint), <i>Fix the wobble with beats</i> (the beat chart and Opposite beat give a trot, 2.8 m) and <i>Lift higher for Hurdles</i> (taller foot loops, 2.3 m → 2.9 m). They work well on the board as a lesson starter.</p>
  <p><b>3D printing:</b> the <b>3D print</b> button in the Critter Lab downloads the Critter as an <b>STL</b> (any slicer, one colour) or a <b>3MF</b> (one part per colour, for multi-colour printers), at 8, 12 or 16 cm long, optionally on a 2.4 mm base plate. Every joint gets a small ball so the parts fuse into one solid piece; parts thinner than 2 mm at the chosen size are flagged. Turn on supports (tree supports suit legs) and use a brim without the base plate; PLA at 0.2 mm layers is fine. Everything is made in the browser, nothing is uploaded.</p>
  <h4>Critter Showdown (live, up to four pupils)</h4>
  <p>Race up to four pupils’ Critters against each other on your screen. Open <b>Cloud → Teacher</b>, choose the class and press <b>Critter Showdown</b> (or press <b>Showdown</b> inside the Critter Lab). Pick up to four pupils and a contest (Sprint, Hurdles, High Jump, Lap or Super Sumo) and press <b>Open the Showdown</b>. Pupils who are signed in get a pop-up on their screen inviting them to join straight away (it saves whatever they were working on first); they can also press <b>Showdown</b> in their Critter Lab or open it from Cloud → Collaborations. They and send in one of their saved Critters (cloud or device), or the one on their screen. Your panel shows who’s here, who’s choosing and who’s ready. You can take an entry out, fill empty lanes with Starter Critters, change the contest, then press <b>Start the race!</b>. Every screen shows the race live with a leaderboard and a podium at the end. In the races each Critter runs exactly as it does in its owner’s Test it!, so the lane makes no difference; Super Sumo is one shared platform. Press <b>Race again</b> or change the contest for another round, and <b>End Showdown</b> when you’re done. Pupils need to be signed in, and it uses the same live rooms as Collaborate (no extra set-up).</p>
  <h3> 3D World (Key Stage 2 &amp; 3)</h3>
- <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 37 animations such as walk, run, wave, dance and swim) and ready-made <b>models</b> (trees, rocks, huts, boats, gems and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
+ <p>The <b>3D World</b> project is a block-based 3D scene and game builder. Pupils make shapes, <b>characters</b> (12, recolourable, with 42 animations such as walk, run, wave, dance and swim) and 73 ready-made <b>models</b> (trees, rocks, houses, a canoe, gems, food, furniture and more), then bring them to life with events, motion, loops, sensing, variables, sound and real <b>physics</b> (fall and bump, solid but still, bounciness, grip, weight). A <b>control with the arrow keys</b> block and <b>camera</b> blocks make it easy to build a third-person game; speech bubbles and <b>show … on the screen</b> give feedback and scores.</p>
  <p><b>Building view:</b> before pupils press Run, the world shows how it <b>starts</b>. Clicking a thing highlights the block that made it, and dragging its arrows (or Resize handles) writes the new numbers back into that block, so pupils see the link between the 3D scene and the code. Run plays the world; Stop resets it. Projects save, share and hand in like every other project. The 3D engine and models download the first time a 3D project opens, so it needs internet then (about 1 MB to start, plus the models a world uses). <b>Live collaboration</b> works for 3D: signed-in pupils press Share → Collaborate and pick up to five classmates; block changes and arrow drags appear on everyone's screen, with named pointers, while Run plays on each pupil's own screen. If two pupils change the very same number at the same moment, the latest change wins on every screen. The characters and models are light enough for Chromebooks; they come from Kenney's free CC0 packs, so schools can use them freely.</p>
  <p><b>Park Designers (24 ready-made lessons, Years 3–6):</b> a unit in which pupils design and run a 3D theme park, in four blocks of six lessons that follow the usual primary order of skills. <b>Year 3 · Opening day:</b> algorithms and sequence, click events, physics, animation and speech. <b>Year 4 · Rides that move:</b> repeat, forever, loops that make things, random, and debugging loops. <b>Year 5 · Fairground games:</b> if and if … else with sensing (touching, distance, position, random), testing and debugging. <b>Year 6 · Running the park:</b> variables (counters, a score, a countdown, money that buys new rides), cameras and messages. The sixth lesson of each block is a design project. When a pupil finishes a lesson (every goal ticked, or the last step of the Lesson card) the card offers <b>Next lesson</b>, which saves their work (handing it in if it came from your class) and opens the next one. Each lesson opens its own world with a <b>Goals</b> checklist (top left of the world) that ticks itself: goals about the blocks tick as soon as the code is right, the rest tick while the program runs, so you can see at a glance who is done. Find them in <b>Ready-made lessons</b> (lesson plans, slides, a Lesson card for pupils, and Give to my class).</p>
  <h3> AI Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>AI Lab</b> lets pupils <b>teach a computer</b> to recognise their own <b>drawings</b> or <b>words</b> (machine learning), then use it in a block-coded game. Three steps: <b>Teach</b> (choose Drawings or Words, make 2–6 labels and add examples of each; ready-made <i>Shapes</i>, <i>Happy or sad faces</i>, <i>Sunny, rainy or snowy</i> and <i>Kind or unkind messages</i> sets are there for a quick start or a demo; under the pad pupils see <i>what the computer sees</i>, a 20 × 20 grid), <b>Train &amp; test</b> (a small neural network practises on the drawings, slightly turned and stretched each time; if each label has 4+ drawings it is also checked on 1 in 4 drawings it never practised with, and shows the ones it got wrong, a <i>mix-ups</i> table and, under <i>Look inside your AI</i>, the average drawing of each label or the key words of each label; pupils then draw or type to test it, with a confidence bar for every label and the examples it thinks are most alike) and <b>Code it</b> (Blockly: <i>when the AI makes a guess</i>, <i>when the AI thinks it’s …</i>, <i>AI’s guess</i>, <i>how sure the AI is</i>, <i>a random label</i>, <i>wait for the next guess</i>, plus show/say out loud, sounds, pad colour, score, loops, if, variables and operators).</p>
- <p><b>Big ideas to draw out:</b> the computer isn’t told rules — it finds patterns in examples; more and more varied examples make it better; testing on data it hasn’t seen is the fair test; it gives a <i>confidence</i>, not a certainty; and an AI trained on narrow or unbalanced examples is unfair to the things it wasn’t shown (bias). The ready-made lesson <b>Teach the computer</b> (Years 5–6) covers all of this, with slides. <b>Safeguarding:</b> drawings and typed words only — no camera, no microphone — and training happens in the browser; nothing is sent anywhere except inside the pupil’s own saved or shared project. Live collaboration isn’t available for the AI Lab.</p>
+ <p><b>Big ideas to draw out:</b> the computer isn’t told rules — it finds patterns in examples; more and more varied examples make it better; testing on data it hasn’t seen is the fair test; it gives a <i>confidence</i>, not a certainty; and an AI trained on narrow or unbalanced examples is unfair to the things it wasn’t shown (bias). The ready-made lesson <b>Teach the computer</b> (Years 5–6) covers all of this, with slides. <b>Safeguarding:</b> drawings and typed words only — no camera, no microphone — and training happens in the browser; nothing is sent anywhere except inside the pupil’s own saved or shared project. A team can teach and code one AI together live (Share → Collaborate).</p>
  <h3> Train Lab (Key Stage 2 &amp; 3)</h3>
  <p>The <b>Train Lab</b> is a train set to code. Pupils click a smart-train track together (straights, short straights, 45° curves, splits and crossings), click <b>colour snaps</b> into it and put up to three trains on it. With no code at all the trains behave like real smart trains: they set off when Run is pressed and obey <b>snap commands</b> — a row of snaps starting with white, such as white-red (stop for 2 seconds) or white-green-green-green (fast) — and choose a way at each split from the snap in its slot (or at random). Pupils then add blocks: the same blocks as the smart train's own Scratch 3 extension (drive at cm/s, drive a distance, pause, lights, split decisions, snap and colour events), with one block category per train, so the coding carries straight over to real smart trains. Lights, sounds, messages between trains and shared variables are there too.</p>
  <p><b>Wagons, places and challenge cards:</b> trains can pull a wagon, leave it at a white-yellow snap and collect it again by reversing into it (the magnet is at the back, like the real thing). The <b>Places</b> tool puts signs beside the track (station, airport, museum, depot, farm …). Pupils can give the places an <b>order</b> (the Order tool: tap the signs one after another and gold numbers appear, which also show on the printed card), and zoom and move round big tracks (drag, pinch or the mouse wheel; Fit shows it all). Under <b>Challenges</b> there are four ready-made challenges (levels 1–3) and pupils can make their own: a list of jobs for Train 1 at the places (stop at, turn back at, pick up / drop off the wagon at, end the route at) that tick off on the board as the train does them. <b>Print the challenge card</b> gives a card with the track picture, the jobs and the pieces needed, so pupils can then build the same challenge with real smart-train track; tick the option to print an answer card with the snaps on it. Pupils can swap their own cards with a partner.</p>
@@ -8368,7 +8444,7 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <h3>Game size</h3>
   <p>Key Stage 2 &amp; 3 games can be created at different grid sizes (Standard 20×12, Wide, Large, or Huge 48×24) for bigger projects. The build view scales to show the whole level; play uses a camera that follows the player in both directions. Key Stage 1 stays at the standard size.</p>
   <h3>Running a lesson</h3>
- <ul><li>Collect pupils' work two ways: have them <b>hand it in to your class</b> (cloud), or <b>open a level file</b> (.codejump / .html) they share.</li><li><b>Send a starter</b> to a class in one tap (My classes a class Send the game I'm building), or use the in-app guided activities in <b> Help</b>.</li><li>Suggested flow: <i>predict place a few blocks play improve</i>.</li><li><b>Ready-made lessons</b> (home page → For teachers, or the Teacher Hub): 20 complete 60-minute lessons with a plan, slides, curriculum links for your country, a starter project and a Lesson card that guides pupils step by step. Every lab has a lesson for Years 3–4 (sequence, repetition, events, debugging) and one for Years 5–6 that builds on it (selection, variables, procedures, fair testing, data), plus three for Years 1–2. Choose <b>Progression</b> in the lessons library to see them all side by side.</li></ul>
+ <ul><li>Collect pupils' work two ways: have them <b>hand it in to your class</b> (cloud), or <b>open a level file</b> (.codejump / .html) they share.</li><li><b>Send a starter</b> to a class in one tap (My classes → a class → Send the game I'm building), or use the in-app guided activities in <b> Help</b>.</li><li>Suggested flow: <i>predict → place a few blocks → play → improve</i>.</li><li><b>Ready-made lessons</b> (home page → For teachers, or the Teacher Hub): 200 complete 60-minute lessons, in a unit for every lab, each with a plan, slides, curriculum links for your country, a starter project and a Lesson card that guides pupils step by step. They build from sequence, repetition, events and debugging (Years 3–4, with picture-block lessons for Years 1–2) to selection, variables, procedures, fair testing and data (Years 5–6). Choose <b>Progression</b> in the lessons library to see them all side by side.</li></ul>
   <h3>Every block &amp; tile</h3>
   `+guideTileRef()+`
   <h3>Coding blocks (Key Stage 2)</h3>
@@ -8379,25 +8455,104 @@ function teacherGuideHTML(){return `<div class="tg-doc">
   <p>Choosing Key Stage 3 swaps the blocks for a <b>code editor</b>. Pupils write a safe, sandboxed Python-style language (no <code>eval</code>; capped loops so nothing freezes) featuring variables, <code>if/elif/else</code>, <code>while</code> &amp; <code>for … in</code> loops, <b>lists</b>, and <b>functions</b> with <code>def</code>. Special functions run on game events — <b>on_start</b>, <b>on_update</b>, <b>on_key</b>, <b>on_gem</b>, <b>on_enemy</b> — and the game API covers movement (<code>move_left/right</code>, <code>jump</code>, <code>is_key</code>), scoring/lives (<code>add_score</code>, <code>set_lives</code>) and helpers (<code>say</code>, <code>win</code>, <code>game_over</code>, <code>player_x</code>, <code>random</code>). Live syntax checking and friendly errors with line numbers support debugging — covering the KS3 hallmarks of a textual language, modular programs and data structures.</p>
  <p>Pupils don't need to memorise anything: the <b> Commands</b> button in the editor opens a complete, grouped reference of every command and event, each with a one-line explanation — so the whole API (movement, scoring, sensing, settings and sound) is always one tap away.</p>
   <h3>Cloud save &amp; classes (optional)</h3>
- <p>If your organisation sets up the (free) cloud backend, an <b> Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes a class a child their work</b>. <b>Pupils</b> join classes in <b> Cloud Settings</b> (a child can be in several), then when saving choose <b> My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. Setup takes ~5 minutes — see the <code>cloud/</code> folder’s guide. Until it’s configured, the Cloud button is hidden and on-device saving works as normal.</p>
+ <p>If your organisation sets up the (free) cloud backend, an <b> Cloud</b> button appears and everyone uses an <b>account</b> (a unique display name + password + their name + a role of student or teacher). <b>Sign in once</b> and your games are on <b>any device</b> — no PINs. <b>Teachers</b> (and only teachers) can open the <b>Teacher Hub</b>; there they make classes and see each pupil's work — by <b>real name and display name</b> — under <b>My classes → a class → a child → their work</b>. <b>Pupils</b> join classes in <b>Cloud → Settings</b> (a child can be in several), then when saving choose <b> My own work</b> (private) or pick a <b>class</b> they've joined to hand it in. Teachers only see work handed in to <b>their</b> class. Use <b>first names/nicknames</b> for the "name" field; your organisation hosts the data and controls retention. On codejump.co.uk the cloud is already set up (it runs from the separate codejump-cloud project). A copy of CodeJump without a cloud hides the Cloud button, and on-device saving works as normal.</p>
   <h3>Managing your classes</h3>
- <p>In <b>Teacher Hub My classes &amp; pupils' work</b> you can <b>make a class</b> (share its code so pupils self-join), <b>rename</b> or <b>delete</b> a class, <b>remove</b> a pupil, open any child's <b>handed-in work</b>, and <b> send the game you're building straight to a whole class</b> (it lands in every pupil's class work — handy for starters/templates). Pupils show by <b>real name + display name</b>.</p>
+ <p>In <b>Teacher Hub → My classes &amp; pupils' work</b> you can <b>make a class</b> (share its code so pupils self-join), <b>rename</b> or <b>delete</b> a class, <b>remove</b> a pupil, open any child's <b>handed-in work</b>, and <b> send the game you're building straight to a whole class</b> (it lands in every pupil's class work — handy for starters/templates). Pupils show by <b>real name + display name</b>.</p>
  <p><b>Add pupils</b> (in a class): choose a spreadsheet saved as CSV, or copy the rows from Excel / Google Sheets and paste them in. One pupil per row: their name, then a display name and password if you have them (first and last name columns are fine, and a header row is spotted). Anything missing is made for you: display names can only use letters, numbers, - and _, so names with spaces are tidied. You see the whole list before any accounts are made, and if a display name is already taken you can give those pupils new ones in one tap. Then print their <b>login cards</b>.</p>
  <h3> Live collaboration</h3>
- <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game <b>Share Collaborate</b> invites classmates by display name; everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b> Cloud Collaborations</b>. This works in the <b>Build Lab</b>, <b>Critter Lab</b>, <b>AI Lab</b>, <b>Train Lab</b>, <b>Robot Lab</b> and <b>3D World</b> too: everyone sees the same project, while Run (or Test it!) plays on each pupil's own screen. In the Build Lab, pupils share one world and can see each other walking round it. Great for pair-programming and group projects. <i>(Needs the optional cloud backend — including its Durable Object “rooms” setup; see <code>cloud/COLLAB.md</code>.)</i></p>
+ <p>Up to <b>6 pupils can build the same game at once</b>, in real time. A pupil opens a game, taps <b>Share → Collaborate</b> and picks up to five classmates from their classes (or invites them by display name); everyone then sees each other's <b>blocks, code and coloured cursors update live</b>, on both the Build and Code screens. Invited pupils find shared projects under <b>Cloud → Collaborations</b>. This works in every lab: the <b>Platformer</b>, <b>Stage</b> and <b>Turtle Labs</b>, and the <b>Build Lab</b>, <b>Critter Lab</b>, <b>AI Lab</b>, <b>Train Lab</b>, <b>Robot Lab</b> and <b>3D World</b> too: everyone sees the same project, while Run (or Test it!) plays on each pupil's own screen. In the Build Lab, pupils share one world and can see each other walking round it. Great for pair-programming and group projects. <i>(Needs the cloud, which is already set up on codejump.co.uk, and pupils who are signed in.)</i></p>
   <h3>Saving, sharing &amp; safety</h3>
-  <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link.</li></ul>
+  <ul><li>Work auto-saves as a draft; pupils can Save named games and Resume drafts.</li><li>Share by link, downloadable playable file, or level file — no account needed.</li><li>Nothing leaves the device unless a pupil chooses to share a link or save to the cloud.</li></ul>
  <h3> Accessibility</h3>
- <p>Tap the <b></b> button (on the home screen, or in the Key Stage 1 Stage) to switch on an <b>easy-to-read dyslexia-friendly font</b>, <b>bigger text</b>, <b>high contrast</b>, <b>reduced motion</b>, or <b>read-aloud</b>. Choices are remembered on the device and apply across all key stages.</p>
+ <p>Tap the <b>Accessibility options</b> button (the round person button at the top of the home screen, or in the Key Stage 1 Stage) to switch on an <b>easy-to-read dyslexia-friendly font</b>, <b>bigger text</b>, <b>high contrast</b>, <b>reduced motion</b>, or <b>read-aloud</b>. Choices are remembered on the device and apply across all key stages.</p>
  <h3>iPads without Wi-Fi</h3>
  <p>On an iPad, CodeJump can go on the Home Screen and then works with <b>no internet</b>, which helps where a school network blocks it. Once per iPad, on a network that doesn't block CodeJump (home Wi-Fi or a phone hotspot): open codejump.co.uk in Safari, tap <b>Use offline</b> at the top of the home page and follow the steps (Share, <b>Add to Home Screen</b>, then open the new icon and wait until it says <b>Ready offline</b>, about 31 MB). After that, open CodeJump from the icon. Every lab, saving on the iPad, the lessons and this guide work offline; signing in, handing in, share links and working together still need the internet, and the Critter Lab video guides don't play offline. It updates itself whenever it has internet. The Home Screen app keeps its <b>own saves</b>, separate from Safari's, so pupils should always use the icon. This is for iPads only; other devices use the website as normal.</p>
   <h3>Troubleshooting</h3>
- <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>A lab won’t open?</b> It now says why. <b>Can’t show 3D</b>: the Robot, Critter, Build and Print Labs and the 3D World need 3D graphics (WebGL), so use an up-to-date Chrome, Edge or Safari and switch on “hardware acceleration” in the browser’s settings; some older laptops and remote desktops can’t. <b>Couldn’t download</b> or <b>blocks editor couldn’t load</b>: ask your IT team to allow <b>codejump.co.uk</b> and <b>unpkg.com</b> (and codejump-cloud.primarycodingleague.workers.dev for accounts and sharing).</li><li><b>Can't press Play?</b> Add a Finish — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
+ <ul><li><b>No sound?</b> Tap once to start audio (a browser rule), and check the speaker buttons.</li><li><b>A lab won’t open?</b> It now says why. <b>Can’t show 3D</b>: the Robot, Critter and Build Labs and the 3D World need 3D graphics (WebGL), so use an up-to-date Chrome, Edge or Safari and switch on “hardware acceleration” in the browser’s settings; some older laptops and remote desktops can’t. <b>Couldn’t download</b> or <b>blocks editor couldn’t load</b>: ask your IT team to allow <b>codejump.co.uk</b> and <b>unpkg.com</b> (and codejump-cloud.primarycodingleague.workers.dev for accounts and sharing).</li><li><b>Can't press Play?</b> Add a Finish — every game needs one.</li><li><b>Lost work?</b> Use “Resume your last game” on the home screen.</li><li><b>Code won't run?</b> Coding blocks only run in Key Stage 2 games.</li></ul>
   <h3>Curriculum links</h3>
   <p>Sequence, selection, repetition, variables and decomposition (functions); design, write and debug programs; use logical reasoning to predict behaviour. KS1 focuses on algorithms, predicting, and debugging simple programs.</p>
 </div>`;}
-function openTeacherGuide(){document.getElementById('th-guide-body').innerHTML=teacherGuideHTML();thGo('t-guide');}
-function printGuide(){doPrint(teacherGuideHTML());}
+// ── TEACHER GUIDE dashboard ── topics on the left, one page each (#guide/<id>). Topic data = guide/topics.js; a topic that
+// hasn't been converted to steps + videos shows its part of the old guide (teacherGuideHTML), so nothing is ever lost.
+function guideBase(){return /^https?:/.test(location.protocol)?new URL('guide/',location.href.split('#')[0].split('?')[0]).href:'https://codejump.co.uk/guide/';}
+let guideMod=null,_guideLoading=null,_guideCur=null,_guideIO=null;
+function loadGuide(){if(!_guideLoading)_guideLoading=import(guideBase()+'topics.js').then(m=>(guideMod=m)).catch(e=>{_guideLoading=null;throw e;});return _guideLoading;}
+const gdEsc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const gdTime=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+const gdReduced=()=>(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)||document.body.classList.contains('a11y-reduce');
+// the old guide, cut at its h3 headings: [{h, html}]
+function guideLegacy(){const d=document.createElement('div');d.innerHTML=teacherGuideHTML();const out=[];let cur=null;
+  [...d.firstElementChild.childNodes].forEach(n=>{if(n.nodeName==='H3'){cur={h:n.textContent.trim(),html:''};out.push(cur);}else if(cur)cur.html+=n.nodeType===1?n.outerHTML:n.textContent;});return out;}
+function guideLegacyFor(t,parts){return parts.filter(p=>(t.legacy||[]).some(k=>p.h.startsWith(k))).map(p=>p.html).join('');}
+function openTeacherGuide(id){const body=document.getElementById('th-guide-body');thGo('t-guide');
+  if(!guideMod){body.innerHTML='<div class="gd-load">Loading the guide…</div>';
+    loadGuide().then(()=>openTeacherGuide(id)).catch(()=>{body.innerHTML='<div class="gd-fallback tg-doc">'+teacherGuideHTML()+'</div>';});return;}
+  if(!body.querySelector('.gd'))guideBuild(body);
+  const want=id||(location.hash.match(/^#guide\/([\w-]+)/)||[])[1]||_guideCur||guideMod.TOPICS[0].id;
+  guideShow(guideMod.topic(want)?want:guideMod.TOPICS[0].id);}
+function guideBuild(body){const {GROUPS,TOPICS,converted}=guideMod;
+  body.innerHTML='<div class="gd"><nav class="gd-nav" aria-label="Guide topics">'+GROUPS.map((g,gi)=>'<div class="gd-group"><h2>'+gdEsc(g)+'</h2>'+
+    TOPICS.filter(t=>t.group===gi).map(t=>'<a class="gd-topic" href="#guide/'+t.id+'" data-topic="'+t.id+'">'+gdEsc(t.title)+(converted(t)?'<span class="gd-dot" title="Step-by-step with videos"></span><span class="sr-only"> (step by step with videos)</span>':'')+'</a>').join('')+'</div>').join('')+
+    '<div class="gd-group"><a class="gd-topic gd-all" href="#guide/all" data-topic="all">The whole guide on one page</a></div></nav><main class="gd-main" id="gd-main" tabindex="-1"></main></div>';
+  body.querySelectorAll('.gd-topic').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();guideGo(a.dataset.topic);}));}
+function guideGo(id){window.history.replaceState(null,'','#guide/'+id);guideShow(id);const m=document.getElementById('gd-main');if(m){m.focus({preventScroll:true});document.getElementById('teacher').scrollTo(0,0);}}
+function guideShow(id){const {GROUPS,WHO,converted}=guideMod,main=document.getElementById('gd-main');if(!main)return;
+  guideStopMedia();_guideCur=id;if(location.hash!=='#guide/'+id)window.history.replaceState(null,'','#guide/'+id);
+  document.querySelectorAll('.gd-topic').forEach(a=>{const on=a.dataset.topic===id;a.classList.toggle('on',on);if(on){a.setAttribute('aria-current','page');a.scrollIntoView&&a.closest('.gd-nav').scrollWidth>a.closest('.gd-nav').clientWidth&&a.scrollIntoView({block:'nearest',inline:'center'});}else a.removeAttribute('aria-current');});
+  const parts=guideLegacy();
+  if(id==='all'){main.innerHTML='<p class="gd-eyebrow">Teacher Guide</p><h1>The whole guide on one page</h1><div class="gd-legacy tg-doc">'+teacherGuideHTML()+'</div>';return;}
+  const t=guideMod.topic(id),base=guideBase(),legacy=guideLegacyFor(t,parts);
+  let h='<p class="gd-eyebrow">'+gdEsc(GROUPS[t.group])+'</p><h1>'+gdEsc(t.title)+'</h1>';
+  if(!converted(t)){main.innerHTML=h+'<div class="gd-legacy tg-doc">'+legacy+'</div>';return;}
+  const v=t.video,red=gdReduced();
+  h+='<p class="gd-sum">'+gdEsc(t.summary)+'</p>';
+  if(t.before)h+='<div class="gd-before"><b>Before you start</b><p>'+gdEsc(t.before)+'</p></div>';
+  if(v)h+='<button class="gd-watch" id="gd-watch"><svg class="ic"><use href="#i-play"></use></svg> Watch it all <span>'+gdTime(v.length)+'</span></button>'+
+    '<section class="gd-player hide" id="gd-player" aria-label="Full video"><video id="gd-full" controls playsinline preload="none" poster="'+gdEsc(base+v.poster)+'">'+(v.captions?'<track kind="captions" srclang="en" label="English" src="'+gdEsc(base+v.captions)+'">':'')+'</video>'+
+    '<p class="gd-vmsg hide" id="gd-vmsg">The video can’t load right now (are you offline?). The steps below say everything it shows.</p>'+
+    '<div class="gd-chapters" role="group" aria-label="Chapters">'+t.steps.map((s,i)=>'<button class="gd-chap" data-i="'+i+'"><span>'+gdTime(s.at)+'</span> Step '+(i+1)+'</button>').join('')+'</div></section>';
+  h+='<ol class="gd-steps">'+t.steps.map((s,i)=>'<li class="gd-step" data-i="'+i+'">'+
+    (s.clip?'<button class="gd-clip" data-i="'+i+'" aria-label="Watch step '+(i+1)+' in the full video">'+(red?'<img alt="" loading="lazy" src="'+gdEsc(base+s.clip)+'.jpg">':'<video muted loop playsinline autoplay preload="none" poster="'+gdEsc(base+s.clip)+'.jpg" data-src="'+gdEsc(base+s.clip)+'.mp4"></video>')+'</button>':'')+
+    '<div class="gd-stxt"><div class="gd-shead"><span class="gd-n">Step '+(i+1)+'</span><span class="gd-who">'+gdEsc(WHO[s.who]||s.who)+'</span></div><h3>'+gdEsc(s.title)+'</h3><p>'+gdEsc(s.text)+'</p></div></li>').join('')+'</ol>';
+  if(t.tips&&t.tips.length)h+='<section class="gd-tips"><h2>Good to know</h2><ul>'+t.tips.map(x=>'<li>'+gdEsc(x)+'</li>').join('')+'</ul></section>';
+  if(legacy)h+='<details class="gd-more"><summary>Full notes</summary><div class="gd-legacy tg-doc">'+legacy+'</div></details>';
+  main.innerHTML=h;guideWire(t);}
+function guideWire(t){const main=document.getElementById('gd-main'),full=document.getElementById('gd-full');
+  // media that can't load just goes away: the step text stands on its own
+  main.querySelectorAll('.gd-clip video,.gd-clip img').forEach(m=>m.addEventListener('error',()=>{const b=m.closest('.gd-clip');if(b)b.remove();}));
+  main.querySelectorAll('.gd-clip video').forEach(m=>{m.muted=true;});
+  if(!gdReduced()&&'IntersectionObserver' in window){_guideIO=new IntersectionObserver(es=>es.forEach(e=>{const m=e.target;
+      if(e.isIntersecting){if(!m.src&&m.dataset.src){m.src=m.dataset.src;}const p=m.play();if(p&&p.catch)p.catch(()=>{});}else if(!m.paused)m.pause();}),{rootMargin:'120px 0px',threshold:.25});
+    main.querySelectorAll('.gd-clip video').forEach(m=>{m.autoplay=false;_guideIO.observe(m);});}
+  else main.querySelectorAll('.gd-clip video').forEach(m=>{m.autoplay=false;});
+  if(!full)return;
+  const open=(at,play)=>{const pl=document.getElementById('gd-player');pl.classList.remove('hide');document.getElementById('gd-watch').setAttribute('aria-expanded','true');
+    if(!full.getAttribute('src')){full.preload='auto';full.src=guideBase()+t.video.src;full.load();}
+    const go=()=>{try{full.currentTime=at;}catch(e){}if(play){const p=full.play();if(p&&p.catch)p.catch(()=>{});}};
+    if(full.readyState>=1)go();else full.addEventListener('loadedmetadata',go,{once:true});
+    pl.scrollIntoView({block:'nearest',behavior:gdReduced()?'auto':'smooth'});};
+  document.getElementById('gd-watch').setAttribute('aria-expanded','false');
+  document.getElementById('gd-watch').onclick=()=>open(0,true);
+  main.querySelectorAll('.gd-chap').forEach(b=>b.onclick=()=>open(t.steps[+b.dataset.i].at,true));
+  main.querySelectorAll('.gd-clip').forEach(b=>b.onclick=()=>open(t.steps[+b.dataset.i].at,true));
+  full.addEventListener('error',()=>{document.getElementById('gd-vmsg').classList.remove('hide');full.classList.add('hide');});
+  const mark=()=>{let k=-1;t.steps.forEach((s,i)=>{if(full.currentTime+0.05>=s.at)k=i;});if(full.currentTime>=t.video.length-2.4)k=-1;
+    main.querySelectorAll('.gd-step').forEach(el=>el.classList.toggle('now',+el.dataset.i===k&&!full.paused));
+    main.querySelectorAll('.gd-chap').forEach(el=>{const on=+el.dataset.i===k;el.classList.toggle('now',on);if(on)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});};
+  ['timeupdate','seeked','play','pause','ended'].forEach(ev=>full.addEventListener(ev,mark));}
+function guideStopMedia(){if(_guideIO){_guideIO.disconnect();_guideIO=null;}document.querySelectorAll('#gd-main video').forEach(m=>{try{m.pause();m.removeAttribute('src');m.load();}catch(e){}});}
+function guideLeave(){guideStopMedia();if(/^#guide\//.test(location.hash))window.history.replaceState(null,'',location.pathname+location.search);}
+// Print = the words of every topic (steps, good to know, then the old notes), never the videos
+function guidePrintHTML(){if(!guideMod)return teacherGuideHTML();const {GROUPS,TOPICS,WHO,converted}=guideMod,parts=guideLegacy();
+  return '<div class="tg-doc">'+TOPICS.map(t=>{const legacy=guideLegacyFor(t,parts);let h='<h3>'+gdEsc(GROUPS[t.group])+' · '+gdEsc(t.title)+'</h3>';
+    if(!converted(t))return h+legacy;
+    h+='<p>'+gdEsc(t.summary)+'</p>'+(t.before?'<p><b>Before you start:</b> '+gdEsc(t.before)+'</p>':'')+'<ol>'+t.steps.map(s=>'<li><b>'+gdEsc(s.title)+'</b> ('+gdEsc(WHO[s.who]||s.who)+') — '+gdEsc(s.text)+'</li>').join('')+'</ol>';
+    if(t.tips&&t.tips.length)h+='<h4>Good to know</h4><ul>'+t.tips.map(x=>'<li>'+gdEsc(x)+'</li>').join('')+'</ul>';
+    return h+(legacy?'<h4>Full notes</h4>'+legacy:'');}).join('')+'</div>';}
+function printGuide(){doPrint(guidePrintHTML());}
+window.addEventListener('hashchange',()=>{const m=location.hash.match(/^#guide\/([\w-]+)/);if(!m)return;
+  const id=m[1];if(document.getElementById('teacher').classList.contains('hide')||!document.getElementById('t-guide').classList.contains('on')){showTeacher();}
+  openTeacherGuide(id);});
 
 // ═══════════════════════════════════════════════════════════════════════
 // GUIDED MISSIONS — a coach that checks your progress and advances itself

@@ -121,7 +121,7 @@ export const TOPICS = [
       { who: 'all', title: 'Start an AI Lab project', text: 'Press Start building, choose Key Stage 2 (or 3), then AI Lab.', clip: 'media/ai/step1', at: 2.4 },
       { who: 'all', title: 'Make labels', text: 'Choose Drawings or Words, then make 2–6 labels with New label, or load a Ready-made examples set.', clip: 'media/ai/step2', at: 8.6 },
       { who: 'all', title: 'Draw examples and Add them', text: 'Draw on the pad and press Add; under the pad pupils see what the computer sees, a 20 × 20 grid.', clip: 'media/ai/step3', at: 13.8 },
-      { who: 'all', title: 'Train it', text: 'On Train & test press Train; with 4 or more examples a label is also checked on drawings it never practised with.', clip: 'media/ai/step4', at: 19 },
+      { who: 'all', title: 'Train it', text: 'On Train & test press Train; when every label has 4 or more examples it is also checked on drawings it never practised with.', clip: 'media/ai/step4', at: 19 },
       { who: 'all', title: 'Test it with a new drawing', text: 'Draw something new: a bar for every label shows how sure it is, plus the examples it thinks are most alike.', clip: 'media/ai/step5', at: 24.2 },
       { who: 'all', title: 'Code it', text: 'On Code it, blocks such as “when the AI makes a guess” react to its guesses; press Run, then draw.', clip: 'media/ai/step6', at: 27.4 }
     ],
@@ -132,7 +132,26 @@ export const TOPICS = [
       'A team can teach and code one AI together live (Share → Collaborate).'
     ]
   },
-  { id: 'train', group: 1, title: 'Train Lab', legacy: ['Train Lab'] },
+  {
+    id: 'train', group: 1, title: 'Train Lab', legacy: ['Train Lab'],
+    summary: 'A smart-train set to build and code. With no code at all the trains obey colour snaps on the track; then pupils add blocks that carry straight over to real smart trains.',
+    before: 'Key Stage 2 and 3. Real smart trains and track are optional: everything works on screen, and challenge cards can be printed to build with real track.',
+    video: { src: 'media/train/full.mp4', poster: 'media/train/full.jpg', captions: 'media/train/full.vtt', length: 36.6 },
+    steps: [
+      { who: 'all', title: 'Start a Train Lab project', text: 'Press Start building, choose Key Stage 2 (or 3), then Train Lab. It opens with a track to change.', clip: 'media/train/step1', at: 2.4 },
+      { who: 'all', title: 'Click track and snaps together', text: 'Track pieces (straights, curves, splits, crossings) click onto open ends; colour snaps click into the slots.', clip: 'media/train/step2', at: 8.6 },
+      { who: 'all', title: 'Press Run: the trains obey the snaps', text: 'With no code, trains set off and follow snap commands such as white-red (stop for 2 seconds), and choose a way at each split.', clip: 'media/train/step3', at: 13.8 },
+      { who: 'all', title: 'Add blocks for each train', text: 'Each train has its own block category (drive, pause, lights, split decisions, snap and colour events), as on a real smart train.', clip: 'media/train/step4', at: 18.8 },
+      { who: 'all', title: 'Try a challenge', text: 'Challenges has four ready-made ones (levels 1–3), or make your own: jobs for Train 1 tick off on the board as it does them.', clip: 'media/train/step5', at: 23.8 },
+      { who: 'all', title: 'Print the challenge card', text: 'Print the challenge card shows the track, the jobs and the pieces needed; tick the option for an answer card with the snaps.', clip: 'media/train/step6', at: 31.2 }
+    ],
+    tips: [
+      'Trains can pull a wagon, leave it at a white-yellow snap and collect it by reversing into it (the magnet is at the back).',
+      'The Places tool puts signs beside the track; the Order tool numbers them for a route.',
+      'The Brindlewick Railway unit has 18 ready-made Train Lab lessons for Years 3–6 (Ready-made lessons).',
+      'While a program runs, its variables show in the top-right corner of the board.'
+    ]
+  },
   { id: 'build', group: 1, title: 'Build Lab', legacy: ['Build Lab'] },
   { id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'] },
   // Coding

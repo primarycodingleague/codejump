@@ -119,5 +119,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Code it', sub: 'Blocks react to its guesses. Press Run, then draw.',
         beats: [['s6a', 2.4], ['s6b', 3, { type: 'look' }]] }
     ]
+  },
+  train: {
+    title: 'Train Lab', sub: 'A smart-train set to build and code', outroText: 'All aboard!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a Train Lab project', sub: 'Start building → Key Stage 2 → Train Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Click track and snaps together', sub: 'Track pieces join end to end; colour snaps click into the slots.',
+        beats: [['s2a', 2.6], ['s2b', 2.6]] },
+      { n: 3, who: 'Everyone', title: 'Press Run: the trains obey the snaps', sub: 'With no code at all, trains follow snap commands like real smart trains.',
+        beats: [['s3a', 2.2], ['s3b', 2.8, { type: 'look' }]] },
+      { n: 4, who: 'Everyone', title: 'Add blocks for each train', sub: 'The same blocks as a real smart train, one category per train.',
+        beats: [['s4a', 2.2], ['s4b', 2.8, { type: 'look' }]] },
+      { n: 5, who: 'Everyone', title: 'Try a challenge', sub: 'Jobs for Train 1 tick off on the board as the train does them.',
+        beats: [['s5a', 2.2], ['s5b', 2.6], ['s5c', 2.6, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Print the challenge card', sub: 'Then build the same challenge with real smart-train track.',
+        beats: [['s6', 3]] }
+    ]
   }
 };

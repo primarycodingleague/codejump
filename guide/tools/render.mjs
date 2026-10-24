@@ -2,7 +2,7 @@
 //   node guide/tools/render.mjs collab        (after node guide/tools/capture-collab.mjs)
 // The spec for each topic is in specs.mjs (which shots make each step, and how long each is on screen).
 // Frames are drawn by composer.html (deterministic render(t)), grabbed at 25 fps and piped into ffmpeg.
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { browser } from '../../tests/lib.mjs';
@@ -57,8 +57,13 @@ const S = SPECS[topic];
 const full = await render(spec(true, 1280, 720), join(OUT, 'full.mp4'), 20, info => info.starts[0] + 1.6);
 console.log('full.mp4', full.length + 's', 'chapters', JSON.stringify(full.starts));
 for (const st of S.steps) {
-  const info = await render(spec(false, 960, 540, st.n), join(OUT, `step${st.n}.mp4`), 26, info => Math.min(info.length - 0.05, (st.beats[0][1]) * 0.62));
-  console.log(`step${st.n}.mp4`, info.length + 's');
+  // loops aim for about 200–450 KB: CRF 26, or a little higher for a busy step
+  for (let crf = 26; ; crf += 2) {
+    const f = join(OUT, `step${st.n}.mp4`);
+    const info = await render(spec(false, 960, 540, st.n), f, crf, info => Math.min(info.length - 0.05, (st.beats[0][1]) * 0.62));
+    const kb = Math.round(statSync(f).size / 1000);
+    if (kb <= 450 || crf >= 32) { console.log(`step${st.n}.mp4`, info.length + 's', kb + ' KB', 'CRF ' + crf); break; }
+  }
 }
 // captions as a text track too (screen readers, and the words if the picture can't be seen)
 const vt = s => { const m = Math.floor(s / 60), x = (s - m * 60).toFixed(3).padStart(6, '0'); return `00:${String(m).padStart(2, '0')}:${x}`; };

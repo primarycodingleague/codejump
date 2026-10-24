@@ -17,7 +17,7 @@ star-byte, lava-leap).
    towards the target, a gold ring, a pointer that clicks it, and a caption bar (step badge, title, subtitle, who). Frames are taken at
    25 fps with Playwright screenshots and piped into ffmpeg (H.264, `-preset veryfast`, yuv420p, `+faststart`):
    - `full.mp4`: 1280×720, captions, CRF 20, with title cards; `full.jpg` poster; `full.vtt` captions as text; `timing.json` (length + step starts)
-   - `step<n>.mp4`: 960×540, no captions, CRF 26, about 200–450 KB each; `step<n>.jpg` poster (also the still picture for reduced motion)
+   - `step<n>.mp4`: 960×540, no captions, CRF 26 (raised by 2 until it is under 450 KB, up to 32); `step<n>.jpg` poster (also the still picture for reduced motion)
 4. **Add the data** to `guide/topics.js`: summary, before, video, steps (`at` = the step's start from timing.json), tips.
    `tests/guide.test.mjs` checks the times match the video and every file exists.
 

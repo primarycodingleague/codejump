@@ -68,5 +68,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Design your own pictures', sub: 'Draw 16 × 16 pictures for the player, blocks and background.',
         beats: [['s6a', 2.2], ['s6b', 2.8, { type: 'look' }]] }
     ]
+  },
+  critter: {
+    title: 'Critter Lab', sub: 'Build a 3D creature and test it with real physics', outroText: 'Ready, steady, scuttle!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a Critter Lab project', sub: 'Start building → Key Stage 2 → Critter Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Drag parts onto the body', sub: 'Blobs and limbs stick where they touch. Legs come in pairs.',
+        beats: [['s2a', 2.6], ['s2b', 3, { type: 'look' }]] },
+      { n: 3, who: 'Everyone', title: 'Or start from a Starter Critter', sub: 'Four ready-made Critters that really move.',
+        beats: [['s3a', 2.2], ['s3b', 2.6], ['s3c', 2.2, { type: 'look' }]] },
+      { n: 4, who: 'Everyone', title: 'Choose a contest in Test it!', sub: 'Sprint, Hurdles, Block Push, High Jump, Lap, races and Sumo.',
+        beats: [['s4a', 2.2], ['s4b', 2.6]] },
+      { n: 5, who: 'Everyone', title: 'Press Go! and watch', sub: 'Real physics: nothing is scripted, so test, tweak and test again.',
+        beats: [['s5a', 2.2], ['s5b', 2.4, { type: 'look' }], ['s5c', 2.6, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Compare in Results', sub: 'Every test goes in a table, with a note of what you changed.',
+        beats: [['s6a', 2.2], ['s6b', 3, { type: 'look' }]] }
+    ]
   }
 };

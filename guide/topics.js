@@ -73,7 +73,26 @@ export const TOPICS = [
       'Teammates can type one drawing together live (Share → Collaborate).'
     ]
   },
-  { id: 'critter', group: 1, title: 'Critter Lab', legacy: ['Critter Lab'] },
+  {
+    id: 'critter', group: 1, title: 'Critter Lab', legacy: ['Critter Lab'],
+    summary: 'Pupils build a 3D creature from blobs and limbs, then test it in contests with real physics. Nothing is scripted, so they learn by predicting, testing and tweaking.',
+    before: 'Key Stage 2 and 3 only. The 3D engine downloads the first time a Critter opens, so that needs the internet, and the computer needs 3D graphics (WebGL).',
+    video: { src: 'media/critter/full.mp4', poster: 'media/critter/full.jpg', captions: 'media/critter/full.vtt', length: 40.8 },
+    steps: [
+      { who: 'all', title: 'Start a Critter Lab project', text: 'Press Start building, choose Key Stage 2 (or 3), then Critter Lab.', clip: 'media/critter/step1', at: 2.4 },
+      { who: 'all', title: 'Drag parts onto the body', text: 'Drag blobs and limbs from the left onto the Critter; they stick where they touch, and legs are added in pairs.', clip: 'media/critter/step2', at: 8.6 },
+      { who: 'all', title: 'Or start from a Starter Critter', text: 'Starter Critters gives four ready-made Critters (Scuttler, Crab, Wriggler, Hopper) that really move.', clip: 'media/critter/step3', at: 14.2 },
+      { who: 'all', title: 'Choose a contest in Test it!', text: 'Press Test it! and pick a contest: Sprint, Hurdles, Block Push, High Jump, Lap, Head-to-head, Super Sumo or Free roam.', clip: 'media/critter/step4', at: 21.2 },
+      { who: 'all', title: 'Press Go! and watch', text: 'The Critter heads for the red target under real physics; Turbo speeds it up, and the best score is kept.', clip: 'media/critter/step5', at: 26 },
+      { who: 'all', title: 'Compare in Results', text: 'Results lists every finished test with a note box for what was changed, plus a bar chart per contest.', clip: 'media/critter/step6', at: 33.2 }
+    ],
+    tips: [
+      'Guides plays three short captioned videos that take pupils from an empty body to a walking Critter. Good as a lesson starter on the board.',
+      '3D print downloads the Critter as STL or 3MF (8, 12 or 16 cm), made in the browser; nothing is uploaded.',
+      'Critter Showdown races up to four pupils’ Critters live on your screen (Cloud → Teacher, choose the class, Critter Showdown).',
+      'The Critter Workshop unit has 18 ready-made lessons for Years 3–6 (Ready-made lessons).'
+    ]
+  },
   { id: 'world3d', group: 1, title: '3D World', legacy: ['3D World'] },
   { id: 'ai', group: 1, title: 'AI Lab', legacy: ['AI Lab'] },
   { id: 'train', group: 1, title: 'Train Lab', legacy: ['Train Lab'] },

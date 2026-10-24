@@ -17,7 +17,25 @@ export const TOPICS = [
   { id: 'keystages', group: 0, title: 'Key Stage 1, 2 and 3', legacy: ['Key Stage 1 vs Key Stage 2'] },
   { id: 'size', group: 0, title: 'Game size', legacy: ['Game size'] },
   // The labs
-  { id: 'stage', group: 1, title: 'Platformer, Stage & Turtle Labs', legacy: ['The Platformer Lab, Stage Lab'] },
+  {
+    id: 'stage', group: 1, title: 'Stage Lab', legacy: ['The Platformer Lab, Stage Lab'],
+    summary: 'Characters (sprites) on a stage, brought to life with snap-together blocks. Key Stage 2 and 3 get nearly the whole Scratch-style palette; Key Stage 1 gets big picture blocks.',
+    video: { src: 'media/stage/full.mp4', poster: 'media/stage/full.jpg', captions: 'media/stage/full.vtt', length: 41.8 },
+    steps: [
+      { who: 'all', title: 'Start a Stage Lab project', text: 'Press Start building, choose the key stage, then Stage Lab.', clip: 'media/stage/step1', at: 2.4 },
+      { who: 'all', title: 'Snap blocks together', text: 'Pick a category (Motion, Looks, Events …) and drag blocks under a “when green flag clicked” hat until they click together.', clip: 'media/stage/step2', at: 8.6 },
+      { who: 'all', title: 'Press Run', text: 'Every character runs its own blocks at once; Stop puts them back where they started.', clip: 'media/stage/step3', at: 14.2 },
+      { who: 'all', title: 'Add characters and costumes', text: 'Add makes a new character; Costume picks its look and colour, or opens the paint editor.', clip: 'media/stage/step4', at: 21.2 },
+      { who: 'all', title: 'Choose a backdrop', text: 'Backdrops → Choose a backdrop gives seven ready-made scenes; you can also paint one or pick a solid colour.', clip: 'media/stage/step5', at: 26.6 },
+      { who: 'all', title: 'Key Stage 1: picture blocks', text: 'Younger pupils tap big picture blocks that join left to right after a start block, then press Go. No reading needed.', clip: 'media/stage/step6', at: 33.8 }
+    ],
+    tips: [
+      'Hover over (or press and hold) any Stage block to see what it does, in every key stage.',
+      'Give a character the micro:bit costume for an on-screen micro:bit: LEDs, A and B buttons, shake, sensors, music and radio. No hardware needed.',
+      'The Lantern Street Theatre unit has 24 ready-made Stage Lab lessons for Years 1–6 (Ready-made lessons).',
+      'The paint editor works like a real drawing app: shapes you can recolour, move, reshape and layer, a colour wheel, gradients and an eyedropper.'
+    ]
+  },
   {
     id: 'turtle', group: 1, title: 'Turtle Lab (Logo)', legacy: ['Turtle Lab (Logo)'],
     summary: 'Pupils type Logo commands on the left and a turtle draws them on the right. A gentle bridge from blocks to typed code, full of maths: angles, repeats and shapes.',

@@ -74,3 +74,9 @@ export async function startLab(page, dir, S, p, pt, ks = 'ks2') {
   S[p + 'c'] = await shot(page, dir, p + 'c', '#pt-modal .ks-opt[data-pt="' + pt + '"]');
   await page.click('#pt-modal .ks-opt[data-pt="' + pt + '"]');
 }
+
+// mark any element (e.g. a Blockly block's SVG) so shot() can point at it: await mark(page, () => someElement)
+export async function mark(page, fn, arg) {
+  await page.evaluate(({ src, arg }) => { document.querySelectorAll('[data-gd-target]').forEach(e => e.removeAttribute('data-gd-target')); const el = (0, eval)('(' + src + ')')(arg); if (el) el.setAttribute('data-gd-target', '1'); }, { src: fn.toString(), arg });
+  return '[data-gd-target]';
+}

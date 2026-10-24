@@ -34,5 +34,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Teach it your own command', sub: 'to star :size … end, then star 150.',
         beats: [['s6a', 2.8, { type: 'look' }], ['s6b', 2.6, { type: 'look' }]] }
     ]
+  },
+  stage: {
+    title: 'Stage Lab', sub: 'Characters on a stage, coded with blocks', outroText: 'On with the show!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a Stage Lab project', sub: 'Start building → Key Stage 2 → Stage Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Snap blocks together', sub: 'Drag blocks out of the coloured categories; they click into place.',
+        beats: [['s2a', 2.6], ['s2b', 3, { type: 'look' }]] },
+      { n: 3, who: 'Everyone', title: 'Press Run', sub: 'Every character runs its own blocks. Stop puts them back.',
+        beats: [['s3a', 2.4], ['s3b', 2.4, { type: 'look' }], ['s3c', 2.2, { type: 'look' }]] },
+      { n: 4, who: 'Everyone', title: 'Add characters and costumes', sub: 'Add makes a new character; Costume changes its look.',
+        beats: [['s4a', 2.4], ['s4b', 3]] },
+      { n: 5, who: 'Everyone', title: 'Choose a backdrop', sub: 'Backdrops → Choose a backdrop, or paint your own.',
+        beats: [['s5a', 2.2], ['s5b', 2.6], ['s5c', 2.4, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Key Stage 1: picture blocks', sub: 'Tap a picture block to add it after the green flag. No reading needed.',
+        beats: [['s6a', 2.8], ['s6b', 2.8, { type: 'look' }]] }
+    ]
   }
 };

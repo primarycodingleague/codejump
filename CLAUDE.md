@@ -31,6 +31,161 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## 3D World models replaced with Kenney CC0 packs (23 Oct 2026; LIVE on main since 24 Oct 2026, CJ_VERSION 2026.10.24) — Charlie: "the 3D models used in the 3D world lab need to be changed" (licence worry: Flock's files, possibly Mixamo clips)
+- **All Flock assets are gone** (characters, objects, the 37 animation files, thumbs). New files in `world/assets/` come from Kenney's
+  CC0 packs (Mini Characters, Platformer, Nature, Food, Fantasy Town, City Suburban, Furniture, Mini Arena). Made by
+  `tools/world-assets/` (packchars.mjs, packobjs.mjs + objmap.mjs list/labels/heights, measure.mjs; Kenney zips unpacked into
+  `tools/world-assets/kenney/`, gitignored). See its README. Every .glb is self-contained (texture embedded) and scaled.
+- **Ids kept** (Block1–6, Liz1–6, Star, tree, Gem2, hut…) so saved projects and lessons still open; labels changed (Gem2 = Purple jewel,
+  pond = Fountain, hut = House, Hat = Teddy bear, airplane = Flag…). 73 objects (27 new: barrel, crate, palm, bench, pizza…).
+  Characters = the 12 Kenney mini characters, scaled to 2.8 m; Liz1 (female-a) had a toy blaster in the mesh — packchars drops it (`DROP`).
+- **Animations:** each character file has its own 32 clips; `ANIMATIONS` rows are [id, label, clip | null] (`clipOf`). Missing ones
+  (Wave, Clap, Cheer, Dance1–4, Spin, Flip, HitReact, Wobble, Fly, Swim, Tread_Water, Skate, Climb_wall/rope, Stand_Up) are built by
+  the runtime (`makeClip`) from key poses in `PROC_ANIMS` (joints arm/leg/torso/head on the 7-joint skeleton; arms hang at z ±45,
+  straight up = ∓90; `turn`/`flip`/`lift` move the root). `restPose` runs before every clip. Animation group names = `<id>.<Name>`.
+  New: Cheer, Spin, Kick, Pick_Up, Drive.
+- **Part recolouring:** packchars gives every (part, swatch) its own 32×128 slot in the unused top half of the colour map
+  (`CHARACTER_SLOTS`, `slotsOf`, `partId`; part values kept: hair, skin, eyes, 'T-shirt', shorts, 'sleeves and shoes' = shoes). The runtime
+  reads the PNG out of the GLB (`pngOf`; `files` keeps a COPY of each character's bytes — loading detaches the buffer), and paints a
+  per-object `DynamicTexture` (`repaint`, keeps the shading). Headless (no createImageBitmap) it only records `o.parts`.
+- **Bundle gotcha:** babylon-world.min.js exports no `Animation`, `Axis` or `Texture` — `makeClip` takes Animation from a file clip's
+  constructor; sampling/wrap modes are numbers.
+- Lesson pictures (3D) and `home/world3d.jpg` regenerated; help/Teacher Guide credit Kenney. `make-starters.mjs` takes a comma list of ids.
+
+## Lesson units for every lab (21 Oct 2026; LIVE on main since 24 Oct 2026, CJ_VERSION 2026.10.24, WITHOUT the Print Lab and its Maple Street Makers unit — main's lessons.js drops UPrint and the two print lessons, offline/make-list.mjs has no 'print' dir) — Charlie: "proper units" for all the labs
+- Built by 8 parallel agents (a multi-agent workflow), one per lab, then merged and re-tested. 18 lessons per lab (3 blocks of 6: Years 3–4,
+  4–5, 5–6), 24 for the Platformer and Stage Labs (+ a Years 1–2 block in their KS1 editors). Each lab's existing lessons were ADOPTED into
+  its unit (same ids/starters). 200 lessons in all.
+- **Files:** `lessons/units/<lab>.js` (LESSONS in unit order + SLIDES; `{adopt:'<id>', …overrides}` moves an existing lesson in), merged by
+  lessons.js (see lessons/units/README.md). Starters from `lessons/builds/<prefix>-*.mjs` (+ a shared module per unit in a sub-folder that
+  make-starters skips). Tests `tests/unit-<lab>.test.mjs` (every starter opens with its card; every non-project answer does what it promises
+  and the bare starter doesn't).
+- **Library:** opens on **Units** (`_lsFilter='units'`, `lsUnits()`, `lsYearsSpan`, `_lsUnit` = a unit page with `.ls-blockh` block headings);
+  All lessons / year chips / Progression (cells now list each unit's blocks) remain.
+- **Host fixes the agents found:** platformer `switchMode` put the played page over page 1 after Play → Code → Play (now re-activates the
+  edited page when leaving Play); platformer functions couldn't change global variables (`cjSetVar`: only a function's inputs are local).
+  AI and Critter mounts pass `onGoalsDone` → `lessonDone()`. Help: ROBOT_HELP My blocks tab, CRITTER_HELP Results & goals, AI_HELP Goals;
+  Teacher Guide: the units list under Ready-made lessons, Print Lab rules + unit.
+- Character names repeat across units (Pip, Bramble) — harmless, but pick new names in future units.
+
+## Lantern Street Theatre (Stage Lab lesson unit, 24 lessons in 4 blocks, Years 1–6; 21 Oct 2026, branch `claude/vibrant-cori-tho25y`) — Charlie: "proper units" for every lab
+- **Our own unit.** Story: a little theatre on Lantern Street run by animal friends — Pip the cat (star), Bramble the bear, Dot the bird (singer), Bun the bunny (dancer), Biscuit the dog (ticket booth), Bolt the robot (stage manager). Never echo Scratch/ScratchJr names, projects or lesson text.
+- **Blocks:** 1 First rehearsals (Years 1–2, KS1 picture blocks): `cat-to-star` (adopted) · `theatre-2-steps` (plan with arrow cards; right 2, up 3, right 3) · `fix-the-dance` (adopted) · `theatre-4-ball` (repeat 5 [right, hop]) · `theatre-5-wake` (tap triggers per character) · `theatre-6-show` project. 2 The puppet show (Years 3–4): `theatre-7-joke` (waits so two sprites take turns) · `stage-animate` (adopted) · `theatre-9-scenes` (decomposition: Sun/Dot/Bramble parts, glide + backdrop switch) · `theatre-10-seats` (nested repeat + stamp, 3×9) · `theatre-11-rehearsal` (3 bugs: move outside repeat, flag instead of click, lines swapped) · `theatre-12-puppets` project. 3 Games night (Years 4–5): `catch-the-stars` (adopted, years overridden) · `theatre-14-door` (ask + if/else answer = please; "Please" fails = exact compare) · `theatre-15-spotlight` (x > −150 and x < 150) · `theatre-16-curtain` (repeat until y > 250 + hide; Pip wait until y position of Curtain > 250) · `theatre-17-lights` (if above forever, < vs >, wait until touching edge) · `theatre-18-games` project. 4 The grand show (Years 5–6): `theatre-19-tickets` (seats/sold variables, if seats > 0) · `microbit-rps` (adopted) · `theatre-21-cues` (broadcast and wait lights/curtain/music) · `theatre-22-votes` (list votes; repeat until i > length of votes with if item i = Pip) · `theatre-23-chorus` (6 clones) · `theatre-24-gala` final project.
+- **Files:** `lessons/units/stage.js` (LESSONS in unit order with `unit: 'Lantern Street Theatre · Block N · Lesson M'`, M = 1–24, + SLIDES; adopted lessons get unit/years/tool overrides and new 60-min plans for the two KS1 ones). `lessons/builds/theatre/theatre.mjs` = one shared module: `PAINTS` (theatre backdrop with opts dark/lit/spot/steps, hall, seat, curtain, spot — drawn in-page through `vecRecord`, so they are editable drawings; the theatre gets a "LANTERN STREET THEATRE" text shape), `build` (in-page; KS1 specs in stage px, KS2 in block coordinates; KS1 resets `stageState.pages`), `SPECS`, `ANSWERS`, a compact Blockly-XML writer (`blk`/`xml`, variables `v_<name>`, lists `l_<name>` with `variabletype="list"` — hand XML in this form loads fine), and `criteria(id, programs)` for the 4 project lessons. `lessons/builds/theatre-*.mjs` are 5-line wrappers (make-starters skips the `theatre/` folder).
+- **Test:** `tests/unit-stage.test.mjs` (232 checks): unit data (block/years/ks/60 min/steps/slides/curriculum keys/no other product names/starter + picture), every starter opens with its card, and every answer does what the lesson promises while the starter doesn't (driven with stageStart/stageFrame, stageFireClick, keys, stFinishAsk; stStampSprite wrapped to count stamps); projects: empty starter fails `criteria`, the example passes and runs. `THEATRE_BUILD=1` builds starters in the page instead of loading the JSON (for editing the unit).
+- **Gotchas:** st_say/st_say_secs take a TEXT FIELD (no reporter), so variable values are shown with monitors; st_repeat's count is a field, so "repeat length of list" is written as repeat until i > length; logic_compare's B socket is a number shadow — pupils drop the Operators text block on it for words; stCostumeOptions reads the SELECTED sprite, so avoid "switch costume to" in multi-sprite answers.
+
+## Driftwood Bay Artists (Turtle Lab lesson unit, 18 lessons in 3 blocks, Years 3–6; 21 Oct 2026, on branch `claude/vibrant-cori-tho25y`) — Charlie: "proper units" for every lab, like the Build Lab and 3D World ones
+- **Our own story:** Tilly, a young sea turtle, is the new artist of Driftwood Bay, a seaside town. Her jobs come from Captain Pearl (harbour master: map, regatta), Mrs Kelp (beach café: sign, survey), Mr Gull (lighthouse) and the festival team. Typed Logo throughout, KS2 only. lessons/units/turtle.js: `unit: 'Driftwood Bay Artists · Block N · Lesson M'`, with M counting 1–18 through the whole unit (`u(b, m)` takes m within the block).
+- **Blocks:**
+  - **Block 1, Mapping the bay (Years 3–4):** 1 `bay-1-jetty` (plan a route round the rock pool/sandcastle on a 50-step grid) · 2 `bay-2-sign` (decompose; board + arrow; pu/setxy/pd) · 3 adopted `turtle-shapes` · 4 `bay-4-bunting` (repeat 10 [repeat 3 [fd 40 rt 120] pu fd 50 pd] fills a 500-step string exactly) · 5 `bay-5-lighthouse` (3 bugs: lt/rt, repeat 3→4, missing pu/pd) · 6 `bay-6-map` (project).
+  - **Block 2, Festival week (Years 4–5):** 7 `bay-7-slide` (fd repcount * 10 spiral) · 8 `bay-8-ducks` (if repcount = 5 gold, > 6 red) · 9 `bay-9-crab` (ifelse random 2 = 0) · 10 `bay-10-tide` (random start; repeat 500 [if ycor < -150 [stop] fd 2]) · 11 `bay-11-lights` (3 bugs: repeat 9, > 6 vs < 6, the if after the loop where repcount is 0) · 12 `bay-12-fireworks` (project).
+  - **Block 3, Building the seafront (Years 5–6):** 13 `bay-13-size` (make "size; :size * 3 / 8 etc.; one line resizes the hut) · 14 adopted `turtle-procedures` · 15 `bay-15-survey` (to bar :n :c; data 6 9 4 7 as a chart) · 16 `bay-16-seafront` (3 bugs: fd 80 vs :size, hut not ending where it started, make inside the loop) · 17 `bay-17-regatta` (boat :size with ifelse :size > 50 for the sail; variables x and size in a loop) · 18 `bay-18-postcard` (final project).
+  - The lab has no events or messages, so the unit doesn't teach them. `stop` at the top level ends the whole program, so the tide walk comes last.
+- **Starters and answers:** one shared module, lessons/builds/bay/bay.mjs (`STARTERS`, `ANSWERS`, `args`, `build`). lessons/builds/bay-*.mjs re-export it, so starters and tests can't drift apart. Colour inputs to procedures must be numbers 0–15: `setpencolor :c`, because a "word input is an error.
+- **Test, tests/unit-turtle.test.mjs (184 checks):**
+  - Unit data checks.
+  - A page helper `BAY(code, rnd)` runs Logo in the real Turtle Lab. It wraps `turtleDrawLine`/`turtleMove` to record every segment (ends, colour, width) and move, and stubs Math.random with a sequence.
+  - Geometry helpers (`covers`, `rect`, `inkIn`, `inked`) prove that each answer does what the lesson promises and each starter doesn't. The projects meet their criteria and their bare starters don't.
+  - Every starter opens with its Lesson card, and Next lesson goes through the unit in order. `BAY_CODE=1` runs only the Logo checks.
+
+## Sky Isles Explorers (Platformer Lab lesson unit, 24 lessons, Years 1–6; 21 Oct 2026, on branch `claude/vibrant-cori-tho25y`) — Charlie: "start doing some progression bits… proper units" for every lab
+- **Our own story:** Pip the explorer lands on the Sky Isles (floating islands). Captain Wren the lighthouse keeper needs help to collect the sun gems and relight the lighthouse before the storm. Never echo another product's names, worlds or lessons.
+- **Block 1 · First steps (Years 1–2, KS1 editor):** `sky-1-map` algorithm (follow the map: Start 2nd from left, Finish 2nd from right, cover 4 spikes) · `sky-2-steps` sequence (steps 1, 2, 3 against a 4-high cliff; tallest-first fails) · `sky-3-bounce` predict + debug (Bounce! mushroom in the grass at col 4 lands short, so move it next to the island; erase the 3-block wall) · `sky-4-stones` repeat a pattern (spike, spike, stone, stone + gem, ×3) · `sky-5-keys` events (A key moves left in the starter; pupils add D → move right and W → jump, and see the Right Arrow stop; when game starts → play music + win screen says) · `level-for-a-friend` (adopted project, now a 60-min plan).
+- **Block 2 · Island builders (Years 3–4):** `sky-7-islands` decomposition (3 pages, a sign with each page's job; bridge + Door / Ladder one block above the cliff + Door / Bounce! in the grass; test each with This Page) · `level-designers` (adopted) · `sky-9-welcome` long sequence (show message + wait ×, 3-2-1, Go!) · `sky-10-repeat` (8 copied blocks → repeat 4; gem bonus repeat 5 {score 10, coin, wait 0.2} = 60 a gem) · `sky-11-debug` (countdown 1-2-3, repeat 50, wait after the loop) · `sky-12-island` project.
+- **Block 3 · Weather and wonders (Years 4–5):** `sky-13-enough` (when I collect a gem: if score = 50 → go to next page) · `sky-14-ouch` (when I get hurt: if lives > 1 "Ouch! Lives left: n" else "Last life!"; when_hit runs after the life is taken) · `sky-15-medals` (2 pages, win within 60 s; when I land on a page + page number = 2: else-if on seconds left > 40/20, then lives = 3 and seconds left > 40) · `sky-16-storm` (repeat until seconds left < 20 {wait 1}; without the wait → "Your code ran too long") · `sky-17-debug` (empty until loop, > vs ≥, do/else swapped) · `sky-18-arcade` project.
+- **Block 4 · Keepers of the light (Years 5–6):** `code-the-rules` (adopted) · `sky-20-pilots` (variables seconds/hurts/gems, results on page 2, fair test of jump height) · `sky-21-reward` (function reward(points) called with 5, 50 and 100 on page 2) · `sky-22-shop` (price variable + buy(cost): if score ≥ cost, take the cost off the score, +1 life, else "You need cost points"; the red button (gate dur 2) calls it) · `sky-23-debug` (set vs change storm, report(level) shows 1 not its input, game over checks score not storm) · `sky-24-tour` final project (3 pages, blue button/gate, Enemy A).
+- **Files:** `lessons/units/platformer.js` (LESSONS + SLIDES; adopted lessons keep their own steps and slides), `lessons/builds/sky-*.mjs` (KS1 builds paint the grid; KS2 builds share a header of Blockly-XML helpers and a data-driven level: PAGES of [row, col, tile] cells + signs/buttons/gates. They export ANSWER / SAMPLE / FIX / GEMS for the tests). The Platformer Lab has no broadcast blocks, so Block 4 uses functions, pages and events instead.
+- **Host bugs found (reported, not fixed here):** (1) Play onto page 2 → Code → Test it copies the played page over page 1 (switchMode doesn't restore the edited page when leaving Play). Lessons say "Press Build, then Code" after a test. (2) set/change of a global variable inside a function only changes a local copy (cjRunG writes to `Object.create(runVars)`). Lessons only change score/lives inside functions.
+- **Tests:** `tests/unit-platformer.test.mjs` (114 checks; `node unit-platformer.test.mjs sky-21` runs one lesson). An in-page "pupil" bot (`__bot`: hold Right, jump at walls and gap edges; `walk` for mushrooms; real key events for W/A/D and ladders) plays every KS1 level. KS2 answers are loaded as XML and driven by placing Pip on gems, doors, buttons and spikes, with toast/playSfx recorders. Every non-project starter fails its promise and every answer achieves it.
+
+## Robot Librarian (Robot Lab lesson unit, 18 lessons in 3 blocks; 21 Oct 2026, on branch `claude/vibrant-cori-tho25y`) — Charlie: "proper units" for every lab, like the Academy and Park Designers
+- **Our own unit.** Sparky is the new robot helper at **Willow Lane Library**. Ms Okafor the librarian sets a job each lesson. It follows only the usual primary SKILL ORDER. Never use another product's names or projects.
+  Block 1 Hello, library! (Years 3–4) · Block 2 The help desk (Years 4–5) · Block 3 Open Day (Years 5–6). Lesson 6 of each block is a design-and-make project.
+- **Lessons** are in `lessons/units/robot.js`, with `unit: 'Robot Librarian · Block N · Lesson M'` (M counts 1–18 through the whole unit):
+  - Block 1: 1 `library-1-welcome` (algorithm: plan, then wake Sparky and welcome) · 2 `library-2-tour` (decomposition, look-then-talk parts) · 3 adopted `robot-storyteller` (retitled "Story time: fix the bug"; predict + debug the order + bug swap; plan, steps and slides overridden, starter unchanged) · 4 `library-4-stretch` (repeat 5 nods / 3 tilts) · 5 `library-5-buttons` (tap head, B/C keys) · 6 `library-6-project` (welcome show).
+  - Block 2: 7 `library-7-signin` (ask/answer + create text with) · 8 `library-8-shelves` (if … else on answer = stories; a word needs a text block in the = gap) · 9 `library-9-door` (forever + nested if … else on mouse x < 4 / > 6) · 10 `library-10-closing` (repeat until timer > 8, wait until key space pressed?) · 11 `library-11-returns` (debug: repeat 2→3, swapped looks, All done inside the loop) · 12 `library-12-project` (help desk: repeat until answer = bye, if … else chain, ≠ bye for the sorry reply).
+  - Block 3: 13 adopted `robot-quiz` (retitled "Quiz night: keep the score"; the new skill is the variable) · 14 `library-14-survey` (two tally variables, totals, > to find the winner) · 15 `library-15-lights` (send message lights / when I receive: lights flash while Sparky talks; tap sends it again) · 16 `library-16-myblocks` (nod yes / shake no procedures) · 17 `library-17-inputs` (cheer with: stars → 3, 2, 1) · 18 `library-18-project` (Open Day: variable + message + My block + if + ask).
+- **Starters, answers and play scripts** are in `lessons/builds/robot/library.mjs`: `STARTERS`, `ANSWERS` (including the two adopted lessons) and `PLAY` (scripted answers, taps, keys, held keys and mouse positions). It has small helpers (`sayW`, `look`, `repeat`, `ifElse`, `until`, `def`/`call`/`param`…) that produce Blockly JSON. Variables use ids `v_<name>`; procedure params use `p_<name>`. Put `procedures_defnoreturn` scripts FIRST and at the top of the workspace. The build files are `lessons/builds/library-*.mjs`.
+- **My blocks added to the Robot Lab:**
+  - `robot-blocks.js` toolbox: category 'My blocks' (`custom: 'RB_PROCS'`, colour `#ff6680`). `robot-app.js` registers it with `Blockly.Procedures.flyoutCategory`, without the defreturn/ifreturn/callreturn blocks.
+  - `robot-runner.js`: `start()` collects the enabled `procedures_defnoreturn` blocks by lower-case name (`procs`). `procedures_callnoreturn` sets the param variables (`def.getVarModels()` ids) from `ARG0…`, runs `STACK` and restores them afterwards.
+  - The call depth is threaded through `run(b, d)` and `seq(b, d)`. At a depth of 40 or more it throws "One of your own blocks keeps using itself…" (shown through `onError`).
+- **Test:** `tests/unit-robot.test.mjs` (226 checks).
+  - Node part: every lesson is complete; each answer does what its lesson promises and each bare starter does not. It runs the REAL runner on a headless Blockly workspace with a stand-in view that records motor targets, faces (matched against `FACES`), lights, blinks, bubbles and asks. Looks are read from the `LOOKS` target values.
+  - App part: every starter opens with its Lesson card; My blocks is in the toolbox with "to do something" and no return blocks; the lesson 17 answer runs in the app with 6 nods.
+  - `ROBOT_CODE=1` runs only the Node part.
+- **Ideas not done:** an in-app goals checklist for robot lessons (like `#w3Goals`); mouse-following on tablets (a touch drag also turns the camera).
+
+## Wildwood Spotters (AI Lab lesson unit, 18 lessons in 3 blocks; 21 Oct 2026; on branch `claude/vibrant-cori-tho25y`) — Charlie: "proper units" for every lab, like the Build Lab and 3D World ones
+- **Our own unit and story** (no other product's names, worlds or lesson text): the class are the Spotters at **Wildwood Nature Reserve**;
+  Ranger Rosa runs it; **Hoot** is the reserve's owl-shaped computer that learns only from what the Spotters give it. Blocks: 1 Hoot's first
+  lessons (Years 3–4) · 2 Hoot on patrol (Years 4–5) · 3 Hoot runs the visitor centre (Years 5–6); lesson 6 of each block is a project.
+- **Lessons** (`lessons/units/ai.js`, `unit: 'Wildwood Spotters · Block N · Lesson M'`, M = 1–18): 1 `ai-happy-sad` (adopted; plan re-framed
+  as visitor feedback cards) · 2 `ai-2-tracks` algorithm/decompose the 5 steps of making an AI (deer/fox/duck from empty labels) · 3
+  `ai-3-events` a "when the AI thinks it's" script per label · 4 `ai-4-survey` copied steps → repeat 5 · 5 `ai-5-muddle` debug 3 bugs ·
+  6 `ai-6-guide` project · 7 `ai-7-sure` if … else on how sure > 80 · 8 `ai-8-signs` trail signs (left/right/closed), nested if … else ·
+  9 `ai-9-clues` and / or (mammal or bird; log a fox only when > 90% sure) · 10 `ai-10-ducks` repeat until score = 3 · 11 `ai-11-patrol`
+  debug a loop + condition (wait outside the loop, until score < 2, < for >) · 12 `ai-12-gate` project · 13 `teach-the-computer` (adopted;
+  unknowns, fair check, bias intro) · 14 `ai-14-target` variables target + goes · 15 `ai-15-alert` send message / when I receive + foxes
+  variable · 16 `ai-16-book` words AI: visitor book praise/problem + missing question label, fair check, key words · 17 `ai-17-fair` bias:
+  every dog message was a complaint → rebalance → "my dog had a great time" becomes praise · 18 `ai-18-centre` final project.
+- **Goals checklist (`ai/ai-goals.js`, no DOM):** an AI Lab project can carry `goals {title, list}`, which is saved in `getProject()`. Goal types:
+  labels (n, names), examples (n, label), kind, trained, check (pct), reads (text → label, words AIs), tested (n test-pad drawings, counted
+  once until Clear), uses (blocks, n, inside, has, fields e.g. {OP:'OR'}; only scripts under a "when" block count; pseudo-type
+  controls_if_else), thinks (n labels with a when-thinks script). The "while it ran" types are said, score, guesses, var (name, op incl. 'text')
+  and msg. These tick and stay ticked until the next Run. `cleanGoals`, `programInfo`, `countUses`, `newRecord`, `createGoals(g).reset/update(state)`.
+  App: `#alGoals` row under the tabs (fold with Hide/Show, green when all done, toast + win sound once, `host.onGoalsDone`).
+  `goalState()` gives the checker the labels, the fresh-brain check, tested, the blocks JSON, readAs, the run record and the variables by name.
+  Runner gained `io.sent(msg)`. Test hooks `_goals()`, `_rec()`.
+- **Starters/answers** in `lessons/builds/ai/wildwood.mjs` (`UNIT[id]` = goals, starter(), answer(), play/test scripts; `args`, `build`). Thin
+  `lessons/builds/ai-<n>-<word>.mjs` files are what make-starters loads. Code-drawn tracks/signs are in `lessons/builds/ai/draw.mjs` (seeded).
+  The visitor-book texts (BOOK, DOG_BOOK, DOG_FIX) are in `lessons/builds/ai/words.mjs`.
+- **Tests:** `tests/unit-ai.test.mjs` (204 checks). It checks that the unit data is complete; that in Node (real brain + runner + checker, headless
+  Blockly) every answer ticks every goal and no starter does, and each lesson's promise holds; and that in the app every starter opens with
+  its card + goals, while teach/train/test, running an answer and a words-AI fix tick the checklist.
+- Host glue still to add: AI mount option `onGoalsDone` → `lessonDone()` (Next lesson button).
+
+## Brindlewick Railway (Train Lab lesson unit, 18 lessons in 3 blocks, Years 3–6; 21 Oct 2026, on branch `claude/vibrant-cori-tho25y`)
+- **Our own unit** (never echo intelino or any other product). Story: the town of Brindlewick is getting its railway back. The class are its engineers, Mrs Achebe the station master sets the jobs, engines **Bramble** (Train 1) and **Fern** (Train 2, on the branch line to Brindle Farm). Train names = toolbox category names, so pupil steps say "Click Bramble".
+- **Blocks:** 1 Opening the line (Years 3–4) · 2 Signals and switches (Years 4–5) · 3 Running the railway (Years 5–6); lesson 6 of each block is a project.
+  1 `rail-1-track` build plan (1 straight + 4 curve rights closes the oval; curves first doesn't join) · 2 `train-snaps` (adopted) · 3 `rail-3-market` decomposition (legs 75/50/75 cm = pieces × 25, `drive forward … cm` + `wait 2`) · 4 `rail-4-shuttle` repeat 3 · 5 `rail-5-driver` key events (g go / s stop) · 6 `rail-6-project` · 7 `rail-7-signal` when train sees red → pause + top LED (lone colour snaps = markers, not commands) · 8 `rail-8-platform` if key space pressed? → on next split go right else straight (decided at a yellow marker BEFORE the split) · 9 `rail-9-shed` wait until sensor color = red (1) then stop (else it hits the open end) · 10 `rail-10-speed` forever { if speed (cm/s) > 50 red else green } · 11 `rail-11-debug` 3 bugs (sees green, branches swapped, <) · 12 `rail-12-project` · 13 `smart-trains` (adopted, re-pitched as the variables lesson) · 14 `rail-14-laps` lap time = timer at a red timing line, then reset timer; data table · 15 `rail-15-connect` broadcast connection → Fern's when I receive (two separate ovals: main pieces 0–11, branch 12–21) · 16 `rail-16-express` variable test speed as the drive speed, +10 a lap, stop when > 60 · 17 `rail-17-debug` 3 bugs (set trips to 0 inside the event, message "conection", > 3 vs ≥ 3) · 18 `rail-18-project`.
+- **Files:** `lessons/units/train.js` (LESSONS + SLIDES), `lessons/builds/train/brindlewick.mjs` (STARTERS / ANSWERS / EXAMPLES / PLAY, written with small Blockly-JSON helpers; `oval(n, at)`, `passingLoop()`, `twoLines()`), `lessons/builds/rail-*.mjs` (one per new lesson → make-starters). No Train Lab procedures exist, so Block 3 = variables, data, messages, combining.
+- **Lab changes:** Operators now starts with a plain number block (`math_number`, so "set test speed to 20" is possible). **Bug fixed:** opening a project WITH a challenge as the first Train Lab project threw a TDZ error (`renderCheck` → `stepText` ran during mount, before its const), so the lab didn't open. `renderCheck` is now deferred with `Promise.resolve().then`.
+- **Test:** `tests/unit-train.test.mjs` (171 checks; `TRAIN_CODE=1` = Node only). `play(project, {secs, keys, hold})` runs the real `createSim` + `createChecker` + `createRunner` on a headless Blockly workspace at 1/60 s with `random: () => 0.3`, and scripted keys (`at` / `near: place` / `wait` + `press` / `down` / `up`). Every non-project answer does its promise (challenge complete, loop visited, LED follows speed, Fern leaves within 0.3 s of each arrival, speeds 20…60, trips 3) and the bare starter doesn't. Projects: the example meets the criteria and the starter doesn't. App: every starter opens with its card, plus two answers run in the real lab.
+
+## Maple Street Makers (Print Lab lesson unit, 18 lessons in 3 blocks; 21 Oct 2026, branch only, like the Print Lab) — Charlie: "proper units" for every lab
+- **Our own unit.** The class run a design workshop on Maple Street, and shops send in orders (briefs whose rules tick themselves): Rosa at the Corner Café,
+  Mr Adeyemi at Leaf & Root, the Book Nook, the Toy Box, Pip's Pet Parlour, Gem & Thread, Ollie's Workbench, Maple Street School, and the Maple Street Fair.
+  Not coding, so the computing progression is mapped onto designing. Never use other products' names (Tinkercad/Autodesk etc.).
+- **Block 1 Opening the workshop (Years 3–4):** 1 `print-1-stand` algorithm (follow/write a plan with mm) · 2 `print-keyring` (adopted) · 3 `print-3-birdbox`
+  decomposition (parts table; turned Hole cylinder for the door) · 4 `print-4-pencils` count-controlled repeat (Duplicate, X +15, ×4) · 5 `print-5-boat` debugging
+  (4 bugs: under plate, floating cabin, 0.5 mm mast, ungrouped porthole) · 6 `print-6-gift` project.
+- **Block 2 Orders with rules (Years 4–5):** 7 `print-7-bookmark` conditions ≤/≥ · 8 `print-8-trophy` AND (range 80–100) · 9 `print-9-fit` measurement as input +
+  fit test card (7.0…8.6 by 0.4) + if/else · 10 `print-10-pot` repeat until every rule ticks · 11 `print-11-tag` debug the RULES (3→35, at least→no taller than)
+  with Change on the challenge card · 12 `print-12-order` project (Make a challenge…, ≥4 rules incl. a range).
+- **Block 3 The big commission (Years 5–6):** 13 `print-13-box` variable wall (hole = width − 2 × wall; then wall = 4) · 14 `print-14-knobs` procedure with input
+  (a grouped knob used at 24/36/48, Keep its shape) · 15 `print-phone-stand` (adopted) · 16 `print-16-medals` data (fair test thickness/width → grams;
+  30 × 9 g = 270 g > 250 g reel; 30 × 4 g fits) · 17 `print-17-gears` formula width = teeth × 2.5 · 18 `print-18-fair` final project.
+- **New brief rules (print-model.js RULES, for the unit):** `holes` v (hole children cutting inside groups), `repeat` v (same kind/hole/size/text the most
+  times), `maxg` v (model.estimate grams), `wall` v (thinnest gap between each hole and its group's solid bbox on x/y where the hole is inside, plus the floor;
+  scaled by group stretch), `parts` v (groups with identical children ignoring ids = the same part at any size), `mesh` (≥2 gears, width ÷ teeth within 2%).
+  `RULE_NOV` = rules without a number (hole/text/ready/mesh), used by cleanBrief and print-app's challenge editor.
+- **Files:** lessons/units/print.js (lessons + slides; the keyring's plan is overridden to 60 min, and its slides' last note points to the bird box),
+  lessons/builds/print/maple.mjs (`BRIEFS`, `STARTERS`, `ANSWERS(md, p)`), lessons/builds/print-<n>-<word>.mjs (one per new lesson),
+  starters/pics from make-starters. Test: tests/unit-print.test.mjs (data, new rules, every answer meets every rule and no starter does, each lesson's own
+  promise in Node; in the app every starter opens with its Lesson card and challenge card (the same ticks as Node) and the answer ticks all rules; lessons
+  4, 11, 14 and 16 followed click by click).
+
+## Critter Workshop (Critter Lab lesson unit, 18 lessons in 3 blocks, Years 3–6; 21 Oct 2026, on branch claude/vibrant-cori-tho25y)
+- **Our own unit.** The class are apprentices at **Nell’s Critter Workshop** in the village of **Fernhollow**. Every lesson a villager brings a job card. The lab has no code blocks, so the unit maps the usual primary order onto the lab’s own computing. Block 1 Apprentice builders (Years 3–4): sequence (the foot loop), decomposition, repetition (the movement cycle), debugging. Block 2 Critters that sense and decide (Years 4–5): input (the angle to the target), selection (the steering rule: if the target is left, the left legs take shorter steps, else the right ones), comparison, repeat-until, debugging. Block 3 Critter science (Years 5–6): fair tests, data and graphs, reuse (a copied leg works like a procedure and its Length is the input), evaluation. Lesson 6 of each block is a project. Never use the BBC/Bamzooki names.
+- **Lessons** (lessons/units/critter.js, `unit: 'Critter Workshop · Block N · Lesson M'`): 1 critter-builders (adopted) · 2 workshop-2-loop (Trundle: Reverse both foot loops, ~0.8 → 5.15 m) · 3 workshop-3-parts (Lizzie: two Long leg pairs + Neck & head dragged to the front) · 4 workshop-4-cycles (Dash: cycle speed 4 → 6 → 9, −0.03/0.73/8.06 m) · 5 workshop-5-bugs (Bramble: reversed back loop, slippy feet, power 50%; it only walks once all three are fixed) · 6 workshop-6-post (project) · 7 workshop-7-sense (Scout: smoothness 0 gives 6 flags, ≥20% gives a full lap) · 8 workshop-8-turns (Spinner: sharpness 100/80 spins, 50 gives 7 flags) · 9 workshop-9-better (Hilda, Hurdles: Lift higher is worse → Undo, Longer steps 7.18 → 9.72) · 10 workshop-10-rocks (Digger, Block Push: body Width 56 → 60 → 64 gives 1.41/0.96/2.59) · 11 workshop-11-patrol (cycle speed 7, sharpness 100 + smoothness 0, slippy feet) · 12 workshop-12-pond (project) · 13 critter-engineers (adopted) · 14 workshop-14-speeds (Strider, Sprint at cycle speeds 1–10: peak at 7 = 2.37 m, backwards at 10) · 15 workshop-15-copy (Patch walks backwards at −2.1 m; Remove the back pair, Copy a front Long bit, click the body, Paste → 5.15 m) · 16 workshop-16-trials (4 contests, then a second design) · 17 workshop-17-sumo (Rumble beats 2 of the 4 Starter Critters; body Width 70 beats all 4) · 18 workshop-18-games (final project).
+- **lessons/builds/critter/workshop.mjs** (Node): `UNIT[id]` holds `starter()` (with `goals`), `answer` steps (`{act}` / `{test, opp}`) and `project`. `H` copies the app’s own actions exactly: tapLimb (quickAdd spots: the BODY must be chosen first or the limb hangs from the foot), dropLimb, path buttons (longer/shorter/higher/lower/reverse with syncTwin), grip, width, the slider values speed/sharpness/smoothness/power, remove, copyToBody (Copy + Paste on the body = freeSpot). `play(R, z, steps)` runs each test with runHeadless and logs it like the app. The starters are the Scuttler’s legs (`sprawler`) or two tapped Long-leg pairs (`longWalker`), recoloured. lessons/builds/workshop-*.mjs just re-export args/build.
+- **Physics is chaotic.** Small setting changes can swing results a lot (e.g. the long walker at period 1.00 gives 5.1 m, at 1.06 it gives 2.4 m). Every answer uses only values the sliders can actually reach, and the numbers in the lesson text come from the tests. Results in the app are exactly the same as in Node (checked: 5.15 m). If critter-core physics, LIMBS or STARTERS change, re-run the unit test and update the numbers in the plans and slides.
+- **critter/critter-goals.js** (no DOM): `critter.goals {title, list}`. Types: score/tests/contests/wins come from the log, so they stay ticked; feet/swings/kind/grip/aim/pairs/colours/parts/setting/named follow the design. `wins` counts ONE design’s distinct Starter opponents beaten, and itself doesn’t count. `critter.log` = rows `{c, s, k, o?, w?, n?}` (≤60), with `designKey` = an FNV hash of motion, blocks and joints. `cleanGoals`, `cleanLog`, `logRow`, `addLog`, `checkGoals`, `allDone`. critter-core normalise() keeps both (only when present).
+- **App:** `#zGoals` checklist strip under the bar, shown only when the Critter has goals: green when all done, toast, `host.onGoalsDone`. finishRun logs every finished non-roam run, whether or not it is broken (two-Critter contests record the opponent and the win). **Results** button `#zResults` opens a table (design numbers, “(now)”, a note box per test, “backwards” for negative distances), bar charts per contest and Clear the table. Undo/Redo and picking a Starter Critter keep the log and the goals (`keepLog`). Test hooks `_goals()`, `_state()`.
+- Tests: tests/unit-critter.test.mjs covers the data, the goals/log, every answer vs its bare starter in Node, the adopted lessons, and the app (every starter opens with its card and checklist; the foot loop done with the real Reverse and Test it! ticks everything; Results; Undo keeps the log; save/reopen; a Starter Critter keeps the goals). `CRITTER_NODE=1` runs only the Node part. critter.test.mjs has 2 goals/log checks.
+
 ## Add pupils from a list (21 Oct 2026, CJ_VERSION 2026.10.21.2) — a teacher: "it's not picking up the CSV file"
 - The old parser split lines only on \n (Excel for Mac's CSV uses \r → one line → "No pupils found"), only knew commas, needed a header
   with both "name" and "pass", dropped rows without all 3 columns, and the cloud skipped display names with spaces (handle rule
@@ -55,6 +210,52 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   (10.4.3, byte-identical, + media) if Blockly/blocks/msg didn't load; `window.CJ_BLOCKLY_MEDIA` (unpkg, or vendor when it fell back)
   is the `media` every Blockly inject uses. `vendor/` is in the offline list and an unpkg failure no longer stops the iPad download.
   Keep `vendor/blockly/` in step with the unpkg version. Test: tests/lab-fail.test.mjs.
+
+## Print Lab — `projectType==='print3d'` (14 Oct 2026, CJ_VERSION 2026.10.14; on branch `claude/vibrant-cori-tho25y`) — Charlie: "a whole separate lab that is for designing 3D prints"
+- **Hands-on shapes only (no coding), KS2 + KS3** (Charlie's choices). Our own design studio — never use the Tinkercad or Autodesk names.
+- **Model `print/print-model.js` (no DOM; Node-testable):** project `{v:1, title, plate:{w,d}, objs}` in mm, Z up, plate centre 0,0.
+  obj `{id, kind, hole, color, x, y, z(bottom), w, d, h, rx, ry, rz (deg; Manifold order x→y→z), flip (bits 1 x/2 y/4 z), text?, wall?}`;
+  `KINDS` = box cylinder sphere(Ball) cone pyramid roof ramp dome tube(wall mm) ring hexagon star heart text. Group `{kind:'group', bw,bd,bh,
+  children}` (children in the group's space, bottom middle at 0; w/bw etc. stretch it); inside a group hole children cut the solids
+  (`pieces(o)` → [{m, color}] keeps each part's colour); an ungrouped hole cuts nothing and isn't printed. `createModel(M,{font})`:
+  pieces/whole/bounds/meshOf, `group(project, ids)` (bbox of the RESULT), `ungroup` (exact even when the group is stretched + turned:
+  per-side stretch from the turned child's column lengths, rotations composed via `rotMatrix`/`eulerOf`), `check(project)` → [{level
+  stop|warn|tip|ok, text, ids}] (empty, ungrouped holes, under plate, off plate, <1 mm, >200 mm tall, floating via `decompose()`),
+  `exportWhole` (one solid → STL), `exportParts` (one closed part per colour, earlier colours win overlaps → 3MF), `toSTL`/`to3MF`
+  (own zip writer, like critter-print). `cleanProject` clamps everything (≤300 objects, groups ≤6 deep, text ≤40). `EXAMPLES` keyring /
+  pencilpot / house (ready-made groups) / rocket. Manifold objects live in wasm memory: everything is `.delete()`d (`free`); pieces are
+  cached by the object's JSON (LRU 400). Text = opentype glyphs laid out one by one (opentype's shaping throws on Outfit's GSUB).
+- **Vendor `print/vendor/`:** manifold-3d 3.5.4 (`manifold.js` + `manifold.wasm`, Apache-2.0), opentype.js 2.0.0 (MIT), Outfit-Bold.ttf (OFL).
+- **App `print/print-app.js` + `.css` (scoped `.pl`, ids `pl*`):** shapes panel (pictures rendered once from the real geometry by a
+  second small WebGL renderer; drag a tile onto the plate = drop where released, on top of a shape if over its top face; tap = a free
+  spot) + Hole box/Hole cylinder + Examples; bar: title, Undo/Redo (JSON snapshots, 80), Duplicate, Delete, Group, Ungroup, Drop to
+  plate, Snap (0.1–10 mm), Keys, Check & print; view (Three.js from the Critter bundle, objects under `world` turned −90° about X so print
+  (x,y,z) → three (x,z,−y); camera near/far follow the zoom) with Home/Top/Front/Side/Fit; inspector: Solid/Hole, 12 colours + any colour,
+  text, tube wall, X/Y/Up, Width/Depth/Height, Tip/Roll/Turn, keep shape, flips; plate size when nothing is selected. Handles (one shape
+  selected, in its own turned frame, same size on screen): white corners = width+depth (Shift = all evenly; text keeps its shape), blue
+  edges = one side, top = height, black cone = lift, orange arcs (invisible disc hit area) = turn in 15° (Shift 1°). Shift-click never grabs
+  a handle. Moving drags only shift the meshes until you let go. Check & print pop-up: checks with Show me, size/volume/triangles,
+  Download .stl / .3mf. Keys in `KEYS` (+ PRINT3D_HELP Keys tab — change both). Test hooks `_proj/_model/_sel/_select/_add/_screen/_handles/_pick`.
+- **Host glue (mirrors the Build Lab):** `print3dBase/loadPrint3DLab/p3dData/p3dApp/p3dCurrent/startNewPrint3D/enterPrint3DUI/
+  exitPrint3DUI`, `body.print3d-mode`, `#print3d-ui`, payload `print3d`, `#pt-modal` tile `data-pt="print3d"` (KS1 hidden), home tile
+  `data-start="print3d"` (`home/print3d.jpg`, a real render), icon `#i-print3d`, `PRINT3D_HELP`, Teacher Guide section, thumbnail badge,
+  `LS_TYPE`/`LS_LAB_ORDER`, Share hides Collaborate. Offline list includes `print/`. Test: `tests/print.test.mjs` (57 checks).
+- **More (14 Oct 2026, Charlie picked all four):** shapes rounded (`round` mm; flat bottom: hull of top spheres + bottom discs, built at
+  real size), halfcyl, arrow, plus; parts kinds `gear` (`teeth` 6–60, unit cache key `gear|n`, axle hole) and `hinge` (built at real size:
+  two leaves + knuckles + pin with `GAP` 0.5 mm all round → 2 separate pieces, print-in-place); `KINDS[i][5]` = 'part'|'hidden' (not in
+  `SHAPE_KINDS`). `PARTS` + `partObjs(id, project, x, y)`: loop (tube), pegs (peg + hole 0.6 wider), boxlid (two groups, lip 0.3 gap),
+  gear, hinge. **Drawings** kind `sketch` {pts: ≤300 [x,y] ints 0–1000 (`cleanPts`), mode 'up' (extrude) | 'spin' (revolve round x=0)},
+  unit cache key `sketch|mode|json`; no area → no pieces. App: `#plDraw` → `openDraw(edit)` (modal canvas 440, click points with snap
+  50 / freehand + RDP `simplify`, spin mode = right half with a mirrored ghost, validates via model.whole). **Align** `model.align(p, ids,
+  axis, 'min'|'mid'|'max')` → inspector "Line them up" (multi-select). **Measure** `#plMeasure`/M: `setMeasure`, two clicks (object hit or
+  plate), pink line + `#plMLabel` (distance + across/back/up). **Estimate** `estimateFrom(volume, area)` (skin 0.8 mm solid + 15% fill,
+  PLA 1.24 g/cm³; 10 and 4 mm³/s → time range) + `timeText`; Check & print shows plastic + time (`exportWhole` now has area + pieces).
+  **Challenges** = `project.brief` {title, text, rules [{k, v}]} (`RULES` maxw/maxd/maxh/minw/minh/hole/text/colours/shapes/uses/ready,
+  `cleanBrief`, `briefCheck(model, project, brief)` → [{text, ok, k}], `BRIEFS` keyring/phonestand/pencilpot/badge/chess, `briefProject`).
+  App: Challenges section, `#plBrief` checklist on the stage (`renderBrief`, debounced, toast once when all tick), `editBrief` ("Make a
+  challenge…", rule rows). **Lessons:** `print-keyring` (Years 3–4) + `print-phone-stand` (Years 5–6), slides, starters from
+  `lessons/builds/print-*.mjs`; the Lesson card sits bottom-right in print3d-mode (`.pl-empty` hint moved to the bottom). Tests: 88 checks.
+- **Ideas not done:** a workplane on a face, lettering on curved faces, more parts (snap fit, threads), a printable "fit test" card.
 
 ## Next lesson button (16 Oct 2026, CJ_VERSION 2026.10.16; LIVE on main since 16 Oct 2026) — Charlie: "when a student completes a lesson they need a button that says next lesson"
 - Lesson card `#lg-go` ("Next lesson: <title>") shows on the last step and once `lessonDone()` runs (Finish on the last step, every goal
@@ -97,7 +298,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **Also fixed:** the Build Lab's Worlds / Make / Competitions help tabs had been put in the 3D World's `WORLD_HELP` (7 Oct); moved to
   `CRAFT_HELP`. WORLD_HELP gained a "Lessons & goals" tab.
 
-## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; LIVE on main since 14 Oct 2026 — without the iPad offline mode, which is still on the branch) — Charlie: "like Minecraft Education's CS units… our own"
+## Robot Helper Academy (Build Lab lesson unit, 18 lessons in 3 blocks; 11 Oct 2026, CJ_VERSION 2026.10.12; LIVE on main since 14 Oct 2026) — Charlie: "like Minecraft Education's CS units… our own"
 - **Our own unit**, modelled only on the SKILL ORDER of a standard computing progression (Minecraft Education's "Coding FUNdamentals" goes
   algorithms/sequence/loops → debugging/conditionals/operators/loops → variables/events/functions). NEVER copy their worlds, characters,
   story or lesson text; Charlie was told their world files can't be converted. Story: the robot helper fixes up **Pebble Island**.
@@ -140,13 +341,13 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   gold; the maze starter gets stuck; crops says 7 not 5; functions round-trip/inputs/errors/recursion guard/'uses function'; app: gallery 18
   under 3 headings, My blocks flyout, the huts answer finishes the lesson (slow in swiftshader: 180 s timeout).
 
-## iPad offline mode (8 Oct 2026, CJ_VERSION 2026.10.12; LIVE on main since 15 Oct 2026) — Charlie: school networks block CodeJump as "gaming"; "only make this available for iPads"
+## iPad offline mode (8 Oct 2026; LIVE on main since 15 Oct 2026, CJ_VERSION 2026.10.15) — Charlie: school networks block CodeJump as "gaming"; "only make this available for iPads"
 - **iPads only.** A tiny head script sets `CJ_IPAD` (UA has iPad, or Macintosh + touch = iPadOS) and only then adds the manifest
   (`app.webmanifest`, icons `home/icon-180/192/512.png` made from the logo), apple-touch-icon and the Home Screen meta tags. Main script
   "OFFLINE (iPad)" block: `CJ_STANDALONE` (opened from the Home Screen), `CJ_OFFLINE_ON`, `offPrepare`, `offRender`, `offOpen`/`offFill`
   (`#offline-modal`), header button `#h-offline` (`.hm-offline`, icon `i-offline`), progress pill `#cj-offpill`. Laptops etc. get NOTHING
-  (no SW, no manifest, button hidden; tested). The What's New iPad line (`iPads:` prefix) is filtered off non-iPads (`cjWhatsNewLines`),
-  and non-iPads that had seen `CJ_WHATSNEW_NOT_IPAD` ('2026.10.11') don't get the popup for 2026.10.12.
+  (no SW, no manifest, button hidden; tested). What's New lines starting `iPads:` are shown only on iPads (`cjWhatsNewLines`; the
+  popup is skipped when a device has no lines).
 - **How:** `offline/make-list.mjs` writes `offline.json` = {v, files:[[path,size,sha256-16]], ext:[Blockly 10.4.3 core+media, Google
   Fonts CSS (its woff2 files are found and stored too), the two jsdelivr micro:bit libs]} — index.html, app.webmanifest, the micro:bit hex
   and home/ craft/ critter/ world/ robot/ ai/ train/ lessons/ (NOT critter/guides videos, lessons/builds, *.md); ~31 MB. In the Home Screen
@@ -173,7 +374,7 @@ tiles (`[data-start=<projectType>]`: set `_pendingPt`, open the KS modal, then t
 teacher band (`#h-setup-class` = For teachers, `#h-guide` = Teacher Guide) → footer (`#pol-*`). Pictures are real
 screenshots in `home/*.jpg`, loaded via `homeAsset()` (live-site URL when CodeJump runs from a downloaded file).
 All home CSS is the `.hm-*` block under "HOME SCREEN"; the old `.hcard`/`.quickstart` rules are now unused.
-- **Labs carousel (15 Oct 2026, CJ_VERSION 2026.10.15, LIVE on main 15 Oct 2026):** the hero's Critter Lab spotlight is now `#hm-spot` = a carousel of
+- **Labs carousel (15 Oct 2026, CJ_VERSION 2026.10.15, LIVE on main 15 Oct 2026 — main has no Print Lab slide):** the hero's Critter Lab spotlight is now `#hm-spot` = a carousel of
   `.hm-slide[data-lab]` (one per lab, each with a picture, words and a `[data-start]` Try button; `.on` = showing). JS `homeCarousel`
   (after the tile bindings): drops a slide whose `.hm-tile[data-start]` is missing/hidden (3D off, or no Print Lab on main), builds
   `#hm-spot-dots`, arrows `#hm-spot-prev/next`, moves on every 6 s (not while hovered/focused, tab hidden, home hidden, or reduced

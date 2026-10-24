@@ -253,6 +253,8 @@ export function mount(root, host) {
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
+    // My blocks: Blockly's own "to do something" block and its call blocks (no "return" kinds: the runner only runs these)
+    ws.registerToolboxCategoryCallback('RB_PROCS', w => Blockly.Procedures.flyoutCategory(w).filter(el => !/^procedures_(defreturn|ifreturn|callreturn)$/.test(el.getAttribute && el.getAttribute('type'))));
     loadBlocks(proj);
     ws.addChangeListener(e => {
       if (quiet || e.isUiEvent) return;

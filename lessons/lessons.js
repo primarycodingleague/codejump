@@ -18,6 +18,14 @@
  * Presenter view)}. {use:'steps'} puts the "Your turn" slide (the pupil Lesson-card steps) at that point.
  */
 
+import * as UPlatformer from './units/platformer.js';
+import * as UStage from './units/stage.js';
+import * as UTurtle from './units/turtle.js';
+import * as UCritter from './units/critter.js';
+import * as URobot from './units/robot.js';
+import * as UAi from './units/ai.js';
+import * as UTrain from './units/train.js';
+
 export const LESSONS = [
   // ───────────────────────────────── KEY STAGE 1 ─────────────────────────────────
   {
@@ -2305,6 +2313,14 @@ const SLIDES = {
     { t: 'Park Designers!', b: ['Sequence and events', 'Loops', 'Selection and debugging', 'Variables, cameras and messages'], notes: 'Celebrate the whole unit.' }
   ]
 };
+// ---- lesson units, one file per lab (lessons/units/README.md): appended in this order; { adopt } moves an existing lesson in
+for (const U of [UPlatformer, UStage, UTurtle, UCritter, URobot, UAi, UTrain]) {
+  for (const x of U.LESSONS) {
+    if (x.adopt) { const i = LESSONS.findIndex(l => l.id === x.adopt); if (i < 0) continue; const l = LESSONS.splice(i, 1)[0]; const o = Object.assign({}, x); delete o.adopt; LESSONS.push(Object.assign(l, o)); }
+    else LESSONS.push(x);
+  }
+  Object.assign(SLIDES, U.SLIDES);
+}
 for (const l of LESSONS) l.slides = SLIDES[l.id] || [];
 
 export { CURRICULA, curriculumLinks } from './curricula.js';

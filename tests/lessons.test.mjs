@@ -38,7 +38,15 @@ try {
   // ---- the library
   await page.click('#h-lessons');
   await page.waitForSelector('.ls-card');
-  ok(await page.$$eval('.ls-card', c => c.length) === LESSONS.length, 'Ready-made lessons (home page) lists every lesson');
+  const unitNames = [...new Set(LESSONS.filter(l => l.unit).map(l => l.unit.split(' · ')[0]))];
+  ok(await page.$$eval('.ls-ucard', c => c.length) === unitNames.length, 'Ready-made lessons opens on the units: one card per unit (' + unitNames.length + ')');
+  await page.click('.ls-ucard[data-unit="' + unitNames[0] + '"]');
+  const inUnit = LESSONS.filter(l => l.unit && l.unit.startsWith(unitNames[0] + ' · '));
+  ok(await page.$$eval('.ls-card[data-id]', c => c.map(x => x.dataset.id).join()) === inUnit.map(l => l.id).join() && (await page.$$eval('.ls-blockh', h => h.length)) === new Set(inUnit.map(l => /Block \d+/.exec(l.unit)[0])).size,
+    'a unit lists its lessons in order under its block headings');
+  await page.click('#ls-units-back');
+  await page.click('.ls-chip[data-f="all"]');
+  ok(await page.$$eval('.ls-card', c => c.length) === LESSONS.length, 'All lessons lists every lesson');
   await page.click('.ls-chip[data-f="ks1"]');
   ok(await page.$$eval('.ls-card', c => c.length) === LESSONS.filter(l => l.ks === 'ks1').length, 'the Key Stage 1 filter works');
   await page.click('.ls-card[data-id="cat-to-star"]');
@@ -65,7 +73,7 @@ try {
   await page.click('#ls-present-btn');
   await page.waitForSelector('#ls-present:not(.hide) .lp-slide');
   const deckLen = await page.evaluate(() => _lp.deck.length);
-  ok(deckLen === 4 + LESSONS[0].slides.filter(x => !x.use).length + 1, 'the deck = title, objective, key words, the lesson’s slides, Your turn and How did we do?');
+  ok(deckLen === 4 + LESSONS.find(l => l.id === 'cat-to-star').slides.filter(x => !x.use).length + 1, 'the deck = title, objective, key words, the lesson’s slides, Your turn and How did we do?');
   ok(/Get the cat to the star/i.test(await page.textContent('#lp-stage')) && await page.textContent('#lp-count') === '1 / ' + deckLen, 'the slides open on the title slide');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
   ok(/Key words/i.test(await page.textContent('#lp-stage')), 'the arrow keys move through the slides');
@@ -77,7 +85,7 @@ try {
   await page.keyboard.press('End');
   ok(/How did we do/i.test(await page.textContent('#lp-stage')), 'End goes to the last slide (How did we do?)');
   await page.evaluate(() => lpGo(_lp.deck.findIndex(s => s.kind === 'steps')));
-  ok((await page.$$eval('.lp-steps li', l => l.length)) === LESSONS[0].steps.length, 'the Your turn slide lists the pupils’ Lesson-card steps');
+  ok((await page.$$eval('.lp-steps li', l => l.length)) === LESSONS.find(l => l.id === 'cat-to-star').steps.length, 'the Your turn slide lists the pupils’ Lesson-card steps');
   const [pv] = await Promise.all([page.waitForEvent('popup'), page.click('#lp-pview')]);
   await pv.waitForSelector('#pv-cur .lp-slide');
   await page.keyboard.press('ArrowRight');
@@ -149,7 +157,7 @@ try {
     ok(go.shown && go.t === nextT && go.open && go.done, 'Finish shows “Next lesson: ' + go.t + '” on the open card');
     await page.evaluate(() => clearDirty());
     await page.click('#lg-go');
-    await page.waitForFunction(() => lessonActive && lessonActive.id === 'turtle-procedures', null, { timeout: 30000 });
+    await page.waitForFunction(() => lessonActive && lessonActive.id === lessonNeighbours(lessonsMod.lesson('turtle-shapes')).next[0].id, null, { timeout: 30000 });
     ok(await page.evaluate(() => projectType === 'turtle' && lessonActive.step === 0 && !lessonActive.done), 'Next lesson opens the next lesson’s starter at step 1');
     // unsaved work: it asks first, and "Stay here" stays
     await page.evaluate(() => { clearDirty(); lessonOpenStarter('turtle-shapes'); });
@@ -534,7 +542,7 @@ try {
   await page.waitForFunction(id => lessonActive && lessonActive.id === id, 'robot-storyteller', { timeout: 60000 });
     await page.waitForFunction(() => projectType === 'robot' && robotApp && robotApp._view() && robotApp._ws() && robotApp._ws().getTopBlocks().length === 1 &&
       robotApp._ws().getAllBlocks(false).some(x => x.type === 'rb_light_off'), null, { timeout: 30000 });
-    ok(await page.evaluate(() => /Robot storyteller/.test(document.getElementById('lesson-guide').textContent)), 'Robot storyteller: the starter opens with its Lesson card');
+    ok(await page.evaluate(() => document.getElementById('lesson-guide').textContent.includes(lessonsMod.lesson('robot-storyteller').title)), 'Robot storyteller: the starter opens with its Lesson card');
     const rbRecord = () => page.evaluate(() => new Promise(res => {
       const log = []; let idle = 0;
       const iv = setInterval(() => {
@@ -577,7 +585,7 @@ try {
     await page.evaluate(() => { clearDirty(); window.__lsOpen = lessonOpenStarter('robot-quiz'); });
   await page.waitForFunction(id => lessonActive && lessonActive.id === id, 'robot-quiz', { timeout: 60000 });
     await page.waitForFunction(() => projectType === 'robot' && robotApp && robotApp._view() && robotApp._ws() && robotApp._ws().getAllBlocks(false).some(x => x.type === 'rb_ask'), null, { timeout: 30000 });
-    ok(await page.evaluate(() => /Robot quiz/.test(document.getElementById('lesson-guide').textContent)), 'Robot quiz: the starter opens with its Lesson card');
+    ok(await page.evaluate(() => document.getElementById('lesson-guide').textContent.includes(lessonsMod.lesson('robot-quiz').title)), 'Robot quiz: the starter opens with its Lesson card');
     const quizAnswer = async a => {
       await page.waitForSelector('#rbAsk:not([hidden])', { timeout: 30000 });
       const q = await page.textContent('#rbAskQ');

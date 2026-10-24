@@ -145,7 +145,7 @@ const site = await serve();
 const b = await browser();
 const errors = [];
 for (const id of Object.keys(BUILD)) {
-  if (only && id !== only) continue;
+  if (only && !only.split(',').includes(id)) continue;
   const { ctx, page } = await openApp(b, site.url, { errors }); // a fresh page each time, so nothing carries over
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.evaluate(([src, args]) => (0, eval)('(' + src + ')')(args), [BUILD[id].toString(), BUILD_ARGS[id] || ARGS]);
@@ -156,7 +156,7 @@ for (const id of Object.keys(BUILD)) {
   // the card picture: the starter as a pupil first sees it, with its Lesson card
   await page.evaluate(id => { clearDirty(); lessonOpenStarter(id); }, id); // not returned: a big starter’s promise can be collected before it resolves
   await page.waitForFunction(() => !document.getElementById('lesson-guide').classList.contains('hide'), null, { timeout: 30000 });
-  if (id === 'turtle-shapes' || id === 'turtle-procedures') await page.evaluate(() => { turtleSpeed = 10; turtleRun(); });
+  if (/^turtle-|^bay-/.test(id)) await page.evaluate(() => { turtleSpeed = 10; turtleRun(); });
   if (id === 'obstacle-course') await page.waitForFunction(() => worldApp._world().editing() && worldApp._world().objects().some(o => o.id === 'finish'), null, { timeout: 60000 });
   if (/^academy-/.test(id)) await page.evaluate(() => { document.getElementById('crGo')?.click(); document.querySelector('.cr [data-cam="helper"]')?.click(); }); // the world, not its welcome card
   if (/^park-/.test(id)) await page.waitForFunction(() => worldApp._world().editing(), null, { timeout: 60000 });

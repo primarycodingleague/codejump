@@ -3,7 +3,7 @@
  *
  *   const run = createRunner(io);   // io: { say(text), speak(text, done) -> {cancel}|null, sound(name) -> secs,
  *                                   //       colour(c), score(n|null), clear(), guess() -> {label, conf, probs}|null,
- *                                   //       labels() -> [name…], onError(e), onStop() }
+ *                                   //       labels() -> [name…], sent(message), onError(e), onStop() }
  *   run.start(workspace) · run.tick(dt) every frame · run.guessed() after each new guess · run.stop() · run.running()
  *
  * Each script is a generator ("fiber"): one step per tick, and every loop pass and wait yields, so a forever loop never
@@ -106,7 +106,7 @@ export function createRunner(io = {}) {
   function* seq(b) { while (b) { if (!b.isEnabled || b.isEnabled()) yield* run(b); b = b.getNextBlock(); } }
 
   function spawn(hat) { fibers = fibers.filter(f => f.hat !== hat.id); fibers.push({ hat: hat.id, g: seq(hat.getNextBlock()) }); }
-  function broadcast(msg) { for (const h of hats.msg) if (same(h.getFieldValue('MSG'), msg)) spawn(h); }
+  function broadcast(msg) { if (io.sent) io.sent(String(msg)); for (const h of hats.msg) if (same(h.getFieldValue('MSG'), msg)) spawn(h); }
 
   const api = {
     start(workspace) {

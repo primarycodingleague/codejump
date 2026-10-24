@@ -138,7 +138,7 @@ export function toolbox(trains) {
       { kind: 'category', name: 'Control', colour: C.control, contents: [blk('tr_wait', { S: N(1) }), blk('controls_repeat_ext', { TIMES: N(10) }), blk('tr_forever'),
         blk('controls_if'), { kind: 'block', type: 'controls_if', extraState: { hasElse: true } }, blk('tr_wait_until'), blk('controls_whileUntil', null, { MODE: 'UNTIL' }), blk('tr_stop_all')] },
       { kind: 'category', name: 'Sensing', colour: C.sensing, contents: [blk('tr_key_pressed'), blk('tr_timer'), blk('tr_reset_timer')] },
-      { kind: 'category', name: 'Operators', colour: C.ops, contents: [blk('math_arithmetic', { A: N(1), B: N(1) }), blk('tr_random', { A: N(1), B: N(10) }),
+      { kind: 'category', name: 'Operators', colour: C.ops, contents: [blk('math_number', null, { NUM: 0 }), blk('math_arithmetic', { A: N(1), B: N(1) }), blk('tr_random', { A: N(1), B: N(10) }),
         blk('logic_compare', { A: N(0), B: N(50) }), blk('logic_operation'), blk('logic_negate'), blk('text_join'), blk('math_round'), blk('math_modulo', { DIVIDEND: N(10), DIVISOR: N(3) })] },
       { kind: 'category', name: 'Variables', colour: C.vars, custom: 'VARIABLE' },
       ...trainCats

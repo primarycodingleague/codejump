@@ -10,11 +10,13 @@
 import * as THREE from './vendor/three-0.186.1-critter.min.js';
 import * as Z from './critter-core.js';
 import * as P3 from './critter-print.js';
+import * as G from './critter-goals.js';
 
 // lucide-style names used below -> CodeJump's own SVG icon symbols (#i-…)
 var ICONS = { wrench: 'i-build', flag: 'i-flag', 'undo-2': 'i-undo', 'redo-2': 'i-redo', sparkles: 'i-spark', 'trash-2': 'i-trash',
   x: 'i-x', play: 'i-play', square: 'i-stop', 'rotate-ccw': 'i-reset', zap: 'i-dash', mountain: 'i-jump2', box: 'i-crate',
-  'arrow-up-from-line': 'i-arr-u', keyboard: 'i-key', users: 'i-people', swords: 'i-bump', crosshair: 'i-target', printer: 'i-cube', download: 'i-save' };
+  'arrow-up-from-line': 'i-arr-u', keyboard: 'i-key', users: 'i-people', swords: 'i-bump', crosshair: 'i-target', printer: 'i-cube', download: 'i-save',
+  check: 'i-check', table: 'i-grid' };
 function ic(name) { return '<svg class="ic"><use href="#' + (ICONS[name] || 'i-spark') + '"></use></svg>'; }
 
 var CSS_URL = new URL('./critter-app.css', import.meta.url).href;
@@ -34,10 +36,13 @@ var TEMPLATE = `
       <button type="button" class="zl-tool" id="zKeys" title="Keyboard shortcuts (?)">${ic('keyboard')} Keys</button>
       <button type="button" class="zl-tool" id="zGuides" title="Short videos: build a Critter that walks">${ic('play')} Guides</button>
       <button type="button" class="zl-tool" id="zStarters">${ic('sparkles')} Starter Critters</button>
+      <button type="button" class="zl-tool" id="zResults" title="Every test you have run, in a table">${ic('table')} Results</button>
       <button type="button" class="zl-tool" id="zPrint" title="Download your Critter for a 3D printer">${ic('printer')} 3D print</button>
       <button type="button" class="zl-tool" id="zShowdown" title="Race your Critters against each other with your class">${ic('users')} Showdown</button>
     </div>
   </div>
+
+  <div class="zl-goals" id="zGoals" hidden></div>
 
   <div class="zl-stage" id="buildStage">
     <aside class="zl-palette" aria-label="Parts">
@@ -140,14 +145,21 @@ function remember() {
 function undo() {
   if (!state.history.length) return;
   state.future.push(JSON.stringify(state.critter));
-  state.critter = JSON.parse(state.history.pop());
+  state.critter = keepLog(JSON.parse(state.history.pop()));
   changed({ inspector: true });
 }
 function redo() {
   if (!state.future.length) return;
   state.history.push(JSON.stringify(state.critter));
-  state.critter = JSON.parse(state.future.pop());
+  state.critter = keepLog(JSON.parse(state.future.pop()));
   changed({ inspector: true });
+}
+// The results log and the lesson goals belong to the Critter, not to one design: Undo and Redo leave them as they are.
+function keepLog(z) {
+  var cur = state.critter;
+  if (cur && cur.log) z.log = cur.log; else delete z.log;
+  if (cur && cur.goals) z.goals = cur.goals; else delete z.goals;
+  return z;
 }
 function updateUndo() { $('zUndo').disabled = !state.history.length; $('zRedo').disabled = !state.future.length; }
 
@@ -165,7 +177,34 @@ function changed(opts) {
   $('zName').value = state.critter.name;
   drawBeats();
   updateUndo();
+  updateGoals();
   if (state.mode === 'test') resetRun();
+}
+
+/* ------------------------------------------------------------------ lesson goals (critter-goals.js): a checklist that ticks itself */
+var goalsOpen = true, goalsDoneFor = null;
+function updateGoals() {
+  var box = $('zGoals'), z = state.critter, goals = z && z.goals;
+  if (!box) return;
+  if (!goals) { box.hidden = true; box.innerHTML = ''; box.dataset.sig = ''; return; }
+  var ticks = G.checkGoals(goals, z), n = ticks.filter(Boolean).length, all = n === ticks.length;
+  var sig = JSON.stringify(goals) + ticks.join() + goalsOpen;
+  if (box.dataset.sig !== sig) {
+    box.dataset.sig = sig; box.hidden = false; box.classList.toggle('all', all); box.classList.toggle('shut', !goalsOpen);
+    box.innerHTML = '<button type="button" class="zl-ghead" aria-expanded="' + goalsOpen + '">' + ic(all ? 'check' : 'crosshair') + ' <b>' + esc(goals.title) + '</b> <span class="zl-gn">' + n + ' / ' + ticks.length + '</span>' +
+      '<span class="zl-gfold">' + (goalsOpen ? 'Hide' : 'Show') + '</span></button>' +
+      '<ul class="zl-glist">' + goals.list.map(function (g, i) {
+        return '<li class="' + (ticks[i] ? 'ok' : '') + '"><span class="zl-gtick" aria-hidden="true">' + (ticks[i] ? ic('check') : '') + '</span>' + esc(g.text) +
+          '<span class="zk-sr">' + (ticks[i] ? ' (done)' : ' (not done yet)') + '</span></li>';
+      }).join('') + '</ul>';
+    box.querySelector('.zl-ghead').addEventListener('click', function () { goalsOpen = !goalsOpen; updateGoals(); });
+  }
+  var key = JSON.stringify(goals);
+  if (all && goalsDoneFor !== key) {
+    goalsDoneFor = key;
+    toast('Every goal done: well done!');
+    if (host.onGoalsDone) host.onGoalsDone();
+  } else if (!all && goalsDoneFor === key) goalsDoneFor = null;
 }
 
 function setCritter(z) {
@@ -1414,7 +1453,9 @@ function finishRun() {
   var prev = z.best && z.best[state.contest];
   var keep = !C.two && state.contest !== 'roam' && !sim.broken;
   var isBest = keep && (prev == null || r.score > prev + 0.005);
-  if (isBest) { z.best = z.best || {}; z.best[state.contest] = Math.round(r.score * 100) / 100; saveCurrent(); }
+  if (isBest) { z.best = z.best || {}; z.best[state.contest] = Math.round(r.score * 100) / 100; }
+  if (state.contest !== 'roam' && !sim.broken) G.addLog(z, G.logRow(z, state.contest, r, state.opponent)); // the Results table
+  saveCurrent(); updateGoals();
   var big, msg, badge = isBest ? 'New best!' : C.label;
   if (sim.broken) { big = 'Oops!'; msg = 'Whoa, it came apart! Try smaller swings, slower cycles or less power.'; }
   else if (state.contest === 'sumo') { big = r.win === true ? 'You win!' : r.win === false ? 'You lose' : 'Draw'; msg = r.text + '.'; }
@@ -1608,6 +1649,34 @@ function showGuides() {
   dialog.addEventListener('close', function stop() { vids.forEach(function (v) { v.pause(); }); dialog.removeEventListener('close', stop); });
 }
 
+/* ---- the Results table: every finished test (critter.log), with a note each and a bar chart per contest ---- */
+function resultText(c, v) { return v < 0 && Z.CONTESTS[c] && Z.CONTESTS[c].unit === 'm' ? fmtScore(c, v) + ' backwards' : fmtScore(c, v); }
+function showResults() {
+  var z = state.critter, log = z.log || [], keys = [], name = {};
+  log.forEach(function (r) { if (!name[r.k]) { keys.push(r.k); name[r.k] = 'Design ' + keys.length; } });
+  var cur = G.designKey(z);
+  var rows = log.map(function (r, i) {
+    var C = Z.CONTESTS[r.c], res = r.w != null ? (r.w === 1 ? 'Won' : r.w === 0 ? 'Lost' : 'Draw') + ' v ' + (r.o === 'self' ? 'itself' : (Z.STARTERS[r.o] || {}).label || r.o) : resultText(r.c, r.s);
+    return '<tr><td>' + (i + 1) + '</td><td>' + esc(name[r.k]) + (r.k === cur ? ' <em>(now)</em>' : '') + '</td><td>' + esc(C ? C.label : r.c) + '</td><td><strong>' + esc(res) + '</strong></td>' +
+      '<td><input type="text" maxlength="60" data-note="' + i + '" value="' + esc(r.n || '') + '" placeholder="What did you change?" aria-label="Note for test ' + (i + 1) + '"></td></tr>';
+  }).join('');
+  var charts = Object.keys(Z.CONTESTS).filter(function (c) { return !Z.CONTESTS[c].two && log.some(function (r) { return r.c === c; }); }).map(function (c) {
+    var rs = log.filter(function (r) { return r.c === c; }), hi = Math.max.apply(null, rs.map(function (r) { return Math.abs(r.s); }).concat([0.01]));
+    return '<div class="zl-chart"><h4>' + esc(Z.CONTESTS[c].label) + '</h4>' + rs.map(function (r) {
+      return '<div class="zl-cbar"><span>' + esc(name[r.k]) + '</span><i style="width:' + Math.max(1, Math.abs(r.s) / hi * 100) + '%"' + (r.s < 0 ? ' class="neg"' : '') + '></i><b>' + esc(resultText(c, r.s)) + '</b></div>';
+    }).join('') + '</div>';
+  }).join('');
+  openDialog('Results', log.length
+    ? '<p class="zl-muted" style="margin-top:0;">Every test you finish goes in this table. The same Critter keeps the same design number; change it and test it, and it gets a new one. Type what you changed next to each test.</p>' +
+      '<div class="zl-rtable"><table><thead><tr><th>#</th><th>Design</th><th>Contest</th><th>Result</th><th>Note</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + charts +
+      '<div class="zl-sd-actions"><button type="button" class="zl-tool" id="rClear">' + ic('trash-2') + ' Clear the table</button></div>'
+    : '<p class="zl-muted" style="margin-top:0;">No results yet. Press <strong>Test it!</strong> and let a contest finish: every test goes in this table.</p>');
+  dialog.querySelectorAll('[data-note]').forEach(function (inp) {
+    inp.addEventListener('change', function () { var r = log[Number(inp.dataset.note)]; if (r) { r.n = inp.value.replace(/[<>]/g, '').slice(0, 60); if (!r.n) delete r.n; saveCurrent(); } });
+  });
+  on('rClear', function () { delete state.critter.log; saveCurrent(); updateGoals(); dialog.close(); toast('The Results table is empty again.'); });
+}
+
 function showStarters() {
   var keys = Object.keys(Z.STARTERS);
   openDialog('Start from a ready-made Critter', '<p class="zl-muted" style="margin-top:0;">Each of these really moves. Open one, test it, then change it and see what happens.</p><div class="zl-gallery">' +
@@ -1618,7 +1687,7 @@ function showStarters() {
     }).join('') + '</div>');
   dialog.querySelectorAll('[data-open]').forEach(function (b) {
     b.addEventListener('click', function () {
-      remember(); setCritter(fresh(Z.STARTERS[b.dataset.open].make())); dialog.close(); setMode('build');
+      remember(); setCritter(keepLog(fresh(Z.STARTERS[b.dataset.open].make()))); dialog.close(); setMode('build');
       toast('Here’s ' + state.critter.name + '. Press Test it! to watch it go.');
     });
   });
@@ -2102,7 +2171,7 @@ function boot() {
 
   $('zName').addEventListener('input', function () {
     if (!state.sliding) { remember(); state.sliding = true; }
-    state.critter.name = this.value.slice(0, 40) || 'My Critter'; saveCurrent();
+    state.critter.name = this.value.slice(0, 40) || 'My Critter'; saveCurrent(); updateGoals();
   });
   $('zName').addEventListener('change', function () { state.sliding = false; changed({ inspector: !state.selected }); });
   root.querySelectorAll('.zl-mode').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
@@ -2113,6 +2182,7 @@ function boot() {
   $('zShowdown').addEventListener('click', showdownMenu);
   $('zGuides').addEventListener('click', showGuides);
   $('zPrint').addEventListener('click', showPrint);
+  $('zResults').addEventListener('click', showResults);
   $('zGo').addEventListener('click', go);
   $('zOpp').addEventListener('change', function () { state.opponent = this.value; resetRun(); });
   $('zPreview').addEventListener('change', drawBeats);
@@ -2228,6 +2298,8 @@ return {
   openShowdown: function (roomId) { sdOpen(roomId, null); },
   showdownRoom: function () { return sd ? sd.roomId : null; },
   _select: function (id) { state.selected = id; setMode('build'); renderInspector(); }, // for tests
+  _goals: function () { var z = state.critter; return z.goals ? G.checkGoals(z.goals, z) : null; },
+  _state: function () { return state; },
   // live collaboration (Share → Collaborate): CodeJump sends the whole Critter when it changes; a partner's copy replaces
   // ours (keeping what we had selected), but not while we're holding, dragging or testing (CodeJump tries again shortly)
   liveParts: function () { return { all: JSON.parse(JSON.stringify(state.critter)) }; },

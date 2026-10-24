@@ -31,7 +31,7 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## 3D World models replaced with Kenney CC0 packs (23 Oct 2026, CJ_VERSION 2026.10.23; branch `claude/vibrant-cori-tho25y`) — Charlie: "the 3D models used in the 3D world lab need to be changed" (licence worry: Flock's files, possibly Mixamo clips)
+## 3D World models replaced with Kenney CC0 packs (23 Oct 2026; LIVE on main since 24 Oct 2026, CJ_VERSION 2026.10.24) — Charlie: "the 3D models used in the 3D world lab need to be changed" (licence worry: Flock's files, possibly Mixamo clips)
 - **All Flock assets are gone** (characters, objects, the 37 animation files, thumbs). New files in `world/assets/` come from Kenney's
   CC0 packs (Mini Characters, Platformer, Nature, Food, Fantasy Town, City Suburban, Furniture, Mini Arena). Made by
   `tools/world-assets/` (packchars.mjs, packobjs.mjs + objmap.mjs list/labels/heights, measure.mjs; Kenney zips unpacked into
@@ -52,7 +52,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   constructor; sampling/wrap modes are numbers.
 - Lesson pictures (3D) and `home/world3d.jpg` regenerated; help/Teacher Guide credit Kenney. `make-starters.mjs` takes a comma list of ids.
 
-## Lesson units for every lab (21 Oct 2026, CJ_VERSION 2026.10.21.3; branch `claude/vibrant-cori-tho25y`) — Charlie: "proper units" for all the labs
+## Lesson units for every lab (21 Oct 2026; LIVE on main since 24 Oct 2026, CJ_VERSION 2026.10.24, WITHOUT the Print Lab and its Maple Street Makers unit — main's lessons.js drops UPrint and the two print lessons, offline/make-list.mjs has no 'print' dir) — Charlie: "proper units" for all the labs
 - Built by 8 parallel agents (a multi-agent workflow), one per lab, then merged and re-tested. 18 lessons per lab (3 blocks of 6: Years 3–4,
   4–5, 5–6), 24 for the Platformer and Stage Labs (+ a Years 1–2 block in their KS1 editors). Each lab's existing lessons were ADOPTED into
   its unit (same ids/starters). 200 lessons in all.

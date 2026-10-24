@@ -71,7 +71,9 @@ function caption(step, a) {
   cx.font = '800 17px Montserrat'; const lab = 'STEP ' + step.n; const bw = cx.measureText(lab).width + 28;
   rrect(40, H - bh + 6, bw, 34, 17); cx.fillStyle = GOLD; cx.fill(); cx.fillStyle = '#1b140a'; cx.textBaseline = 'middle'; cx.fillText(lab, 54, H - bh + 24);
   cx.fillStyle = '#fff'; cx.font = '800 26px Montserrat'; cx.fillText(step.title, 40 + bw + 18, H - bh + 22);
-  cx.fillStyle = 'rgba(255,255,255,.82)'; cx.font = '500 19px Montserrat'; cx.fillText(step.sub, 40 + bw + 18, H - bh + 54);
+  cx.font = '700 15px Montserrat'; const ww0 = step.who ? cx.measureText(step.who).width + 22 : 0, room = W - 40 - ww0 - 24 - (40 + bw + 18);
+  let fs = 19; cx.font = '500 ' + fs + 'px Montserrat'; while (fs > 14 && cx.measureText(step.sub).width > room) { fs--; cx.font = '500 ' + fs + 'px Montserrat'; } // long subtitles shrink to fit
+  cx.fillStyle = 'rgba(255,255,255,.82)'; cx.fillText(step.sub, 40 + bw + 18, H - bh + 54);
   if (step.who) { cx.font = '700 15px Montserrat'; const ww = cx.measureText(step.who).width + 22; rrect(W - 40 - ww, H - bh + 9, ww, 28, 14); cx.strokeStyle = GOLD; cx.lineWidth = 2; cx.stroke(); cx.fillStyle = '#e9d3a5'; cx.fillText(step.who, W - 40 - ww + 11, H - bh + 24); }
   cx.restore();
 }

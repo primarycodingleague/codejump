@@ -93,7 +93,25 @@ export const TOPICS = [
       'The Critter Workshop unit has 18 ready-made lessons for Years 3–6 (Ready-made lessons).'
     ]
   },
-  { id: 'world3d', group: 1, title: '3D World', legacy: ['3D World'] },
+  {
+    id: 'world3d', group: 1, title: '3D World', legacy: ['3D World'],
+    summary: 'A block-coded 3D scene and game builder: shapes, characters and models, brought to life with events, motion, loops, sensing, variables, sound and real physics.',
+    before: 'Key Stage 2 and 3. The 3D engine and models download the first time a 3D project opens (about 1 MB to start), so that needs the internet, and the computer needs 3D graphics (WebGL).',
+    video: { src: 'media/world3d/full.mp4', poster: 'media/world3d/full.jpg', captions: 'media/world3d/full.vtt', length: 34.6 },
+    steps: [
+      { who: 'all', title: 'Start a 3D World project', text: 'Press Start building, choose Key Stage 2 (or 3), then 3D World.', clip: 'media/world3d/step1', at: 2.4 },
+      { who: 'all', title: 'Tap a thing to find its block', text: 'Before Run, the world shows how it starts; tapping a thing lights up the block that made it.', clip: 'media/world3d/step2', at: 8.6 },
+      { who: 'all', title: 'Drag its arrows to move it', text: 'Dragging the arrows (or the Resize handles) writes the new numbers straight back into that block.', clip: 'media/world3d/step3', at: 14 },
+      { who: 'all', title: 'Add characters, models and code', text: 'Pick a category such as Characters (12, recolourable, 42 animations) or Models (73 ready-made things) and drag blocks in.', clip: 'media/world3d/step4', at: 17.2 },
+      { who: 'all', title: 'Press Run to play', text: 'Run plays the world: with a “control with the arrow keys” block, arrow keys walk, Space jumps and the camera follows.', clip: 'media/world3d/step5', at: 22.4 },
+      { who: 'all', title: 'Stop puts everything back', text: 'Stop returns the world to how it starts, ready to change one thing and run it again.', clip: 'media/world3d/step6', at: 27.4 }
+    ],
+    tips: [
+      'The Park Designers unit has 24 ready-made lessons for Years 3–6, each with a Goals checklist that ticks itself as pupils work.',
+      'Teammates can build one world together live (Share → Collaborate); Run plays on each pupil’s own screen.',
+      'The characters and models come from Kenney’s free CC0 packs, so schools can use them freely, and they are light enough for Chromebooks.'
+    ]
+  },
   { id: 'ai', group: 1, title: 'AI Lab', legacy: ['AI Lab'] },
   { id: 'train', group: 1, title: 'Train Lab', legacy: ['Train Lab'] },
   { id: 'build', group: 1, title: 'Build Lab', legacy: ['Build Lab'] },

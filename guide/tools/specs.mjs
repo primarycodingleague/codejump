@@ -85,5 +85,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Compare in Results', sub: 'Every test goes in a table, with a note of what you changed.',
         beats: [['s6a', 2.2], ['s6b', 3, { type: 'look' }]] }
     ]
+  },
+  world3d: {
+    title: '3D World', sub: 'Build a 3D world with blocks, then play it', outroText: 'Time to play!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a 3D World project', sub: 'Start building → Key Stage 2 → 3D World.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Tap a thing to find its block', sub: 'Before Run the world shows how it starts. Tapping a thing lights up the block that made it.',
+        beats: [['s2a', 2.6], ['s2b', 2.8, { type: 'look' }]] },
+      { n: 3, who: 'Everyone', title: 'Drag its arrows to move it', sub: 'The new numbers are written back into its block.',
+        beats: [['s3', 3.2]] },
+      { n: 4, who: 'Everyone', title: 'Add characters, models and code', sub: 'Characters, Models, Events, Motion, Physics, Camera, Sound …',
+        beats: [['s4a', 2.4], ['s4b', 2.8, { type: 'look' }]] },
+      { n: 5, who: 'Everyone', title: 'Press Run to play', sub: 'Arrow keys walk, Space jumps, and the camera follows.',
+        beats: [['s5a', 2.2], ['s5b', 2.8, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Stop puts everything back', sub: 'Stop returns to the start, ready to change one thing and run again.',
+        beats: [['s6a', 2.2], ['s6b', 2.6, { type: 'look' }]] }
+    ]
   }
 };

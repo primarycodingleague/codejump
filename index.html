@@ -10688,12 +10688,11 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.24';
+const CJ_VERSION='2026.10.25';
 const CJ_WHATSNEW=[
- "3D World: brand-new characters and models! 12 new characters, over 70 models (houses, trees, food, furniture, jewels and more) and new moves like cheer, spin and kick. Recolour a character's hair, skin, top, shorts or shoes one part at a time. Your old 3D projects still open.",
- "Teachers: every lab now has a full unit of ready-made lessons that build on each other, from algorithms and loops to decisions, variables and functions. Press Ready-made lessons and choose a unit: Sky Isles Explorers (Platformer Lab), Lantern Street Theatre (Stage Lab), Driftwood Bay Artists (Turtle Lab), Critter Workshop, Robot Librarian, Wildwood Spotters (AI Lab) and Brindlewick Railway (Train Lab).",
- "Every lesson has a plan, slides and a starter, and the Lesson card's Next lesson button takes pupils straight on through the unit. The Platformer and Stage units start in Years 1–2.",
- "New in the labs: My blocks in the Robot Lab (make your own blocks, with inputs), a Results table in the Critter Lab, and goals that tick themselves in the AI and Critter Labs.",
+ "Teachers: a brand-new Teacher Guide. Pick a topic on the left and follow it step by step, with a short video for every step and one full walkthrough with chapters.",
+ "Every lab now has its own step-by-step page, plus Live collaboration: how up to 6 pupils build one project together.",
+ "Topics without videos yet still have all their notes, and Print gives you every topic's words. Share a link straight to a topic, too.",
 ];
 // lines starting "iPads:" are only shown on iPads (the offline mode is iPad-only)
 function cjWhatsNewLines(){return (typeof CJ_IPAD!=='undefined'&&CJ_IPAD)?CJ_WHATSNEW:CJ_WHATSNEW.filter(t=>!/^iPads:/.test(t));}

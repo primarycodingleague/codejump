@@ -48,7 +48,13 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **Media tools `guide/tools/`** (README): capture-<topic>.mjs (real UI, stubbed cloud, sample pupils) → specs.mjs → render.mjs (composer.html
   `render(t)` at 25 fps → ffmpeg). Outputs full.mp4/jpg/vtt + timing.json + step<n>.mp4/jpg. Playwright's Chromium has no H.264, so the
   test serves WebM copies (made with ffmpeg) with byte ranges.
-- Converted: Live collaboration. Text-only by design: topics needing a real teacher account (Managing your classes …).
+- Converted (one commit each): Live collaboration, Platformer Lab (topic `modes`), Stage, Turtle, Critter, 3D World, AI, Train, Build, Robot
+  (capture-<x>.mjs each; media folders: collab, platformer, stage, turtle, critter, world3d, ai, train, build, robot). Text-only for now:
+  What is CodeJump, KS1/2/3, Game size, Every block & tile, Coding blocks, KS3, Ready-made lessons, Running a lesson, Cloud save & classes,
+  Managing your classes (needs a real teacher account → a screen recording from Charlie), Saving/sharing, Accessibility, iPads, Troubleshooting,
+  Curriculum. Capture gotchas: Critter's Test it! starts a run by itself (stop it before pressing Go!); the Train challenge asks to replace the
+  track (`#cj-dialog .cj-dlg-btn.ok`); the Robot's speech bubble only lasts ~1.2 s headless (no voice); the Platformer's `#tutorial` overlay
+  must be hidden; `cj_country=england` so the age chooser says Key Stage. CJ_VERSION 2026.10.25 (What's New = the new guide).
 
 ## 3D World models replaced with Kenney CC0 packs (23 Oct 2026; LIVE on main since 24 Oct 2026, CJ_VERSION 2026.10.24) — Charlie: "the 3D models used in the 3D world lab need to be changed" (licence worry: Flock's files, possibly Mixamo clips)
 - **All Flock assets are gone** (characters, objects, the 37 animation files, thumbs). New files in `world/assets/` come from Kenney's

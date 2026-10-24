@@ -51,5 +51,22 @@ export const SPECS = {
       { n: 6, who: 'Everyone', title: 'Key Stage 1: picture blocks', sub: 'Tap a picture block to add it after the green flag. No reading needed.',
         beats: [['s6a', 2.8], ['s6b', 2.8, { type: 'look' }]] }
     ]
+  },
+  platformer: {
+    title: 'Platformer Lab', sub: 'Build, Play, Code and Design a platform game', outroText: 'Game on!',
+    steps: [
+      { n: 1, who: 'Everyone', title: 'Start a Platformer Lab project', sub: 'Start building → a key stage → Platformer Lab.',
+        beats: [['s1a', 2], ['s1b', 2], ['s1c', 2.2]] },
+      { n: 2, who: 'Everyone', title: 'Build: paint blocks on the grid', sub: 'Pick a block on the left, then tap or drag on the grid.',
+        beats: [['s2a', 2.4], ['s2b', 2.8, { type: 'look' }]] },
+      { n: 3, who: 'Everyone', title: 'Add a Start and a Finish', sub: 'Every game needs both before it can be played.',
+        beats: [['s3', 3]] },
+      { n: 4, who: 'Everyone', title: 'Play to test it', sub: 'Arrow keys to move, Space to jump. Tablets get buttons.',
+        beats: [['s4a', 2.2], ['s4b', 2.8, { type: 'look' }]] },
+      { n: 5, who: 'Everyone', title: 'Code the rules', sub: 'Snap blocks together: when I collect a gem, change score by 10.',
+        beats: [['s5a', 2.2], ['s5b', 3, { type: 'look' }]] },
+      { n: 6, who: 'Everyone', title: 'Design your own pictures', sub: 'Draw 16 × 16 pictures for the player, blocks and background.',
+        beats: [['s6a', 2.2], ['s6b', 2.8, { type: 'look' }]] }
+    ]
   }
 };

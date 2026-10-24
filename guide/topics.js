@@ -13,7 +13,24 @@ export const WHO = { all: 'Everyone', one: 'One pupil', mates: 'Teammates', teac
 export const TOPICS = [
   // Getting started
   { id: 'what', group: 0, title: 'What is CodeJump?', legacy: ['What is CodeJump?'] },
-  { id: 'modes', group: 0, title: 'The four modes', legacy: ['The four modes'] },
+  {
+    id: 'modes', group: 0, title: 'Platformer Lab: the four modes', legacy: ['The four modes'],
+    summary: 'The Platformer Lab is the original CodeJump: pupils build a level on a grid, play it, code its rules with blocks and draw their own pictures, all on one screen.',
+    video: { src: 'media/platformer/full.mp4', poster: 'media/platformer/full.jpg', captions: 'media/platformer/full.vtt', length: 34.4 },
+    steps: [
+      { who: 'all', title: 'Start a Platformer Lab project', text: 'Press Start building, choose the key stage, then Platformer Lab.', clip: 'media/platformer/step1', at: 2.4 },
+      { who: 'all', title: 'Build: paint blocks on the grid', text: 'Pick a block on the left, then tap or drag on the 20 × 12 grid. Fill Row, Erase, Undo and Clear help.', clip: 'media/platformer/step2', at: 8.6 },
+      { who: 'all', title: 'Add a Start and a Finish', text: 'Every game needs a Start and a Finish before it can be played or shared.', clip: 'media/platformer/step3', at: 13.8 },
+      { who: 'all', title: 'Play to test it', text: 'Press Play: arrow keys move, Space jumps, and tablets get on-screen buttons.', clip: 'media/platformer/step4', at: 16.8 },
+      { who: 'all', title: 'Code the rules', text: 'Press Code and snap blocks together, such as when I collect a gem → change score by 10.', clip: 'media/platformer/step5', at: 21.8 },
+      { who: 'all', title: 'Design your own pictures', text: 'Press Design to draw 16 × 16 pictures for the player, the blocks, keys and the background.', clip: 'media/platformer/step6', at: 27 }
+    ],
+    tips: [
+      'This Page tests just the page you are building, handy in levels with several pages.',
+      'Key Stage 1 gets a smaller, friendlier set of blocks; Key Stage 3 writes Python-style code instead of blocks.',
+      'The Sky Isles Explorers unit has 24 ready-made Platformer Lab lessons for Years 1–6 (Ready-made lessons).'
+    ]
+  },
   { id: 'keystages', group: 0, title: 'Key Stage 1, 2 and 3', legacy: ['Key Stage 1 vs Key Stage 2'] },
   { id: 'size', group: 0, title: 'Game size', legacy: ['Game size'] },
   // The labs

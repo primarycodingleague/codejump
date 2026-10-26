@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:02.400 --> 00:00:08.600
+Step 1: Start a Platformer Lab project. Start building → a key stage → Platformer Lab.
+
+00:00:08.600 --> 00:00:13.800
+Step 2: Build: paint blocks on the grid. Pick a block on the left, then tap or drag on the grid.
+
+00:00:13.800 --> 00:00:16.800
+Step 3: Add a Start and a Finish. Every game needs both before it can be played.
+
+00:00:16.800 --> 00:00:21.800
+Step 4: Play to test it. Arrow keys to move, Space to jump. Tablets get buttons.
+
+00:00:21.800 --> 00:00:27.000
+Step 5: Code the rules. Snap blocks together: when I collect a gem, change score by 10.
+
+00:00:27.000 --> 00:00:32.000
+Step 6: Design your own pictures. Draw 16 × 16 pictures for the player, blocks and background.

@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:02.400 --> 00:00:08.600
+Step 1: Start a Robot Lab project. Start building → Key Stage 2 → Robot Lab.
+
+00:00:08.600 --> 00:00:13.400
+Step 2: Name it and choose its colours. The name goes on its plinth; Body and Trim change its colours.
+
+00:00:13.400 --> 00:00:16.400
+Step 3: Snap blocks together. Moves, faces, lights, speech, sensing, loops and variables.
+
+00:00:16.400 --> 00:00:21.400
+Step 4: Press Run. It talks with the browser’s own voice. Nothing is recorded or sent.
+
+00:00:21.400 --> 00:00:26.400
+Step 5: Tap the robot. “When the robot is tapped” scripts react to a tap.
+
+00:00:26.400 --> 00:00:34.000
+Step 6: Ask a question. “ask and wait” shows a box; the answer block holds what was typed.

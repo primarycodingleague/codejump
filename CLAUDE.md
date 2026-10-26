@@ -31,7 +31,7 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## Teacher Guide = video-led dashboard (24 Oct 2026, branch `claude/teacher-guide-video`, PR — not merged) — Charlie: "Rebuild the CodeJump Teacher Guide as a video-led, step-by-step guide"
+## Teacher Guide = video-led dashboard (24 Oct 2026; LIVE on main since 26 Oct 2026, CJ_VERSION 2026.10.25, PR primarycodingleague/codejump#1) — Charlie: "Rebuild the CodeJump Teacher Guide as a video-led, step-by-step guide"
 - `#t-guide` (Teacher Hub → Teacher Guide, home `#h-guide`, links `#guide/<id>`) is now a dark dashboard (`.gd`): topic list left in 5 groups
   (phones: a sideways strip), one topic page right. Code: "TEACHER GUIDE dashboard" in build-and-play.html (`guideBase`, `loadGuide`,
   `openTeacherGuide(id)`, `guideBuild`, `guideShow`, `guideWire`, `guideLeave`, `guidePrintHTML`, hashchange listener; `thGo`/`hideTeacher`

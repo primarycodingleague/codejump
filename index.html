@@ -3170,6 +3170,7 @@ document.getElementById('h-myprojects').onclick=()=>{const el=document.getElemen
 document.getElementById('h-setup-class').onclick=()=>openTeacherHubGated();
 document.getElementById('h-guide').onclick=()=>{showTeacher();openTeacherGuide();};
 {const gm=location.hash.match(/^#guide\/([\w-]+)/);if(gm)setTimeout(()=>{showTeacher();openTeacherGuide(gm[1]);},0);} // a link straight to a guide topic
+{const lm=location.hash.match(/^#lesson\/([\w-]+)/);if(lm)setTimeout(()=>{_lsCurrent=lm[1];openLessons();},0);} // a link straight to a lesson, e.g. from Club HQ's session library
 document.getElementById('h-lessons').onclick=()=>{_lsCurrent=null;openLessons();};
 document.getElementById('h-showdown-lesson').onclick=()=>{_lsCurrent='critter-engineers';openLessons();};
 // a few lessons as pictures on the home page (from lessons/lessons.js; the strip stays empty if it can't load)
@@ -3609,7 +3610,7 @@ async function openLessons(){
   try{await loadLessons();}catch(e){body.innerHTML='<p>The lessons need the internet the first time they open. Check your connection and try again.</p>';return;}
   if(_lsCurrent)lessonShow(_lsCurrent);else lessonList();
 }
-function closeLessons(){document.getElementById('lessons-modal').classList.add('hide');}
+function closeLessons(){document.getElementById('lessons-modal').classList.add('hide');if(/^#lesson\//.test(location.hash))window.history.replaceState(null,'',location.pathname+location.search);}
 // a unit = every lesson whose unit starts with the same name, in file order; its blocks = 'Block N' groups
 const lsUnitName=l=>l.unit?l.unit.split(' · ')[0]:'';
 function lsUnits(){const m=new Map();for(const l of lessonsMod.LESSONS){const n=lsUnitName(l);if(!n)continue;if(!m.has(n))m.set(n,[]);m.get(n).push(l);}
@@ -3617,7 +3618,7 @@ function lsUnits(){const m=new Map();for(const l of lessonsMod.LESSONS){const n=
     .sort((a,b)=>LS_LAB_ORDER.indexOf(a.type)-LS_LAB_ORDER.indexOf(b.type));}
 const lsYearsSpan=ls=>{const y=ls.map(l=>l.years||'').join(' ');const n=(y.match(/\d+/g)||[]).map(Number);return n.length?cjYears('Years '+Math.min(...n)+'–'+Math.max(...n)):'';};
 function lessonList(){
-  _lsCurrent=null;document.getElementById('ls-back').hidden=true;document.getElementById('ls-title').textContent='Ready-made lessons';
+  _lsCurrent=null;if(/^#lesson\//.test(location.hash))window.history.replaceState(null,'',location.pathname+location.search);document.getElementById('ls-back').hidden=true;document.getElementById('ls-title').textContent='Ready-made lessons';
   const ord=l=>LS_BANDS.findIndex(b=>b[0]===lsBand(l))*10000+LS_LAB_ORDER.indexOf(l.type)*100+lessonsMod.LESSONS.indexOf(l);
   const L=lessonsMod.LESSONS.filter(l=>(_lsFilter==='all'||_lsFilter==='map'||lsBand(l)===_lsFilter)&&(_lsLab==='all'||l.type===_lsLab)).slice().sort((a,b)=>ord(a)-ord(b));
   const chip=(k,t)=>`<button class="ls-chip${_lsFilter===k?' on':''}" data-f="${k}" aria-pressed="${_lsFilter===k}">${t}</button>`;
@@ -3662,6 +3663,7 @@ function lessonPathHTML(l){const{prev,next}=lessonNeighbours(l);
   return`<div class="ls-path">${prev.length?'<span><b>Before this:</b> '+prev.map(link).join(' ')+'</span>':''}${next.length?'<span><b>Next:</b> '+next.map(link).join(' ')+'</span>':''}</div>`;}
 function lessonShow(id){
   const l=lessonsMod.lesson(id);if(!l){lessonList();return;}
+  if(location.hash!=='#lesson/'+id)window.history.replaceState(null,'','#lesson/'+id); // the address is a link to this lesson
   _lsCurrent=id;document.getElementById('ls-back').hidden=false;document.getElementById('ls-title').textContent=l.title;
   const li=a=>'<ul>'+a.map(x=>'<li>'+lsEsc(x)+'</li>').join('')+'</ul>';
   const body=document.getElementById('ls-body');
@@ -10688,8 +10690,9 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.10.25';
+const CJ_VERSION='2026.11.02';
 const CJ_WHATSNEW=[
+ "Teachers: every lesson now has its own link (codejump.co.uk/#lesson/…), so a planner such as Club HQ can open the exact lesson. Open a lesson and copy the address to share it.",
  "Teachers: a brand-new Teacher Guide. Pick a topic on the left and follow it step by step, with a short video for every step and one full walkthrough with chapters.",
  "Every lab now has its own step-by-step page, plus Live collaboration: how up to 6 pupils build one project together.",
  "Topics without videos yet still have all their notes, and Print gives you every topic's words. Share a link straight to a topic, too.",

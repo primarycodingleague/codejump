@@ -31,7 +31,7 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## Web Lab project type — `projectType==='web'` (11 Nov 2026, CJ_VERSION 2026.11.11; branch `claude/web-lab`, PR — not merged) — Charlie: "a website builder for students… Web Lab… collaboration… guided lessons"
+## Web Lab project type — `projectType==='web'` (11 Nov 2026, CJ_VERSION 2026.11.11; LIVE on main since 11 Nov 2026 with worker v19) — Charlie: "a website builder for students… Web Lab… collaboration… guided lessons"
 - **Charlie's choices:** name Web Lab; Visual + real HTML/CSS (Design ↔ Code, like the Build Lab's Blocks ↔ Python); sharing the same as other
   labs (save, hand in, share link, collaborate; no public listing); KS2 + KS3 (hidden for KS1).
 - **`web/web-model.js` (no DOM, Node-testable):** project `{v:1, site:{title, theme:{font,bg,text,head,accent,link,width,nav,corners}, order:[ids], css},
@@ -61,7 +61,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **Host glue (mirrors the AI Lab):** `webBase/loadWebLab/webData/webApp/webCurrent/startNewWeb/enterWebUI/exitWebUI`, `body.web-mode`, `#web-ui`,
   payload `web`, chooser tile `data-pt="web"` (KS1 hidden), home tile + carousel slide (`home/web.jpg`, a real screenshot), icon `#i-web`,
   `WEB_HELP`, Teacher Guide "Web Lab" section (+ guide topic `web`), thumbnail badge, `LS_TYPE`/`LS_LAB_ORDER`, `LIVE_LABS.web`, offline list `web/`.
-- **Cloud:** worker v19 (codejump-cloud branch `claude/web-lab`) adds 'web' to the lp lab list so late joiners get the pages. Without it live
+- **Cloud:** worker v19 (live since 11 Nov 2026) adds 'web' to the lp lab list so late joiners get the pages. Without it live
   edits still pass between people in the room, but a late joiner only gets the room's first copy.
 - Tests: tests/web.test.mjs (69: model + app), labs-collab.test.mjs (`LABS=web` runs only it).
 - **Lesson unit: Hollybrook Web Team** (18 lessons, Years 3–6; `lessons/units/web.js`, `unit: 'Hollybrook Web Team · Block N · Lesson M'`, M = 1–18).

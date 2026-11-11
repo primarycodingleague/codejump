@@ -31,6 +31,40 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Web Lab project type — `projectType==='web'` (11 Nov 2026, CJ_VERSION 2026.11.11; branch `claude/web-lab`, PR — not merged) — Charlie: "a website builder for students… Web Lab… collaboration… guided lessons"
+- **Charlie's choices:** name Web Lab; Visual + real HTML/CSS (Design ↔ Code, like the Build Lab's Blocks ↔ Python); sharing the same as other
+  labs (save, hand in, share link, collaborate; no public listing); KS2 + KS3 (hidden for KS1).
+- **`web/web-model.js` (no DOM, Node-testable):** project `{v:1, site:{title, theme:{font,bg,text,head,accent,link,width,nav,corners}, order:[ids], css},
+  imgs:{id: dataURL}, p<id>:{name, blocks}, goals?}` — every top-level field is one live part (page ids = 6 lower-case letters). 13 blocks
+  (`BLOCKS`: heading text image button list quote banner card columns table divider space html; style fields align/color/bg/size/cls). Text
+  fields hold small inline HTML. **Safety:** `tokenize`/`parseTree` (forgiving) + `cleanNode` whitelist REBUILDS every piece of HTML (DROP list
+  removed with content; unknown tags unwrapped); `cleanStyle` (property whitelist, no url()/expression/position), `cleanCSS` (plain selectors,
+  no at-rules), `cleanHref` (only `#p-<id>` and https; http upgraded; private IPs refused), `cleanSrc` (only `lib:<picture>` and `img:<upload>`,
+  never outside pictures). Output `siteHTML(p,{home,srcdoc})` = ONE document, every page a `<section>`, CSS `:target` switches pages (no scripts),
+  `<meta CSP default-src 'none'; img-src data:; style-src 'unsafe-inline'>`; `srcdoc:true` adds `<base href="about:srcdoc">` (otherwise #links in an
+  `<iframe srcdoc>` go to a blank page). `pageHTML(p,id,{code:true})` = the Code tab's tidy HTML with readable refs (`pictures/star.svg`,
+  `uploads/<id>.jpg`, `#page-name` via `pageSlugs`/`codeRefs`); `fromHTML(html,p)` → `{blocks, removed}` (round trip is exact for every block;
+  freehand HTML: runs of inline → text, unknown → an html block). `checkSite` (contrast via WCAG ratio, alt text, empty pages, heading order,
+  dead buttons, unreachable pages, long paragraphs, duplicate names). Goals `cleanGoals`/`checkGoals` (pages, blocks, heading, picture(alt),
+  link page|web, theme, font, css, words, menu, check, code (Code-tab edits), cls, named, text). `TEMPLATES` blank/about/club/facts/news.
+  `web/web-pictures.js` = 32 of our own flat SVG pictures (`PICTURES`, `pictureURL`).
+- **`web/web-app.js` + `.css` (scoped `.wl`, ids `wl*`):** bar (title, Design/Code/Preview, Undo/Redo, Check my site, Download one .html); left
+  Add/Pages/Style; centre = the page drawn in a SHADOW ROOT (siteCSS with `:root`→`:host`, `body`→`.wl-body`; blocks carry `data-bid`); the chosen
+  block's words are `contenteditable` (B/I/U/link toolbar `.wl-tbar` with execCommand; paste = plain text; Enter in a list = new item); right =
+  inspector (picture grid + uploads (downscaled ≤1000px JPEG, ≤450 KB, ≤24), alt text, link pickers, look, class name, move/copy/delete).
+  Code tab: HTML of the current page + My CSS (highlight overlay, applied 700 ms after typing/blur, notes for removed tags / dropped rules).
+  Preview: `<iframe sandbox="allow-popups allow-popups-to-escape-sandbox" srcdoc>` at computer/tablet/phone width. Template chooser on a fresh
+  project. Goals strip `#wlGoals` (`host.onGoalsDone`). Undo = JSON snapshots (80). Keys: Delete, Alt+↑/↓, Ctrl+D/Z/Y, Esc.
+  **Live:** `liveParts()` = held orphan pages + every page + imgs + site (pages FIRST so a partner never sees a page listed before it arrives);
+  `liveSet` merges via `pool`. A page received before its site must still be reported by liveParts, or the host thinks it changed and sends a
+  stale copy over the partner's edit (found by labs-collab). Test hooks `_proj/_page/_sel/_select/_tab/_shadow/_add/_applyHTML/_applyCSS/_goals`.
+- **Host glue (mirrors the AI Lab):** `webBase/loadWebLab/webData/webApp/webCurrent/startNewWeb/enterWebUI/exitWebUI`, `body.web-mode`, `#web-ui`,
+  payload `web`, chooser tile `data-pt="web"` (KS1 hidden), home tile + carousel slide (`home/web.jpg`, a real screenshot), icon `#i-web`,
+  `WEB_HELP`, Teacher Guide "Web Lab" section (+ guide topic `web`), thumbnail badge, `LS_TYPE`/`LS_LAB_ORDER`, `LIVE_LABS.web`, offline list `web/`.
+- **Cloud:** worker v19 (codejump-cloud branch `claude/web-lab`) adds 'web' to the lp lab list so late joiners get the pages. Without it live
+  edits still pass between people in the room, but a late joiner only gets the room's first copy.
+- Tests: tests/web.test.mjs (69: model + app), labs-collab.test.mjs (`LABS=web` runs only it).
+
 ## Teacher Guide = video-led dashboard (24 Oct 2026; LIVE on main since 26 Oct 2026, CJ_VERSION 2026.10.25, PR primarycodingleague/codejump#1) — Charlie: "Rebuild the CodeJump Teacher Guide as a video-led, step-by-step guide"
 - `#t-guide` (Teacher Hub → Teacher Guide, home `#h-guide`, links `#guide/<id>`) is now a dark dashboard (`.gd`): topic list left in 5 groups
   (phones: a sideways strip), one topic page right. Code: "TEACHER GUIDE dashboard" in build-and-play.html (`guideBase`, `loadGuide`,

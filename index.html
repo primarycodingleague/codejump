@@ -10781,12 +10781,12 @@ loop();
 // ═══════════════════════════════════════════════════════════════════════
 // WHAT'S NEW — shown once per update (tracked in localStorage)
 // ═══════════════════════════════════════════════════════════════════════
-const CJ_VERSION='2026.11.02';
+const CJ_VERSION='2026.11.11';
 const CJ_WHATSNEW=[
- "Teachers: every lesson now has its own link (codejump.co.uk/#lesson/…), so a planner such as Club HQ can open the exact lesson. Open a lesson and copy the address to share it.",
- "Teachers: a brand-new Teacher Guide. Pick a topic on the left and follow it step by step, with a short video for every step and one full walkthrough with chapters.",
- "Every lab now has its own step-by-step page, plus Live collaboration: how up to 6 pupils build one project together.",
- "Topics without videos yet still have all their notes, and Print gives you every topic's words. Share a link straight to a topic, too.",
+ "New: the Web Lab! Build your own website with pages, pictures, buttons and links. Click anything on the page to change it, and pick a template to start.",
+ "Open the Code tab to see your page's real HTML and write your own CSS. Change the code and the website changes too.",
+ "Preview your site at computer, tablet or phone size, press Check my site for tips (like describing every picture), and Download it as one file.",
+ "Build a website together live: each teammate can work on a different page at the same time.",
 ];
 // lines starting "iPads:" are only shown on iPads (the offline mode is iPad-only)
 function cjWhatsNewLines(){return (typeof CJ_IPAD!=='undefined'&&CJ_IPAD)?CJ_WHATSNEW:CJ_WHATSNEW.filter(t=>!/^iPads:/.test(t));}

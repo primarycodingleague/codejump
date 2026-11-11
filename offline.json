@@ -1,4 +1,4 @@
-{"v":"907374c5f511","files":[["index.html",1378147,"a454b8e33704aeaf"],
+{"v":"b880f2492309","files":[["index.html",1378059,"0aab88ec5f890b10"],
 ["app.webmanifest",538,"ecd36646d7a30610"],
 ["microbit-micropython-v2.hex",1239726,"5bd5d4584a5caae7"],
 ["home/Lazydog.otf",102464,"685e471e830754e9"],
@@ -15,6 +15,7 @@
 ["home/stage.jpg",22031,"191f3d0178ccfa31"],
 ["home/train.jpg",19358,"6d37335062758507"],
 ["home/turtle.jpg",104992,"dbf1794e7c82a5b2"],
+["home/web.jpg",56850,"395dab8ece7c51ff"],
 ["home/world3d.jpg",21943,"b558db37ba7d01a7"],
 ["vendor/blockly/blockly_compressed.js",914868,"cc7bb9ba9e574cb0"],
 ["vendor/blockly/blocks_compressed.js",90269,"db4fa2101e38cfb4"],

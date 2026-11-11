@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DIRS = ['home', 'vendor', 'craft', 'critter', 'world', 'robot', 'ai', 'train', 'lessons', 'guide'];
+const DIRS = ['home', 'vendor', 'craft', 'critter', 'world', 'robot', 'ai', 'train', 'lessons', 'guide', 'web'];
 const FILES = ['index.html', 'app.webmanifest', 'microbit-micropython-v2.hex'];
 // left out: the Critter video guides (15 MB; iPad video needs the internet anyway), the Teacher Guide's videos and the tools that
 // make them (offline the guide shows its step text alone), lesson build scripts, notes

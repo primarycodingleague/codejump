@@ -17,7 +17,7 @@ for (const l of LESSONS) {
 
 const { CURRICULA, curriculumLinks } = await import(join(ROOT, 'lessons', 'curricula.js'));
 for (const c of Object.keys(CURRICULA)) {
-  const empty = LESSONS.filter(l => !curriculumLinks(c, l.curriculum).items.length).map(l => l.id);
+  const empty = LESSONS.filter(l => { const r = curriculumLinks(c, l.curriculum); return !r.items.length && !r.note; }).map(l => l.id);
   ok(CURRICULA[c].framework && (CURRICULA[c].none ? CURRICULA[c].note : !empty.length), CURRICULA[c].none ? `${c}: no computing strand, so every lesson shows the explanatory note` : `${c}: curriculum links for every lesson${empty.length ? ' (missing: ' + empty.join(', ') + ')' : ''}`);
 }
 

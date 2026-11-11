@@ -25,6 +25,7 @@ import * as UCritter from './units/critter.js';
 import * as URobot from './units/robot.js';
 import * as UAi from './units/ai.js';
 import * as UTrain from './units/train.js';
+import * as UWeb from './units/web.js';
 
 export const LESSONS = [
   // ───────────────────────────────── KEY STAGE 1 ─────────────────────────────────
@@ -2314,7 +2315,7 @@ const SLIDES = {
   ]
 };
 // ---- lesson units, one file per lab (lessons/units/README.md): appended in this order; { adopt } moves an existing lesson in
-for (const U of [UPlatformer, UStage, UTurtle, UCritter, URobot, UAi, UTrain]) {
+for (const U of [UPlatformer, UStage, UTurtle, UCritter, URobot, UAi, UTrain, UWeb]) {
   for (const x of U.LESSONS) {
     if (x.adopt) { const i = LESSONS.findIndex(l => l.id === x.adopt); if (i < 0) continue; const l = LESSONS.splice(i, 1)[0]; const o = Object.assign({}, x); delete o.adopt; LESSONS.push(Object.assign(l, o)); }
     else LESSONS.push(x);

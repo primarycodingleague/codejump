@@ -103,7 +103,8 @@ export const CURRICULA = {
       ssr: [{ code: '1B-AP-10', text: 'Create programs that include sequences, events, loops, and conditionals.' },
         { code: '1B-AP-09', text: 'Create programs that use variables to store and modify data.' }],
       reason: [{ code: '1B-AP-15', text: 'Test and debug (identify and fix errors) a program or algorithm to ensure it runs as intended.' }],
-      data: [{ code: '1B-DA-07', text: 'Use data to highlight or propose cause-and-effect relationships, predict outcomes, or communicate an idea.' }]
+      data: [{ code: '1B-DA-07', text: 'Use data to highlight or propose cause-and-effect relationships, predict outcomes, or communicate an idea.' }],
+      safe: [{ code: '1B-NI-05', text: 'Discuss real-world cybersecurity problems and how personal information can be protected.' }]
     }
   },
   australia: {
@@ -126,7 +127,7 @@ export const CURRICULA = {
     }
   },
   nz: {
-    framework: 'The New Zealand Curriculum: Technology, Digital Technologies (Computational thinking for digital technologies, progress outcomes)',
+    framework: 'The New Zealand Curriculum: Technology, Digital Technologies (Computational thinking for digital technologies; Designing and developing digital outcomes; progress outcomes)',
     heading: 'NZ Curriculum: Digital Technologies',
     source: 'https://newzealandcurriculum.tahurangi.education.govt.nz/',
     keys: {
@@ -136,7 +137,8 @@ export const CURRICULA = {
       create1: [{ code: 'Computational thinking, progress outcome 2', text: 'In authentic contexts and taking account of end-users, students give, follow and debug simple algorithms in computerised and non-computerised contexts. They use these algorithms to create simple programs involving outputs and sequencing (putting instructions one after the other) in age-appropriate programming environments.' }],
       design: [{ code: 'Computational thinking, progress outcome 3', text: 'They develop and debug simple programs that use inputs, outputs, sequence and iteration (repeating part of the algorithm with a loop).' }],
       ssr: [{ code: 'Computational thinking, progress outcome 4', text: 'In authentic contexts and taking account of end-users, students decompose problems to create simple algorithms using the three building blocks of programming: sequence, selection, and iteration.' }],
-      reason: [{ code: 'Computational thinking, progress outcome 3', text: 'They develop and debug simple programs that use inputs, outputs, sequence and iteration (repeating part of the algorithm with a loop).' }]
+      reason: [{ code: 'Computational thinking, progress outcome 3', text: 'They develop and debug simple programs that use inputs, outputs, sequence and iteration (repeating part of the algorithm with a loop).' }],
+      safe: [{ code: 'Designing and developing digital outcomes, progress outcome 3', text: 'They understand that with storing data comes responsibility for ensuring security and privacy.' }]
     }
   },
   cyprus: {
@@ -173,5 +175,7 @@ export function curriculumLinks(country, keys) {
     const id = (it.code || '') + '|' + it.text;
     if (!seen.has(id)) { seen.add(id); items.push(it); }
   }
-  return { framework: c.framework, heading: c.heading, source: c.source || '', note: c.note || '', none: !!c.none, items };
+  // a lesson whose focus this framework has no close statement for says so, rather than showing a stretched match
+  const note = c.note || (!c.none && keys && keys.length && !items.length ? 'This framework has no statement that closely matches this lesson, so none is listed.' : '');
+  return { framework: c.framework, heading: c.heading, source: c.source || '', note, none: !!c.none, items };
 }

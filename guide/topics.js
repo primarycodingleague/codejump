@@ -172,6 +172,7 @@ export const TOPICS = [
       'Teammates can share one world live (Share → Collaborate) and see each other walking round it.'
     ]
   },
+  { id: 'web', group: 1, title: 'Web Lab', legacy: ['Web Lab'] },
   {
     id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'],
     summary: 'A 3D robot head and shoulders to code with blocks: eight motors, lights, faces and a voice. Great for conversations, quizzes and short robot plays.',
@@ -217,7 +218,7 @@ export const TOPICS = [
     tips: [
       'A room holds 6 people. A seventh sees “That live room is full”.',
       'Play, Run and Test it! only play on each pupil’s own screen, so everyone can test without stopping the others.',
-      'Works in every lab: the Platformer, Stage, Turtle, Build, Critter, AI, Train and Robot Labs and the 3D World. In the Build Lab teammates also see each other walking round the world.',
+      'Works in every lab: the Platformer, Stage, Turtle, Build, Critter, AI, Train, Robot and Web Labs and the 3D World. In the Build Lab teammates also see each other walking round the world.',
       'Not in a class with anyone yet? The pupil can still press Start a live game and invite teammates by display name.'
     ]
   },

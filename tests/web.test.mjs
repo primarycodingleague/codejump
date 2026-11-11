@@ -12,7 +12,7 @@ for (const t of Object.keys(W.TEMPLATES)) {
   ok(JSON.stringify(W.cleanProject(JSON.parse(JSON.stringify(p)))) === JSON.stringify(p), t + ': cleaning a saved project changes nothing');
   ok(p.site.order.every(id => strip(W.fromHTML(W.pageHTML(p, id, { code: true }), p).blocks) === strip(p['p' + id].blocks)), t + ': every page goes to HTML and back unchanged');
   const html = W.siteHTML(p);
-  ok(/Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'"/.test(html) && !/<script/i.test(html), t + ': the site has a no-scripts security policy');
+  ok(/Content-Security-Policy" content="default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'"/.test(html) && !/<script/i.test(html), t + ': the site has a no-scripts security policy');
 }
 const ATTACKS = ['<script>alert(1)</script><p>hi</p>', '<img src=x onerror=alert(1)>', '<a href="javascript:alert(1)">x</a>', '<a href="JaVaScRiPt:alert(1)">x</a>',
   '<p style="background:url(javascript:alert(1));color:red">y</p>', '<iframe src="https://evil.example"></iframe>ok', '<svg onload=alert(1)><circle/></svg>',
@@ -88,7 +88,7 @@ p = await P();
 ok(p.site.order.length === 4 && p['p' + p.site.order[3]].name === 'Members' && await page.evaluate(() => webApp._page()) === p.site.order[3], 'Add a page, type its name: a 4th page called Members is open');
 // style
 await page.click('.wl-side-tab[data-side="style"]'); await page.click('[data-set="night"]');
-await page.selectOption('#wlFont', 'rounded');
+await page.click('#wlFontBody'); await page.click('.wl-pop .wl-font[data-font="rounded"]'); await sleep(200);
 p = await P();
 ok(p.site.theme.bg === W.THEMES.night.bg && p.site.theme.font === 'rounded', 'Style: a colour set and a font');
 const shadowBg = await page.evaluate(() => getComputedStyle(webApp._shadow().querySelector('.wl-body')).backgroundColor);

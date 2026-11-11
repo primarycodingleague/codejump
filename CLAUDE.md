@@ -84,6 +84,43 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   `curriculumLinks(…).note` ("no statement that closely matches") instead of a stretched link — NZ has none for web-2 and web-15.
   tests/lib.mjs runs a test's `init` only in the top frame (it used to throw inside the sandboxed Web Lab preview).
 
+## Web Lab: free layout + way more customising (12 Nov 2026, CJ_VERSION 2026.11.12; branch `claude/web-lab-2`, PR) — Charlie: "really freely resize and position everything… fluid… wider fonts… build their own colour sets… anything else to make it the best"
+- **Free layout** (page `layout: 'free'`; NEW websites/templates and pages added to a free site are free; old projects + every lesson starter stay
+  stack). The page is a CSS grid `COLS`=96 columns × `ROW`=10px rows that GROW (`minmax(10px, auto)` + `grid-auto-rows`), so words that need more
+  room push things down instead of being covered. Each top-level block has `pos {x,y,w,h}` (grid units) + optional `z`; output = `<div class="free"
+  style="grid-template-rows: repeat(N, …)">` with `grid-area: y+1 / x+1 / span h / span w; z-index` put FIRST in the block's outer style (`placeIn`),
+  so the Code tab shows/edits real `grid-area`. Blocks are stored in reading order (`sortFree`: y then x) = phone + screen-reader order; under 640px
+  `.free` becomes a flex column (no tilt). Free pictures fill their box exactly (img absolute, caption over the bottom) so pupils can squash them.
+  Model: `cleanPos`, `estimateRows`, `defaultWidth`, `bottomOf`, `placeMissing`, `sortFree`, `setLayout(pg)`, `addPage(…, layout)`; blocks inside
+  columns never keep a pos. App: drag a block (mouse: at once; touch: tap then drag), gold **Move** grip (for blocks being typed in), 8 white handles
+  (Shift on a corner keeps the shape), snap to page edges/middle and other blocks' edges/middles (pink `.wl-gl` lines; Alt = no snap), grid shading
+  while dragging, arrow keys nudge (Shift 5), Alt+↑/↓ and Front/Back = `z` (`layer`). Pointer y ↔ row uses the grid's COMPUTED row sizes
+  (`metrics()`: `gridTemplateRows` → tops, `nearest`). Add puts a block under the chosen one and pushes lower blocks down. Stack → Free measures
+  every block on screen (picture/button: their img/.btn) and then nudges y in up to 4 passes until each lands where it was. The design canvas
+  rewrites `@media (max-width)` to `@container wlpage` so the phone button shows the stacked page. The overlay lives inside the shadow root;
+  `.wl-canvas { isolation: isolate }` stops its z-index covering the B/I/U toolbar (which shifts right of the Move grip).
+- **Fonts:** `FONTS[key] = [label (= font-family), stack, group, file?, bold?]` — 6 system + 26 bundled open-licence families (OFL; Chewy, Permanent
+  Marker, Roboto Slab Apache-2.0) from fontsource (latin 400 + 700 where it exists) in `web/fonts/<file>-400|700.woff2` + `licences/`; ~1.4 MB, only
+  loaded when used. `FONT_GROUPS`, `usedFonts(p)` (theme font/hfont, block fonts, names in My CSS / own HTML), `fontFaceCSS(data)` (only
+  `data:font/woff2;base64` passes). App `ensureFonts` (FontFace API into document.fonts; shadow DOM uses them) and `fontData` (fetch → data URLs,
+  cached) for Preview + Download; CSP now `font-src data:`. Theme `hfont` (headings), `fsize` 12–28. Font chooser pop-up `fontPicker` (each name in
+  its own font).
+- **Colours:** 20 `THEMES` (all pass the contrast checks except the old Night accent); theme `bg2` + `grad` (`GRADS` down/across/diag/radial) + `pat`
+  (`PATTERNS` dots/stripes/grid/checks/diamonds/zigzag, pure CSS gradients) → `backgroundCSS(t, strength)`. App: **Surprise me** (`surpriseColours`,
+  random HSL that passes every contrast check), **Save my colours** → localStorage `cj-web-sets` (≤12, per device, delete ✕), a palette (site colours
+  + 28 swatches) behind every colour input (`colourHTML`/`bindColours`). checkSite warns about words on a hard-to-read second gradient colour.
+- **Block look** (`cleanStyleFields`, all optional): font, fs (8–160 px), bg2+grad, bw/bc/bs border, rad, pad, sh (`SHADOWS` soft/strong/glow/float/retro),
+  op (5–99), rot (±180, CSS `rotate`), anim (`ANIMS`, classes `a-*`, `animation-fill-mode: backwards` so hover still works), hov (`HOVERS`, `h-*`);
+  `decls(b)` writes them and `styleFields`/`fxFields` read EXACTLY those back (Code-tab round trip tested). A button's look goes on its `<a>`.
+  Animations are off in Design (`.wl-play` + **Watch it** plays one) and off for `prefers-reduced-motion`.
+- **New blocks:** `shape` (`SHAPES` rect/round/circle/pill/blob/triangle/diamond/star/hexagon/arrow/burst via clip-path/radius, optional words) and
+  `reveal` (`<details class="reveal"><summary>`; open in Design). Own HTML may use details/summary; CSS whitelist gained rotate/scale/filter/
+  background-image/animation/z-index/grid-area/… (still no position, url(), var()).
+- Tests: `tests/web-free.test.mjs` (50: fonts/files/licences/size, font CSS can't be tricked, colour sets, gradient/pattern cleaning, full style + place
+  round trip, clamping, reading order, layout switching; app: drag, snap guide, Shift-resize, keys, Place boxes, add pushes down, shape styling via
+  the inspector, layers, block font loads, Surprise/Save/reuse colour sets, stripes + radial + heading font, stack ↔ free keeps the look, phone
+  stacking in Design and Preview with fonts, Download has @font-face, save/reopen). `home/web.jpg` re-shot to show it.
+
 ## Teacher Guide = video-led dashboard (24 Oct 2026; LIVE on main since 26 Oct 2026, CJ_VERSION 2026.10.25, PR primarycodingleague/codejump#1) — Charlie: "Rebuild the CodeJump Teacher Guide as a video-led, step-by-step guide"
 - `#t-guide` (Teacher Hub → Teacher Guide, home `#h-guide`, links `#guide/<id>`) is now a dark dashboard (`.gd`): topic list left in 5 groups
   (phones: a sideways strip), one topic page right. Code: "TEACHER GUIDE dashboard" in build-and-play.html (`guideBase`, `loadGuide`,

@@ -66,7 +66,7 @@
 
 /* form rows */
 .wl-field { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; font-weight: 600; font-size: 12px; color: var(--wl-dim); }
-.wl-field input[type=text], .wl-field input:not([type]), .wl-field select, .wl-field textarea, .wl input.wl-in { background: #18181c; border: 1px solid var(--wl-line); border-radius: 8px; padding: 8px; color: var(--wl-text); font-weight: 600; width: 100%; }
+.wl-field input[type=text], .wl-field input[type=number], .wl-field input:not([type]), .wl-field select, .wl-field textarea, .wl input.wl-in { background: #18181c; border: 1px solid var(--wl-line); border-radius: 8px; padding: 8px; color: var(--wl-text); font-weight: 600; width: 100%; }
 .wl-field textarea { min-height: 70px; resize: vertical; font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: 12px; }
 .wl-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .wl-seg { display: inline-flex; background: #18181c; border-radius: 8px; padding: 2px; gap: 2px; border: 1px solid var(--wl-line); }
@@ -150,3 +150,48 @@
   .wl-title { width: 140px; }
 }
 @media (max-width: 520px) { .wl-tiles { grid-template-columns: repeat(3, 1fr); } .wl-btn .lbl { display: none; } }
+
+/* ── more customising (Nov 2026): colour choosers, fonts, patterns, shapes, place ── */
+.wl-cpick { margin: 4px 0 8px; }
+.wl-cpick-h { display: flex; align-items: center; gap: 8px; }
+.wl-cpick-h input[type="color"] { width: 38px; height: 30px; padding: 0; border: 1px solid var(--wl-line); border-radius: 8px; background: none; cursor: pointer; flex: none; }
+.wl-cpick-h span { flex: 1; min-width: 0; }
+.wl-sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(24px, 1fr)); gap: 5px; padding: 8px; margin-top: 6px; background: var(--wl-panel2); border-radius: 10px; }
+.wl-sw { width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.25); cursor: pointer; padding: 0; }
+.wl-sw.mine { box-shadow: 0 0 0 2px var(--wl-gold); }
+.wl-sw:hover { transform: scale(1.12); }
+.wl-fontbtn { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; width: 100%; text-align: left; background: var(--wl-panel2); border: 1px solid var(--wl-line); border-radius: 10px; padding: 8px 10px; margin: 0 0 8px; cursor: pointer; color: var(--wl-text); }
+.wl-fontbtn:hover { border-color: var(--wl-gold); }
+.wl-fontbtn .ic { grid-row: span 2; color: var(--wl-gold2); }
+.wl-fontbtn span { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-fontbtn small { font: 600 11px var(--font, 'Montserrat', sans-serif); color: var(--wl-dim); }
+.wl-pop-box.wide { width: min(900px, 94vw); max-height: 88vh; overflow-y: auto; }
+.wl-fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.wl-font { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--wl-panel2); border: 2px solid var(--wl-line); border-radius: 10px; padding: 10px 12px; cursor: pointer; color: var(--wl-text); }
+.wl-font b { font-size: 19px; font-weight: 400; } .wl-font span { font-size: 14px; color: var(--wl-dim); }
+.wl-font:hover { border-color: var(--wl-gold2); } .wl-font.on { border-color: var(--wl-gold); background: #2e2a22; }
+.wl-pop-box > .wl-font { margin-bottom: 6px; width: 100%; font-family: inherit; }
+.wl-pats { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px; margin: 8px 0; }
+.wl-pat { display: flex; flex-direction: column; align-items: center; gap: 3px; background: var(--wl-panel2); border: 2px solid var(--wl-line); border-radius: 8px; padding: 5px 2px; font-size: 10px; font-weight: 700; color: var(--wl-dim); cursor: pointer; }
+.wl-pat i { width: 34px; height: 24px; border-radius: 5px; border: 1px solid #ccc; }
+.wl-pat[aria-pressed="true"] { border-color: var(--wl-gold); color: var(--wl-text); }
+.wl-myset { position: relative; display: block; } .wl-myset .wl-set { width: 100%; }
+.wl-myset .wl-mini { position: absolute; top: 2px; right: 2px; background: rgba(0, 0, 0, 0.55); color: #fff; min-width: 22px; min-height: 22px; padding: 2px; }
+.wl-grid4 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+.wl-grid4 input { width: 100%; }
+.wl-num b { color: var(--wl-gold2); font-weight: 700; }
+.wl-numrow { display: flex; align-items: center; gap: 6px; } .wl-numrow input { flex: 1; min-width: 0; }
+.wl-more { margin: 8px 0; border: 1px solid var(--wl-line); border-radius: 10px; padding: 6px 10px; }
+.wl-more > summary { cursor: pointer; font-weight: 700; color: var(--wl-gold2); padding: 4px 0; }
+.wl-more[open] > summary { margin-bottom: 6px; }
+.wl-shapes { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; margin-bottom: 8px; }
+.wl-shp { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--wl-panel2); border: 2px solid var(--wl-line); border-radius: 8px; padding: 6px 2px; font-size: 10px; font-weight: 700; color: var(--wl-dim); cursor: pointer; }
+.wl-shp[aria-pressed="true"] { border-color: var(--wl-gold); color: var(--wl-text); }
+.wl-shp i { width: 26px; height: 26px; background: var(--wl-gold2); display: block; }
+.wl-shp .s-round { border-radius: 7px; } .wl-shp .s-circle { border-radius: 50%; } .wl-shp .s-pill { border-radius: 99px; height: 16px; margin: 5px 0; } .wl-shp .s-blob { border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%; }
+.wl-shp .s-triangle { clip-path: polygon(50% 0, 100% 100%, 0 100%); } .wl-shp .s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.wl-shp .s-star { clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); } .wl-shp .s-hexagon { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.wl-shp .s-arrow { clip-path: polygon(0 30%, 60% 30%, 60% 5%, 100% 50%, 60% 95%, 60% 70%, 0 70%); }
+.wl-shp .s-burst { clip-path: polygon(50% 0, 59% 20%, 79% 9%, 76% 31%, 98% 32%, 82% 50%, 98% 68%, 76% 69%, 79% 91%, 59% 80%, 50% 100%, 41% 80%, 21% 91%, 24% 69%, 2% 68%, 18% 50%, 2% 32%, 24% 31%, 21% 9%, 41% 20%); }
+.wl-layout button { flex: 1; display: inline-flex; gap: 6px; justify-content: center; align-items: center; }
+.wl-canvas { position: relative; isolation: isolate; }

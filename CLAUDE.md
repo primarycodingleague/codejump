@@ -64,6 +64,25 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **Cloud:** worker v19 (codejump-cloud branch `claude/web-lab`) adds 'web' to the lp lab list so late joiners get the pages. Without it live
   edits still pass between people in the room, but a late joiner only gets the room's first copy.
 - Tests: tests/web.test.mjs (69: model + app), labs-collab.test.mjs (`LABS=web` runs only it).
+- **Lesson unit: Hollybrook Web Team** (18 lessons, Years 3–6; `lessons/units/web.js`, `unit: 'Hollybrook Web Team · Block N · Lesson M'`, M = 1–18).
+  Story: the class are the web team of Hollybrook, a market town; clients Mrs Osei (library), Mr Lindqvist (Crumb & Co bakery), Ms Ruiz
+  (Paws Place animal rescue), Dr Haddad (museum), the sports club, the festival. Block 1 Our first web pages (Years 3–4): 1 `web-1-tour` what is
+  a website · 2 `web-2-bakery` headings/paragraphs/lists · 3 `web-3-pictures` alt text · 4 `web-4-links` pages + buttons · 5 `web-5-fix` debug
+  4 bugs · 6 `web-6-club` project. Block 2 Under the bonnet (Years 4–5): 7 `web-7-code` edit in the Code tab · 8 `web-8-tags` write HTML lists ·
+  9 `web-9-web` trusted sources + https links · 10 `web-10-design` contrast/fonts/phone · 11 `web-11-debug` hidden bugs (heading level, long
+  paragraph, empty page, same name) · 12 `web-12-rescue` project. Block 3 Web designers (Years 5–6): 13 `web-13-css` rules · 14 `web-14-classes` ·
+  15 `web-15-data` survey table · 16 `web-16-plan` site map / decomposition · 17 `web-17-safe` personal information · 18 `web-18-festival`.
+  `lessons/builds/web/hollybrook.mjs` = `UNIT[id]` {goals, starter(), answer(p), code?} + `site()` (pages with '@N' page links), `starterProject`,
+  `answerProject`, `ticks`, `args`/`build`; thin `lessons/builds/web-*.mjs` for make-starters. Goals gained `text {not:true}` (must NOT be on the
+  site) and `check {strict:true}` (no tips either). Test `tests/unit-web.test.mjs` (180; `WEB_NODE=1` = Node only): data, every answer ticks every
+  goal and no starter ticks any, each lesson's own promise, every starter opens with its card + unticked goals (no template chooser), lessons 5,
+  7 and 14 followed in the app, Next lesson order. Found while building: `setProject` now closes the template chooser (a starter opened right
+  after a fresh project showed it on top), a class name now redraws the page at once, and the Lesson card sits over the canvas (left 282px)
+  so it never hides the Add tiles or the inspector.
+  Curricula (11 Nov 2026): USA gained `safe` = CSTA 1B-NI-05 and NZ `safe` = DDDO progress outcome 3's security/privacy sentence (both confirmed
+  from official-page search excerpts; the Tāhūrangi page itself returned 403). A lesson with no close statement in a country now gets
+  `curriculumLinks(…).note` ("no statement that closely matches") instead of a stretched link — NZ has none for web-2 and web-15.
+  tests/lib.mjs runs a test's `init` only in the top frame (it used to throw inside the sandboxed Web Lab preview).
 
 ## Teacher Guide = video-led dashboard (24 Oct 2026; LIVE on main since 26 Oct 2026, CJ_VERSION 2026.10.25, PR primarycodingleague/codejump#1) — Charlie: "Rebuild the CodeJump Teacher Guide as a video-led, step-by-step guide"
 - `#t-guide` (Teacher Hub → Teacher Guide, home `#h-guide`, links `#guide/<id>`) is now a dark dashboard (`.gd`): topic list left in 5 groups

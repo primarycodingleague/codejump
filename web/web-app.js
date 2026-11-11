@@ -94,8 +94,9 @@ export function mount(root, host) {
   function load(p, fresh) {
     proj = W.cleanProject(p || W.newProject('blank'));
     page = proj.site.order[0]; sel = null; undo = []; redo = []; lastSnap = JSON.stringify(proj); codeEdits = 0; goalsWereDone = false;
-    if (fresh) setTimeout(() => templates(true), 50);
+    clearTimeout(tplT); if (fresh) tplT = setTimeout(() => templates(true), 50);
   }
+  let tplT = 0;
   load(host.project, !host.project);
 
   // ── changes, undo ──
@@ -354,7 +355,7 @@ export function mount(root, host) {
     R.querySelectorAll('[data-in]').forEach(x => x.oninput = () => { const k = x.dataset.in; let v = x.value;
       if (k === 'caption') v = esc(v); if (k === 'html') { clearTimeout(x._t); x._t = setTimeout(() => { b.html = W.cleanHTML(x.value, proj.site.order, proj.imgs); changed(true); canvas(); }, 600); return; }
       if (k === 'cls') v = v.replace(/[^\w\s-]/g, '');
-      b[k] = v; if (k === 'alt' || k === 'caption' || k === 'label' || k === 'by') canvas(); changed(); goalsSoon(); });
+      b[k] = v; if (k === 'alt' || k === 'caption' || k === 'label' || k === 'by' || k === 'cls') canvas(); changed(); goalsSoon(); });
     R.querySelectorAll('[data-in="alt"],[data-in="caption"]').forEach(x => x.onchange = () => right());
     R.querySelectorAll('[data-num]').forEach(x => { x.oninput = () => { b[x.dataset.num] = +x.value; canvas(); changed(); const l = x.closest('label'); if (l) l.firstChild.textContent = (x.dataset.num === 'w' ? 'Size: ' + x.value + '%' : 'Height: ' + x.value + 'px'); }; x.onchange = () => changed(true); });
     R.querySelectorAll('[data-bool]').forEach(x => x.onchange = () => set(x.dataset.bool, x.checked));
@@ -560,7 +561,7 @@ export function mount(root, host) {
   }
   return {
     getProject,
-    setProject(p) { quiet = true; try { load(p, false); render(); } finally { quiet = false; } },
+    setProject(p) { quiet = true; try { closePop(); load(p, !p); render(); } finally { quiet = false; } },
     resume() { render(); },
     pause() { hideToolbar(); closePop(); },
     destroy() { destroyed = true; document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onResize); hideToolbar(); root.innerHTML = ''; },

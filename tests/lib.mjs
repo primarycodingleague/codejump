@@ -58,7 +58,7 @@ export async function openApp(b, base, { page: pagePath = '/build-and-play.html'
   });
   // the What's New and promotion popups can appear at any time; keep them out of the way
   await page.addInitScript(() => { setInterval(() => { const w = document.getElementById('whatsnew'); if (w) w.classList.add('hide'); const pm = document.getElementById('promo-modal'); if (pm) pm.classList.add('hide'); }, 50); });
-  if (init) await page.addInitScript(init);
+  if (init) await page.addInitScript(`if (window === window.top) (${init.toString()})();`); // never inside a sandboxed frame (the Web Lab preview has no storage)
   await page.goto(base + pagePath);
   await page.waitForFunction(() => typeof startNewProject === 'function' && typeof buildPayload === 'function');
   await page.evaluate(() => document.getElementById('splash')?.remove());

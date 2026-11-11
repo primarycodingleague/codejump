@@ -593,6 +593,7 @@ export function checkSite(p) {
 // ── goals: a lesson's checklist that ticks itself ──
 // Types: pages (n) · blocks (block type, n, page = index or any) · heading (n) · picture (n, alt: true) · link (to 'page'|'web', n) ·
 // theme (changed from the starter's theme) · font (not the default) · css (n rules) · words (n, page) · menu (on) · check (no warnings) ·
+// (check strict: no tips either) · text (has: words somewhere on the site; not: true = must NOT be there) ·
 // code (n edits made in the Code tab — counted by the app) · cls (a block uses its own class name, styled in the CSS) · named (site title not "My website")
 export const GOAL_TYPES = ['pages', 'blocks', 'heading', 'picture', 'link', 'theme', 'font', 'css', 'words', 'menu', 'check', 'code', 'cls', 'named', 'text'];
 export function cleanGoals(g) {
@@ -605,6 +606,8 @@ export function cleanGoals(g) {
     if (x.to === 'page' || x.to === 'web') o.to = x.to;
     if (x.page != null) o.page = clamp(x.page, 0, 11, 0) | 0;
     if (x.alt) o.alt = true;
+    if (x.not) o.not = true;
+    if (x.strict) o.strict = true;
     if (typeof x.has === 'string') o.has = str(x.has, 60);
     if (x.base && typeof x.base === 'object') o.base = cleanTheme(x.base);
     return o;
@@ -630,11 +633,11 @@ export function checkGoals(goals, p, state = {}) {
       case 'css': ok = (p.site.css.match(/\{/g) || []).length >= n; break;
       case 'words': ok = words(scope(g)) >= n; break;
       case 'menu': ok = p.site.theme.nav !== 'none' && pageIds.length > 1; break;
-      case 'check': ok = !checkSite(p).some(x => x.level === 'warn'); break;
+      case 'check': ok = !checkSite(p).some(x => x.level === 'warn' || (g.strict && x.level === 'tip')); break;
       case 'code': ok = (state.codeEdits || 0) >= n; break;
       case 'cls': ok = all.some(b => b.cls && b.cls.split(' ').some(c => new RegExp('\\.' + c + '\\b').test(p.site.css))); break;
       case 'named': ok = !!p.site.title.trim() && p.site.title !== 'My website'; break;
-      case 'text': ok = !!g.has && all.some(b => [b.text, b.html, b.title, b.sub, ...(b.items || [])].filter(Boolean).some(h => plainText(h).toLowerCase().includes(g.has.toLowerCase()))); break;
+      case 'text': ok = !!g.has && all.some(b => [b.text, b.html, b.title, b.sub, b.caption, b.label, ...(b.items || []), ...((b.rows || []).flat())].filter(Boolean).some(h => plainText(h).toLowerCase().includes(g.has.toLowerCase()))); if (g.has && g.not) ok = !ok; break;
     }
     return { text: g.text, ok };
   });

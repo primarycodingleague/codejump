@@ -459,7 +459,7 @@ export function mount(root, host) {
   // ── Preview tab ──
   function preview() {
     if (tab !== 'preview') return;
-    const html = W.siteHTML(proj, { home: page }); // opens on the page you were looking at
+    const html = W.siteHTML(proj, { home: page, srcdoc: true }); // opens on the page you were looking at
     const f = $('wlFrameView'); f.className = device; f.srcdoc = html;
   }
 
@@ -567,7 +567,11 @@ export function mount(root, host) {
     // live collaboration: the site (title, theme, page order, CSS), the pictures, and each page are separate parts, so two pupils
     // can build different pages at the same time. Pages go first so a partner never sees a page listed before it arrives.
     liveParts() {
-      const o = {}; for (const id of proj.site.order) o['p' + id] = { ['p' + id]: proj['p' + id] };
+      const o = {};
+      // pages a partner sent before their site listed them are reported as they arrived, so CodeJump never mistakes
+      // them for a change of ours (and sends an old copy over theirs) once the site does list them
+      for (const k of Object.keys(pool)) if (!proj[k]) o[k] = { [k]: pool[k] };
+      for (const id of proj.site.order) o['p' + id] = { ['p' + id]: proj['p' + id] };
       o.imgs = { imgs: proj.imgs }; o.site = { site: proj.site }; return JSON.parse(JSON.stringify(o));
     },
     liveSet(part, v) {

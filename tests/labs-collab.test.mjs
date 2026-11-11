@@ -43,12 +43,12 @@ async function person(uid) {
   return page;
 }
 const wf = (pg, fn, arg, t = 30000) => pg.waitForFunction(fn, arg, { timeout: t, polling: 150 }).then(() => true, () => false);
-const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp' };
-const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain' };
+const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp' };
+const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb' };
 const ready = (pg, lab) => wf(pg, ([lab, app]) => projectType === lab && eval(app) && (!eval(app)._ws || eval(app)._ws()) && labLive.base, [lab, APP[lab]], 45000);
 try {
   const A = await person('a'), B = await person('b'), C = await person('c');
-  for (const lab of ['craft', 'critter', 'ai', 'train']) {
+  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web').split(',')) {
     newRoom();
     for (const p of [A, B, C]) await p.evaluate(() => { try { collabDisconnect(true); } catch (e) { /* not in one */ } });
     await A.evaluate(f => window[f]('ks2'), START[lab]);
@@ -104,8 +104,23 @@ try {
       await C.evaluate(r => collabConnect(r), 'room-train');
       ok(await ready(C, lab) && await wf(C, n => trainApp._proj().pieces.length === n && trainApp._ws().getAllBlocks(false).some(b => b.type === 'math_number' && !b.getParent()), n1), 'train: Cara joins late and gets the latest track and code');
     }
+    if (lab === 'web') {
+      await A.click('.wl-tpl [data-tpl="club"]');
+      ok(await wf(B, () => webApp._proj().site.order.length === 3 && webApp._proj().site.title === 'Club or team'), 'web: the template Ana picks reaches Ben (3 pages)');
+      // both at once, on different pages: neither change is lost
+      await Promise.all([
+        A.evaluate(() => { webApp._select(null, webApp._proj().site.order[0]); webApp._add('quote'); }),
+        B.evaluate(() => { webApp._select(null, webApp._proj().site.order[1]); webApp._add('card'); })]);
+      const both = () => { const p = webApp._proj(), o = p.site.order; return p['p' + o[0]].blocks.some(b => b.t === 'quote') && p['p' + o[1]].blocks.some(b => b.t === 'card'); };
+      ok(await wf(A, both) && await wf(B, both), 'web: Ana and Ben change different pages at the same moment and both changes stay');
+      if (process.env.DBG) for (const [n, pg] of [['A', A], ['B', B]]) console.log(n, await pg.evaluate(() => { const p = webApp._proj(); return JSON.stringify(p.site.order.map(id => [id, p['p' + id].blocks.map(b => b.t).join('+')])); }), JSON.stringify(room.doc && room.doc.web ? Object.keys(room.doc.web) : null));
+      await B.evaluate(() => { const p = webApp.getProject(); p.site.order.push('qqqqqq'); p.pqqqqqq = { name: 'Ben’s page', blocks: [] }; webApp.setProject(p); markDirty(); });
+      ok(await wf(A, () => webApp._proj().site.order.length === 4 && webApp._proj().pqqqqqq && webApp._proj().pqqqqqq.name === 'Ben’s page'), 'web: a page Ben adds appears for Ana');
+      await C.evaluate(r => collabConnect(r), 'room-web');
+      ok(await ready(C, lab) && await wf(C, () => { const p = webApp._proj(), o = p.site.order; return o.length === 4 && p['p' + o[0]].blocks.some(b => b.t === 'quote') && p['p' + o[1]].blocks.some(b => b.t === 'card'); }), 'web: Cara joins late and gets every page');
+    }
   }
-  const errs = errors.filter(e => !/WebSocket|Failed to load resource/.test(e));
+  const errs = errors.filter(e => !/WebSocket|Failed to load resource|sandboxed|allow-scripts/.test(e));
   ok(errs.length === 0, 'no page errors' + (errs.length ? ': ' + errs.slice(0, 3).join(' | ') : ''));
 } finally { await b.close(); site.close(); }
 done();

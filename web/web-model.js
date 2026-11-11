@@ -245,12 +245,12 @@ export function cleanCSS(css) {
 export const BLOCKS = {
   heading: ['Heading', 'heading', () => ({ text: 'My heading', level: 2 })],
   text: ['Text', 'text', () => ({ html: 'Write something here. You can make words <b>bold</b>, <i>slanted</i> or into a link.' })],
-  image: ['Picture', 'image', () => ({ src: 'lib:star', alt: 'A yellow star', w: 50, round: false, caption: '' })],
+  image: ['Picture', 'image', () => ({ src: 'lib:star', alt: 'Star', w: 50, round: false, caption: '' })],
   button: ['Button', 'button', () => ({ label: 'Click me', link: '' })],
   list: ['List', 'list', () => ({ items: ['First thing', 'Second thing', 'Third thing'], ordered: false })],
   quote: ['Quote', 'quote', () => ({ html: 'A great quote goes here.', by: '' })],
   banner: ['Banner', 'banner', () => ({ title: 'Welcome!', sub: 'A short line about this page', src: '' })],
-  card: ['Card', 'card', () => ({ title: 'Card title', html: 'A few words about this.', src: 'lib:idea', alt: 'A light bulb', link: '' })],
+  card: ['Card', 'card', () => ({ title: 'Card title', html: 'A few words about this.', src: 'lib:idea', alt: 'Light bulb', link: '' })],
   columns: ['Columns', 'columns', () => ({ cols: [[blockOf('text')], [blockOf('text')]] })],
   table: ['Table', 'table', () => ({ rows: [['Name', 'Score'], ['Pip', '12'], ['Dot', '9']], head: true })],
   divider: ['Line', 'divider', () => ({})],
@@ -466,7 +466,8 @@ export function codeRefs(p) {
       return s; }
   };
 }
-// the whole site as one HTML document (every page; the CSS shows the one you are on)
+// the whole site as one HTML document (every page; the CSS shows the one you are on). srcdoc: true when it is shown in an
+// <iframe srcdoc>, where #links would otherwise go to the parent page's address
 export function siteHTML(p, opts = {}) {
   const ctx = { pages: p.site.order, imgs: p.imgs };
   const home = opts.home && p.site.order.includes(opts.home) ? opts.home : p.site.order[0]; // the page shown when there is no #
@@ -476,7 +477,7 @@ export function siteHTML(p, opts = {}) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">
+${opts.srcdoc ? '<base href="about:srcdoc">\n' : ''}<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">
 <title>${esc(p.site.title)}</title>
 <style>
 ${siteCSS(p)}

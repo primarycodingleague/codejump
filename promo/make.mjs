@@ -30,7 +30,8 @@ const LABS = [
   ['web', '../../lessons/pics/web-18-festival.jpg', 0, 'Web Lab', 'Build a real website', '#5bc0eb', .5],
 ];
 const N_LESSONS = readdirSync(join(ROOT, 'lessons/pics')).filter(f => f.endsWith('.jpg')).length;
-const TIMES = { labs: 4, teach: 4 + LABS.length * PER, where: 8 + LABS.length * PER, end: 10 + LABS.length * PER };
+const L0 = 4 + LABS.length * PER;
+const TIMES = { labs: 4, collab: L0, teach: L0 + 4, safe: L0 + 8, where: L0 + 12, end: L0 + 14 };
 const LENGTH = TIMES.end + 4;
 const SHAPES = { vertical: ['v', 1080, 1920], square: ['s', 1080, 1080], wide: ['w', 1920, 1080] };
 
@@ -41,7 +42,7 @@ function frames() {
     const dir = join(OUT, 'frames', id); rmSync(dir, { recursive: true, force: true }); mkdirSync(dir, { recursive: true });
     const file = join(ROOT, 'guide/media', src);
     if (src.endsWith('.jpg')) execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', file, '-q:v', '2', join(dir, '001.jpg')]);
-    else execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(at), '-i', file, '-t', String(PER + .1), '-r', String(FPS), '-q:v', '2', join(dir, '%03d.jpg')]);
+    else execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(at), '-i', file, '-t', String((id === 'collab' ? 4 : PER) + .1), '-r', String(FPS), '-q:v', '2', join(dir, '%03d.jpg')]);
     n[id] = readdirSync(dir).length;
   }
   return n;
@@ -53,6 +54,8 @@ function spec(mode, n) {
   return {
     mode, length: LENGTH, per: PER, times: TIMES, collab: n.collab, pics: pick,
     labs: LABS.map(([id, src, , title, sub, col, fx, zoom, fy]) => ({ id, title, sub, col, fx, zoom, fy, frames: n[id], still: src.endsWith('.jpg') })),
+    together: { id: 'collab', title: 'Build it together', sub: 'Up to 6 classmates on one project, live', col: '#ae853e', fx: .6 },
+    safe: ['No public forums or galleries', 'No strangers: teamwork is invite-only', 'Teachers see their own class’s work'],
     teach: [`${N_LESSONS} ready-made lessons`, 'Plans, slides and starter projects', 'Classes, hand-in and live teamwork'],
     where: ['Laptops', 'Chromebooks', 'iPads', 'Ages 5–14'],
   };

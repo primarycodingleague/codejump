@@ -97,6 +97,13 @@ function build() {
       <div id="tLines"></div>
     </div>
   </div>
+  <div class="scene" id="safe">
+    <div class="abs" id="sBox">
+      <span class="chip" id="sChip" style="background:#3ddc97;color:${INK}">For parents and schools</span>
+      <div class="lz" id="sH1">Safe by design</div>
+      <div id="sLines"></div>
+    </div>
+  </div>
   <div class="scene" id="where">
     <div class="abs center" id="wText"><div class="lz" id="wH1">No installs.<br>Just open your browser.</div>
     <div id="wChips"></div></div>
@@ -126,6 +133,9 @@ function build() {
     Array.from({ length: per }, (_, i) => `<img src="${PICS[(r * per + i) % PICS.length]}" style="width:${px(iw - 16)};height:${px(rh - 16)}">`).join('') + '</div>').join('');
   E.tShade.style.background = MODE === 'w' ? 'linear-gradient(90deg,rgba(14,13,18,.45) 0%,rgba(14,13,18,.88) 45%,rgba(14,13,18,.95) 100%)' : 'linear-gradient(180deg,rgba(14,13,18,.5) 0%,rgba(14,13,18,.9) 28%,rgba(14,13,18,.9) 72%,rgba(14,13,18,.5) 100%)';
   const T = L.teach; place(E.tBox, T.x, T.y, T.w); E.tH1.style.fontSize = px(T.h1); E.tH1.style.margin = px(26) + ' 0 ' + px(40);
+  place(E.sBox, T.x, MODE === 'v' ? T.y + 60 : T.y, T.w); if (MODE === 'w') place(E.sBox, 420, 230, 1200);
+  E.sH1.style.fontSize = px(T.h1); E.sH1.style.margin = px(26) + ' 0 ' + px(40);
+  E.sLines.innerHTML = S.safe.map(s => `<div class="tline" style="font-size:${px(T.line)};margin-bottom:${px(T.gap)};line-height:1.15"><span class="tick" style="background:#3ddc97;width:${px(T.line * 1.25)};height:${px(T.line * 1.25)};font-size:${px(T.line * .8)}">✓</span><span>${s}</span></div>`).join('');
   E.tLines.innerHTML = S.teach.map(s => `<div class="tline" style="font-size:${px(T.line)};margin-bottom:${px(T.gap)};line-height:1.15"><span class="tick" style="width:${px(T.line * 1.25)};height:${px(T.line * 1.25)};font-size:${px(T.line * .8)}">✓</span><span>${s}</span></div>`).join('');
   // where
   const hy = MODE === 'v' ? 600 : MODE === 's' ? 250 : 250, hs = MODE === 'v' ? 122 : MODE === 's' ? 108 : 124;
@@ -145,8 +155,8 @@ const tf = (e, o, t) => { e.style.opacity = o; e.style.transform = t || ''; };
 
 window.render = t => {
   const T = S.times; // starts: labs, teach, where, end
-  const sc = t < T.labs ? 'hook' : t < T.teach ? 'labs' : t < T.where ? 'teach' : t < T.end ? 'where' : 'end';
-  for (const k of ['hook', 'labs', 'teach', 'where', 'end']) show(E[k], k === sc);
+  const sc = t < T.labs ? 'hook' : t < T.teach ? 'labs' : t < T.safe ? 'teach' : t < T.where ? 'safe' : t < T.end ? 'where' : 'end';
+  for (const k of ['hook', 'labs', 'teach', 'safe', 'where', 'end']) show(E[k], k === sc);
   let glow = GOLD, gx = 50, gy = 38;
   if (sc === 'hook') {
     tf(E.hLogo, out(seg(t, 0.05, .45)), `scale(${lerp(.6, 1, back(seg(t, 0.05, .55)))})`);
@@ -154,15 +164,16 @@ window.render = t => {
     [...E.hWords.children].forEach((w, i) => tf(w, seg(t, 2 + i * .5, .12), `scale(${lerp(.5, 1, back(seg(t, 2 + i * .5, .3)))})`));
     const k = 1 - seg(t, T.labs - .14, .14); E.hook.style.opacity = k;
   } else if (sc === 'labs') {
-    const i = Math.min(S.labs.length - 1, Math.floor((t - T.labs) / S.per)), lab = S.labs[i], p = t - T.labs - i * S.per;
+    const tog = t >= T.collab, i = tog ? -1 : Math.min(S.labs.length - 1, Math.floor((t - T.labs) / S.per)), lab = tog ? S.together : S.labs[i];
+    const p = tog ? t - T.collab : t - T.labs - i * S.per, D = tog ? T.teach - T.collab : S.per;
     glow = lab.col;
     const fr = FR[lab.id], f = fr[Math.min(fr.length - 1, Math.floor(p * 25))];
     E.cx.fillStyle = '#000'; E.cx.fillRect(0, 0, E.cv.width, E.cv.height);
-    cover(E.cx, f, E.cv.width, E.cv.height, (lab.zoom || 1) * (lab.still ? lerp(1.02, 1.12, p / S.per) : lerp(1, 1.03, p / S.per)), lab.fx, lab.fy);
-    const inn = out(seg(p, 0, .32)), ex = seg(p, S.per - .12, .12);
+    cover(E.cx, f, E.cv.width, E.cv.height, (lab.zoom || 1) * (lab.still ? lerp(1.02, 1.12, p / D) : lerp(1, 1.03, p / D)), lab.fx, lab.fy);
+    const inn = out(seg(p, 0, .32)), ex = seg(p, D - .12, .12);
     tf(E.card, inn * (1 - ex), `translateX(${px(lerp(150, 0, inn) - 90 * ex)}) scale(${lerp(.92, 1, inn)}) rotate(${lerp(2.5, 0, inn)}deg)`);
     E.card.style.borderColor = lab.col;
-    E.lChip.textContent = `Lab ${i + 1} of ${S.labs.length}`; E.lChip.style.background = lab.col; E.lChip.style.color = INK;
+    E.lChip.textContent = tog ? 'Collaboration mode' : `Lab ${i + 1} of ${S.labs.length}`; E.lDots.style.visibility = tog ? 'hidden' : ''; E.lChip.style.background = lab.col; E.lChip.style.color = INK;
     tf(E.lNum, seg(p, .05, .15) * (1 - ex));
     E.lTitle.textContent = lab.title; tf(E.lTitle, seg(p, .08, .12) * (1 - ex), `scale(${lerp(.7, 1, back(seg(p, .08, .34)))})`);
     E.lTitle.style.transformOrigin = L.align === 'left' ? 'left center' : 'center';
@@ -171,10 +182,15 @@ window.render = t => {
   } else if (sc === 'teach') {
     const p = t - T.teach;
     for (const r of E.mosaic.children) { const n = +r.dataset.r, dir = n % 2 ? 1 : -1; r.style.transform = `translateX(${px(dir * p * 26 - (dir > 0 ? 300 : 40))})`; }
-    E.teach.style.opacity = Math.min(seg(p, 0, .2), 1 - seg(t, T.where - .14, .14));
+    E.teach.style.opacity = Math.min(seg(p, 0, .2), 1 - seg(t, T.safe - .14, .14));
     tf(E.tChip, seg(p, .05, .15)); tf(E.tH1, seg(p, .12, .15), `scale(${lerp(.75, 1, back(seg(p, .12, .34)))})`); E.tH1.style.transformOrigin = 'left center';
     [...E.tLines.children].forEach((l, i) => tf(l, seg(p, .5 + i * .5, .14), `translateX(${px(lerp(-50, 0, out(seg(p, .5 + i * .5, .3))))})`));
     glow = '#3a2f18';
+  } else if (sc === 'safe') {
+    const p = t - T.safe; glow = '#1d6b4a';
+    E.safe.style.opacity = 1 - seg(t, T.where - .14, .14);
+    tf(E.sChip, seg(p, .05, .15)); tf(E.sH1, seg(p, .12, .15), `scale(${lerp(.75, 1, back(seg(p, .12, .34)))})`); E.sH1.style.transformOrigin = 'left center';
+    [...E.sLines.children].forEach((l, i) => tf(l, seg(p, .5 + i * .5, .14), `translateX(${px(lerp(-50, 0, out(seg(p, .5 + i * .5, .3))))})`));
   } else if (sc === 'where') {
     const p = t - T.where; gy = 50;
     tf(E.wH1, seg(p, 0, .15), `scale(${lerp(.8, 1, back(seg(p, 0, .34)))})`);

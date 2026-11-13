@@ -1,6 +1,6 @@
 # Launch video
 
-`node promo/make.mjs` makes the 34-second launch video in three shapes (about 2½ minutes):
+`node promo/make.mjs` makes the 42-second launch video in three shapes (about 2½ minutes):
 
 - `codejump-launch-vertical.mp4` 1080×1920: Reels, TikTok, Shorts, Stories
 - `codejump-launch-square.mp4` 1080×1080: Instagram and Facebook feeds

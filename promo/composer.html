@@ -1,0 +1,192 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>CodeJump launch video composer</title>
+<style>
+@font-face{font-family:'Montserrat';font-weight:500;src:url(../guide/tools/fonts/montserrat-latin-500-normal.woff2) format('woff2');}
+@font-face{font-family:'Montserrat';font-weight:700;src:url(../guide/tools/fonts/montserrat-latin-700-normal.woff2) format('woff2');}
+@font-face{font-family:'Montserrat';font-weight:800;src:url(../guide/tools/fonts/montserrat-latin-800-normal.woff2) format('woff2');}
+@font-face{font-family:'Lazydog';src:url(../home/Lazydog.otf);}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0e0d12;color:#fff;font-family:Montserrat,sans-serif;}
+*{box-sizing:border-box;}
+#root{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;}
+.abs{position:absolute;}
+.scene{position:absolute;left:0;top:0;width:100%;height:100%;}
+#bg{position:absolute;inset:0;}
+#dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) calc(var(--u)*1.6),transparent calc(var(--u)*2));background-size:calc(var(--u)*44) calc(var(--u)*44);}
+.lz{font-family:Lazydog,Montserrat,sans-serif;font-weight:400;line-height:.95;letter-spacing:.01em;}
+.center{text-align:center;}
+.chip{display:inline-block;font-weight:800;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:calc(var(--u)*10) calc(var(--u)*24);font-size:calc(var(--u)*26);}
+#card{border-radius:calc(var(--u)*28);overflow:hidden;box-shadow:0 calc(var(--u)*30) calc(var(--u)*90) rgba(0,0,0,.6);border:calc(var(--u)*5) solid #ae853e;background:#000;}
+#card canvas{display:block;width:100%;height:100%;}
+#mosaic{position:absolute;inset:0;}
+#mosaic .row{position:absolute;left:0;display:flex;gap:calc(var(--u)*16);}
+#mosaic img{display:block;border-radius:calc(var(--u)*14);object-fit:cover;}
+.tline{font-weight:800;display:flex;align-items:center;gap:calc(var(--u)*22);}
+.tick{flex:none;border-radius:50%;background:#ae853e;color:#0e0d12;display:flex;align-items:center;justify-content:center;font-weight:800;}
+.pill{display:inline-block;border-radius:999px;font-weight:800;}
+</style></head>
+<body><div id="root"></div>
+<script>
+// A deterministic composer for the launch video. load(spec) once, then render(t) draws the frame at t seconds.
+// The cut follows the music: 120 beats a minute, so one bar = 2 s and every scene starts on a bar.
+const GOLD = '#ae853e', INK = '#0e0d12';
+const LOGO = `<svg viewBox="0 0 200 142" style="display:block;width:100%;height:auto">
+<rect x="66" y="8" width="68" height="10" rx="2" fill="#fff"/><rect x="54" y="19" width="92" height="10" fill="#fff"/><rect x="46" y="30" width="108" height="8" fill="#fff"/>
+<text x="100" y="27" font-family="Montserrat,sans-serif" font-weight="800" font-size="11" fill="#111" text-anchor="middle" letter-spacing="3">CODE</text>
+<text x="100" y="88" font-family="Montserrat,sans-serif" font-weight="800" font-size="56" fill="#fff" text-anchor="middle" letter-spacing="-2">JUMP</text>
+${Array.from({ length: 12 }, (_, i) => `<rect x="${8 + i * 16}" y="98" width="12" height="7" fill="#fff"/>`).join('')}
+<text x="100" y="122" font-family="Montserrat,sans-serif" font-weight="700" font-size="8" fill="#fff" text-anchor="middle" letter-spacing="1.5" opacity=".7">BY PRIMARY CODING LEAGUE</text></svg>`;
+
+const clamp = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x;
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const out = x => { x = clamp(x); return 1 - Math.pow(1 - x, 3); };
+const back = x => { x = clamp(x); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); }; // overshoots a little
+const lerp = (a, b, k) => a + (b - a) * k;
+const seg = (t, a, d) => clamp((t - a) / d);
+
+let S = null, W = 0, H = 0, U = 1, MODE = 'v', FR = {}, PICS = [], L = null;
+const root = document.getElementById('root');
+const el = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; };
+const img = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('missing ' + src)); i.src = src; });
+const px = n => (n * U) + 'px';
+function place(e, x, y, w, h) { e.style.left = px(x); e.style.top = px(y); if (w != null) e.style.width = px(w); if (h != null) e.style.height = px(h); }
+
+// where things go for each shape (in units: the short side is 1080)
+const LAY = {
+  v: { W: 1080, H: 1920, card: [40, 470, 1000, 750], num: [0, 350, 1080], title: [40, 1265, 1000, 128], sub: [90, 1420, 900, 46], dotsY: 1580, align: 'center', brand: [440, 190, 200],
+       hook: { logo: [240, 420, 600], h1: [40, 1010, 1000, 150], words: [40, 1240, 1000, 62] }, teach: { x: 90, y: 520, w: 900, h1: 150, line: 50, gap: 36 }, end: { logo: [270, 470, 540], h1: [40, 990, 1000, 120], url: 1220, urlSize: 64 } },
+  s: { W: 1080, H: 1080, card: [110, 120, 860, 484], num: [0, 44, 1080], title: [40, 650, 1000, 120], sub: [60, 790, 960, 42], dotsY: 900, align: 'center', brand: null,
+       hook: { logo: [330, 110, 420], h1: [40, 520, 1000, 132], words: [40, 720, 1000, 52] }, teach: { x: 110, y: 190, w: 860, h1: 128, line: 46, gap: 30 }, end: { logo: [340, 130, 400], h1: [40, 520, 1000, 108], url: 700, urlSize: 58 } },
+  w: { W: 1920, H: 1080, card: [80, 200, 1130, 636], num: [1290, 340, 560], title: [1290, 420, 580, 82], sub: [1290, 560, 540, 40], dotsY: 760, align: 'left', brand: [1700, 900, 150],
+       hook: { logo: [200, 290, 520], h1: [840, 330, 1000, 150], words: [840, 560, 1000, 56] }, teach: { x: 1010, y: 240, w: 800, h1: 130, line: 44, gap: 30 }, end: { logo: [710, 110, 500], h1: [260, 520, 1400, 112], url: 700, urlSize: 60 } },
+};
+
+window.load = async (spec, base) => {
+  S = spec; W = innerWidth; H = innerHeight; MODE = spec.mode; L = LAY[MODE]; U = W / L.W;
+  root.style.setProperty('--u', U + 'px');
+  for (const lab of spec.labs) FR[lab.id] = await Promise.all(Array.from({ length: lab.frames }, (_, i) => img(base + 'frames/' + lab.id + '/' + String(i + 1).padStart(3, '0') + '.jpg')));
+  FR.collab = await Promise.all(Array.from({ length: spec.collab }, (_, i) => img(base + 'frames/collab/' + String(i + 1).padStart(3, '0') + '.jpg')));
+  PICS = spec.pics;
+  await Promise.all(['500', '700', '800'].map(w => document.fonts.load(w + ' 20px Montserrat'))); await document.fonts.load('20px Lazydog');
+  build();
+  await Promise.all([...document.images].map(i => i.decode().catch(() => 0)));
+  return { length: spec.length };
+};
+
+let E = {};
+function build() {
+  const A = L.align, ax = A === 'center' ? 'center' : 'flex-start';
+  root.innerHTML = `<div id="bg"></div><div id="dots"></div>
+  <div class="scene" id="hook">
+    <div class="abs" id="hLogo">${LOGO}</div>
+    <div class="abs ${MODE === 'w' ? '' : 'center'}" id="hText"><div class="lz" id="hH1">Let’s get coding!</div>
+    <div id="hWords" style="font-weight:800"></div></div>
+  </div>
+  <div class="scene" id="labs">
+    <div class="abs" id="card"><canvas id="cv" width="960" height="540"></canvas></div>
+    <div class="abs" id="lNum" style="text-align:${A}"><span class="chip" id="lChip"></span></div>
+    <div class="abs" id="lText" style="text-align:${A}"><div class="lz" id="lTitle"></div>
+    <div id="lSub" style="font-weight:700;line-height:1.25;color:#e9e6f2"></div>
+    <div id="lDots" style="display:flex;gap:${px(14)};justify-content:${ax}"></div></div>
+    <div class="abs" id="lBrand" style="opacity:.9">${LOGO}</div>
+  </div>
+  <div class="scene" id="teach">
+    <div id="mosaic"></div><div class="abs" id="tShade" style="inset:0"></div>
+    <div class="abs" id="tBox">
+      <span class="chip" id="tChip" style="background:${GOLD};color:${INK}">For teachers</span>
+      <div class="lz" id="tH1">Ready to teach</div>
+      <div id="tLines"></div>
+    </div>
+  </div>
+  <div class="scene" id="where">
+    <div class="abs center" id="wText"><div class="lz" id="wH1">No installs.<br>Just open your browser.</div>
+    <div id="wChips"></div></div>
+  </div>
+  <div class="scene" id="end">
+    <div class="abs" id="eLogo">${LOGO}</div>
+    <div class="abs center" id="eText"><div class="lz" id="eH1">Start building today</div>
+    <div id="eUrl"><span class="pill" id="eUrlPill" style="background:${GOLD};color:${INK}">codejump.co.uk</span></div>
+    <div id="eSub" style="font-weight:700;color:#cfcbdc">Games · stories · robots · AI · 3D worlds · websites</div></div>
+  </div>`;
+  for (const e of root.querySelectorAll('[id]')) E[e.id] = e;
+  E.cx = E.cv.getContext('2d');
+  // hook
+  place(E.hLogo, ...L.hook.logo); place(E.hText, L.hook.h1[0], L.hook.h1[1], L.hook.h1[2]); E.hH1.style.fontSize = px(L.hook.h1[3]);
+  E.hWords.style.fontSize = px(L.hook.words[3]); E.hWords.style.marginTop = px(56); E.hWords.style.lineHeight = '1.35';
+  E.hWords.innerHTML = ['Design it.', 'Code it.', 'Play it.', 'Share it.'].map((w, i) => `<span style="display:inline-block;margin:0 ${px(9)};color:${i === 3 ? GOLD : '#fff'}">${w}</span>`).join(MODE === 'w' ? '' : (''));
+  // labs
+  place(E.card, ...L.card); E.cv.width = Math.round(L.card[2] * 1.0); E.cv.height = Math.round(L.card[3] * 1.0);
+  place(E.lNum, L.num[0], L.num[1], L.num[2]);
+  place(E.lText, L.title[0], L.title[1], L.title[2]); E.lTitle.style.fontSize = px(L.title[3]);
+  E.lSub.style.fontSize = px(L.sub[3]); E.lSub.style.margin = px(30) + ' 0 ' + px(48);
+  E.lDots.innerHTML = S.labs.map(() => `<i style="display:block;width:${px(22)};height:${px(22)};border-radius:50%;background:#3a3748"></i>`).join('');
+  if (L.brand) place(E.lBrand, L.brand[0], L.brand[1], L.brand[2]); else E.lBrand.style.display = 'none';
+  // teachers: rows of lesson pictures drifting sideways
+  const rows = MODE === 'w' ? 4 : MODE === 's' ? 4 : 7, rh = L.H / rows, iw = rh * 16 / 9, per = Math.ceil(L.W / iw) + 3;
+  E.mosaic.innerHTML = Array.from({ length: rows }, (_, r) => `<div class="row" data-r="${r}" style="top:${px(r * rh + 8)}">` +
+    Array.from({ length: per }, (_, i) => `<img src="${PICS[(r * per + i) % PICS.length]}" style="width:${px(iw - 16)};height:${px(rh - 16)}">`).join('') + '</div>').join('');
+  E.tShade.style.background = MODE === 'w' ? 'linear-gradient(90deg,rgba(14,13,18,.45) 0%,rgba(14,13,18,.88) 45%,rgba(14,13,18,.95) 100%)' : 'linear-gradient(180deg,rgba(14,13,18,.5) 0%,rgba(14,13,18,.9) 28%,rgba(14,13,18,.9) 72%,rgba(14,13,18,.5) 100%)';
+  const T = L.teach; place(E.tBox, T.x, T.y, T.w); E.tH1.style.fontSize = px(T.h1); E.tH1.style.margin = px(26) + ' 0 ' + px(40);
+  E.tLines.innerHTML = S.teach.map(s => `<div class="tline" style="font-size:${px(T.line)};margin-bottom:${px(T.gap)};line-height:1.15"><span class="tick" style="width:${px(T.line * 1.25)};height:${px(T.line * 1.25)};font-size:${px(T.line * .8)}">✓</span><span>${s}</span></div>`).join('');
+  // where
+  const hy = MODE === 'v' ? 600 : MODE === 's' ? 250 : 250, hs = MODE === 'v' ? 122 : MODE === 's' ? 108 : 124;
+  place(E.wText, 30, hy, L.W - 60); E.wH1.style.fontSize = px(hs); E.wH1.style.lineHeight = '1.05'; E.wChips.style.marginTop = px(70);
+  E.wChips.innerHTML = S.where.map((s, i) => `<span class="pill" style="margin:${px(10)};padding:${px(18)} ${px(36)};font-size:${px(MODE === 'w' ? 44 : 42)};${i === S.where.length - 1 ? `background:${GOLD};color:${INK}` : 'background:#262333;color:#fff'}">${s}</span>`).join('');
+  // end
+  const N = L.end; place(E.eLogo, ...N.logo); place(E.eText, N.h1[0], N.h1[1], N.h1[2]); E.eH1.style.fontSize = px(N.h1[3]); E.eUrl.style.margin = px(64) + ' 0 ' + px(60); E.eUrlPill.style.fontSize = px(N.urlSize); E.eUrlPill.style.padding = px(22) + ' ' + px(56);
+  E.eSub.style.fontSize = px(MODE === 'w' ? 34 : 32); E.eSub.style.lineHeight = '1.4';
+}
+
+function cover(c, im, cw, ch, zoom, fx, fy) { // draw the picture to fill the card, cropping the sides (fx = which part to keep, 0–1)
+  const s = Math.max(cw / im.width, ch / im.height) * zoom, w = im.width * s, h = im.height * s;
+  c.imageSmoothingQuality = 'high'; c.drawImage(im, (cw - w) * (fx ?? .5), (ch - h) * (fy ?? .5), w, h);
+}
+const show = (e, on) => { e.style.display = on ? '' : 'none'; };
+const tf = (e, o, t) => { e.style.opacity = o; e.style.transform = t || ''; };
+
+window.render = t => {
+  const T = S.times; // starts: labs, teach, where, end
+  const sc = t < T.labs ? 'hook' : t < T.teach ? 'labs' : t < T.where ? 'teach' : t < T.end ? 'where' : 'end';
+  for (const k of ['hook', 'labs', 'teach', 'where', 'end']) show(E[k], k === sc);
+  let glow = GOLD, gx = 50, gy = 38;
+  if (sc === 'hook') {
+    tf(E.hLogo, out(seg(t, 0.05, .45)), `scale(${lerp(.6, 1, back(seg(t, 0.05, .55)))})`);
+    tf(E.hH1, out(seg(t, 1, .3)), `translateY(${px(lerp(60, 0, out(seg(t, 1, .4))))}) rotate(${lerp(-4, -2, out(seg(t, 1, .4)))}deg)`);
+    [...E.hWords.children].forEach((w, i) => tf(w, seg(t, 2 + i * .5, .12), `scale(${lerp(.5, 1, back(seg(t, 2 + i * .5, .3)))})`));
+    const k = 1 - seg(t, T.labs - .14, .14); E.hook.style.opacity = k;
+  } else if (sc === 'labs') {
+    const i = Math.min(S.labs.length - 1, Math.floor((t - T.labs) / S.per)), lab = S.labs[i], p = t - T.labs - i * S.per;
+    glow = lab.col;
+    const fr = FR[lab.id], f = fr[Math.min(fr.length - 1, Math.floor(p * 25))];
+    E.cx.fillStyle = '#000'; E.cx.fillRect(0, 0, E.cv.width, E.cv.height);
+    cover(E.cx, f, E.cv.width, E.cv.height, (lab.zoom || 1) * (lab.still ? lerp(1.02, 1.12, p / S.per) : lerp(1, 1.03, p / S.per)), lab.fx, lab.fy);
+    const inn = out(seg(p, 0, .32)), ex = seg(p, S.per - .12, .12);
+    tf(E.card, inn * (1 - ex), `translateX(${px(lerp(150, 0, inn) - 90 * ex)}) scale(${lerp(.92, 1, inn)}) rotate(${lerp(2.5, 0, inn)}deg)`);
+    E.card.style.borderColor = lab.col;
+    E.lChip.textContent = `Lab ${i + 1} of ${S.labs.length}`; E.lChip.style.background = lab.col; E.lChip.style.color = INK;
+    tf(E.lNum, seg(p, .05, .15) * (1 - ex));
+    E.lTitle.textContent = lab.title; tf(E.lTitle, seg(p, .08, .12) * (1 - ex), `scale(${lerp(.7, 1, back(seg(p, .08, .34)))})`);
+    E.lTitle.style.transformOrigin = L.align === 'left' ? 'left center' : 'center';
+    E.lSub.textContent = lab.sub; tf(E.lSub, seg(p, .3, .2) * (1 - ex), `translateY(${px(lerp(24, 0, out(seg(p, .3, .3))))})`);
+    [...E.lDots.children].forEach((d, j) => { d.style.background = j < i ? '#8a8699' : j === i ? lab.col : '#3a3748'; d.style.transform = j === i ? `scale(${lerp(1, 1.35, back(seg(p, 0, .3)))})` : ''; });
+  } else if (sc === 'teach') {
+    const p = t - T.teach;
+    for (const r of E.mosaic.children) { const n = +r.dataset.r, dir = n % 2 ? 1 : -1; r.style.transform = `translateX(${px(dir * p * 26 - (dir > 0 ? 300 : 40))})`; }
+    E.teach.style.opacity = Math.min(seg(p, 0, .2), 1 - seg(t, T.where - .14, .14));
+    tf(E.tChip, seg(p, .05, .15)); tf(E.tH1, seg(p, .12, .15), `scale(${lerp(.75, 1, back(seg(p, .12, .34)))})`); E.tH1.style.transformOrigin = 'left center';
+    [...E.tLines.children].forEach((l, i) => tf(l, seg(p, .5 + i * .5, .14), `translateX(${px(lerp(-50, 0, out(seg(p, .5 + i * .5, .3))))})`));
+    glow = '#3a2f18';
+  } else if (sc === 'where') {
+    const p = t - T.where; gy = 50;
+    tf(E.wH1, seg(p, 0, .15), `scale(${lerp(.8, 1, back(seg(p, 0, .34)))})`);
+    [...E.wChips.children].forEach((c, i) => tf(c, seg(p, .5 + i * .25, .12), `scale(${lerp(.5, 1, back(seg(p, .5 + i * .25, .3)))})`));
+    E.where.style.opacity = 1 - seg(t, T.end - .14, .14);
+  } else {
+    const p = t - T.end; gy = 45;
+    tf(E.eLogo, out(seg(p, 0, .3)), `scale(${lerp(.7, 1, back(seg(p, 0, .5)))})`);
+    tf(E.eH1, seg(p, .5, .15), `scale(${lerp(.75, 1, back(seg(p, .5, .34)))}) rotate(-2deg)`);
+    tf(E.eUrlPill, seg(p, 1, .12), `scale(${lerp(.5, 1, back(seg(p, 1, .34))) * (1 + .03 * Math.sin(Math.max(0, p - 1.4) * Math.PI * 2))})`); E.eUrlPill.style.display = 'inline-block';
+    tf(E.eSub, seg(p, 1.5, .3));
+  }
+  E.bg.style.background = `radial-gradient(ellipse 85% 60% at ${gx}% ${gy}%, ${glow}55 0%, ${glow}14 45%, transparent 75%), ${INK}`;
+};
+</script></body></html>

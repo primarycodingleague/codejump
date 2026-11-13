@@ -112,7 +112,7 @@ function build() {
     <div class="abs" id="eLogo">${LOGO}</div>
     <div class="abs center" id="eText"><div class="lz" id="eH1">Start building today</div>
     <div id="eUrl"><span class="pill" id="eUrlPill" style="background:${GOLD};color:${INK}">codejump.co.uk</span></div>
-    <div id="eSub" style="font-weight:700;color:#cfcbdc">Games · stories · robots · AI · 3D worlds · websites</div></div>
+    <div id="eSub" style="font-weight:800;color:#fff">Completely free. <span style="color:#ae853e">Always.</span></div></div>
   </div>`;
   for (const e of root.querySelectorAll('[id]')) E[e.id] = e;
   E.cx = E.cv.getContext('2d');
@@ -143,7 +143,7 @@ function build() {
   E.wChips.innerHTML = S.where.map((s, i) => `<span class="pill" style="margin:${px(10)};padding:${px(18)} ${px(36)};font-size:${px(MODE === 'w' ? 44 : 42)};${i === S.where.length - 1 ? `background:${GOLD};color:${INK}` : 'background:#262333;color:#fff'}">${s}</span>`).join('');
   // end
   const N = L.end; place(E.eLogo, ...N.logo); place(E.eText, N.h1[0], N.h1[1], N.h1[2]); E.eH1.style.fontSize = px(N.h1[3]); E.eUrl.style.margin = px(64) + ' 0 ' + px(60); E.eUrlPill.style.fontSize = px(N.urlSize); E.eUrlPill.style.padding = px(22) + ' ' + px(56);
-  E.eSub.style.fontSize = px(MODE === 'w' ? 34 : 32); E.eSub.style.lineHeight = '1.4';
+  E.eSub.style.fontSize = px(MODE === 'w' ? 58 : 56); E.eSub.style.lineHeight = '1.4';
 }
 
 function cover(c, im, cw, ch, zoom, fx, fy) { // draw the picture to fill the card, cropping the sides (fx = which part to keep, 0–1)

@@ -57,7 +57,7 @@ function spec(mode, n) {
     together: { id: 'collab', title: 'Build it together', sub: 'Up to 6 classmates on one project, live', col: '#ae853e', fx: .6 },
     safe: ['No public forums or galleries', 'No strangers: teamwork is invite-only', 'Teachers see their own class’s work'],
     teach: [`${N_LESSONS} ready-made lessons`, 'Plans, slides and starter projects', 'Classes, hand-in and live teamwork'],
-    where: ['Laptops', 'Chromebooks', 'iPads', 'Ages 5–14'],
+    where: ['Laptops', 'Chromebooks', 'iPads', 'Ages 5–14', 'Free. Always.'],
   };
 }
 

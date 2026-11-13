@@ -84,6 +84,7 @@ for (const name of shapes) {
   const file = join(HERE, `codejump-launch-${name}.mp4`), enc = encoder(file, wav);
   for (let f = 0; f < LENGTH * FPS; f++) { await page.evaluate(t => render(t), f / FPS); await enc.write(await page.screenshot({ type: 'jpeg', quality: 95 })); }
   await enc.end(); await page.close();
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', file, '-an', '-c:v', 'copy', '-movflags', '+faststart', file.replace(/\.mp4$/, '-silent.mp4')]); // for adding a track in the social app
   console.log(file, LENGTH + ' s');
 }
 await b.close();

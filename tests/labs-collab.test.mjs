@@ -43,12 +43,12 @@ async function person(uid) {
   return page;
 }
 const wf = (pg, fn, arg, t = 30000) => pg.waitForFunction(fn, arg, { timeout: t, polling: 150 }).then(() => true, () => false);
-const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp' };
-const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb' };
+const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp', applab: 'appLabApp' };
+const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb', applab: 'startNewAppLab' };
 const ready = (pg, lab) => wf(pg, ([lab, app]) => projectType === lab && eval(app) && (!eval(app)._ws || eval(app)._ws()) && labLive.base, [lab, APP[lab]], 45000);
 try {
   const A = await person('a'), B = await person('b'), C = await person('c');
-  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web').split(',')) {
+  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web,applab').split(',')) {
     newRoom();
     for (const p of [A, B, C]) await p.evaluate(() => { try { collabDisconnect(true); } catch (e) { /* not in one */ } });
     await A.evaluate(f => window[f]('ks2'), START[lab]);
@@ -118,6 +118,21 @@ try {
       ok(await wf(A, () => webApp._proj().site.order.length === 4 && webApp._proj().pqqqqqq && webApp._proj().pqqqqqq.name === 'Ben’s page'), 'web: a page Ben adds appears for Ana');
       await C.evaluate(r => collabConnect(r), 'room-web');
       ok(await ready(C, lab) && await wf(C, () => { const p = webApp._proj(), o = p.site.order; return o.length === 4 && p['p' + o[0]].blocks.some(b => b.t === 'quote') && p['p' + o[1]].blocks.some(b => b.t === 'card'); }), 'web: Cara joins late and gets every page');
+    }
+    if (lab === 'applab') {
+      await A.evaluate(() => document.querySelector('.al-starter[data-starter="kind"]').click());
+      ok(await wf(B, () => appLabApp._proj().app.title === 'Kindness counter' && appLabApp._proj().app.order.length === 2), 'applab: the starter app Ana picks reaches Ben (2 screens)');
+      await Promise.all([
+        A.evaluate(() => { appLabApp._select('btnone'); appLabApp._add('slider'); }),
+        B.evaluate(() => { appLabApp._select('btnthr'); appLabApp._add('switch'); })]);
+      const both = () => { const p = appLabApp._proj(); return p.sscrone.parts.some(x => x.t === 'slider') && p.sscrtwo.parts.some(x => x.t === 'switch'); };
+      ok(await wf(A, both) && await wf(B, both), 'applab: Ana and Ben add parts to different screens at the same moment and both stay');
+      await B.evaluate(() => { appLabApp._tab('code'); });
+      await wf(B, () => !!appLabApp._blocks());
+      await B.evaluate(() => { const ws = appLabApp._blocks(); const bl = ws.newBlock('app_message'); bl.initSvg(); bl.render(); bl.moveBy(600, 600); });
+      ok(await wf(A, () => JSON.stringify(appLabApp._proj().code).includes('app_message')), 'applab: Ben’s new block reaches Ana');
+      await C.evaluate(r => collabConnect(r), 'room-applab');
+      ok(await ready(C, lab) && await wf(C, () => { const p = appLabApp._proj(); return p.sscrone.parts.some(x => x.t === 'slider') && p.sscrtwo.parts.some(x => x.t === 'switch') && JSON.stringify(p.code).includes('app_message'); }), 'applab: Cara joins late and gets both screens and the code');
     }
   }
   const errs = errors.filter(e => !/WebSocket|Failed to load resource|sandboxed|allow-scripts/.test(e));

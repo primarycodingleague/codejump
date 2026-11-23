@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex">
+<title>App · CodeJump</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #111; overflow: hidden; font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; }
+  #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #host { position: absolute; left: 0; top: 0; width: 360px; height: 640px; transform-origin: 0 0; }
+  #note { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: #eee; text-align: center; padding: 24px; box-sizing: border-box; }
+  #note h1 { font-size: 22px; margin: 0; } #note p { margin: 0; color: #bbb; max-width: 320px; line-height: 1.45; }
+  #note a { color: #f5c76b; }
+  .spin { width: 34px; height: 34px; border: 4px solid #444; border-top-color: #ae853e; border-radius: 50%; animation: s 0.8s linear infinite; } @keyframes s { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="note"><div class="spin"></div><p>Opening the app…</p></div>
+<div id="stage" hidden><div id="host"></div></div>
+<script type="module">
+// The App Lab's phone player: codejump.co.uk/app/?s=CODE opens an app full screen (a cloud share made by "Put it on my phone").
+// #a=… carries a small app in the link itself, for when the cloud can't be reached. It runs the app with app-run.js, the
+// same code the App Lab uses, and never loads Blockly. "remember" blocks save on this phone (localStorage).
+import * as M from './app-model.js';
+import * as R from './app-run.js';
+const CLOUD_URL = 'https://codejump-cloud.primarycodingleague.workers.dev';
+const note = document.getElementById('note'), stage = document.getElementById('stage'), host = document.getElementById('host');
+function fail(title, msg) { note.innerHTML = `<h1>${M.esc(title)}</h1><p>${msg}</p><p><a href="https://codejump.co.uk/">Make your own app on CodeJump</a></p>`; }
+async function getApp() {
+  const q = new URLSearchParams(location.search), code = q.get('s');
+  if (code) {
+    const r = await fetch(CLOUD_URL + '/share/' + encodeURIComponent(code)); const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.payload || !d.payload.applab) throw new Error('not found');
+    return d.payload.applab;
+  }
+  const m = /[#&]a=([^&]+)/.exec(location.hash);
+  if (m) { const b = m[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); }
+  throw new Error('no app');
+}
+function fit() { const k = Math.min(innerWidth / M.PHONE.w, innerHeight / M.PHONE.h); host.style.transform = `scale(${k})`; host.style.left = (innerWidth - M.PHONE.w * k) / 2 + 'px'; host.style.top = (innerHeight - M.PHONE.h * k) / 2 + 'px'; }
+// an icon for the home screen: the first picture in the app on its title-bar colour
+async function icon(p) {
+  const first = p['s' + p.app.order[0]], pic = M.allParts(p).find(x => x.t === 'image'), c = document.createElement('canvas'); c.width = c.height = 192;
+  const g = c.getContext('2d'); g.fillStyle = first.bar || '#2563eb'; g.fillRect(0, 0, 192, 192);
+  if (pic) { const img = new Image(); img.src = pic.src.startsWith('img:') ? p.imgs[pic.src.slice(4)] : M.pictureURL(pic.src.slice(4)); try { await img.decode(); g.fillStyle = '#fff'; g.beginPath(); g.arc(96, 96, 74, 0, 7); g.fill(); g.drawImage(img, 36, 36, 120, 120); } catch (e) { /* plain */ } }
+  else { g.fillStyle = '#fff'; g.font = 'bold 100px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((p.app.title[0] || 'A').toUpperCase(), 96, 100); }
+  return c.toDataURL('image/png');
+}
+try {
+  const p = M.cleanProject(await getApp());
+  document.title = p.app.title;
+  const first = p['s' + p.app.order[0]];
+  document.body.style.background = first.bg;
+  const meta = (n, v) => { const m = document.createElement('meta'); m.name = n; m.content = v; document.head.appendChild(m); };
+  meta('apple-mobile-web-app-title', p.app.title); meta('theme-color', first.bar);
+  const ic = await icon(p);
+  const l = document.createElement('link'); l.rel = 'apple-touch-icon'; l.href = ic; document.head.appendChild(l);
+  const man = { name: p.app.title, short_name: p.app.title.slice(0, 12), start_url: location.href, scope: location.href.split('?')[0], display: 'standalone', background_color: first.bg, theme_color: first.bar, icons: [{ src: ic, sizes: '192x192', type: 'image/png' }] };
+  const ml = document.createElement('link'); ml.rel = 'manifest'; ml.href = URL.createObjectURL(new Blob([JSON.stringify(man)], { type: 'application/manifest+json' })); document.head.appendChild(ml);
+  note.hidden = true; stage.hidden = false; fit(); addEventListener('resize', fit);
+  const runner = R.createRunner(host, p, { onScreen: id => { document.body.style.background = p['s' + id].bg; } });
+  window.cjApp = { runner, project: p };
+  runner.start();
+} catch (e) {
+  fail('This app can’t be opened', e && e.message === 'no app' ? 'This link has no app in it.' : 'The link may be wrong, or the app may have been taken down. Check you’re online and try again.');
+}
+</script>
+</body>
+</html>

@@ -31,6 +31,43 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## App Lab project type — `projectType==='applab'` (23 Nov 2026, branch `claude/app-lab`) — Charlie: "App Lab where students can build, design and code their own apps"
+- **Charlie's choices:** name App Lab (Code.org also has an "App Lab"; Charlie was told and kept the name); mockup first (two rounds: the
+  hand-drawn blocks "seem off", so the mockup moved to real Blockly in CodeJump's colours); v1 = Design + Code + Run + "Put it on my
+  phone" + starter apps. Lesson unit = later. KS2 + KS3 (hidden for KS1). The mockup lived in the session scratchpad only.
+- **`app/app-model.js` (no DOM):** project `{v:1, app:{id (8 letters, names remembered values), title, order:[screenIds]}, imgs:{id:dataURL},
+  s<id>:{name, title (bar text, '' = no bar), bar, bg, parts:[…]}, code:{blocks: Blockly JSON}, goals?}` — every top-level field is one live
+  part. `PHONE` 360×640 (bar 56). `PARTS` button/label(Text)/image/textbox/slider/switch/list/box(Shape), each `{id, t, name, x, y, w, h,
+  …}`; blocks name parts by **id** (dropdowns show the name, so renaming never breaks code). `cleanPart/cleanScreen/cleanProject` (names
+  unique, colours `#hex`, pictures only `lib:` (web/web-pictures.js, shared with the Web Lab) or `img:` uploads, code ≤ 600 KB).
+  `STARTERS` blank/kind (Kindness counter, 2 screens, remember)/quiz/sounds/pet (every 5 s, slider)/dice — built with the `B` JSON
+  helpers. `checkApp` (button with no script, alt text, contrast < 3, small buttons, off the edge, unreachable screens, deleted parts),
+  `cleanGoals/checkGoals` (parts, screens, block, pressed, text, named, sound, remember, picture).
+- **`app/app-run.js`:** `drawScreen` (plain elements, words via textContent; `.ap-edit` for Design) and `createRunner` = an async
+  interpreter over Blockly's JSON (never generated JS): hats app_when_starts/pressed/opens/changed; pressing again restarts that
+  script; loops started by "when … opens" stop when you leave the screen; a step counter yields every 400 steps; `remember` =
+  localStorage `cjapp:<app.id>:<var>` (the editor passes an in-memory store so a classroom computer keeps nothing). Sounds are Web
+  Audio synths (Pop Ding Cheer Drum Boing Coin Buzz Whoosh); `say` = speechSynthesis + the message.
+- **`app/app-blocks.js`:** Blockly defs (custom `field_part` dropdown keeps unknown values as "(deleted part)"), toolbox (Events,
+  Parts, Control, Operators, Variables (+ remember/remembered), Sound, Screens), theme `codejumpApp` (zelos; Robot/Stage colours).
+- **`app/app-app.js` + `.css` (scoped `.al`):** Design (palette tiles: tap to add or drag onto the phone; drag/resize parts with handles,
+  snap 4 px, arrow keys; inspector per part + per screen; screens list, "Start here"), Code (Blockly, lazy-injected; overlapping
+  scripts are tidied into two columns on load; the phone moves to the right), Run/Stop in both, Check my app, Starter apps, **Put it on
+  my phone** (`host.shareApp` → `appLabShare` in build-and-play: cloud `/share` with `payload.applab` → `codejump.co.uk/app/?s=CODE`,
+  else `app/#a=<base64url>` when small; QR from `vendor/qrcode-generator.js` (MIT, npm 2.0.4)). Design undo = snapshots without the
+  code (Blockly has its own). Test hooks `_proj/_screen/_sel/_select/_tab/_blocks/_runner/_run/_stop/_add/_codeFor` (**not `_ws`**: the
+  host waits for `_ws()` before live sync, and the App Lab only makes its workspace when Code opens).
+- **`app/index.html` = the phone player** (`?s=` fetches the share, `#a=` decodes): full screen, scaled to fit, title + theme colour,
+  apple-touch-icon and a blob manifest with a PNG icon drawn from the app's first picture, so it can be added to the home screen.
+- **Host glue (mirrors the Web Lab):** `appLabBase/loadAppLab/appLabData/appLabApp/appLabCurrent/appLabShare/startNewAppLab/
+  enterAppLabUI/exitAppLabUI`, `body.applab-mode`, `#applab-ui` (NOT `#app`, which is CodeJump's own app element), payload `applab`, chooser
+  tile `data-pt="applab"` (KS1 hidden), home tile + slide (`home/applab.jpg`, real screenshot), icon `#i-applab`, `APPLAB_HELP`, Teacher
+  Guide "App Lab" section (+ guide topic `applab`), thumbnail badge, `LS_TYPE`/`LS_LAB_ORDER`, `LIVE_LABS.applab`, offline list `app/`.
+  Live: works through the generic lab parts. **To do in codejump-cloud:** add 'applab' to the worker's lp lab list (as v19 did for
+  'web'); until then live edits still pass between people in the room, but a late joiner only gets the room's first copy (the
+  labs-collab test room stand-in doesn't model this, so it passes either way).
+- Tests: tests/applab.test.mjs (48: model, runtime, editor, share + QR, player, save/reopen), labs-collab.test.mjs (`LABS=applab`).
+
 ## Web Lab project type — `projectType==='web'` (11 Nov 2026, CJ_VERSION 2026.11.11; LIVE on main since 11 Nov 2026 with worker v19) — Charlie: "a website builder for students… Web Lab… collaboration… guided lessons"
 - **Charlie's choices:** name Web Lab; Visual + real HTML/CSS (Design ↔ Code, like the Build Lab's Blocks ↔ Python); sharing the same as other
   labs (save, hand in, share link, collaborate; no public listing); KS2 + KS3 (hidden for KS1).

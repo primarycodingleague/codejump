@@ -25,7 +25,9 @@ const ICON = {
   copy: I('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'), upload: I('<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>'),
   page: I('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'), style: I('<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.3"/><circle cx="12" cy="7.5" r="1.3"/><circle cx="15.5" cy="10" r="1.3"/><path d="M12 21a3 3 0 0 1 0-6h2"/>'),
   computer: I('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'), tablet: I('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M11 18h2"/>'), phone: I('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>'),
-  sparkle: I('<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>'), link: I('<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/>'), x: I('<path d="M6 6l12 12M18 6L6 18"/>')
+  sparkle: I('<path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>'), link: I('<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/>'), x: I('<path d="M6 6l12 12M18 6L6 18"/>'),
+  move: I('<path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>'), stack: I('<rect x="4" y="4" width="16" height="5" rx="1"/><rect x="4" y="11" width="16" height="9" rx="1"/>'),
+  free: I('<rect x="3" y="3" width="9" height="8" rx="1"/><rect x="14" y="6" width="7" height="13" rx="1"/><rect x="4" y="14" width="8" height="6" rx="1"/>')
 };
 const esc = W.esc;
 const TEMPLATE = `
@@ -195,6 +197,19 @@ export function mount(root, host) {
     .wl-body { min-height: 100%; padding-bottom: 1px; }
     .wl-ph { color: #999; font-style: italic; }
     .wl-addhere { margin: 18px auto; text-align: center; color: #999; font: 600 14px sans-serif; padding: 18px; border: 2px dashed #ccc; border-radius: 12px; }
+    .free { position: relative; background-image: linear-gradient(to right, rgba(174,133,62,.10) 1px, transparent 1px); background-size: calc(100% / ${W.GRID.cols}) 100%; min-height: 200px; }
+    .free.wl-dragging { background-image: linear-gradient(to right, rgba(174,133,62,.35) 1px, transparent 1px), linear-gradient(rgba(174,133,62,.2) 1px, transparent 1px); background-size: calc(100% / ${W.GRID.cols}) 100%, 100% ${W.GRID.row}px; user-select: none; -webkit-user-select: none; }
+    .free.wl-dragging [data-bid] { cursor: grabbing; }
+    .free > [data-bid]:not(.wl-sel) { cursor: grab; }
+    .wl-handles { position: absolute; pointer-events: none; z-index: 50; }
+    .wl-handles > * { position: absolute; pointer-events: auto; touch-action: none; background: #ae853e; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); padding: 0; }
+    .wl-grip { left: -3px; top: -34px; height: 28px; border-radius: 8px; color: #fff; font: 700 13px sans-serif; display: flex; align-items: center; gap: 4px; padding: 0 9px !important; cursor: grab; }
+    .wl-grip svg { width: 16px; height: 16px; }
+    .wl-handles [data-drag="e"], .wl-handles [data-drag="w"] { top: 50%; width: 12px; height: 34px; margin-top: -17px; border-radius: 6px; cursor: ew-resize; }
+    .wl-handles [data-drag="e"] { right: -10px; } .wl-handles [data-drag="w"] { left: -10px; }
+    .wl-handles [data-drag="s"] { left: 50%; bottom: -10px; width: 34px; height: 12px; margin-left: -17px; border-radius: 6px; cursor: ns-resize; }
+    .wl-handles [data-drag="se"] { right: -10px; bottom: -10px; width: 16px; height: 16px; border-radius: 50%; cursor: nwse-resize; }
+    .wl-narrow .free { display: block; background: none; } .wl-narrow .free > * { margin: 0.6em 0; } .wl-narrow .free > .space { display: none; }
     .columns > .col:empty::after { content: 'Empty column: choose it, then add blocks'; display: block; color: #aaa; font: italic 14px sans-serif; padding: 16px; border: 2px dashed #ddd; border-radius: 10px; }`;
   function navHTML() {
     const t = proj.site.theme; if (t.nav === 'none' || proj.site.order.length < 2) return '';
@@ -203,13 +218,17 @@ export function mount(root, host) {
   function canvas() {
     if (tab !== 'design') return;
     const pg = proj['p' + page]; if (!pg) return;
-    const body = pg.blocks.map(b => W.blockHTML(b, { pages: proj.site.order, imgs: proj.imgs, edit: true })).join('\n');
+    let body = pg.blocks.map(b => W.blockHTML(b, { pages: proj.site.order, imgs: proj.imgs, edit: true })).join('\n');
+    if (pg.free) body = `<div class="free" id="wlFree">${body}</div>`;
     // a shadow root has no :root or <body>: the site's rules for those apply to the host and a wrapper instead
     const css = W.siteCSS(proj).replace(/^:root \{/m, ':host {').replace(/^body \{/m, '.wl-body {').replace(/^\* \{/m, '* {');
-    shadow.innerHTML = `<style>${css}${EDIT_CSS}</style><div class="wl-body"><div class="page" id="wlPage">${navHTML()}${body || ''}<div class="wl-addhere">${pg.blocks.length ? 'Choose a block, then add another from the left' : 'This page is empty. Add a block from the left.'}</div></div></div>`;
+    // the phone view is drawn in a computer-sized window: leave out what only applies to bigger screens
+    const cssFor = device === 'phone' ? css.replace(/^@media \(min-width: 601px\).*$/m, '') : css;
+    shadow.innerHTML = `<style>${cssFor}${EDIT_CSS}</style><div class="wl-body${device === 'phone' ? ' wl-narrow' : ''}"><div class="page" id="wlPage">${navHTML()}${body || ''}<div class="wl-addhere">${pg.blocks.length ? 'Choose a block, then add another from the left' : 'This page is empty. Add a block from the left.'}</div></div></div>`;
     $('wlFrame').className = 'wl-frame ' + device;
     $('wlFrame').style.background = proj.site.theme.bg;
     if (sel) editable(sel);
+    if (pg.free) { fitFree(); handles(); }
   }
   // the selected block's words can be typed straight onto the page
   const RICH = { heading: 1, text: 1, list: 1, quote: 1, banner: 1, card: 1, table: 1, image: 1 };
@@ -286,6 +305,8 @@ export function mount(root, host) {
 
   // clicking on the page: choose a block (links don't go anywhere while designing)
   shadow.addEventListener('click', e => {
+    if (swallowClick) { swallowClick = false; e.preventDefault(); return; }
+    if (e.target.closest && e.target.closest('#wlHandles')) return;
     const a = e.target.closest && e.target.closest('a'); if (a) e.preventDefault();
     const go = a && a.dataset.goto; if (go && !e.target.closest('[data-bid]')) { page = go; sel = null; render(); return; }
     const el = e.target.closest && e.target.closest('[data-bid]');
@@ -299,6 +320,108 @@ export function mount(root, host) {
     try { const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null; if (r && n.contains(r.startContainer)) { const s = document.getSelection(); s.removeAllRanges(); s.addRange(r); } } catch (_) {}
   }
 
+  // ── free layout: drag a block anywhere on the page's grid, pull its edges to resize it ──
+  // (a page with free: true; see web-model.js GRID. Only blocks straight on the page move; blocks inside columns don't.)
+  const isFree = () => !!(proj['p' + page] || {}).free;
+  const freeEl = () => shadow.getElementById('wlFree');
+  const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+  const topEl = id => { const fr = freeEl(); return fr && id ? [...fr.children].find(c => c.dataset && c.dataset.bid === id) : null; };
+  // the grid's real row edges: rows grow to fit the words, so they are not all GRID.row high
+  function rowEdges(fr) {
+    const out = [0];
+    for (const v of getComputedStyle(fr).gridTemplateRows.split(' ')) { const n = parseFloat(v); if (n >= 0) out.push(out[out.length - 1] + n); }
+    return out;
+  }
+  function rowAt(edges, y) { // the row (1 = first) whose top edge is nearest y; below the last row, rows are GRID.row high
+    const last = edges[edges.length - 1];
+    if (y >= last) return edges.length + Math.round((y - last) / W.GRID.row);
+    let best = 1, d = Infinity; edges.forEach((e, i) => { const dd = Math.abs(e - y); if (dd < d) { d = dd; best = i + 1; } }); return best;
+  }
+  // a block can be made shorter than its words: then its height grows to fit them (h is the least height)
+  function fitFree() {
+    const fr = freeEl(); if (!fr || device === 'phone') return;
+    const pg = proj['p' + page], els = pg.blocks.map(b => [b, topEl(b.id)]).filter(x => x[1] && x[0].pos);
+    els.forEach(([, el]) => { el.style.alignSelf = 'start'; });
+    const need = els.map(([b, el]) => [b, el, Math.ceil(el.offsetHeight / W.GRID.row)]);
+    els.forEach(([, el]) => { el.style.alignSelf = ''; });
+    let grew = false;
+    for (const [b, el, n] of need) if (n > b.pos.h && n <= 300) { b.pos.h = n; el.style.gridRow = b.pos.y + ' / span ' + n; grew = true; }
+    if (grew) changed();
+  }
+  function handles() {
+    const old = shadow.getElementById('wlHandles'); if (old) old.remove();
+    const fr = freeEl(), el = topEl(sel); if (!fr || !el || device === 'phone') return;
+    const h = document.createElement('div'); h.id = 'wlHandles'; h.className = 'wl-handles';
+    h.innerHTML = `<button class="wl-grip" data-drag="move" title="Drag to move it. The arrow keys move it too." aria-label="Move">${ICON.move} Move</button><button data-drag="w" title="Drag to change its width" aria-label="Left edge"></button><button data-drag="e" title="Drag to change its width" aria-label="Right edge"></button><button data-drag="s" title="Drag to make it taller" aria-label="Bottom edge"></button><button data-drag="se" title="Drag to change its size" aria-label="Corner"></button>`;
+    fr.appendChild(h); placeHandles(h, el);
+  }
+  function placeHandles(h, el) { Object.assign(h.style, { left: el.offsetLeft + 'px', top: el.offsetTop + 'px', width: el.offsetWidth + 'px', height: el.offsetHeight + 'px' }); }
+  let drag = null, swallowClick = false;
+  shadow.addEventListener('dragstart', e => { if (isFree()) e.preventDefault(); }); // no browser picture-dragging on a free page
+  shadow.addEventListener('pointerdown', e => {
+    swallowClick = false;
+    if (!isFree() || device === 'phone' || e.button !== 0 || tab !== 'design') return;
+    const fr = freeEl(); if (!fr) return;
+    const hd = e.target.closest && e.target.closest('[data-drag]');
+    let el;
+    if (hd) el = topEl(sel);
+    else {
+      if (e.pointerType === 'touch') return; // on a touch screen the page scrolls; use the handles to move a block
+      el = e.target; while (el && el.parentNode !== fr) el = el.parentNode;
+      if (!el || !el.dataset || !el.dataset.bid) return;
+      if (el.dataset.bid === sel && e.target.closest('[contenteditable]')) return; // typing, not moving
+    }
+    const f = el && findBlock(el.dataset.bid); if (!f || f.parent || !f.b.pos) return;
+    drag = { el, f, fr, mode: hd ? hd.dataset.drag : 'move?', x0: e.clientX, y0: e.clientY, pos: Object.assign({}, f.b.pos), colW: fr.clientWidth / W.GRID.cols, edges: rowEdges(fr), top: el.offsetTop, bottom: el.offsetTop + el.offsetHeight };
+    if (hd) { e.preventDefault(); dragStart(); }
+    window.addEventListener('pointermove', dragMove); window.addEventListener('pointerup', dragEnd); window.addEventListener('pointercancel', dragEnd);
+  });
+  function dragStart() {
+    hideToolbar(); const a = shadow.activeElement; if (a && a.blur) a.blur();
+    drag.fr.classList.add('wl-dragging');
+    if (drag.mode === 'move' && drag.f.b.id !== sel) { sel = drag.f.b.id; drag.el.classList.add('wl-sel'); }
+  }
+  function dragMove(e) {
+    if (!drag) return;
+    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+    if (drag.mode === 'move?') { if (Math.hypot(dx, dy) < 5) return; drag.mode = 'move'; dragStart(); }
+    e.preventDefault();
+    const G = W.GRID, p = drag.pos, q = Object.assign({}, p), dc = Math.round(dx / drag.colW), m = drag.mode;
+    if (m === 'move') { q.x = clampN(p.x + dc, 1, G.cols - p.w + 1); q.y = clampN(rowAt(drag.edges, drag.top + dy), 1, G.rows); }
+    if (m === 'e' || m === 'se') q.w = clampN(p.w + dc, 1, G.cols - p.x + 1);
+    if (m === 'w') { const nx = clampN(p.x + dc, 1, p.x + p.w - 1); q.w = p.w + p.x - nx; q.x = nx; }
+    if (m === 's' || m === 'se') q.h = clampN(rowAt(drag.edges, drag.bottom + dy) - p.y, 1, 300);
+    drag.q = q;
+    drag.el.style.gridColumn = q.x + ' / span ' + q.w; drag.el.style.gridRow = q.y + ' / span ' + q.h;
+    const h = shadow.getElementById('wlHandles'); if (h) placeHandles(h, drag.el);
+    status(m === 'move' ? `Across ${q.x} · down ${q.y}` : `${q.w} of ${G.cols} columns wide`);
+  }
+  function dragEnd() {
+    window.removeEventListener('pointermove', dragMove); window.removeEventListener('pointerup', dragEnd); window.removeEventListener('pointercancel', dragEnd);
+    const d = drag; drag = null; if (!d) return;
+    d.fr.classList.remove('wl-dragging'); status('');
+    if (d.mode === 'move?') return; // just a click: it chooses the block
+    swallowClick = true; setTimeout(() => { swallowClick = false; }, 0);
+    if (d.q) placeBlock(d.f.b, d.q); else render();
+  }
+  function placeBlock(b, q) { b.pos = W.cleanPos(Object.assign({}, b.pos, q)); W.freePlace(proj['p' + page]); sel = b.id; changed(true); render(); }
+  function nudge(dx, dy, size) {
+    const f = sel && findBlock(sel); if (!f || f.parent || !f.b.pos) return;
+    const q = Object.assign({}, f.b.pos);
+    if (size) { q.w = clampN(q.w + dx, 1, W.GRID.cols - q.x + 1); q.h = clampN(q.h + dy, 1, 300); }
+    else { q.x = clampN(q.x + dx, 1, W.GRID.cols - q.w + 1); q.y = clampN(q.y + dy, 1, W.GRID.rows); }
+    placeBlock(f.b, q);
+  }
+  function setLayout(free) {
+    const pg = proj['p' + page]; if (!!pg.free === free) return;
+    if (free) {
+      const heights = {}; // how tall each block is now, so the free page starts out looking the same
+      for (const b of pg.blocks) { const el = shadow.querySelector(`[data-bid="${b.id}"]`); if (el) heights[b.id] = el.offsetHeight; }
+      pg.free = true; W.freePlace(pg, heights); toast('Free layout: drag blocks anywhere and pull their edges to resize them.');
+    } else { W.stackPlace(pg); delete pg.free; toast('Stacked: blocks go one under another again.'); }
+    changed(true); render();
+  }
+
   // ── adding / moving blocks ──
   function addBlock(t) {
     const b = W.blockOf(t); if (t === 'button' && proj.site.order.length > 1) b.link = '#p-' + proj.site.order.find(x => x !== page);
@@ -307,11 +430,15 @@ export function mount(root, host) {
     else if (f) f.list.splice(f.i + 1, 0, f.parent && t === 'columns' ? W.blockOf('text') : b);
     else proj['p' + page].blocks.push(b);
     if (proj['p' + page].blocks.length > W.LIMITS.blocks) { proj['p' + page].blocks.pop(); toast('This page is full. Add a new page instead.'); return; }
+    if (isFree() && !(f && (f.parent || f.b.t === 'columns'))) { // a free page: the new block goes under the chosen one (or at the bottom)
+      if (f && f.b.pos) b.pos = { x: f.b.pos.x, w: f.b.pos.w, y: f.b.pos.y + f.b.pos.h + 1, h: 4 };
+      W.freePlace(proj['p' + page]);
+    }
     sel = b.id; changed(true); render();
     const el = shadow.querySelector(`[data-bid="${b.id}"]`); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
-  function moveBlock(d) { const f = sel && findBlock(sel); if (!f) return; const j = f.i + d; if (j < 0 || j >= f.list.length) return; [f.list[f.i], f.list[j]] = [f.list[j], f.list[f.i]]; changed(true); render(); }
-  function dupBlock() { const f = sel && findBlock(sel); if (!f) return; const c = JSON.parse(JSON.stringify(f.b)); const re = x => { x.id = W.newId(); if (x.cols) x.cols.forEach(col => col.forEach(re)); }; re(c); f.list.splice(f.i + 1, 0, c); sel = c.id; changed(true); render(); }
+  function moveBlock(d) { if (isFree() && sel && findBlock(sel) && !findBlock(sel).parent) { nudge(0, d * 2); return; } const f = sel && findBlock(sel); if (!f) return; const j = f.i + d; if (j < 0 || j >= f.list.length) return; [f.list[f.i], f.list[j]] = [f.list[j], f.list[f.i]]; changed(true); render(); }
+  function dupBlock() { const f = sel && findBlock(sel); if (!f) return; const c = JSON.parse(JSON.stringify(f.b)); const re = x => { x.id = W.newId(); if (x.cols) x.cols.forEach(col => col.forEach(re)); }; re(c); if (c.pos) c.pos.y += c.pos.h + 1; f.list.splice(f.i + 1, 0, c); if (c.pos) W.freePlace(proj['p' + page]); sel = c.id; changed(true); render(); }
   function delBlock() { const f = sel && findBlock(sel); if (!f) return; f.list.splice(f.i, 1); sel = (f.list[f.i] || f.list[f.i - 1] || {}).id || (f.parent ? f.parent.id : null); changed(true); render(); }
 
   // ── the inspector ──
@@ -319,7 +446,10 @@ export function mount(root, host) {
     const R = $('wlRight');
     const f = sel && findBlock(sel);
     if (!f) { R.innerHTML = `<div class="wl-insp-h">${ICON.page} ${esc(proj['p' + page].name)}</div><p class="wl-hint">Click anything on the page to change it, or add a block from the left.</p>
-      <h3>This page</h3><label class="wl-field">Page name<input id="wlPgName" maxlength="40" value="${esc(proj['p' + page].name)}"></label>`;
+      <h3>This page</h3><label class="wl-field">Page name<input id="wlPgName" maxlength="40" value="${esc(proj['p' + page].name)}"></label>
+      <h3>Layout</h3><div class="wl-seg" role="group" aria-label="Layout"><button data-layout="stack" aria-pressed="${!isFree()}">${ICON.stack} Stacked</button><button data-layout="free" aria-pressed="${isFree()}">${ICON.free} Free</button></div>
+      <p class="wl-hint">${isFree() ? 'Drag blocks anywhere on the page and pull their edges to resize them. On a phone they still go one under another, top to bottom.' : 'Blocks go one under another. Choose <b>Free</b> to drag them anywhere and resize them.'}</p>`;
+      R.querySelectorAll('[data-layout]').forEach(x => x.onclick = () => setLayout(x.dataset.layout === 'free'));
       R.querySelector('#wlPgName').onchange = e => { const v = e.target.value.trim(); if (v) { proj['p' + page].name = v; changed(true); render(); } };
       return; }
     const b = f.b, B = W.BLOCKS[b.t];
@@ -348,7 +478,10 @@ export function mount(root, host) {
       <label class="wl-colour"><input type="color" data-colour="color" value="${b.color || proj.site.theme.text}"><span>Colour</span><button class="wl-mini" data-clear="color" title="Back to normal" aria-label="Back to normal colour"${b.color ? '' : ' disabled'}>${ICON.x}</button></label>
       <label class="wl-colour"><input type="color" data-colour="bg" value="${b.bg || '#ffffff'}"><span>Background</span><button class="wl-mini" data-clear="bg" title="No background" aria-label="No background"${b.bg ? '' : ' disabled'}>${ICON.x}</button></label>` : ''}
       <details${b.cls ? ' open' : ''}><summary>Class name (for your own CSS)</summary><input class="wl-in" data-in="cls" maxlength="60" value="${esc(b.cls || '')}" placeholder="e.g. special"></details>
-      <h3>Block</h3><div class="wl-acts"><button class="wl-btn" data-act="up" title="Move up (Alt+↑)">${ICON.up}</button><button class="wl-btn" data-act="down" title="Move down (Alt+↓)">${ICON.down}</button><button class="wl-btn" data-act="dup" title="Make a copy (Ctrl+D)">${ICON.copy} Copy</button><button class="wl-btn danger" data-act="del" title="Delete (Delete key)">${ICON.trash} Delete</button></div>`;
+      ${b.pos && !f.parent ? `<h3>Place on the page</h3><div class="wl-pos">${[['x', 'Across', W.GRID.cols], ['y', 'Down', W.GRID.rows], ['w', 'Width', W.GRID.cols], ['h', 'Height', 300]].map(([k, n, mx]) => `<label class="wl-field">${n}<input type="number" min="1" max="${mx}" data-pos="${k}" value="${b.pos[k]}"></label>`).join('')}</div>
+      <div class="wl-acts"><button class="wl-btn" data-act="full">Full width</button><button class="wl-btn" data-act="front">Bring to front</button><button class="wl-btn" data-act="back">Send to back</button></div>
+      <p class="wl-hint">Drag it, or pull its edges. Arrow keys move it; Shift + arrow keys change its size. Width is in columns (${W.GRID.cols} across the page).</p>` : ''}
+      <h3>Block</h3><div class="wl-acts">${b.pos && !f.parent ? '' : `<button class="wl-btn" data-act="up" title="Move up (Alt+↑)">${ICON.up}</button><button class="wl-btn" data-act="down" title="Move down (Alt+↓)">${ICON.down}</button>`}<button class="wl-btn" data-act="dup" title="Make a copy (Ctrl+D)">${ICON.copy} Copy</button><button class="wl-btn danger" data-act="del" title="Delete (Delete key)">${ICON.trash} Delete</button></div>`;
     R.innerHTML = h;
     const set = (k, v, re = true) => { if (v === '' || v == null) delete b[k]; else b[k] = v; changed(true); if (re) render(); else canvas(); };
     R.querySelectorAll('[data-set]').forEach(x => x.onclick = () => { const k = x.dataset.set, v = x.dataset.v; set(k, k === 'level' ? +v : k === 'ordered' ? v === '1' : v); });
@@ -359,6 +492,7 @@ export function mount(root, host) {
     R.querySelectorAll('[data-in="alt"],[data-in="caption"]').forEach(x => x.onchange = () => right());
     R.querySelectorAll('[data-num]').forEach(x => { x.oninput = () => { b[x.dataset.num] = +x.value; canvas(); changed(); const l = x.closest('label'); if (l) l.firstChild.textContent = (x.dataset.num === 'w' ? 'Size: ' + x.value + '%' : 'Height: ' + x.value + 'px'); }; x.onchange = () => changed(true); });
     R.querySelectorAll('[data-bool]').forEach(x => x.onchange = () => set(x.dataset.bool, x.checked));
+    R.querySelectorAll('[data-pos]').forEach(x => x.onchange = () => { const v = parseInt(x.value, 10); if (Number.isFinite(v)) placeBlock(b, { [x.dataset.pos]: v }); else right(); });
     R.querySelectorAll('[data-colour]').forEach(x => { x.oninput = () => { b[x.dataset.colour] = x.value; canvas(); changed(); }; x.onchange = () => { changed(true); right(); }; });
     R.querySelectorAll('[data-clear]').forEach(x => x.onclick = e => { e.preventDefault(); set(x.dataset.clear, ''); });
     R.querySelectorAll('[data-pic]').forEach(x => x.onclick = () => { b[x.dataset.pic] = x.dataset.v; if (b.t === 'image' && x.dataset.v.startsWith('lib:') && (!b.alt || W.PICTURE_KEYS.some(k => b.alt === W.PICTURES[k][0]))) b.alt = W.PICTURES[x.dataset.v.slice(4)][0]; changed(true); render(); });
@@ -367,7 +501,10 @@ export function mount(root, host) {
     R.querySelectorAll('[data-linkurl]').forEach(x => x.onchange = () => { let v = x.value.trim(); if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v; const ok = W.cleanHref(v, proj.site.order); if (v && !ok) { toast('That isn’t a web address CodeJump can link to.'); return; } set(x.dataset.linkurl, ok || ''); });
     R.querySelectorAll('[data-act]').forEach(x => x.onclick = () => {
       const a = x.dataset.act;
-      if (a === 'up') moveBlock(-1); else if (a === 'down') moveBlock(1); else if (a === 'dup') dupBlock(); else if (a === 'del') delBlock();
+      if (a === 'full') placeBlock(b, { x: 1, w: W.GRID.cols });
+      else if (a === 'front') placeBlock(b, { z: Math.min(9, Math.max(0, ...proj['p' + page].blocks.map(x => (x.pos && x.pos.z) || 0)) + 1) });
+      else if (a === 'back') placeBlock(b, { z: 0 });
+      else if (a === 'up') moveBlock(-1); else if (a === 'down') moveBlock(1); else if (a === 'dup') dupBlock(); else if (a === 'del') delBlock();
       else if (a === 'item+') { b.items.push('New item'); changed(true); render(); }
       else if (a === 'cols2' || a === 'cols3') { const n = +a.slice(4); if (n < b.cols.length) { const gone = b.cols.slice(n).flat(); b.cols = b.cols.slice(0, n); b.cols[n - 1].push(...gone); } else while (b.cols.length < n) b.cols.push([]); changed(true); render(); }
       else if (a.startsWith('colAdd')) { const t = W.blockOf('text'); b.cols[+a.slice(6)].push(t); sel = t.id; changed(true); render(); }
@@ -440,6 +577,7 @@ export function mount(root, host) {
     if (txt === cur) return;
     const r = W.fromHTML(txt, proj), pg = proj['p' + page];
     pg.blocks = r.blocks; sel = null; codeEdits++;
+    if (pg.free) W.freePlace(pg); else pg.blocks.forEach(b => delete b.pos);
     const note = $('wlHtmlNote');
     note.hidden = !r.removed.length; note.className = 'wl-note bad';
     note.textContent = r.removed.length ? 'Taken out, because a CodeJump website can’t use them: ' + r.removed.map(t => '<' + t + '>').join(', ') + '.' : '';
@@ -545,10 +683,13 @@ export function mount(root, host) {
     else if (sel && e.altKey && e.key === 'ArrowUp') { e.preventDefault(); moveBlock(-1); }
     else if (sel && e.altKey && e.key === 'ArrowDown') { e.preventDefault(); moveBlock(1); }
     else if (sel && mod && e.key.toLowerCase() === 'd') { e.preventDefault(); dupBlock(); }
+    else if (sel && !mod && !e.altKey && isFree() && /^Arrow(Up|Down|Left|Right)$/.test(e.key)) {
+      e.preventDefault(); const d = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key]; nudge(d[0], d[1], e.shiftKey);
+    }
     else if (e.key === 'Escape' && sel) { sel = null; render(); }
   }
   document.addEventListener('keydown', onKey);
-  const onResize = () => { if (tbar && sel) { const el = shadow.querySelector(`[data-bid="${sel}"]`); if (el) toolbarFor(el); } };
+  const onResize = () => { if (tbar && sel) { const el = shadow.querySelector(`[data-bid="${sel}"]`); if (el) toolbarFor(el); } const h = shadow.getElementById('wlHandles'), el = topEl(sel); if (h && el) placeHandles(h, el); };
   window.addEventListener('resize', onResize);
 
   render();
@@ -588,7 +729,7 @@ export function mount(root, host) {
     liveBusy() { return editingText() || !!wl.querySelector('.wl-pop'); },
     // test hooks
     _proj: () => proj, _page: () => page, _sel: () => sel, _select(id, pid) { if (pid) page = pid; sel = id; render(); }, _tab(t) { tab = t; render(); },
-    _shadow: () => shadow, _add: addBlock, _codeEdits: () => codeEdits, _goals: () => proj.goals ? W.checkGoals(proj.goals, proj, { codeEdits }) : null,
+    _shadow: () => shadow, _add: addBlock, _layout: setLayout, _device(d) { device = d; bar(); canvas(); }, _codeEdits: () => codeEdits, _goals: () => proj.goals ? W.checkGoals(proj.goals, proj, { codeEdits }) : null,
     _applyHTML(txt) { $('wlHtml').value = txt; edPaint($('wlHtmlEd'), 'html'); $('wlHtml').dispatchEvent(new Event('blur')); },
     _applyCSS(txt) { $('wlCss').value = txt; edPaint($('wlCssEd'), 'css'); $('wlCss').dispatchEvent(new Event('blur')); }
   };

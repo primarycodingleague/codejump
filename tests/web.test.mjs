@@ -41,6 +41,27 @@ ok(W.cleanHref('https://www.example.org/a') && W.cleanHref('http://www.example.o
   ok(JSON.stringify(W.checkGoals(g, W.newProject('club')).map(x => x.ok)) === '[true,true,true,true]' && JSON.stringify(W.checkGoals(g, W.newProject('blank')).map(x => x.ok)) === '[false,false,false,false]', 'goals tick for the club template and not for a blank site');
 }
 
+// ── free layout (a page with free: true) ──
+for (const t of Object.keys(W.TEMPLATES)) {
+  const p = W.newProject(t); for (const id of p.site.order) p['p' + id].free = true;
+  const c = W.cleanProject(JSON.parse(JSON.stringify(p)));
+  ok(c.site.order.every(id => c['p' + id].free && c['p' + id].blocks.every(b => b.pos)) && JSON.stringify(W.cleanProject(JSON.parse(JSON.stringify(c)))) === JSON.stringify(c), t + ': a free page gives every block a place, and cleaning again changes nothing');
+  ok(c.site.order.every(id => strip(W.fromHTML(W.pageHTML(c, id, { code: true }), c).blocks) === strip(c['p' + id].blocks)), t + ': free pages go to HTML and back with their places');
+  let inner = 0; W.eachBlock(c, (b, id, par) => { if (par && b.pos) inner++; }); ok(!inner && /<div class="free">/.test(W.siteHTML(c)), t + ': the site has the grid; blocks inside columns have no place of their own');
+}
+{
+  const p = W.newProject('about'), pg = p['p' + p.site.order[0]]; pg.free = true; W.freePlace(pg);
+  const img = pg.blocks.find(b => b.t === 'image'); ok(img.pos.w === Math.round(W.GRID.cols * img.w / 100) && img.pos.x === Math.floor((W.GRID.cols - img.pos.w) / 2) + 1, 'a picture keeps its size and line-up when its page goes free');
+  pg.blocks[1].pos = { x: 30, y: -3, w: 99, h: 0, z: 22 }; const id = pg.blocks[1].id;
+  const c = W.cleanProject(p), q = c['p' + p.site.order[0]].blocks.find(b => b.id === id).pos;
+  ok(q.x === 24 && q.w === 1 && q.y === 1 && q.h === 1 && q.z === 9, 'places off the grid are pulled back onto it');
+  const s = c['p' + p.site.order[0]]; W.stackPlace(s); delete s.free; ok(W.cleanProject(c)['p' + p.site.order[0]].blocks.every(b => !b.pos), 'a stacked page forgets places');
+  const st = Object.assign({}, c, { ['p' + c.site.order[0]]: { name: 'Home', blocks: [Object.assign(W.blockOf('text'), { pos: { x: 2, y: 2, w: 3, h: 3 } })] } });
+  ok(!W.cleanProject(st)['p' + c.site.order[0]].blocks[0].pos, 'a block on a stacked page has no place');
+  ok(W.cleanStyle('grid-column: 2 / span 5; grid-row: 3 / span 4; position: absolute; z-index: 3') === 'grid-column: 2 / span 5; grid-row: 3 / span 4; z-index: 3', 'pupils’ HTML may place things on the grid, but not with position');
+  ok(/@media \(max-width: 600px\)[^\n]*\.free \{ display: block; \}/.test(W.siteCSS(c)), 'on a phone a free page stacks');
+}
+
 // ── the app ──
 const site = await serve(), b = await browser(), errors = [];
 const { ctx, page } = await openApp(b, site.url, { errors });
@@ -150,6 +171,35 @@ ok(await page.isVisible('#wlGoals') && (await page.textContent('#wlGoals')).incl
 await page.evaluate(() => webApp._add('text'));
 await page.click('.wl-side-tab[data-side="pages"]'); await page.click('#wlAddPage'); await page.keyboard.press('Enter'); await sleep(600);
 ok((await page.textContent('#wlGoals')).includes('2/2') && await page.evaluate(() => document.querySelector('#wlGoals').classList.contains('done')), 'adding a 6th page ticks the last goal');
+// free layout: switch a page to Free, drag a block, pull an edge, arrow keys, the place boxes, phone, back to Stacked
+await page.evaluate(() => webApp.setProject(null)); await page.waitForSelector('.wl-tpl [data-tpl]'); await page.click('.wl-tpl [data-tpl="about"]'); await sleep(300);
+await page.evaluate(() => webApp._select(null)); await sleep(200);
+await page.click('[data-layout="free"]'); await sleep(400);
+p = await P(); let fh = p.site.order[0];
+ok(p['p' + fh].free && p['p' + fh].blocks.every(b => b.pos) && await page.isVisible('#wlCanvas >> #wlFree'), 'Layout → Free gives every block a place on the grid');
+const fimg = p['p' + fh].blocks.find(b => b.t === 'image'), fpos = fimg.pos;
+const fbox = await page.locator(`#wlCanvas >> [data-bid="${fimg.id}"]`).boundingBox();
+await page.mouse.move(fbox.x + fbox.width / 2, fbox.y + fbox.height / 2); await page.mouse.down();
+await page.mouse.move(fbox.x + fbox.width / 2 + 120, fbox.y + fbox.height / 2 + 4, { steps: 6 }); await page.mouse.move(fbox.x + fbox.width / 2 + 230, fbox.y + fbox.height / 2 + 8, { steps: 6 }); await page.mouse.up(); await sleep(300);
+p = await P(); let fq = p['p' + fh].blocks.find(b => b.id === fimg.id).pos;
+ok(fq.x > fpos.x && await page.evaluate(() => webApp._sel()) === fimg.id, 'dragging a picture moves it across the grid and chooses it: ' + JSON.stringify(fpos) + ' → ' + JSON.stringify(fq));
+const fw = await page.locator('#wlCanvas >> [data-drag="w"]').boundingBox();
+await page.mouse.move(fw.x + 5, fw.y + 10); await page.mouse.down(); await page.mouse.move(fw.x - 120, fw.y + 10, { steps: 6 }); await page.mouse.up(); await sleep(300);
+p = await P(); let fq2 = p['p' + fh].blocks.find(b => b.id === fimg.id).pos;
+ok(fq2.w > fq.w && fq2.x + fq2.w === fq.x + fq.w, 'pulling the left edge makes it wider and keeps its right edge');
+await page.keyboard.press('ArrowRight'); await page.keyboard.press('Shift+ArrowDown'); await sleep(300);
+p = await P(); let fq3 = p['p' + fh].blocks.find(b => b.id === fimg.id).pos;
+ok(fq3.x === Math.min(fq2.x + 1, W.GRID.cols - fq2.w + 1) && fq3.h === fq2.h + 1, 'arrow keys move it; Shift + arrows change its size');
+await page.fill('[data-pos="y"]', '2'); await page.press('[data-pos="y"]', 'Tab'); await sleep(300);
+p = await P(); ok(p['p' + fh].blocks.find(b => b.id === fimg.id).pos.y === 2 && p['p' + fh].blocks[0].pos.y <= 2, 'the Down box moves it, and blocks stay in reading order');
+const fhtml = await page.evaluate(() => { webApp._tab('preview'); return document.getElementById('wlFrameView').srcdoc; });
+ok(/<div class="free">/.test(fhtml) && /grid-row: 2 \/ span/.test(fhtml), 'Preview shows the page on its grid');
+await page.evaluate(() => { webApp._tab('design'); webApp._device('phone'); }); await sleep(300);
+ok(await page.evaluate(() => getComputedStyle(webApp._shadow().getElementById('wlFree')).display === 'block' && !webApp._shadow().getElementById('wlHandles')), 'the phone view stacks a free page and hides the handles');
+await page.evaluate(() => { webApp._device('computer'); webApp._select(null); }); await sleep(200);
+const forder = (await P())['p' + fh].blocks.map(b => b.id).join();
+await page.click('[data-layout="stack"]'); await sleep(300);
+p = await P(); ok(!p['p' + fh].free && p['p' + fh].blocks.every(b => !b.pos) && p['p' + fh].blocks.map(b => b.id).join() === forder, 'Layout → Stacked puts blocks one under another in reading order');
 // phone width
 await page.setViewportSize({ width: 390, height: 844 }); await sleep(300);
 ok(await page.evaluate(() => document.documentElement.scrollWidth <= 400 || document.getElementById('web-ui').scrollWidth <= 400), 'the lab fits a phone screen');

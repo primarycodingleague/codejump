@@ -4,16 +4,22 @@
 //   { v:1,
 //     site: { title, theme:{font,bg,text,head,accent,link,width,nav,corners}, order:[pageId…], css },
 //     imgs: { <imgId>: 'data:image/jpeg;base64,…' },          // pictures pupils uploaded
-//     p<pageId>: { name, blocks:[block…] }, … }               // one field per page (ids = 6 lower-case letters)
-// A block: { id, t, …its own fields, align?, color?, bg?, size?, cls? } — see BLOCKS. Text fields hold a small, safe piece
+//     p<pageId>: { name, blocks:[block…], free? }, … }        // one field per page (ids = 6 lower-case letters)
+// A block: { id, t, …its own fields, align?, color?, bg?, size?, cls?, pos? } — see BLOCKS. Text fields hold a small, safe piece
 // of inline HTML (b/i/u/a/br/span…), cleaned by cleanInline. Links are '#p-<pageId>' (another page) or 'https://…'.
 //
 // Output is one HTML document that holds every page as a <section>; CSS :target shows the page you linked to (the home page
 // when there is no #), so a whole site works with no scripts at all — in the app's preview (a sandboxed frame), in a
 // downloaded .html file, and anywhere it's copied to. fromHTML() reads pupils' edited HTML back into blocks.
+//
+// Free layout (a page with free: true): its top-level blocks sit on a grid of GRID.cols columns and GRID.row px rows, each
+// at pos {x, y, w, h} (column and row to start at, columns and rows across; h is the LEAST height: rows grow to fit the
+// words). Output is plain CSS grid (`grid-column: x / span w; grid-row: y / span h`, z for overlaps); on a phone-sized
+// screen a free page stacks its blocks top to bottom in reading order (blocks are kept sorted by y, then x).
 import { PICTURES, PICTURE_KEYS, pictureURL } from './web-pictures.js';
 export { PICTURES, PICTURE_KEYS, pictureURL };
 
+export const GRID = { cols: 24, row: 10, rows: 600 };
 export const LIMITS = { pages: 12, blocks: 150, text: 4000, imgs: 24, img: 450000, css: 8000, cols: 3, rows: 12, cells: 6, items: 30 };
 
 // ── small helpers ──
@@ -132,7 +138,8 @@ const CSS_PROPS = new Set(['color', 'background-color', 'background', 'font-size
   'padding-bottom', 'padding-left', 'padding-right', 'border', 'border-top', 'border-bottom', 'border-left', 'border-right', 'border-color', 'border-width',
   'border-style', 'border-radius', 'width', 'max-width', 'min-width', 'height', 'max-height', 'min-height', 'display', 'gap', 'flex', 'flex-direction',
   'flex-wrap', 'justify-content', 'align-items', 'grid-template-columns', 'opacity', 'box-shadow', 'text-shadow', 'vertical-align', 'list-style-type',
-  'object-fit', 'float', 'clear', 'transform', 'transition', 'cursor', 'outline', 'white-space', 'word-spacing', 'columns', 'column-gap', 'aspect-ratio', 'overflow']);
+  'object-fit', 'float', 'clear', 'transform', 'transition', 'cursor', 'outline', 'white-space', 'word-spacing', 'columns', 'column-gap', 'aspect-ratio', 'overflow',
+  'grid-column', 'grid-row', 'align-self', 'justify-self', 'z-index']);
 function cleanValue(prop, v) {
   v = String(v).trim();
   if (!v || v.length > 200) return null;
@@ -266,7 +273,35 @@ function cleanStyleFields(b, out) {
   const g = safeColour(b.bg); if (g) out.bg = g;
   if (['s', 'l', 'xl'].includes(b.size)) out.size = b.size;
   const cl = cleanClass(b.cls); if (cl) out.cls = cl;
+  const ps = cleanPos(b.pos); if (ps) out.pos = ps;
 }
+// where a block sits on a free page (see GRID); null when it has no place
+export function cleanPos(q) {
+  if (!q || typeof q !== 'object') return null;
+  const x = clamp(q.x, 1, GRID.cols, 1) | 0, w = clamp(q.w, 1, GRID.cols - x + 1, GRID.cols - x + 1) | 0;
+  const out = { x, y: clamp(q.y, 1, GRID.rows, 1) | 0, w, h: clamp(q.h, 1, 300, 4) | 0 };
+  const z = clamp(q.z, 0, 9, 0) | 0; if (z) out.z = z;
+  return out;
+}
+// rows a block of each kind roughly needs before the page has been drawn (the app measures the real height)
+const EST = { heading: 6, text: 8, image: 16, button: 6, list: 10, quote: 8, banner: 20, card: 26, columns: 26, table: 14, divider: 3, space: 4, html: 8 };
+// a free page: every top-level block gets a place (new ones go under everything else), sorted into reading order
+export function freePlace(pg, heights) {
+  let bottom = 1;
+  for (const b of pg.blocks) if (b.pos) bottom = Math.max(bottom, b.pos.y + b.pos.h);
+  for (const b of pg.blocks) {
+    if (b.pos) continue;
+    const h = Math.max(1, Math.min(300, Math.ceil(((heights && heights[b.id]) || EST[b.t] * GRID.row) / GRID.row)));
+    // a picture keeps its size: on a free page the block's width is the picture's width
+    let w = GRID.cols, x = 1;
+    if (b.t === 'image') { w = Math.max(2, Math.round(GRID.cols * b.w / 100)); x = b.align === 'center' ? Math.floor((GRID.cols - w) / 2) + 1 : b.align === 'right' ? GRID.cols - w + 1 : 1; }
+    b.pos = { x, y: Math.min(GRID.rows, bottom), w, h }; bottom += h + 1;
+  }
+  pg.blocks.sort((a, b) => a.pos.y - b.pos.y || a.pos.x - b.pos.x);
+  return pg;
+}
+// back to a stacked page: reading order is kept, places are forgotten
+export function stackPlace(pg) { pg.blocks.sort((a, b) => (a.pos ? a.pos.y : 0) - (b.pos ? b.pos.y : 0) || (a.pos ? a.pos.x : 0) - (b.pos ? b.pos.x : 0)); pg.blocks.forEach(b => delete b.pos); return pg; }
 export function cleanBlock(b, ctx, depth = 0) {
   if (!b || typeof b !== 'object' || !BLOCKS[b.t]) return null;
   const { pages, imgs } = ctx;
@@ -285,6 +320,7 @@ export function cleanBlock(b, ctx, depth = 0) {
     case 'columns': {
       const cols = Array.isArray(b.cols) ? b.cols.slice(0, LIMITS.cols) : [];
       out.cols = cols.map(c => (Array.isArray(c) ? c : []).slice(0, 20).map(x => depth ? null : cleanBlock(x && x.t === 'columns' ? null : x, ctx, 1)).filter(Boolean));
+      out.cols.forEach(c => c.forEach(x => delete x.pos));
       while (out.cols.length < 2) out.cols.push([]);
       break; }
     case 'table': {
@@ -312,7 +348,8 @@ export function cleanProject(p) {
   const ctx = { pages: order, imgs, seen: new Set() };
   for (const id of order) {
     const pg = p['p' + id];
-    out['p' + id] = { name: str(pg.name, 40).trim() || 'Page', blocks: (Array.isArray(pg.blocks) ? pg.blocks : []).slice(0, LIMITS.blocks).map(b => cleanBlock(b, ctx)).filter(Boolean) };
+    const o = out['p' + id] = { name: str(pg.name, 40).trim() || 'Page', blocks: (Array.isArray(pg.blocks) ? pg.blocks : []).slice(0, LIMITS.blocks).map(b => cleanBlock(b, ctx)).filter(Boolean) };
+    if (pg.free === true) { o.free = true; freePlace(o); } else o.blocks.forEach(b => delete b.pos);
   }
   // goals for a lesson travel with the project
   if (p.goals && typeof p.goals === 'object') out.goals = cleanGoals(p.goals);
@@ -353,8 +390,9 @@ export function newProject(template = 'blank', title) {
 
 // ── HTML out ──
 const SIZE = { s: '0.85em', l: '1.3em', xl: '1.7em' };
+export function posCSS(b) { const q = b.pos; return q ? [`grid-column: ${q.x} / span ${q.w}`, `grid-row: ${q.y} / span ${q.h}`].concat(q.z ? ['z-index: ' + q.z] : []) : []; }
 function styleOf(b) {
-  const s = [];
+  const s = posCSS(b);
   if (b.align) s.push('text-align: ' + b.align);
   if (b.color) s.push('color: ' + b.color);
   if (b.bg) s.push('background-color: ' + b.bg, 'padding: 12px 16px', 'border-radius: var(--r)');
@@ -375,15 +413,15 @@ export function blockHTML(b, ctx, ind = '') {
     case 'heading': return `${ind}<h${b.level}${id}${b.cls ? ' class="' + b.cls + '"' : ''}${st}>${inl(b.text)}</h${b.level}>`;
     case 'text': return `${ind}<p${id}${b.cls ? ' class="' + b.cls + '"' : ''}${st}>${inl(b.html)}</p>`;
     case 'image': return `${ind}<figure${id}${cls('pic' + (b.round ? ' round' : ''), b)}${st}>\n${ind}  <img src="${esc(srcOf(b.src, ctx))}" alt="${esc(b.alt)}" style="width: ${b.w}%">${b.caption ? `\n${ind}  <figcaption>${inl(b.caption)}</figcaption>` : ''}\n${ind}</figure>`;
-    case 'button': return `${ind}<p${id}${cls('btnrow', b)}${b.align ? ' style="text-align: ' + b.align + '"' : ''}><a class="btn"${b.link ? ` href="${esc(hrefOf(b.link, ctx))}"` + (/^https:/.test(b.link) ? ' target="_blank" rel="noopener noreferrer"' : '') : ''}${b.color || b.bg ? ` style="${b.bg ? 'background-color: ' + b.bg + '; ' : ''}${b.color ? 'color: ' + b.color : ''}"` : ''}>${esc(b.label)}</a></p>`;
+    case 'button': { const bs = posCSS(b).concat(b.align ? ['text-align: ' + b.align] : []); return `${ind}<p${id}${cls('btnrow', b)}${bs.length ? ' style="' + bs.join('; ') + '"' : ''}><a class="btn"${b.link ? ` href="${esc(hrefOf(b.link, ctx))}"` + (/^https:/.test(b.link) ? ' target="_blank" rel="noopener noreferrer"' : '') : ''}${b.color || b.bg ? ` style="${b.bg ? 'background-color: ' + b.bg + '; ' : ''}${b.color ? 'color: ' + b.color : ''}"` : ''}>${esc(b.label)}</a></p>`; }
     case 'list': { const tag = b.ordered ? 'ol' : 'ul'; return `${ind}<${tag}${id}${b.cls ? ' class="' + b.cls + '"' : ''}${st}>\n${b.items.map(x => `${ind}  <li>${inl(x)}</li>`).join('\n')}\n${ind}</${tag}>`; }
     case 'quote': return `${ind}<blockquote${id}${b.cls ? ' class="' + b.cls + '"' : ''}${st}>\n${ind}  <p>${inl(b.html)}</p>${b.by ? `\n${ind}  <cite>${esc(b.by)}</cite>` : ''}\n${ind}</blockquote>`;
     case 'banner': return `${ind}<header${id}${cls('banner', b)}${st}>${b.src ? `\n${ind}  <img src="${esc(srcOf(b.src, ctx))}" alt="">` : ''}\n${ind}  <h1>${inl(b.title)}</h1>${b.sub ? `\n${ind}  <p>${inl(b.sub)}</p>` : ''}\n${ind}</header>`;
     case 'card': return `${ind}<div${id}${cls('card', b)}${st}>${b.src ? `\n${ind}  <img src="${esc(srcOf(b.src, ctx))}" alt="${esc(b.alt)}">` : ''}\n${ind}  <h3>${inl(b.title)}</h3>\n${ind}  <p>${inl(b.html)}</p>${b.link ? `\n${ind}  <a class="more" href="${esc(hrefOf(b.link, ctx))}"${/^https:/.test(b.link) ? ' target="_blank" rel="noopener noreferrer"' : ''}>Find out more</a>` : ''}\n${ind}</div>`;
     case 'columns': return `${ind}<div${id}${cls('columns', b)}${st}>\n${b.cols.map(c => `${ind}  <div class="col">\n${c.map(x => blockHTML(x, ctx, ind + '    ')).join('\n')}\n${ind}  </div>`).join('\n')}\n${ind}</div>`;
     case 'table': return `${ind}<table${id}${b.cls ? ' class="' + b.cls + '"' : ''}${st}>\n${b.rows.map((r, i) => `${ind}  <tr>${r.map(c => { const t = b.head && i === 0 ? 'th' : 'td'; return `<${t}>${inl(c)}</${t}>`; }).join('')}</tr>`).join('\n')}\n${ind}</table>`;
-    case 'divider': return `${ind}<hr${id}${b.cls ? ' class="' + b.cls + '"' : ''}${b.color ? ' style="border-color: ' + b.color + '"' : ''}>`;
-    case 'space': return `${ind}<div${id}${cls('space', b)} style="height: ${b.h}px"></div>`;
+    case 'divider': { const ds = posCSS(b).concat(b.color ? ['border-color: ' + b.color] : []); return `${ind}<hr${id}${b.cls ? ' class="' + b.cls + '"' : ''}${ds.length ? ' style="' + ds.join('; ') + '"' : ''}>`; }
+    case 'space': return `${ind}<div${id}${cls('space', b)} style="${posCSS(b).concat(['height: ' + b.h + 'px']).join('; ')}"></div>`;
     case 'html': { const t = parseTree(b.html); return `${ind}<div${id}${cls('own', b)}${st}>\n${ind}  ${serialize(t.kids.map(k => cleanNode(k, { inline: false, pages: ctx.pages, imgs: ctx.imgs }, 0)).filter(Boolean), R)}\n${ind}</div>`; }
   }
   return '';
@@ -426,8 +464,12 @@ td, th { border: 2px solid rgba(127,127,127,0.3); padding: 8px 12px; text-align:
 th { background: var(--accent); color: #fff; }
 hr { border: 0; border-top: 3px solid var(--accent); margin: 1.5em 0; opacity: 0.7; }
 ul, ol { padding-left: 1.4em; } li { margin: 0.25em 0; }
+.free { display: grid; grid-template-columns: repeat(${GRID.cols}, minmax(0, 1fr)); grid-auto-rows: minmax(${GRID.row}px, auto); margin: 16px 0; }
+.free > * { margin: 0; min-width: 0; }
+@media (min-width: 601px) { .free > .pic img { width: 100% !important; } }
+.free > .space { height: auto !important; }
 .made { text-align: center; font-size: 0.8em; opacity: 0.6; padding: 24px 0 8px; }
-@media (max-width: 600px) { body { font-size: 16px; } h1 { font-size: 1.8em; } }
+@media (max-width: 600px) { body { font-size: 16px; } h1 { font-size: 1.8em; } .free { display: block; } .free > * { margin: 0.6em 0; } .free > .space { display: none; } }
 ${p.site.css ? '/* My own CSS */\n' + p.site.css : ''}`;
 }
 function navHTML(p, here, ctx) {
@@ -471,7 +513,7 @@ export function codeRefs(p) {
 export function siteHTML(p, opts = {}) {
   const ctx = { pages: p.site.order, imgs: p.imgs };
   const home = opts.home && p.site.order.includes(opts.home) ? opts.home : p.site.order[0]; // the page shown when there is no #
-  const body = p.site.order.map(id => `<section class="page${id === home ? ' home' : ''}" id="p-${id}">\n${navHTML(p, id, ctx)}${pageHTML(p, id).split('\n').map(l => '  ' + l).join('\n')}\n</section>`).join('\n');
+  const body = p.site.order.map(id => `<section class="page${id === home ? ' home' : ''}" id="p-${id}">\n${navHTML(p, id, ctx)}${p['p' + id].free ? '  <div class="free">\n' + pageHTML(p, id).split('\n').map(l => '    ' + l).join('\n') + '\n  </div>' : pageHTML(p, id).split('\n').map(l => '  ' + l).join('\n')}\n</section>`).join('\n');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -503,6 +545,8 @@ function styleFields(n, out) {
   const c = safeColour(g('color')); if (c) out.color = c;
   const b = safeColour(g('background-color') || g('background')); if (b) out.bg = b;
   const fs = g('font-size'); const k = Object.keys(SIZE).find(k => SIZE[k] === fs); if (k) out.size = k;
+  const gc = /^(\d+)\s*\/\s*span\s+(\d+)$/.exec(g('grid-column') || ''), gr = /^(\d+)\s*\/\s*span\s+(\d+)$/.exec(g('grid-row') || '');
+  if (gc && gr) { out.pos = { x: +gc[1], w: +gc[2], y: +gr[1], h: +gr[2] }; const z = parseInt(g('z-index'), 10); if (z > 0) out.pos.z = z; }
   return out;
 }
 // an <img src> as it appears in the Code tab is a data: URL; turn it back into our own reference
@@ -535,7 +579,7 @@ export function fromHTML(html, p, rnd) {
     if ((tag === 'header' || tag === 'section' || tag === 'div') && hasClass(n, 'banner')) { const h = kidsEl(n).find(k => /^h[1-3]$/.test(k.tag)), s = kidsEl(n).find(k => k.tag === 'p'), im = kidsEl(n).find(k => k.tag === 'img'); return mk('banner', { title: h ? innerHTML(h) : '', sub: s ? innerHTML(s) : '', src: im ? srcBack(im.attrs.src || '', p) : '' }, n); }
     if (tag === 'div' && hasClass(n, 'card')) { const h = kidsEl(n).find(k => /^h[1-6]$/.test(k.tag)), s = kidsEl(n).find(k => k.tag === 'p'), im = kidsEl(n).find(k => k.tag === 'img'), a = kidsEl(n).find(k => k.tag === 'a'); return mk('card', { title: h ? innerHTML(h) : '', html: s ? innerHTML(s) : '', src: im ? srcBack(im.attrs.src || '', p) : '', alt: im ? im.attrs.alt || '' : '', link: a ? a.attrs.href || '' : '' }, n); }
     if (tag === 'div' && hasClass(n, 'columns') && !depth) return mk('columns', { cols: kidsEl(n).filter(k => hasClass(k, 'col')).slice(0, 3).map(c => c.kids.map(k => toBlock(k, 1)).filter(Boolean)) }, n);
-    if (tag === 'div' && hasClass(n, 'space')) return mk('space', { h: clamp(parseInt((/height:\s*(\d+)px/.exec(n.attrs.style || '') || [])[1], 10), 8, 300, 40) }, null);
+    if (tag === 'div' && hasClass(n, 'space')) { const b = mk('space', { h: clamp(parseInt((/height:\s*(\d+)px/.exec(n.attrs.style || '') || [])[1], 10), 8, 300, 40) }, null); styleFields(n, b); delete b.color; delete b.bg; delete b.align; delete b.size; return b; }
     if (tag === 'div' && hasClass(n, 'own')) return mk('html', { html: serialize(n.kids.map(k => cleanNode(k, { inline: false, pages, imgs }, 0)).filter(Boolean)) }, n);
     if (INLINE.has(tag)) return mk('text', { html: serialize([cleanNode(n, { inline: true }, 0)].filter(Boolean)) });
     if (DROP.has(tag)) return null;

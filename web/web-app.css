@@ -150,3 +150,8 @@
   .wl-title { width: 140px; }
 }
 @media (max-width: 520px) { .wl-tiles { grid-template-columns: repeat(3, 1fr); } .wl-btn .lbl { display: none; } }
+
+.wl-pos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.wl-pos .wl-field input { width: 100%; }
+.wl-seg button .ic { width: 16px; height: 16px; vertical-align: -3px; }
+.wl-field input[type=number] { background: #18181c; border: 1px solid var(--wl-line); border-radius: 8px; padding: 6px 8px; color: var(--wl-text); font-weight: 600; }

@@ -58,6 +58,18 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   **Live:** `liveParts()` = held orphan pages + every page + imgs + site (pages FIRST so a partner never sees a page listed before it arrives);
   `liveSet` merges via `pool`. A page received before its site must still be reported by liveParts, or the host thinks it changed and sends a
   stale copy over the partner's edit (found by labs-collab). Test hooks `_proj/_page/_sel/_select/_tab/_shadow/_add/_applyHTML/_applyCSS/_goals`.
+- **Free layout** (23 Nov 2026, branch `claude/web-lab-free-layout`) — Charlie: "on web lab I want to be able to more freely resize and
+  place things". Per page: `p<id>.free = true` → every top-level block has `pos {x, y, w, h, z?}` on `GRID` (24 columns × 10 px rows;
+  h = LEAST height, rows are `minmax(10px, auto)` so words never get cut off). `cleanPos`, `freePlace(pg, heights)` (missing places go
+  under everything; a picture's place comes from its size % and line-up; blocks sorted by y then x = reading/phone order), `stackPlace`,
+  `posCSS`. Output: `<div class="free">` (CSS grid) inside the page's section; blocks carry `grid-column: x / span w; grid-row: y / span h`
+  (+ `z-index`), which `styleFields` reads back (Code tab round trip exact). CSS_PROPS allow grid-column/grid-row/align-self/
+  justify-self/z-index (still no `position`). `@media (max-width: 600px)` stacks a free page; pictures fill their box only on wider screens.
+  Blocks inside Columns never have a place. App: page inspector **Layout: Stacked | Free** (`setLayout` measures the drawn blocks so
+  the page starts out looking the same); drag a block (mouse; on touch only the handles) or the gold handles (`#wlHandles`: Move grip,
+  w/e/s/se edges); `rowEdges`/`rowAt` map the pointer to the real (grown) rows; `fitFree` raises h when the words need more room;
+  arrow keys move, Shift+arrows resize, Alt+↑/↓ nudge; inspector "Place on the page" (Across/Down/Width/Height, Full width, Bring to
+  front, Send to back). Phone view (`wl-narrow`) stacks and hides handles. Tests in web.test.mjs ("free layout").
 - **Host glue (mirrors the AI Lab):** `webBase/loadWebLab/webData/webApp/webCurrent/startNewWeb/enterWebUI/exitWebUI`, `body.web-mode`, `#web-ui`,
   payload `web`, chooser tile `data-pt="web"` (KS1 hidden), home tile + carousel slide (`home/web.jpg`, a real screenshot), icon `#i-web`,
   `WEB_HELP`, Teacher Guide "Web Lab" section (+ guide topic `web`), thumbnail badge, `LS_TYPE`/`LS_LAB_ORDER`, `LIVE_LABS.web`, offline list `web/`.

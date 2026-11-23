@@ -58,7 +58,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   **Live:** `liveParts()` = held orphan pages + every page + imgs + site (pages FIRST so a partner never sees a page listed before it arrives);
   `liveSet` merges via `pool`. A page received before its site must still be reported by liveParts, or the host thinks it changed and sends a
   stale copy over the partner's edit (found by labs-collab). Test hooks `_proj/_page/_sel/_select/_tab/_shadow/_add/_applyHTML/_applyCSS/_goals`.
-- **Free layout** (23 Nov 2026, branch `claude/web-lab-free-layout`) — Charlie: "on web lab I want to be able to more freely resize and
+- **Free layout** (23 Nov 2026, LIVE on main since 23 Nov 2026, CJ_VERSION 2026.11.23) — Charlie: "on web lab I want to be able to more freely resize and
   place things". Per page: `p<id>.free = true` → every top-level block has `pos {x, y, w, h, z?}` on `GRID` (24 columns × 10 px rows;
   h = LEAST height, rows are `minmax(10px, auto)` so words never get cut off). `cleanPos`, `freePlace(pg, heights)` (missing places go
   under everything; a picture's place comes from its size % and line-up; blocks sorted by y then x = reading/phone order), `stackPlace`,

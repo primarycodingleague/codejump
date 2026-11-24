@@ -43,12 +43,12 @@ async function person(uid) {
   return page;
 }
 const wf = (pg, fn, arg, t = 30000) => pg.waitForFunction(fn, arg, { timeout: t, polling: 150 }).then(() => true, () => false);
-const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp', applab: 'appLabApp' };
-const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb', applab: 'startNewAppLab' };
+const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp', applab: 'appLabApp', bricklab: 'brickLabApp' };
+const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb', applab: 'startNewAppLab', bricklab: 'startNewBrickLab' };
 const ready = (pg, lab) => wf(pg, ([lab, app]) => projectType === lab && eval(app) && (!eval(app)._ws || eval(app)._ws()) && labLive.base, [lab, APP[lab]], 45000);
 try {
   const A = await person('a'), B = await person('b'), C = await person('c');
-  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web,applab').split(',')) {
+  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web,applab,bricklab').split(',')) {
     newRoom();
     for (const p of [A, B, C]) await p.evaluate(() => { try { collabDisconnect(true); } catch (e) { /* not in one */ } });
     await A.evaluate(f => window[f]('ks2'), START[lab]);
@@ -118,6 +118,14 @@ try {
       ok(await wf(A, () => webApp._proj().site.order.length === 4 && webApp._proj().pqqqqqq && webApp._proj().pqqqqqq.name === 'Ben’s page'), 'web: a page Ben adds appears for Ana');
       await C.evaluate(r => collabConnect(r), 'room-web');
       ok(await ready(C, lab) && await wf(C, () => { const p = webApp._proj(), o = p.site.order; return o.length === 4 && p['p' + o[0]].blocks.some(b => b.t === 'quote') && p['p' + o[1]].blocks.some(b => b.t === 'card'); }), 'web: Cara joins late and gets every page');
+    }
+    if (lab === 'bricklab') {
+      await A.evaluate(() => { const ws = brickLabApp._ws(); const bl = ws.newBlock('br_light_off'); bl.initSvg(); bl.render(); bl.moveBy(500, 500); });
+      ok(await wf(B, () => brickLabApp._ws().getAllBlocks(false).some(b => b.type === 'br_light_off')), 'bricklab: a block Ana adds reaches Ben');
+      await B.evaluate(() => { const i = document.getElementById('bkTitle'); i.value = 'Crane'; i.dispatchEvent(new Event('input')); });
+      ok(await wf(A, () => brickLabApp.getProject().title === 'Crane'), 'bricklab: Ben’s name for the project reaches Ana');
+      await C.evaluate(r => collabConnect(r), 'room-bricklab');
+      ok(await ready(C, lab) && await wf(C, () => brickLabApp.getProject().title === 'Crane' && brickLabApp._ws().getAllBlocks(false).some(b => b.type === 'br_light_off')), 'bricklab: Cara joins late and gets the code and the name');
     }
     if (lab === 'applab') {
       await A.evaluate(() => document.querySelector('.al-starter[data-starter="kind"]').click());

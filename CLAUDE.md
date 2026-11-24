@@ -31,6 +31,42 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Brick Lab project type — `projectType==='bricklab'` (24 Nov 2026, branch `claude/brick-lab`; Phase 1 = WeDo 2.0) — Charlie: "a workspace for coding LEGO® Education robotics kits over Web Bluetooth"
+- **Charlie's choices:** name **Brick Lab** (Charlie first said "CodeJump Lab"; changed after hearing every tile is "… Lab"); KS2+KS3
+  (hidden for KS1); "Try without a hub" pretend hub for pupils; motor power mapped like Scratch (1–100 → 30–100, 0 = off); live
+  collaboration needed (see the cloud TODO below). **Never use "LEGO" in names, routes, files or code identifiers**; user-facing
+  descriptions may say "Works with LEGO® Education WeDo 2.0" + the trademark line ("LEGO is a trademark of the LEGO Group, which does
+  not sponsor, authorise or endorse CodeJump"). The block category is "WeDo" (Charlie asked for it).
+- **Drivers (`brick/drivers/`, no UI):** `hub-driver.js` = the interface every hub implements (request/connect/reconnect/disconnect,
+  state, kind, name, battery/batteryLow, ports {A,B: {device}}, values, motor(port, ±power), brake, stopAll, light(r,g,b), events
+  change/value/disconnect) + `HubBase` + `WriteQueue` (one GATT write at a time, ≤20/s, newest command per key replaces an older
+  unsent one, urgent = stop jumps the queue) + `bluetoothSupport()`. `wedo2.js` = Web Bluetooth (filter `services:[1523…]`,
+  optional IO + battery_service; attached-IO notifications → ports; tilt/distance set-up writes; INPUT_VALUES notifications →
+  values; battery = standard Battery Level if the hub has it, else the low-voltage alert → "Battery OK/low"). Protocol facts came from
+  the Scratch 3 WeDo 2.0 extension (scratch-vm, **AGPL-3.0: facts only, no code copied**); LEGO's WeDo2-SDK repo is gone (404), so
+  nothing is confirmed against LEGO docs. `sim.js` = the pretend hub (ports chosen by the pupil, setTilt/setDistance, motors/colour).
+  **SPIKE Essential / Prime go in as new drivers behind the same interface** (LWP3 / SPIKE Prime protocol), then a hub-kind chooser.
+- **Unverified until a real hub is tried (see the checklist):** tilt axis signs (`TILT_AXES` in brick-run.js — flip a sign there if
+  "forward" comes out as "back"); the distance scale (raw byte, assumed 0–100 with unit=percent; pretend hub and the
+  `when distance <` default (50) follow that); battery source; whether reconnect needs the picker on Android/ChromeOS.
+- **Runner (`brick/brick-run.js`, no DOM):** async interpreter over Blockly JSON (as the App Lab); hats br_when_run, br_when_tilted
+  (edge-triggered), br_when_distance (fires when the reading drops below N; primed at Run so a sensor already "in" doesn't fire);
+  a hat that fires again restarts its script; per-port motor state {power, dir, on}; Stop, disconnect, hidden tab and pagehide turn
+  every motor off. Blocks (`brick-blocks.js`, `br_*`, colours: events #d9a43a, WeDo #4c97ff, control #e8a33c).
+- **App (`brick/brick-app.js` + `.css`, scoped `.bk`):** blocks left, hub panel right (state, name, battery, port cards with live
+  readings, light swatch, pretend-hub tilt pad + distance slider + port pickers, Reconnect after a lost hub — no reload, no picker),
+  the message "Brick Lab needs Chrome or Edge on a Chromebook, Windows PC, Mac or Android tablet." when `bluetoothSupport()` fails.
+  `requestDevice` is the FIRST await after the tap (transient activation). Project = `{v, title, hub:'wedo2', blocks, sim:{A,B}}`.
+  Live parts `code` {blocks} and `info` {title}; the hub stays on each pupil's own device.
+- **Host glue (mirrors the App Lab):** `brickLabBase/loadBrickLab/brickLabData/brickLabApp/brickLabCurrent/startNewBrickLab/
+  enterBrickLabUI/exitBrickLabUI`, `body.bricklab-mode`, `#bricklab-ui`, payload `bricklab`, tile `data-pt="bricklab"`, home tile + slide
+  (`home/bricklab.jpg`), icon `#i-bricklab`, `BRICKLAB_HELP`, Teacher Guide "Brick Lab", guide topic `bricklab`, `LIVE_LABS.bricklab`,
+  offline list `brick/`.
+- **TODO in codejump-cloud (this session was refused access):** add 'bricklab' (and 'applab') to the worker's lp lab list, as v19 did
+  for 'web', so late joiners get the latest code from the room.
+- Tests: tests/brick.test.mjs (32: bytes, queue, runner, the lab against a FAKE Web Bluetooth hub incl. disconnect → Reconnect,
+  unsupported browser + pretend hub, Stage unaffected), labs-collab (`LABS=bricklab`).
+
 ## App Lab project type — `projectType==='applab'` (23 Nov 2026; LIVE on main since 24 Nov 2026, CJ_VERSION 2026.11.24) — Charlie: "App Lab where students can build, design and code their own apps"
 - **Charlie's choices:** name App Lab (Code.org also has an "App Lab"; Charlie was told and kept the name); mockup first (two rounds: the
   hand-drawn blocks "seem off", so the mockup moved to real Blockly in CodeJump's colours); v1 = Design + Code + Run + "Put it on my

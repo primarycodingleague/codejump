@@ -31,7 +31,7 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## App Lab project type — `projectType==='applab'` (23 Nov 2026, branch `claude/app-lab`) — Charlie: "App Lab where students can build, design and code their own apps"
+## App Lab project type — `projectType==='applab'` (23 Nov 2026; LIVE on main since 24 Nov 2026, CJ_VERSION 2026.11.24) — Charlie: "App Lab where students can build, design and code their own apps"
 - **Charlie's choices:** name App Lab (Code.org also has an "App Lab"; Charlie was told and kept the name); mockup first (two rounds: the
   hand-drawn blocks "seem off", so the mockup moved to real Blockly in CodeJump's colours); v1 = Design + Code + Run + "Put it on my
   phone" + starter apps. Lesson unit = later. KS2 + KS3 (hidden for KS1). The mockup lived in the session scratchpad only.

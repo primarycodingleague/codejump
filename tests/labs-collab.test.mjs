@@ -70,8 +70,13 @@ try {
       ok(x1 === x2 && (x1 === 5 || x1 === 3), 'craft: changing the same block at the same moment ends up the same for both');
       await A.evaluate(() => { const ws = craftApp._ws(); const bl = ws.newBlock('cr_h_say'); bl.initSvg(); bl.render(); bl.moveBy(400, 400); });
       ok(await wf(B, () => craftApp._ws().getAllBlocks(false).some(b => b.type === 'cr_h_say' && b.getRelativeToSurfaceXY().x > 300)), 'craft: a new block in Ana’s code appears in Ben’s');
+      // a whole world from a partner (New world, Undo, Restart) must not be sent back out: it used to bounce between screens,
+      // and a bounced old copy could wipe newer building (the late joiner then got an empty world)
+      await B.evaluate(() => { const o = window.collabSend; window.__crWorldSent = 0; window.collabSend = function (m) { if (m && m.op && m.op.k === 'cr_world') window.__crWorldSent++; return o.apply(this, arguments); }; });
       await A.evaluate(() => craftApp._world().reset());
       ok(await wf(B, () => craftApp._world().get(30, 16, 30) === 0 && craftApp._world().get(31, 13, 30) === 0), 'craft: New world clears it for Ben too');
+      await sleep(400);
+      ok(await B.evaluate(() => window.__crWorldSent) === 0, 'craft: Ben doesn’t send Ana’s new world back out');
       await A.evaluate(() => { const w = craftApp._world(); w.set(20, 13, 20, 22); w.set(20, 14, 20, 22); });
       await sleep(600);
       await C.evaluate(r => collabConnect(r), 'room-craft');

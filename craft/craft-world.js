@@ -214,9 +214,9 @@ export function createWorld() {
         for (let k = 0; k < n && p < tmp.length; k++) tmp[p++] = v;
       }
       if (p !== tmp.length) return false; // a damaged save: keep what we have
-      cells.set(tmp); for (const f of listeners) f(-1, -1, -1); return true;
+      cells.set(tmp); for (const f of listeners) f(-1, -1, -1, 0, 0, w.remote); return true; // remote: a partner's world (live rooms must not send it back out)
     },
-    reset(kind) { starter(w, kind); for (const f of listeners) f(-1, -1, -1); },
+    reset(kind) { starter(w, kind); for (const f of listeners) f(-1, -1, -1, 0, 0, w.remote); },
     guard: null, guards: {}, remote: false
   };
   starter(w);

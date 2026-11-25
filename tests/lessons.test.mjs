@@ -543,11 +543,17 @@ try {
     await page.waitForFunction(() => projectType === 'robot' && robotApp && robotApp._view() && robotApp._ws() && robotApp._ws().getTopBlocks().length === 1 &&
       robotApp._ws().getAllBlocks(false).some(x => x.type === 'rb_light_off'), null, { timeout: 30000 });
     ok(await page.evaluate(() => document.getElementById('lesson-guide').textContent.includes(lessonsMod.lesson('robot-storyteller').title)), 'Robot storyteller: the starter opens with its Lesson card');
+    // Sampling every 30 ms can miss the top of a nod (the next move starts the moment the head gets there), so every time the
+    // runner sees a motor arrive, that moment is logged too: a nod is counted from where the robot really got to, never missed.
     const rbRecord = () => page.evaluate(() => new Promise(res => {
       const log = []; let idle = 0;
+      const snap = () => { const v = robotApp._view(); return { b: document.getElementById('rbBubble').textContent, s: Object.assign({}, v.state().cur), eyes: v.robot.lights.eyes.emissive.getHexString() }; };
+      const v0 = robotApp._view();
+      if (!v0.__arrivedLogged) { const orig = v0.arrived; v0.arrived = function (m) { const r = orig.apply(this, arguments); if (r && window.__rbLog) window.__rbLog.push(Object.assign(snap(), { arr: m })); return r; }; v0.__arrivedLogged = true; }
+      window.__rbLog = log;
       const iv = setInterval(() => {
-        const v = robotApp._view(); log.push({ b: document.getElementById('rbBubble').textContent, s: v.state().cur, eyes: v.robot.lights.eyes.emissive.getHexString() });
-        if (!robotApp._runner().busy()) { if (!idle) idle = Date.now(); if (Date.now() - idle > 300) { clearInterval(iv); res(log); } } else idle = 0;
+        log.push(snap());
+        if (!robotApp._runner().busy()) { if (!idle) idle = Date.now(); if (Date.now() - idle > 300) { clearInterval(iv); window.__rbLog = null; res(log); } } else idle = 0;
       }, 30);
     }));
     await page.evaluate(() => robotApp.run());
@@ -570,7 +576,8 @@ try {
     await page.evaluate(() => robotApp.run());
     story = await rbRecord();
     gm = story.find(x => x.b === 'Good morning! I am Sparky.');
-    let nodsSeen = 0, up = false; for (const x of story.slice(story.indexOf(gm))) { if (!up && x.s.HeadNod >= 7) up = true; else if (up && x.s.HeadNod <= 3) { up = false; nodsSeen++; } }
+    // nods are counted from the moments the head really arrived (logged by rbRecord), so the count doesn't depend on timing
+    let nodsSeen = 0, up = false; for (const x of story.slice(story.indexOf(gm))) { if (x.arr !== 'HeadNod') continue; if (!up && x.s.HeadNod >= 7) up = true; else if (up && x.s.HeadNod <= 3) { up = false; nodsSeen++; } }
     const endPose = story[story.length - 1].s;
     ok(gm && gm.s.Eyelids === 1 && gm.eyes === 'ffd23f' && nodsSeen === 3 && endPose.HeadTurn === 5 && endPose.HeadNod === 5, 'Robot storyteller: fixed, it wakes up before “Good morning!”, then repeat 3 makes it nod 3 times (' + nodsSeen + ') and it ends looking ahead');
     await page.evaluate(() => robotApp._runner().tap('head'));

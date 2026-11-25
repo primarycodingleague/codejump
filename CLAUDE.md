@@ -838,6 +838,10 @@ asked for the look AND the default behaviour to match intelino EXACTLY; referenc
   a competition team room (that has its own sync).
 - The presence bar sits in the header for the labs (bottom-left ≤900 px). The Critter Lab used to leave any live room when its screen
   opened (`enterCritterUI`) — removed. Full `snapshot` messages are ignored for these labs (only the room's first copy uses one).
+- **Fixed 25 Nov 2026 (was live since 7 Oct):** `world.load()`/`reset()` didn't pass `w.remote` to change listeners, so a partner's
+  whole world (`cr_world`: New world, Undo, Restart) was sent back out by every screen that received it — an endless bounce in
+  which an old copy could wipe newer building (found as the flaky "Cara joins late" check). Listeners now get `w.remote`;
+  labs-collab checks that Ben sends nothing back after Ana's New world.
 - Tests: tests/labs-collab.test.mjs (stand-in room = worker v18; all four labs, both directions, same-moment change, late joiner);
   end to end against `wrangler dev` with 3 browsers (script in the session scratchpad); codejump-cloud tests cover v18 ops.
 

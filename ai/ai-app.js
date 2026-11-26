@@ -30,6 +30,7 @@ const TEMPLATE = `
     <button type="button" role="tab" class="al-tab" data-tab="train" id="alTabTrain"><span class="al-n">2</span> Train &amp; test</button>
     <button type="button" role="tab" class="al-tab" data-tab="code" id="alTabCode"><span class="al-n">3</span> Code it</button>
     <span class="al-status" id="alStatus" role="status" aria-live="polite"></span>
+    <button type="button" class="al-run al-run2" id="alRun2" data-pv-go="run" title="Run your program and go to the drawing pad">${ic('i-play')} Run</button>
   </div>
   <div class="al-goals" id="alGoals" hidden></div>
 
@@ -530,7 +531,10 @@ export function mount(root, host) {
     if (which === 'train') { showTrainState(); if (!training && brain && !stale()) status(T() ? 'Type in the box to test your AI.' : 'Draw on the pad to test your AI.'); }
     if (which === 'code') status(brain ? (T() ? 'Press Run, then type in the box.' : 'Press Run, then draw on the pad.') : 'Tip: teach and train your AI (steps 1 and 2) before you run your program.');
     if (which === 'teach') status('');
+    panes();
   }
+  // portrait tablets: in "Code it" CodeJump shows the blocks or the pad (a bar at the bottom picks); the other steps are one pane
+  function panes() { if (typeof window.cjPanes === 'function') window.cjPanes(tab === 'code' ? [['code', 'Code', 'i-code'], ['run', 'Run', 'i-play']] : null); }
   root.querySelectorAll('.al-tab').forEach(b => { b.onclick = () => show(b.dataset.tab); });
 
   const kindNow = () => kind;
@@ -552,7 +556,7 @@ export function mount(root, host) {
   $('alTrain').onclick = () => startTraining(false);
   $('alTestClear').onclick = () => { testPad.clear(); testMark = false; testGuess(); };
   $('alTestText').addEventListener('input', () => { if (!M.words($('alTestText').value).length) testMark = false; });
-  $('alRun').onclick = run; $('alStop').onclick = stop;
+  $('alRun').onclick = run; $('alRun2').onclick = run; $('alStop').onclick = stop;
   $('alPlayClear').onclick = () => { clearTimeout(idleTimer); playPad.clear(); };
   $('alDone').onclick = () => { unlockSpeech(); playGuess(); };
 
@@ -640,7 +644,7 @@ export function mount(root, host) {
     ready,
     getProject,
     setProject(p) { loadProject(p); if (!raf) raf = requestAnimationFrame(tick); }, // reopening after pause() must restart the loop, or Run does nothing
-    resume() { teachPad.size(); testPad.size(); playPad.size(); if (ws) Blockly.svgResize(ws); if (!raf) raf = requestAnimationFrame(tick); },
+    resume() { panes(); teachPad.size(); testPad.size(); playPad.size(); if (ws) Blockly.svgResize(ws); if (!raf) raf = requestAnimationFrame(tick); },
     pause() { if (runner) runner.stop(true); cancelAnimationFrame(raf); raf = 0; clearTimeout(idleTimer); },
     destroy() { alive = false; ro.disconnect(); cancelAnimationFrame(raf); if (training) training.cancel = true; if (runner) runner.stop(true); if (ws) ws.dispose(); root.innerHTML = ''; },
     show, run, stop, setKind,

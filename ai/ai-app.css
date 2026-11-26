@@ -140,3 +140,46 @@
 .ailab .al-glist li.ok .al-gtick { background: var(--al-green); border-color: var(--al-green); }
 .ailab .al-gtick .ic { width: 13px; height: 13px; filter: brightness(0) invert(1); }
 .ailab .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ── tablets (26 Nov 2026) ── */
+.ailab .al-run.al-run2 { display: none; margin-left: auto; }
+/* finger-sized controls on touch screens */
+body.is-touch .ailab .al-tab, body.is-touch .ailab .al-btn, body.is-touch .ailab .al-run, body.is-touch .ailab .al-kind button,
+body.is-touch .ailab .al-ghead { min-height: 44px; }
+body.is-touch .ailab .al-x { min-width: 44px; min-height: 44px; }
+body.is-touch .ailab .al-sel select { min-height: 36px; font-size: 14px; }
+body.is-touch .ailab .al-look summary { min-height: 44px; display: flex; align-items: center; }
+/* touch screens can't hover: show a small cross on each example so pupils know a tap removes it */
+@media (hover: none) {
+  .ailab .al-ex .al-del { display: flex; inset: auto; right: 0; top: 0; width: 18px; height: 18px; border-radius: 0 0 0 6px; }
+  .ailab .al-ex .al-del .ic { width: 12px; height: 12px; }
+}
+/* the drawing pads grow and shrink to fit their column (up to 360px), so Undo / Clear / Add stay on screen on short screens.
+   Only where the column has a fixed height: side by side (wider than 820px) or on a portrait tablet, where the steps fit the
+   screen too (the labels above, scrolling when there are many, and the pad below; "Code it" is one pane at a time). */
+@media (min-width: 821px), (orientation: portrait) and (max-width: 900px) {
+  .ailab .al-pad-col { container-type: size; }
+}
+@media (orientation: portrait) and (max-width: 900px) {
+  .ailab .al-view { flex-direction: column; }
+  .ailab .al-col { flex: 1 1 0; min-height: 0; overflow: auto; }
+  .ailab .al-labels-col, .ailab .al-view[data-view="train"] .al-col:first-child { flex: 0 1 auto; max-height: 46%; }
+  .ailab .al-pad-col { min-height: 270px; }
+  .ailab .al-blocks { flex: 1 1 auto; height: auto; }
+}
+.ailab .al-view[data-view="teach"] .al-padwrap, .ailab .al-view[data-view="train"] .al-padwrap { width: max(140px, min(100%, 360px, calc(100cqh - 130px))); }
+.ailab .al-view[data-view="code"] .al-padwrap { width: max(140px, min(100%, 360px, calc(100cqh - 230px))); }
+.ailab.k-text .al-view .al-padwrap { width: min(100%, 360px); }
+@media (orientation: landscape) and (max-height: 620px) {
+  .ailab { gap: 8px; }
+  .ailab .al-col { padding: 10px; gap: 8px; }
+  .ailab .al-prompt { font-size: 18px; }
+  .ailab .al-bubble { min-height: 2em; padding: 6px 12px; }
+  .ailab .al-view[data-view="code"] .al-padwrap { width: max(140px, min(100%, 360px, calc(100cqh - 205px))); }
+}
+/* portrait tablets: "Code it" shows one pane at a time, Code or Run (CodeJump's bar at the bottom picks; body.pv-on.pv-<id>) */
+body.pv-on .ailab .al-view.al-code { flex-direction: column; }
+body.pv-on .ailab .al-code .al-blocks, body.pv-on .ailab .al-code .al-pad-col { flex: 1 1 auto; height: auto; min-height: 0; overflow: auto; }
+body.pv-on.pv-code .ailab .al-code .al-pad-col, body.pv-on.pv-run .ailab .al-code .al-blocks { display: none; }
+body.pv-on.pv-code .ailab .al-run.al-run2 { display: inline-flex; }
+body.pv-on .ailab .al-view[data-view="code"] .al-padwrap { width: max(140px, min(100%, 480px, calc(100cqh - 230px))); }

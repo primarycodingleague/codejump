@@ -272,3 +272,62 @@
 .zk .zl-cbar i { display: block; height: 14px; border-radius: 4px; background: var(--zk-green); }
 .zk .zl-cbar i.neg { background: var(--zk-red); }
 .zk .zl-cbar b { text-align: right; }
+
+/* ---------- tablets (26 Nov 2026) ---------- */
+/* finger-sized controls on touch screens */
+body.is-touch .zk .zl-tool, body.is-touch .zk .zl-icon, body.is-touch .zk .zl-mode, body.is-touch .zk .zl-go,
+body.is-touch .zk .zl-seg button, body.is-touch .zk .zl-tabs button, body.is-touch .zk .zl-edit button,
+body.is-touch .zk .zl-dial-btns button, body.is-touch .zk .zl-btnrow button, body.is-touch .zk .zl-danger,
+body.is-touch .zk .zl-ghead, body.is-touch .zk .zl-check, body.is-touch .zk .zl-opp select { min-height: 44px; }
+body.is-touch .zk .zl-icon { min-width: 44px; justify-content: center; }
+body.is-touch .zk .zl-sd-slot .zl-icon { min-height: 44px; padding: 3px 8px; }
+body.is-touch .zk .zl-check input { width: 22px; height: 22px; }
+body.is-touch .zk .zl-swatches { gap: 8px; }
+body.is-touch .zk .zl-swatches button { width: 40px; height: 40px; }
+body.is-touch .zk .zl-part { min-height: 50px; }
+/* landscape tablets (and short screens): keep the parts, the Critter and its settings side by side, filling the screen;
+   the side panels scroll inside (the beat chart is below, as before) */
+@media (orientation: landscape) and (max-width: 1100px), (orientation: landscape) and (max-height: 620px) {
+  .zk .zl-stage { grid-template-columns: 150px minmax(0, 1fr) 240px; height: var(--zk-fit, 460px); }
+  .zk .zl-palette { grid-column: auto; overflow-y: auto; min-height: 0; padding: 10px; }
+  .zk .zl-parts { grid-template-columns: 1fr; }
+  .zk .zl-part { padding: 6px 7px; gap: 6px; font-size: 13px; }
+  .zk .zl-stage .zl-canvas-wrap { min-height: 0; }
+  .zk .zl-inspector { max-height: none; min-height: 0; padding: 10px; }
+  .zk .zl-name input { width: 160px; }
+  .zk .zl-tools { margin-left: 0; }
+}
+@media (orientation: landscape) and (max-height: 620px) {
+  .zk { gap: 8px; }
+  .zk .zl-bar { gap: 8px; }
+  .zk .zl-check { margin-top: 6px; }
+}
+/* portrait tablets: one pane at a time, the Critter, its Parts or its Settings (CodeJump's bar at the bottom picks;
+   body.pv-on.pv-<id>). The stage fills the screen; the beat chart sits under the Settings. */
+body.pv-on .zk .zl-stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: var(--zk-fit, 600px); }
+body.pv-on .zk .zl-stage > * { grid-column: 1; grid-row: 1; min-height: 0; }
+body.pv-on .zk .zl-stage .zl-canvas-wrap { min-height: 0; }
+body.pv-on .zk .zl-palette, body.pv-on .zk .zl-inspector { overflow-y: auto; max-height: none; }
+body.pv-on.pv-critter .zk .zl-palette, body.pv-on.pv-critter .zk .zl-inspector, body.pv-on.pv-critter .zk .zl-beats,
+body.pv-on.pv-parts .zk .zl-canvas-wrap, body.pv-on.pv-parts .zk .zl-inspector, body.pv-on.pv-parts .zk .zl-beats,
+body.pv-on.pv-settings .zk .zl-palette, body.pv-on.pv-settings .zk .zl-canvas-wrap { display: none; }
+body.pv-on .zk .zl-parts { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+body.pv-on .zk .zl-part { min-height: 56px; font-size: 14.5px; }
+body.pv-on .zk .zl-name { flex: 1 1 200px; }
+body.pv-on .zk .zl-name input { width: 100%; }
+body.pv-on .zk .zl-tools { margin-left: 0; }
+.zk .zl-hint-pv { display: none; }
+body.pv-on .zk .zl-hint-pv { display: inline; }
+body.pv-on .zk .zl-hint-wide { display: none; }
+body.is-touch .zk .zl-palette .zl-check { margin-top: 4px; }
+/* testing on a tablet: smaller contest cards, and the arena fills the rest of the screen (--zk-afit, set by fitStage) */
+@media (orientation: landscape) and (max-width: 1100px), (orientation: landscape) and (max-height: 620px), (orientation: portrait) and (max-width: 900px) {
+  .zk .zl-contests { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+  .zk .zl-contest { min-height: 52px; padding: 6px 8px; gap: 1px; }
+  .zk .zl-contest .ic { width: 16px; height: 16px; }
+  .zk .zl-arena-bar { margin-bottom: 6px; }
+  .zk #arenaCanvas { height: var(--zk-afit, 400px); }
+}
+@media (orientation: landscape) and (max-height: 620px) {
+  .zk #sdCanvas { height: max(260px, calc(100vh - 150px)); height: max(260px, calc(100dvh - 150px)); }
+}

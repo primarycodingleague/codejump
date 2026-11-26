@@ -23,7 +23,8 @@ const KEYNAME = { ' ': 'space', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'le
 const TEMPLATE = `
 <div class="tl">
   <div class="tl-left">
-    <div class="tl-trains" id="tlTrains" role="tablist" aria-label="Trains"></div>
+    <div class="tl-ltop"><div class="tl-trains" id="tlTrains" role="tablist" aria-label="Trains"></div>
+      <button type="button" class="tl-run tl-run2" id="tlRun2" data-pv-go="track" title="Run every train's program and watch the track">${ic('i-play')} Run</button></div>
     <div class="tl-blocks" id="tlBlocks" aria-label="Blocks editor"></div>
   </div>
   <div class="tl-view">
@@ -45,12 +46,14 @@ const TEMPLATE = `
       </div>
       <div class="tl-loading" id="tlLoading">Getting the Train Lab ready…</div>
     </div>
+    <div class="tl-dock">
     <div class="tl-tools" id="tlTools"></div>
     <div class="tl-settings" id="tlSettings">
       <label>Name <input id="tlName" maxlength="14" autocomplete="off"></label>
       <label>Colour <input type="color" id="tlColour"></label>
       <label title="The train starts with a wagon on its magnet"><input type="checkbox" id="tlWagon"> Pulls a wagon</label>
       <button type="button" class="tl-small" id="tlDelTrain">${ic('i-trash')} Remove train</button>
+    </div>
     </div>
   </div>
   <div class="tl-modal" id="tlModal" hidden><div class="tl-mbox" role="dialog" aria-modal="true" aria-labelledby="tlMTitle">
@@ -693,7 +696,7 @@ export function mount(root, host) {
   }
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey);
 
-  $('tlRun').onclick = run; $('tlStop').onclick = stop; $('tlReset').onclick = reset;
+  $('tlRun').onclick = run; $('tlRun2').onclick = run; $('tlStop').onclick = stop; $('tlReset').onclick = reset;
   $('tlName').addEventListener('input', () => { const t = proj.trains[sel]; if (!t) return; t.name = TM.cleanName($('tlName').value) || 'Train ' + (sel + 1); if (sim.trains[sel]) sim.trains[sel].name = t.name; renderTrainsSoon(); toolboxSoon(); changed(); });
   $('tlColour').addEventListener('input', () => { const t = proj.trains[sel]; if (!t || !okColour($('tlColour').value)) return; t.color = $('tlColour').value; if (sim.trains[sel]) sim.trains[sel].color = t.color; renderTrainsSoon(); setTool(tool); changed(); });
   let tbTimer = 0; function toolboxSoon() { clearTimeout(tbTimer); tbTimer = setTimeout(refreshToolbox, 500); }
@@ -704,6 +707,9 @@ export function mount(root, host) {
 
   const ro = new ResizeObserver(() => { if (ws) Blockly.svgResize(ws); });
   ro.observe($('tlBlocks'));
+  // portrait tablets: CodeJump shows one pane at a time (the blocks or the track), chosen in a bar at the bottom
+  function panes() { if (typeof window.cjPanes === 'function') window.cjPanes([['code', 'Code', 'i-code'], ['track', 'Track', 'i-train']]); }
+  panes();
 
   rebuild(); renderTrains(); renderTools();
   const ready = (async () => {
@@ -880,7 +886,7 @@ export function mount(root, host) {
       status('Press Run: the trains follow the snaps by themselves. Add blocks to do more.');
       if (!raf && ws) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
     },
-    resume() { if (ws) Blockly.svgResize(ws); if (!raf && ws) raf = requestAnimationFrame(tick); },
+    resume() { panes(); if (ws) Blockly.svgResize(ws); if (!raf && ws) raf = requestAnimationFrame(tick); },
     pause() { if (runner) runner.stop(true); cancelAnimationFrame(raf); raf = 0; },
     destroy() {
       alive = false; ro.disconnect(); cancelAnimationFrame(raf);

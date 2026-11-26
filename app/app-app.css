@@ -161,3 +161,4 @@ body.is-touch .al-sel i[data-h="e"] { right: -14px; margin-top: -13px; } body.is
   .al-title { width: 150px; }
   .al-bar { padding: 6px 10px; }
 }
+body.pv-on .al-toast { bottom: 78px; }

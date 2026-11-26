@@ -175,6 +175,7 @@ export const TOPICS = [
   { id: 'web', group: 1, title: 'Web Lab', legacy: ['Web Lab'] },
   { id: 'applab', group: 1, title: 'App Lab', legacy: ['App Lab'] },
   { id: 'bricklab', group: 1, title: 'Brick Lab', legacy: ['Brick Lab'] },
+  { id: 'print3d', group: 1, title: 'Print Lab', legacy: ['Print Lab'] },
   {
     id: 'robot', group: 1, title: 'Robot Lab', legacy: ['Robot Lab'],
     summary: 'A 3D robot head and shoulders to code with blocks: eight motors, lights, faces and a voice. Great for conversations, quizzes and short robot plays.',

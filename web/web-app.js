@@ -86,6 +86,7 @@ export function mount(root, host) {
   const $ = id => root.querySelector('#' + id), wl = root.querySelector('.wl');
   const toast = (m) => { if (host.toast) host.toast(m); else { const t = document.createElement('div'); t.className = 'wl-toast'; t.textContent = m; wl.appendChild(t); setTimeout(() => t.remove(), 2200); } };
   const confirm = async m => host.confirm ? !!(await host.confirm(m)) : window.confirm(m);
+  const touch = () => document.body.classList.contains('is-touch'), pvOn = () => document.body.classList.contains('pv-on');
   const canvasHost = $('wlCanvas'), shadow = canvasHost.attachShadow({ mode: 'open' });
 
   let proj, page, sel = null, tab = 'design', side = 'add', device = 'computer';
@@ -136,13 +137,13 @@ export function mount(root, host) {
   // ── left panel ──
   function left() {
     const L = $('wlLeft');
-    if (tab === 'code') { L.innerHTML = `<div class="wl-side"><h3>Pages</h3>${pagesHTML()}<p class="wl-hint">The HTML on the right is the page you pick here. Change it and your page changes too. Things a website can’t safely run (like &lt;script&gt;) are taken out.</p></div>`; bindPages(L); return; }
+    if (tab === 'code') { L.innerHTML = `<div class="wl-side"><h3>Pages</h3>${pagesHTML()}<p class="wl-hint">The HTML ${pvOn() ? 'in <b>Code</b>' : 'on the right'} is the page you pick here. Change it and your page changes too. Things a website can’t safely run (like &lt;script&gt;) are taken out.</p></div>`; bindPages(L); return; }
     L.innerHTML = `<div class="wl-side-tabs" role="tablist">${[['add', 'Add'], ['pages', 'Pages'], ['style', 'Style']].map(([k, n]) => `<button class="wl-side-tab" role="tab" data-side="${k}" aria-selected="${side === k}">${n}</button>`).join('')}</div><div class="wl-side" id="wlSide"></div>`;
     L.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { side = b.dataset.side; left(); });
     const S = L.querySelector('#wlSide');
     if (side === 'add') {
-      S.innerHTML = `<h3>Add to the page</h3><div class="wl-tiles">${W.BLOCK_KEYS.map(k => `<button class="wl-tile" data-add="${k}" title="Add a ${esc(W.BLOCKS[k][0].toLowerCase())}">${ICON[W.BLOCKS[k][1]] || ICON.text}${esc(W.BLOCKS[k][0])}</button>`).join('')}</div>
-        <p class="wl-hint">Tap a block to add it under the one you have chosen. Click anything on the page to change it.</p>
+      S.innerHTML = `<h3>Add to the page</h3><div class="wl-tiles">${W.BLOCK_KEYS.map(k => `<button class="wl-tile" data-add="${k}" data-pv-go="page" title="Add a ${esc(W.BLOCKS[k][0].toLowerCase())}">${ICON[W.BLOCKS[k][1]] || ICON.text}${esc(W.BLOCKS[k][0])}</button>`).join('')}</div>
+        <p class="wl-hint">Tap a block to add it under the one you have chosen. ${touch() ? 'Tap' : 'Click'} anything on the page to change it.</p>
         <button class="wl-btn" id="wlTpl" style="width:100%">${ICON.sparkle} Start from a template</button>`;
       S.querySelectorAll('[data-add]').forEach(b => b.onclick = () => addBlock(b.dataset.add));
       S.querySelector('#wlTpl').onclick = () => templates(false);
@@ -153,7 +154,7 @@ export function mount(root, host) {
     } else styleSide(S);
   }
   function pagesHTML() {
-    return `<ul class="wl-pages">${proj.site.order.map((id, i) => `<li class="wl-page${id === page ? ' on' : ''}" data-pid="${id}"><button class="name" data-open="${id}" title="Open this page">${ICON.page} ${esc(proj['p' + id].name)}</button>${i === 0 ? '<small>Home</small>' : ''}
+    return `<ul class="wl-pages">${proj.site.order.map((id, i) => `<li class="wl-page${id === page ? ' on' : ''}" data-pid="${id}"><button class="name" data-open="${id}" data-pv-go="${tab === 'code' ? 'code' : 'page'}" title="Open this page">${ICON.page} ${esc(proj['p' + id].name)}</button>${i === 0 ? '<small>Home</small>' : ''}
       ${tab === 'code' ? '' : `<button class="wl-mini" data-ren="${id}" title="Rename" aria-label="Rename ${esc(proj['p' + id].name)}">${ICON.design}</button><button class="wl-mini" data-pup="${id}" title="Move up" aria-label="Move up"${i ? '' : ' disabled'}>${ICON.up}</button><button class="wl-mini" data-pdel="${id}" title="Delete page" aria-label="Delete ${esc(proj['p' + id].name)}"${proj.site.order.length > 1 ? '' : ' disabled'}>${ICON.trash}</button>`}</li>`).join('')}</ul>`;
   }
   function bindPages(S) {
@@ -209,6 +210,12 @@ export function mount(root, host) {
     .wl-handles [data-drag="e"] { right: -10px; } .wl-handles [data-drag="w"] { left: -10px; }
     .wl-handles [data-drag="s"] { left: 50%; bottom: -10px; width: 34px; height: 12px; margin-left: -17px; border-radius: 6px; cursor: ns-resize; }
     .wl-handles [data-drag="se"] { right: -10px; bottom: -10px; width: 16px; height: 16px; border-radius: 50%; cursor: nwse-resize; }
+    .wl-handles.wl-gin .wl-grip { top: 4px; left: 4px; }
+    .wl-touch .wl-grip { height: 40px; top: -46px; font-size: 14px; padding: 0 12px !important; }
+    .wl-touch .wl-handles [data-drag="e"], .wl-touch .wl-handles [data-drag="w"] { width: 24px; height: 48px; margin-top: -24px; border-radius: 12px; }
+    .wl-touch .wl-handles [data-drag="e"] { right: -12px; } .wl-touch .wl-handles [data-drag="w"] { left: -12px; }
+    .wl-touch .wl-handles [data-drag="s"] { width: 48px; height: 24px; margin-left: -24px; bottom: -12px; border-radius: 12px; }
+    .wl-touch .wl-handles [data-drag="se"] { width: 32px; height: 32px; right: -14px; bottom: -14px; }
     .wl-narrow .free { display: block; background: none; } .wl-narrow .free > * { margin: 0.6em 0; } .wl-narrow .free > .space { display: none; }
     .columns > .col:empty::after { content: 'Empty column: choose it, then add blocks'; display: block; color: #aaa; font: italic 14px sans-serif; padding: 16px; border: 2px dashed #ddd; border-radius: 10px; }`;
   function navHTML() {
@@ -224,7 +231,7 @@ export function mount(root, host) {
     const css = W.siteCSS(proj).replace(/^:root \{/m, ':host {').replace(/^body \{/m, '.wl-body {').replace(/^\* \{/m, '* {');
     // the phone view is drawn in a computer-sized window: leave out what only applies to bigger screens
     const cssFor = device === 'phone' ? css.replace(/^@media \(min-width: 601px\).*$/m, '') : css;
-    shadow.innerHTML = `<style>${cssFor}${EDIT_CSS}</style><div class="wl-body${device === 'phone' ? ' wl-narrow' : ''}"><div class="page" id="wlPage">${navHTML()}${body || ''}<div class="wl-addhere">${pg.blocks.length ? 'Choose a block, then add another from the left' : 'This page is empty. Add a block from the left.'}</div></div></div>`;
+    shadow.innerHTML = `<style>${cssFor}${EDIT_CSS}</style><div class="wl-body${device === 'phone' ? ' wl-narrow' : ''}${touch() ? ' wl-touch' : ''}"><div class="page" id="wlPage">${navHTML()}${body || ''}<div class="wl-addhere">${pg.blocks.length ? `Choose a block, then add another from ${pvOn() ? 'Add' : 'the left'}` : `This page is empty. Add a block from ${pvOn() ? 'Add' : 'the left'}.`}</div></div></div>`;
     $('wlFrame').className = 'wl-frame ' + device;
     $('wlFrame').style.background = proj.site.theme.bg;
     if (sel) editable(sel);
@@ -269,7 +276,7 @@ export function mount(root, host) {
     tbar = document.createElement('div'); tbar.className = 'wl-tbar'; tbar.setAttribute('role', 'toolbar'); tbar.setAttribute('aria-label', 'Text style');
     tbar.innerHTML = `<button data-cmd="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button><button data-cmd="italic" title="Slanted (Ctrl+I)" aria-label="Italic"><i>I</i></button><button data-cmd="underline" title="Underline" aria-label="Underline"><u>U</u></button><button data-cmd="link" title="Make a link" aria-label="Link">${ICON.link}</button><button data-cmd="unlink" title="Remove the link" aria-label="Remove link">${ICON.x}</button>`;
     wl.appendChild(tbar);
-    const place = () => { if (!tbar) return; const r = el.getBoundingClientRect(), w = wl.getBoundingClientRect(), st = $('wlStage').getBoundingClientRect(); tbar.style.left = Math.max(8, r.left - w.left) + 'px'; tbar.style.top = Math.max(st.top - w.top + 4, r.top - w.top - 40) + 'px'; tbar.hidden = r.bottom < st.top || r.top > st.bottom; };
+    const place = () => { if (!tbar) return; const r = el.getBoundingClientRect(), w = wl.getBoundingClientRect(), st = $('wlStage').getBoundingClientRect(); tbar.style.left = Math.max(8, r.left - w.left + (isFree() && device !== 'phone' ? (touch() ? 120 : 100) : 0)) + 'px'; /* on a free page, beside the Move grip, not over it */ tbar.style.top = Math.max(st.top - w.top + 4, r.top - w.top - 40) + 'px'; tbar.hidden = r.bottom < st.top || r.top > st.bottom; };
     place(); $('wlStage').onscroll = place;
     tbar.addEventListener('mousedown', e => { e.preventDefault(); keepRange(); });
     tbar.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = e => {
@@ -355,7 +362,11 @@ export function mount(root, host) {
     h.innerHTML = `<button class="wl-grip" data-drag="move" title="Drag to move it. The arrow keys move it too." aria-label="Move">${ICON.move} Move</button><button data-drag="w" title="Drag to change its width" aria-label="Left edge"></button><button data-drag="e" title="Drag to change its width" aria-label="Right edge"></button><button data-drag="s" title="Drag to make it taller" aria-label="Bottom edge"></button><button data-drag="se" title="Drag to change its size" aria-label="Corner"></button>`;
     fr.appendChild(h); placeHandles(h, el);
   }
-  function placeHandles(h, el) { Object.assign(h.style, { left: el.offsetLeft + 'px', top: el.offsetTop + 'px', width: el.offsetWidth + 'px', height: el.offsetHeight + 'px' }); }
+  function placeHandles(h, el) {
+    Object.assign(h.style, { left: el.offsetLeft + 'px', top: el.offsetTop + 'px', width: el.offsetWidth + 'px', height: el.offsetHeight + 'px' });
+    // a block at the very top of the page: its Move grip goes just inside it, or the page's edge would hide it
+    h.classList.toggle('wl-gin', el.getBoundingClientRect().top - $('wlFrame').getBoundingClientRect().top < (touch() ? 52 : 40));
+  }
   let drag = null, swallowClick = false;
   shadow.addEventListener('dragstart', e => { if (isFree()) e.preventDefault(); }); // no browser picture-dragging on a free page
   shadow.addEventListener('pointerdown', e => {
@@ -445,7 +456,7 @@ export function mount(root, host) {
   function right() {
     const R = $('wlRight');
     const f = sel && findBlock(sel);
-    if (!f) { R.innerHTML = `<div class="wl-insp-h">${ICON.page} ${esc(proj['p' + page].name)}</div><p class="wl-hint">Click anything on the page to change it, or add a block from the left.</p>
+    if (!f) { R.innerHTML = `<div class="wl-insp-h">${ICON.page} ${esc(proj['p' + page].name)}</div><p class="wl-hint">${touch() ? 'Tap' : 'Click'} anything on the page to change it, or add a block from ${pvOn() ? '<b>Add</b>' : 'the left'}.</p>
       <h3>This page</h3><label class="wl-field">Page name<input id="wlPgName" maxlength="40" value="${esc(proj['p' + page].name)}"></label>
       <h3>Layout</h3><div class="wl-seg" role="group" aria-label="Layout"><button data-layout="stack" aria-pressed="${!isFree()}">${ICON.stack} Stacked</button><button data-layout="free" aria-pressed="${isFree()}">${ICON.free} Free</button></div>
       <p class="wl-hint">${isFree() ? 'Drag blocks anywhere on the page and pull their edges to resize them. On a phone they still go one under another, top to bottom.' : 'Blocks go one under another. Choose <b>Free</b> to drag them anywhere and resize them.'}</p>`;
@@ -628,7 +639,7 @@ export function mount(root, host) {
   }
   function check() {
     const list = W.checkSite(proj);
-    pop(`<h2>Check my site</h2><ul class="wl-checks">${list.map((x, i) => `<li class="${x.level}"><b>${x.level === 'warn' ? 'Fix' : x.level === 'tip' ? 'Tip' : 'Good'}</b><span>${esc(x.text)}</span>${x.page ? `<button class="wl-btn" data-show="${i}">Show me</button>` : ''}</li>`).join('')}</ul><div class="wl-acts"><button class="wl-btn gold" data-close>Done</button></div>`, box => {
+    pop(`<h2>Check my site</h2><ul class="wl-checks">${list.map((x, i) => `<li class="${x.level}"><b>${x.level === 'warn' ? 'Fix' : x.level === 'tip' ? 'Tip' : 'Good'}</b><span>${esc(x.text)}</span>${x.page ? `<button class="wl-btn" data-show="${i}" data-pv-go="page">Show me</button>` : ''}</li>`).join('')}</ul><div class="wl-acts"><button class="wl-btn gold" data-close>Done</button></div>`, box => {
       box.querySelectorAll('[data-show]').forEach(b => b.onclick = () => { const x = list[+b.dataset.show]; page = x.page; sel = x.block; tab = 'design'; closePop(); render(); const el = shadow.querySelector(`[data-bid="${x.block}"]`); if (el) el.scrollIntoView({ block: 'center' }); });
     });
   }
@@ -653,12 +664,18 @@ export function mount(root, host) {
     if (!all) goalsWereDone = false;
   }
 
+  // ── portrait tablets: one pane at a time (CodeJump's Code / Run switch at the bottom; web-app.css shows the chosen one) ──
+  function panes() {
+    if (!window.cjPanes || !root.isConnected || !document.body.classList.contains('web-mode')) return;
+    window.cjPanes(tab === 'design' ? [['page', 'Page', 'i-page'], ['add', 'Add', 'i-plus'], ['settings', 'Settings', 'i-gear']] : tab === 'code' ? [['code', 'Code', 'i-code'], ['pages', 'Pages', 'i-layers']] : null);
+  }
+
   // ── draw everything ──
   function render() {
     if (destroyed) return;
     if (!proj['p' + page]) page = proj.site.order[0];
     if (sel && !findBlock(sel)) sel = null;
-    bar(); left(); right();
+    panes(); bar(); left(); right();
     $('wlStage').hidden = tab !== 'design'; $('wlCode').hidden = tab !== 'code'; $('wlPreview').hidden = tab !== 'preview';
     if (tab === 'design') canvas(); else hideToolbar();
     code(); preview(); goals();

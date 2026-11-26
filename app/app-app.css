@@ -44,7 +44,8 @@
 .al-hint.center { text-align: center; }
 
 .al-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.al-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; background: var(--al-panel2); border: 1px solid var(--al-line); border-radius: 10px; cursor: grab; font-weight: 700; font-size: 12px; touch-action: none; user-select: none; }
+.al-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; background: var(--al-panel2); border: 1px solid var(--al-line); border-radius: 10px; cursor: grab; font-weight: 700; font-size: 12px; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.al-tile.al-held { border-color: var(--al-gold); background: #33302a; }
 .al-tile:hover { border-color: var(--al-gold); }
 .al-tile .ic { width: 26px; height: 26px; color: var(--al-gold2); }
 .al-ghost { position: fixed; z-index: 9999; transform: translate(-50%, -50%); pointer-events: none; background: var(--al-gold); color: #000; font-weight: 800; padding: 8px 12px; border-radius: 10px; display: flex; gap: 6px; align-items: center; box-shadow: 0 8px 20px rgba(0,0,0,.4); font-family: var(--font, 'Montserrat', sans-serif); }
@@ -123,4 +124,40 @@
   .al-stage { min-height: 520px; }
   .al-share { grid-template-columns: 1fr; }
   .al-title { width: 130px; }
+}
+
+/* portrait tablets: one pane at a time, chosen in CodeJump's switch at the bottom (body.pv-on + body.pv-<pane>; panes() in app-app.js).
+   Design: Parts / Phone / Settings. Code: Code / Phone. While the app runs in Design, only the phone shows. */
+@media (orientation: portrait) and (max-width: 900px) {
+  .al-main, .al.code .al-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-auto-rows: 0; overflow: hidden; }
+  .al-stage { min-height: 0; }
+  .al.running:not(.code) .al-left, .al.running:not(.code) .al-right { display: none; }
+}
+body.pv-on .al-left, body.pv-on .al-right { border: 0; }
+body.pv-on.pv-parts .al-centre, body.pv-on.pv-parts .al-right, body.pv-on.pv-phone .al-left, body.pv-on.pv-phone .al:not(.code) .al-right,
+body.pv-on.pv-settings .al-left, body.pv-on.pv-settings .al-centre, body.pv-on.pv-code .al-right { display: none; }
+body.pv-on.pv-phone .al.code .al-centre { display: none; }
+body.pv-on.pv-phone .al.code .al-right { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+body.pv-on .al-tiles { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+
+/* touch screens (CodeJump sets body.is-touch): finger-sized controls, and the words stay on the buttons (no hover tooltips) */
+body.is-touch .al-btn .lbl { display: inline; }
+body.is-touch .al-btn, body.is-touch .al-tab, body.is-touch .al-seg button, body.is-touch .al-scr { min-height: 44px; min-width: 44px; }
+body.is-touch .al-title, body.is-touch .al-field input:not([type=range]):not([type=checkbox]), body.is-touch .al-link input { min-height: 44px; font-size: 15px; }
+body.is-touch .al-field input[type=range] { height: 32px; }
+body.is-touch .al-colour { min-height: 44px; }
+body.is-touch .al-colour input[type=color] { width: 52px; height: 40px; }
+body.is-touch .al-colour input[type=checkbox] { width: 26px; height: 26px; }
+body.is-touch .al-tile { min-height: 64px; font-size: 13px; }
+body.is-touch .al-hint, body.is-touch .al-stagehint { font-size: 13px; }
+body.is-touch .al-pics { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+body.is-touch .al-sel i { width: 26px; height: 26px; }
+body.is-touch .al-sel i[data-h="nw"] { left: -14px; top: -14px; } body.is-touch .al-sel i[data-h="ne"] { right: -14px; top: -14px; }
+body.is-touch .al-sel i[data-h="sw"] { left: -14px; bottom: -14px; } body.is-touch .al-sel i[data-h="se"] { right: -14px; bottom: -14px; }
+body.is-touch .al-sel i[data-h="e"] { right: -14px; margin-top: -13px; } body.is-touch .al-sel i[data-h="s"] { bottom: -14px; margin-left: -13px; }
+/* short landscape screens (the Fire 8 at ~540px): keep the top bar to one row (those two buttons keep their aria-labels and tooltips) */
+@media (orientation: landscape) and (max-height: 620px) {
+  body.is-touch .al #alCheck .lbl, body.is-touch .al #alStarters .lbl { display: none; }
+  .al-title { width: 150px; }
+  .al-bar { padding: 6px 10px; }
 }

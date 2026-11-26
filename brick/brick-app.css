@@ -59,3 +59,26 @@
 .bk-field input { width: 100%; accent-color: var(--bk-gold); }
 .bk.running .bk-blocks { box-shadow: inset 0 0 0 3px #22c55e; }
 @media (max-width: 900px) { .bk-main { grid-template-columns: 1fr; grid-template-rows: 60vh auto; overflow-y: auto; } .bk-panel { border-left: 0; border-top: 1px solid var(--bk-line); } .bk-title { width: 140px; } }
+
+/* portrait tablets: one pane at a time, Code or Hub, chosen in CodeJump's switch at the bottom (body.pv-on + body.pv-<pane>) */
+@media (orientation: portrait) and (max-width: 900px) { .bk-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; } .bk-panel { border: 0; } }
+body.pv-on.pv-code .bk-panel, body.pv-on.pv-hub .bk-blocks { display: none; }
+body.pv-on.pv-hub .bk-panel { padding: 14px 16px; }
+
+/* touch screens (CodeJump sets body.is-touch): finger-sized controls; the pretend hub's tilt pad and distance slider too */
+body.is-touch .bk-btn, body.is-touch .bk-title, body.is-touch .bk-pick { min-height: 44px; min-width: 44px; }
+body.is-touch .bk-title { font-size: 15px; }
+body.is-touch .bk-hint { font-size: 13px; }
+body.is-touch .bk-pad { grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 6px; }
+body.is-touch .bk-pad button { font-size: 20px; touch-action: manipulation; }
+body.is-touch .bk-pad .t-level { font-size: 13px; }
+body.is-touch .bk-field input[type=range] { height: 44px; touch-action: pan-y; }
+body.is-touch .bk-sim b { font-size: 14px; }
+/* short landscape screens (the Fire 8 at ~540px): the pretend hub's controls come straight after the hub's state, so the tilt pad
+   and distance slider are on screen without scrolling the panel */
+@media (orientation: landscape) and (max-height: 620px) {
+  .bk-panel { display: flex; flex-direction: column; padding: 10px; }
+  .bk-panel > h3, .bk-panel > .bk-state { order: -2; }
+  .bk-panel > .bk-sim { order: -1; margin: 4px 0; padding: 8px; }
+  body.is-touch .bk-pad { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 46px); margin-top: 4px; }
+}

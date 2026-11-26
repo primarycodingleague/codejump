@@ -31,7 +31,7 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
-## Tablets (26 Nov 2026, branch `claude/tablet`) — Charlie: "works really well on laptops, but on tablets it feels a bit clanky… things don't resize properly"
+## Tablets (live 26 Nov 2026, CJ_VERSION 2026.11.26) — Charlie: "works really well on laptops, but on tablets it feels a bit clanky… things don't resize properly"
 - **Charlie's choices:** portrait tablets get a **Code / Run switch** (one pane at a time), not stacked panes; all three phases at once.
 - **Host:** `body.is-touch` → controls ≥44px. Short landscape = `@media (orientation:landscape) and (max-height:620px)` (Fire 8 is
   ~962×540 after the address bar). Portrait ≤900px wide + a lab that declared panes → `body.pv-on` + `body.pv-<id>` and the
@@ -50,7 +50,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **Tests:** tests/tablet-lib.mjs (`runTablet(SCREENS)`, profiles ipadL 1024×700, ipadP 768×950, fireL 962×540, fireP 601×900;
   `TABLET=<profile>` filters) + tablet.test.mjs (host screens) + tablet-labs-{a,b,c}.test.mjs. Not yet tried on a real device.
 
-## Brick Lab project type — `projectType==='bricklab'` (24 Nov 2026, branch `claude/brick-lab`; Phase 1 = WeDo 2.0) — Charlie: "a workspace for coding LEGO® Education robotics kits over Web Bluetooth"
+## Brick Lab project type — `projectType==='bricklab'` (24 Nov 2026, live 26 Nov 2026 in 2026.11.26 before a real-hub test; Phase 1 = WeDo 2.0) — Charlie: "a workspace for coding LEGO® Education robotics kits over Web Bluetooth"
 - **Charlie's choices:** name **Brick Lab** (Charlie first said "CodeJump Lab"; changed after hearing every tile is "… Lab"); KS2+KS3
   (hidden for KS1); "Try without a hub" pretend hub for pupils; motor power mapped like Scratch (1–100 → 30–100, 0 = off); live
   collaboration needed (see the cloud TODO below). **Never use "LEGO" in names, routes, files or code identifiers**; user-facing

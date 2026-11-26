@@ -864,7 +864,7 @@ body.ai-mode #t-cave,body.ai-mode #t-mute,body.ai-mode #t-hand,body.ai-mode #rot
 body.ai-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.ai-mode #ai-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #ai-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
-@media(max-width:820px){body.ai-mode #cwrap{overflow:auto;}body.ai-mode #ai-ui{min-height:900px;}}
+@media(max-width:820px) and (orientation:landscape){body.ai-mode #cwrap{overflow:auto;}body.ai-mode #ai-ui{min-height:900px;}}
 /* ── Train Lab (train/train-app.js + train-app.css, lazy-loaded) ── */
 #train-ui{display:none;}
 body.train-mode #btn-build,body.train-mode #btn-play,body.train-mode #btn-code,
@@ -878,7 +878,7 @@ body.train-mode #t-cave,body.train-mode #t-mute,body.train-mode #t-hand,body.tra
 body.train-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.train-mode #train-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #train-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
-@media(max-width:820px){body.train-mode #cwrap{overflow:auto;}body.train-mode #train-ui{min-height:960px;}}
+@media(max-width:820px){body.train-mode:not(.pv-on) #cwrap{overflow:auto;}body.train-mode:not(.pv-on) #train-ui{min-height:960px;}}
 /* ── Build Lab (craft/craft-app.js + craft-app.css, lazy-loaded) ── */
 #craft-ui{display:none;}
 body.craft-mode #btn-build,body.craft-mode #btn-play,body.craft-mode #btn-code,
@@ -926,7 +926,7 @@ body.critter-mode #btn-design,body.critter-mode #btn-read,body.critter-mode #pal
 body.critter-mode #play-mute,body.critter-mode #play-sfx,body.critter-mode #hint,body.critter-mode #touch-controls,
 body.critter-mode .cp-run-bar,body.critter-mode #ks3-editor,body.critter-mode #code-panel,body.critter-mode #turtle-ui,
 body.critter-mode #world-ui,body.critter-mode #stage-right,body.critter-mode #gc,body.critter-mode .stage-only,
-body.critter-mode #t-cave,body.critter-mode #t-mute,body.critter-mode #t-hand{display:none !important;}
+body.critter-mode #t-cave,body.critter-mode #t-mute,body.critter-mode #t-hand,body.critter-mode #rotate-hint{display:none !important;}
 body.critter-mode #cwrap{display:block;padding:10px;background:#1e1e1e;overflow:auto;}
 body.critter-mode #critter-ui{display:block;min-height:100%;}
 #critter-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}

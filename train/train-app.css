@@ -6,7 +6,9 @@
 .tl .ic { width: 1.15em; height: 1.15em; vertical-align: -0.2em; }
 .tl button, .tl input, .tl select { font-family: inherit; }
 .tl .tl-left { flex: 1 1 50%; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
-.tl .tl-trains { display: flex; gap: 6px; flex-wrap: wrap; }
+.tl .tl-ltop { display: flex; gap: 6px; align-items: flex-start; }
+.tl .tl-trains { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+.tl .tl-run.tl-run2 { display: none; flex: none; }
 .tl .tl-tab { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 2px solid var(--tl-line);
   background: var(--tl-panel); color: #ddd; font-weight: 800; font-size: 14px; cursor: pointer; }
 .tl .tl-tab i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); display: inline-block; }
@@ -24,10 +26,12 @@
 .tl button:focus-visible, .tl canvas:focus-visible, .tl input:focus-visible, .tl select:focus-visible { outline: 3px solid var(--tl-gold); outline-offset: 2px; }
 .tl .tl-status { font-size: 13px; font-weight: 700; color: #bbb; flex: 1 1 160px; min-width: 0; }
 .tl .tl-status.ok { color: #7bd88f; } .tl .tl-status.bad { color: #ffb0b0; }
-.tl .tl-stage { flex: 1 1 auto; position: relative; border-radius: 10px; overflow: hidden; border: 2px solid var(--tl-line); min-height: 220px; background: #1c2a20; }
+.tl .tl-stage { flex: 1 1 0; position: relative; border-radius: 10px; overflow: hidden; border: 2px solid var(--tl-line); min-height: 220px; background: #1c2a20; }
 .tl canvas#tlCanvas { width: 100%; height: 100%; display: block; touch-action: none; outline: none; cursor: crosshair; }
 .tl.playing canvas#tlCanvas { cursor: pointer; }
 .tl .tl-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #1e1e1e; color: #ddd; font-weight: 800; font-size: 16px; }
+/* the tools and train settings under the board: when the screen is short they scroll, so the board keeps its room */
+.tl .tl-dock { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .tl .tl-tools { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
 .tl.playing .tl-tools { opacity: 0.45; pointer-events: none; }
 .tl .tl-tgroup { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
@@ -91,3 +95,33 @@
 .tl .tl-vars { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; z-index: 2; }
 .tl .tl-vars div { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.94); border: 2px solid #ff8c1a; border-radius: 9px; padding: 3px 4px 3px 10px; color: #1f2024; font-size: 13px; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 .tl .tl-vars b { background: #ff8c1a; color: #fff; border-radius: 6px; padding: 1px 9px; min-width: 2.2em; text-align: center; font-size: 15px; }
+
+/* ── tablets (26 Nov 2026) ── */
+/* finger-sized controls on touch screens */
+body.is-touch .tl .tl-tab, body.is-touch .tl .tl-small, body.is-touch .tl #tlPlace,
+body.is-touch .tl .tl-run, body.is-touch .tl .tl-stop, body.is-touch .tl .tl-reset { min-height: 44px; }
+body.is-touch .tl .tl-zoom button, body.is-touch .tl .tl-mclose { width: 44px; height: 44px; }
+body.is-touch .tl .tl-mv { min-width: 44px; }
+body.is-touch .tl .tl-settings #tlName, body.is-touch .tl .tl-settings select { min-height: 44px; }
+body.is-touch .tl .tl-settings input[type=color] { width: 48px; height: 44px; }
+body.is-touch .tl .tl-settings input[type=checkbox] { width: 22px; height: 22px; }
+body.is-touch .tl .tl-settings label:has(#tlWagon) { min-height: 44px; }
+body.is-touch .tl .tl-steps select { min-height: 44px; }
+/* short landscape screens (Fire 8 tablet): more room for the board and its tools, the board never shrinks below 150px */
+@media (orientation: landscape) and (max-width: 1100px), (orientation: landscape) and (max-height: 620px) {
+  .tl .tl-left { flex: 1 1 42%; }
+  .tl .tl-view { flex: 1 1 58%; }
+}
+@media (orientation: landscape) and (max-height: 620px) {
+  .tl .tl-view { gap: 6px; }
+  .tl .tl-stage { min-height: 150px; }
+  .tl .tl-zoom { flex-direction: row; }
+  .tl .tl-status { font-size: 12px; flex-basis: 100%; }
+  .tl .tl-bar { gap: 6px; }
+  .tl .tl-tools { gap: 4px 10px; }
+}
+/* portrait tablets: one pane at a time, Code or Track (CodeJump's bar at the bottom picks; body.pv-on.pv-<id>) */
+body.pv-on .tl { flex-direction: column; }
+body.pv-on .tl .tl-left, body.pv-on .tl .tl-view { flex: 1 1 auto; min-height: 0; }
+body.pv-on.pv-code .tl .tl-view, body.pv-on.pv-track .tl .tl-left { display: none; }
+body.pv-on .tl .tl-run.tl-run2 { display: inline-flex; }

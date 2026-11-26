@@ -47,7 +47,7 @@ var TEMPLATE = `
   <div class="zl-stage" id="buildStage">
     <aside class="zl-palette" aria-label="Parts">
       <h2>Blobs</h2>
-      <p class="zl-hint">Drag a part onto your Critter. It sticks where it touches.</p>
+      <p class="zl-hint"><span class="zl-hint-wide">Drag a part onto your Critter. It sticks where it touches.</span><span class="zl-hint-pv">Tap a part to add it to your Critter. Then drag it round your Critter to move it.</span></p>
       <div class="zl-parts" id="zParts"></div>
       <h2 style="margin-top:14px;">Limbs</h2>
       <div class="zl-parts" id="zLimbs"></div>
@@ -613,7 +613,7 @@ function insertPoint(tip, at) {
 function renderPalette() {
   function tile(box, key, label, draw) {
     var el = document.createElement('div');
-    el.className = 'zl-part'; el.tabIndex = 0; el.setAttribute('role', 'button');
+    el.className = 'zl-part'; el.tabIndex = 0; el.setAttribute('role', 'button'); el.dataset.pvGo = 'critter';
     el.setAttribute('aria-label', 'Add ' + label.toLowerCase());
     var c = document.createElement('canvas'); c.width = 104; c.height = 60; c.style.width = '52px'; c.style.height = '30px';
     el.appendChild(c); el.appendChild(document.createTextNode(label));
@@ -1490,9 +1490,30 @@ function setMode(mode) {
   $('beatsWrap').hidden = mode !== 'build';
   $('testStage').hidden = mode !== 'test';
   $('sdStage').hidden = mode !== 'showdown';
+  panes();
   if (mode === 'showdown') { sdShow(); return; }
   if (mode === 'test') { renderContests(); state.autoGo = state.contest !== 'roam'; resetRun(); if (R && state.autoGo) go(); }
   else { state.running = false; requestAnimationFrame(drawBeats); }
+  requestAnimationFrame(fitStage);
+}
+
+// Portrait tablets: CodeJump shows one pane at a time (a bar at the bottom picks): the Critter, the parts to add, or the
+// chosen part's settings. Tapping a part adds it and goes back to the Critter. Testing and Showdown are one pane.
+function panes() {
+  if (typeof window.cjPanes === 'function') window.cjPanes(state.mode === 'build' ? [['critter', 'Critter', 'i-critter'], ['parts', 'Parts', 'i-plus'], ['settings', 'Settings', 'i-gear']] : null);
+}
+// Tablets: the build stage fills the rest of the screen (its panels scroll inside), so nothing is pushed off a short screen.
+// --zk-fit is the room between the top of the stage and the bottom of CodeJump's scrolling area; the CSS uses it where it applies.
+function fitStage() {
+  var sc = root.parentElement, zk = root.querySelector('.zk');
+  if (!sc || !zk) return;
+  var room = function (el) { // from the top of el to the bottom of the scrolling area
+    var top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
+    return Math.floor(sc.clientHeight - top - (parseFloat(getComputedStyle(sc).paddingBottom) || 0));
+  };
+  var set = function (k, v) { v = Math.max(k === '--zk-fit' ? 300 : 240, v) + 'px'; if (zk.style.getPropertyValue(k) !== v) zk.style.setProperty(k, v); };
+  if (!$('buildStage').hidden) set('--zk-fit', room($('buildStage')));
+  if (!$('testStage').hidden) set('--zk-afit', room(root.querySelector('#testStage .zl-canvas-wrap')) - 4);
 }
 
 function visible() { return root.offsetParent !== null && !document.hidden; }
@@ -2162,6 +2183,14 @@ function sdClose(keepMode) {
 /* ------------------------------------------------------------------ start up */
 
 function boot() {
+  if (document.body.classList.contains('is-touch')) { // touch wording
+    var hint = root.querySelector('.zl-palette .zl-hint-wide'); if (hint) hint.textContent = 'Drag a part onto your Critter, or tap it to add it. It sticks where it touches.';
+    $('buildTip').textContent = 'Drag a part to move it · drag the background to look around · pinch to zoom';
+  }
+  panes();
+  if (window.ResizeObserver) { var fro = new ResizeObserver(function () { fitStage(); }); if (root.parentElement) fro.observe(root.parentElement); fro.observe(root.querySelector('.zl-bar')); fro.observe($('zGoals')); }
+  window.addEventListener('resize', fitStage);
+  fitStage();
   eyeMats = [keepMat(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.3 })), keepMat(new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.2 }))];
   renderPalette();
   state.critter = Z.normalise(host.critter || Z.newCritter('My Critter'));
@@ -2313,6 +2342,6 @@ return {
   hostShowdown: function (code, name) { sdSetup(code, name); },
   // the video guides dialog
   showGuides: function () { showGuides(); },
-  destroy: function () { destroyed = true; if (sd) sdClose(true); document.removeEventListener('keydown', onKey); if (state.sim) state.sim.free(); root.innerHTML = ''; }
+  destroy: function () { destroyed = true; window.removeEventListener('resize', fitStage); if (sd) sdClose(true); document.removeEventListener('keydown', onKey); if (state.sim) state.sim.free(); root.innerHTML = ''; }
 };
 }

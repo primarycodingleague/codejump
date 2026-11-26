@@ -67,7 +67,8 @@ function safeName(s) {
 export function createWorld(B, opts) {
   opts = opts || {};
   const headless = !opts.canvas;
-  const engine = opts.engine || (headless ? new B.NullEngine() : new B.Engine(opts.canvas, true, { preserveDrawingBuffer: true, stencil: true }));
+  // sharp on high-density screens (iPads are 2x), but never more than 2x: a Fire tablet stays smooth
+  const engine = opts.engine || (headless ? new B.NullEngine() : new B.Engine(opts.canvas, true, { preserveDrawingBuffer: true, stencil: true, limitDeviceRatio: 2 }, true));
   const scene = new B.Scene(engine);
   const onError = opts.onError || (() => {});
   const onPad = opts.onPad || (() => {});
@@ -88,6 +89,17 @@ export function createWorld(B, opts) {
   camera.wheelDeltaPercentage = 0.02; camera.panningSensibility = 0;
   try { camera.inputs.removeByType('ArcRotateCameraKeyboardMoveInput'); } catch (e) { /* arrow keys drive the player, not the camera */ }
   if (opts.canvas) camera.attachControl(opts.canvas, true);
+  // two fingers zoom like a photo: pinching in/out scales the distance by how far the fingers moved apart (Babylon's own
+  // pinch zoom races off to the nearest limit on a tablet); one finger still drags to look round
+  const ptrs = camera.inputs && camera.inputs.attached && camera.inputs.attached.pointers;
+  if (ptrs) {
+    ptrs.multiTouchPanning = false;
+    ptrs.onMultiTouch = (a, b, prevSq, sq) => {
+      if (!prevSq || !sq) return;
+      const r = camera.radius * Math.sqrt(prevSq / sq);
+      camera.radius = Math.max(camera.lowerRadiusLimit || 1, Math.min(camera.upperRadiusLimit || 100, r));
+    };
+  }
   const hemi = new B.HemisphericLight('hemi', new B.Vector3(0.3, 1, 0.2), scene);
   hemi.intensity = 0.75; hemi.groundColor = new B.Color3(0.35, 0.35, 0.42);
   const sun = new B.DirectionalLight('sun', new B.Vector3(-0.5, -1, -0.35), scene);

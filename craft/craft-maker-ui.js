@@ -31,6 +31,7 @@ export function createMakerUI(app) {
   let compMode = false, checker = null, checkT = 0, inZones = new Set(), talking = null, nearNpc = null, finished = false;
   let chal = null; // {t0, elapsed, running, over}
   const view = () => app.view();
+  const CLICK = (('ontouchstart' in window) || navigator.maxTouchPoints > 0) ? 'Tap' : 'Click'; // hints on a tablet say "Tap"
 
   // ── DOM ──
   const V = $('crView');
@@ -187,7 +188,7 @@ export function createMakerUI(app) {
   function setTool(t) {
     tool = tool === t ? null : t; pendingCorner = null; moveNpc = null;
     $('crMkBar').querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tool));
-    hint(tool === 'npc' ? 'Click the ground where the character should stand.' : tool === 'zone' ? 'Click the first corner of the area on the ground.' : 'Pick a tool. Click a character to change it; areas are changed in Tasks › Areas.');
+    hint(tool === 'npc' ? CLICK + ' the ground where the character should stand.' : tool === 'zone' ? CLICK + ' the first corner of the area on the ground.' : 'Pick a tool. ' + CLICK + ' a character to change it; areas are changed in Tasks › Areas.');
   }
   const hint = t => { $('crMkHint').textContent = t || ''; };
   $('crMkBar').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
@@ -244,7 +245,7 @@ export function createMakerUI(app) {
     if (tool === 'zone') {
       if (!hit) return true;
       const c = [hit.x + hit.nx, hit.y + hit.ny, hit.z + hit.nz];
-      if (!pendingCorner) { pendingCorner = c; hint('Now click the opposite corner.'); return true; }
+      if (!pendingCorner) { pendingCorner = c; hint('Now ' + CLICK.toLowerCase() + ' the opposite corner.'); return true; }
       ensureMaker(); if (maker.zones.length >= 30) { app.toast('That’s the most areas a world can have (30).'); setTool(null); return true; }
       const y0 = Math.min(pendingCorner[1], c[1]);
       const z = { id: M.uid('z'), name: 'Area ' + (maker.zones.length + 1), a: [pendingCorner[0], y0, pendingCorner[2]], b: [c[0], Math.max(y0 + 3, Math.max(pendingCorner[1], c[1])), c[2]], msg: '', show: true, colour: '#ffd166' };
@@ -267,7 +268,7 @@ export function createMakerUI(app) {
       <div class="cr-mbtns"><button type="button" class="gold" id="mkNSave">Save</button><button type="button" id="mkNMove">Move</button><button type="button" id="mkNTalkTask">Add a “talk to ${esc(n.name)}” task</button><button type="button" class="bad" id="mkNDel">Delete</button></div>`);
     const save = () => { Object.assign(n, { name: val('mkNName'), colour: radio('mkNCol') || n.colour, lines: val('mkNLines'), task: val('mkNTask'), done: val('mkNDone') }); maker = M.cleanMaker(maker); markers(); app.changed(); };
     $('mkNSave').onclick = () => { save(); app.closeModal(); };
-    $('mkNMove').onclick = () => { save(); app.closeModal(); moveNpc = maker.npcs.find(q => q.id === id); hint('Click where ' + moveNpc.name + ' should stand.'); };
+    $('mkNMove').onclick = () => { save(); app.closeModal(); moveNpc = maker.npcs.find(q => q.id === id); hint(CLICK + ' where ' + moveNpc.name + ' should stand.'); };
     $('mkNTalkTask').onclick = () => { save(); maker.tasks.push({ id: M.uid('t'), type: 'talk', npc: id }); maker = M.cleanMaker(maker); app.changed(); editNpc(id); app.toast('Task added.'); };
     $('mkNDel').onclick = () => { maker.npcs = maker.npcs.filter(q => q.id !== id); maker.tasks = maker.tasks.filter(t => t.npc !== id); maker = M.cleanMaker(maker); markers(); app.changed(); app.closeModal(); };
   }

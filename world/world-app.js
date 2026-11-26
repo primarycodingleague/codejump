@@ -52,7 +52,7 @@ const TEMPLATE = `
     <div class="w3-canvas-wrap" id="w3Wrap">
       <canvas id="w3Canvas" tabindex="0" aria-label="Your 3D world. Drag to look around, scroll or pinch to zoom. Before you press Run, click a thing to move or resize it; while it runs, clicking fires its when-clicked blocks."></canvas>
       <div class="w3-loading" id="w3Loading">Getting the 3D world ready…</div>
-      <div class="w3-tip" id="w3Tip">Drag to look around · scroll to zoom</div>
+      <div class="w3-tip" id="w3Tip"></div>
       <div class="w3-banner" id="w3Banner" role="status" aria-live="polite" hidden></div>
       <div class="w3-goals" id="w3Goals" hidden>
         <button type="button" class="w3-goals-head" id="w3GoalsHead" aria-expanded="true"><span id="w3GoalsTitle">Goals</span> <b id="w3GoalsCount"></b></button>
@@ -110,12 +110,16 @@ export function mount(root, host) {
   const Blockly = window.Blockly;
   const touchy = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
+  // portrait tablets show Code or the World (CodeJump's Code / Run switch)
+  const panes = () => { if (window.cjPanes) window.cjPanes([['code', 'Code', 'i-code'], ['world', 'World', 'i-play']]); };
+  panes();
+  setMode(false);
   const sound = createSound();
   let ws = null, world = null, gen = null, alive = true, quiet = false, pendingProject = host.project || null, padWanted = false;
   let changeTimer = 0, editTimer = 0, selBlock = null, tool = 'move', staleWarned = false;
   const GIZMO = 'w3gizmo', LOAD = 'w3load', REMOTE = 'w3remote';
   let groupN = 0;
-  const EDIT_TIP = 'Click a thing to move it, or its block to find it. Press Run to play.';
+  const EDIT_TIP = (touchy ? 'Tap' : 'Click') + ' a thing to move it, or its block to find it. Press Run to play.';
 
   function status(msg, kind) { const s = $('w3Status'); s.textContent = msg || ''; s.className = 'w3-status' + (kind ? ' ' + kind : ''); }
   function toast(msg) { if (host.toast) host.toast(msg); }
@@ -253,7 +257,8 @@ export function mount(root, host) {
   function setMode(playing) {
     $('w3Run').classList.toggle('on', playing);
     $('w3Tools').hidden = playing;
-    $('w3Tip').textContent = playing ? 'Drag to look around · scroll to zoom' : 'Click a thing to move it · drag empty space to look around';
+    $('w3Tip').textContent = touchy ? (playing ? 'Drag to look around · pinch to zoom' : 'Tap a thing to move it · drag to look around · pinch to zoom')
+      : (playing ? 'Drag to look around · scroll to zoom' : 'Click a thing to move it · drag empty space to look around');
   }
   async function run() {
     sound.unlock(); // iPads only allow speech and sound that start from a tap, so unlock them inside the tap on Run
@@ -391,8 +396,9 @@ export function mount(root, host) {
     gen = window.javascript.javascriptGenerator;
     WB.defineBlocks(Blockly, gen, window.javascript.Order);
     ws = Blockly.inject($('w3Blocks'), {
-      toolbox: WB.toolbox(), renderer: 'zelos', theme: cjTheme(Blockly), scrollbars: true, trashcan: true,
-      zoom: { controls: true, wheel: true, startScale: touchy ? 0.9 : 0.75, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 },
+      toolbox: WB.toolbox(), renderer: 'zelos', theme: cjTheme(Blockly), scrollbars: true, trashcan: true, media: window.CJ_BLOCKLY_MEDIA || 'https://unpkg.com/blockly@10.4.3/media/',
+      move: { scrollbars: true, drag: true, wheel: false }, // drag empty space to move round the blocks (by finger too)
+      zoom: { controls: true, wheel: true, startScale: touchy ? 0.85 : 0.75, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 },
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
     // any value can go in any socket, like CodeJump's other editors (the runtime turns values into numbers/colours)
@@ -435,6 +441,7 @@ export function mount(root, host) {
     ready,
     getProject,
     setProject(p) {
+      panes();
       pendingProject = p || null;
       if (!ws) return;
       loadProject(pendingProject);
@@ -442,6 +449,7 @@ export function mount(root, host) {
       if (world) { world.start(); world.resize(); Blockly.svgResize(ws); edit(); }
     },
     resume() {
+      panes();
       if (world) { world.start(); world.resize(); if (!world.running() && !world.editing()) edit(); }
       if (ws) Blockly.svgResize(ws);
       setPad(padWanted);

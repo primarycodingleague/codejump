@@ -33,7 +33,7 @@ const TEMPLATE = `
   <div class="cr-code">
     <div class="cr-bar">
       <div class="cr-tabs" role="tablist"><button type="button" role="tab" class="cr-tab on" data-m="blocks" id="crTabB">Blocks</button><button type="button" role="tab" class="cr-tab" data-m="python" id="crTabP">Python</button></div>
-      <button type="button" class="cr-run" id="crRun" title="Run your program (the “when Run is clicked” blocks)">${ic('i-play')} Run</button>
+      <button type="button" class="cr-run" id="crRun" data-pv-go="world" title="Run your program (the “when Run is clicked” blocks)">${ic('i-play')} Run</button>
       <button type="button" class="cr-btn" id="crStop" title="Stop every script">${ic('i-stop')} Stop</button>
       <button type="button" class="cr-btn" id="crUndo" title="Take back the last build (by code or by hand)">${ic('i-undo')} Undo</button>
       <button type="button" class="cr-btn" id="crNew" title="Start again with a fresh world (your code stays)">${ic('i-reset')} New world</button>
@@ -57,7 +57,7 @@ const TEMPLATE = `
     <div class="cr-cross" aria-hidden="true"></div>
     <div class="cr-pad" id="crPad" aria-hidden="true"><button data-k="f">${chev(0)}</button><button data-k="l">${chev(270)}</button><button data-k="b">${chev(180)}</button><button data-k="r">${chev(90)}</button></div>
     <div class="cr-pad2" id="crPad2" aria-hidden="true"><button data-k="j">Jump</button><button data-k="d">Down</button></div>
-    <div class="cr-tip" id="crTip"><span><b>Drag</b> to look</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</span><span><kbd>Space</kbd> jump</span><span><b>Click</b> build</span><span><b>Right-click</b> break</span><span><kbd>F</kbd> fly</span></div>
+    <div class="cr-tip" id="crTip"><span><b>Drag</b> to look</span><span class="cr-k"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk</span><span class="cr-k"><kbd>Space</kbd> jump</span><span class="cr-k"><b>Click</b> build</span><span class="cr-k"><b>Right-click</b> break</span><span class="cr-k"><kbd>F</kbd> fly</span><span class="cr-t"><b>Arrows</b> walk</span><span class="cr-t"><b>Tap</b> build</span><span class="cr-t"><b>Press and hold</b> break</span></div>
   </div>
   <div class="cr-modal" id="crModal" hidden><div class="cr-modalbox"><button type="button" class="cr-x" id="crModalX" aria-label="Close">×</button><div id="crModalBody"></div></div></div>
 </div>`;
@@ -102,6 +102,9 @@ export function mount(root, host) {
   let ws = null, view = null, alive = true, raf = 0, last = 0, quiet = false, changeTimer = 0;
   let mode = 'blocks', pyText = '', hot = HOT_DEFAULT.slice(), slot = 1, cam = 'me', undo = [], savedHot = null, allowed = null, codeRule = 'all', flyOk = true;
   const keys = new Set(), pad = new Set();
+  // portrait tablets show Code or the World (CodeJump's Code / Run switch); a world with no code has just the world
+  const panes = () => { if (window.cjPanes) window.cjPanes(root.querySelector('.cr.nocode') ? null : [['code', 'Code', 'i-code'], ['world', 'World', 'i-craft']]); };
+  panes();
   const status = (msg, kind) => { const s = $('crStatus'); s.textContent = msg || ''; s.className = 'cr-status' + (kind ? ' ' + kind : ''); };
   const changed = () => { if (quiet) return;  clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 300); };
   const toast = (m, c) => { if (host.toast) host.toast(m, c); };
@@ -206,7 +209,7 @@ export function mount(root, host) {
   function renderHot() {
     const h = $('crHot'); h.innerHTML = '';
     const mk = (i, inner, title) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'cr-slot' + (i === slot ? ' on' : ''); b.title = title; b.innerHTML = inner; b.onclick = () => { slot = i; renderHot(); }; return b; };
-    h.appendChild(mk(0, PICK + '<i>0</i>', 'Break blocks (or right-click)'));
+    h.appendChild(mk(0, PICK + '<i>0</i>', touchy ? 'Break blocks (or press and hold on one)' : 'Break blocks (or right-click)'));
     hot.forEach((id, k) => { const b = mk(k + 1, '<i>' + (k + 1) + '</i>', LABEL_OF(id)); if (view) b.prepend(blockIcon(document, view.atlas, id, 34)); h.appendChild(b); });
     const more = document.createElement('button'); more.type = 'button'; more.className = 'cr-slot cr-more'; more.innerHTML = GRID + '<span>More</span>'; more.title = 'Choose a different block for this slot'; more.onclick = togglePick; h.appendChild(more);
   }
@@ -232,7 +235,7 @@ export function mount(root, host) {
     renderHot(); $('crHot').hidden = !!r && !r.build && !r.break; // nothing to build with by hand: no block bar
     flyOk = !r || r.fly; if (!flyOk && player.fly) toggleFly(); $('crFly').hidden = !flyOk;
     $('crTabP').hidden = !!r && !r.python; if (r && !r.python && mode === 'python') setMode('blocks');
-    const code = r ? r.code : 'all'; root.querySelector('.cr').classList.toggle('nocode', code === 'none');
+    const code = r ? r.code : 'all'; root.querySelector('.cr').classList.toggle('nocode', code === 'none'); panes();
     if (code !== codeRule) { codeRule = code; if (ws) { try { ws.updateToolbox(L.toolbox(code === 'none' ? 'all' : code)); } catch (e) { /* older Blockly */ } } }
     if (view) setTimeout(() => view.resize(), 0);
   }
@@ -349,7 +352,7 @@ export function mount(root, host) {
     const r = cv.getBoundingClientRect();
     if (drag) {
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
-      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 6) drag.moved = true;
+      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > (e.pointerType === 'touch' ? 12 : 6)) drag.moved = true; // a finger held still wobbles a little
       if (drag.moved && cam === 'me') { player.yaw -= dx * 0.0055; player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch - dy * 0.0055)); }
     }
     hover = { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -378,7 +381,7 @@ export function mount(root, host) {
     b.addEventListener('pointerdown', e => { e.preventDefault(); pad.add(k); b.setPointerCapture(e.pointerId); });
     const up = () => pad.delete(k); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
   });
-  if (touchy) root.querySelector('.cr').classList.add('touch');
+  if (touchy) { root.querySelector('.cr').classList.add('touch'); $('crChat').placeholder = 'Chat, like: tower 6'; cv.setAttribute('aria-label', 'The block world. Drag to look round, and use the arrow buttons to walk. Tap to place a block; press and hold on a block to break it.'); }
 
   function tick(now) {
     raf = requestAnimationFrame(tick);
@@ -431,11 +434,13 @@ export function mount(root, host) {
       savedHot = null; mk.load(p.maker, p.progress, opts);
     } finally { quiet = false; }
     renderHot();
-    status('Press Run, or type a chat command. Click the world, then W A S D to walk.');
+    status(touchy ? 'Press Run, or type a chat command. Tap the world to build, press and hold to break, and use the arrows to walk.' : 'Press Run, or type a chat command. Click the world, then W A S D to walk.');
   }
 
-  const ro = new ResizeObserver(() => { if (view) view.resize(); if (ws && mode === 'blocks') Blockly.svgResize(ws); });
-  ro.observe($('crView')); ro.observe($('crBlocks'));
+  // on a tablet the hint pill sits just under the buttons at the top right, which can wrap onto two lines
+  const placeTip = () => { if (!touchy) return; const t = root.querySelector('.cr-topr'); if (t && t.offsetHeight) $('crTip').style.top = (t.offsetTop + t.offsetHeight + 6) + 'px'; };
+  const ro = new ResizeObserver(() => { if (view) view.resize(); if (ws && mode === 'blocks') Blockly.svgResize(ws); placeTip(); });
+  ro.observe($('crView')); ro.observe($('crBlocks')); ro.observe(root.querySelector('.cr-topr'));
 
   const ready = (async () => {
     if (!defined) { L.defineBlocks(Blockly.common || Blockly); defined = true; }
@@ -455,8 +460,8 @@ export function mount(root, host) {
 
   return {
     ready, getProject, ...liveApi,
-    setProject(p) { if (!ws) { pending = p; return; } comp.leave(true); setProject(p); mk.viewReady(); if (!raf && view) raf = requestAnimationFrame(tick); },
-    resume() { if (view) view.resize(); if (ws) Blockly.svgResize(ws); if (!raf && view) raf = requestAnimationFrame(tick); },
+    setProject(p) { panes(); if (!ws) { pending = p; return; } comp.leave(true); setProject(p); mk.viewReady(); if (!raf && view) raf = requestAnimationFrame(tick); },
+    resume() { panes(); if (view) view.resize(); if (ws) Blockly.svgResize(ws); if (!raf && view) raf = requestAnimationFrame(tick); },
     pause() { comp.leave(true); runner.stop(); keys.clear(); pad.clear(); cancelAnimationFrame(raf); raf = 0; },
     destroy() { comp.leave(true); alive = false; ro.disconnect(); cancelAnimationFrame(raf); runner.stop(); if (view) view.dispose(); if (ws) ws.dispose(); root.innerHTML = ''; },
     run, chat, setMode, openComp: code => comp.open(code), compPanel: () => comp.panel(), _comp: () => comp,

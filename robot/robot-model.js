@@ -152,7 +152,10 @@ export function createRobotView(THREE, canvas, opts = {}) {
     renderer.render(scene, camera);
   }
   function resize() {
-    const w = canvas.clientWidth || canvas.width, h = canvas.clientHeight || canvas.height;
+    // measure the box the canvas sits in, never the canvas itself: its drawing-buffer size feeds back into its CSS size on
+    // some browsers (iPad Safari), so it kept growing or shrinking every resize
+    const box = canvas.parentElement;
+    const w = (box && box.clientWidth) || canvas.clientWidth, h = (box && box.clientHeight) || canvas.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false); camera.aspect = w / h;
     // keep the whole bust in view on tall/narrow panels

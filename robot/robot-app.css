@@ -1,5 +1,6 @@
 /* CodeJump · Robot Lab (robot/robot-app.js). Scoped under .rb. Dark CodeJump look like 3D World:
-   side by side on wide screens, stacked at 820px and below. */
+   side by side on wide screens, stacked at 820px and below; on a portrait tablet one pane at a time (Code / Robot, chosen in
+   CodeJump's bar at the bottom: body.pv-on.pv-code / .pv-robot). */
 .rb { --rb-panel: #2a2a2a; --rb-line: #444; --rb-gold: #ae853e; --rb-green: #3fae5e;
   font-family: var(--font, 'Montserrat', sans-serif); color: #eee; display: flex; gap: 10px; height: 100%; min-height: 0; }
 .rb [hidden] { display: none !important; }
@@ -19,6 +20,8 @@
 .rb .rb-stage { flex: 1 1 auto; position: relative; border-radius: 10px; overflow: hidden; border: 2px solid var(--rb-line); min-height: 0;
   background: radial-gradient(ellipse at 50% 35%, #3b4559 0%, #20252f 55%, #12151b 100%); }
 .rb canvas { width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+/* the canvas fills its box without taking part in its size (robot-model.js measures the box) */
+.rb .rb-stage canvas { position: absolute; inset: 0; }
 .rb .rb-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #1e1e1e; color: #ddd; font-weight: 800; font-size: 16px; }
 .rb .rb-bubble { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); max-width: 82%; background: #fff; color: #111; font-weight: 800; font-size: 17px; line-height: 1.35;
   padding: 10px 16px; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,.35); pointer-events: none; text-align: center; }
@@ -36,4 +39,18 @@
   .rb { flex-direction: column; }
   .rb .rb-blocks { flex: 1 1 52%; min-height: 300px; }
   .rb .rb-view { flex: 1 1 48%; min-height: 360px; }
+}
+
+/* touch screens: every control at least 44px; 16px text in the name box so iPads don't zoom in on it */
+body.is-touch .rb .rb-run, body.is-touch .rb .rb-stop, body.is-touch .rb .rb-reset, body.is-touch .rb .rb-ask button { min-height: 44px; }
+body.is-touch .rb .rb-settings #rbName, body.is-touch .rb .rb-ask input { min-height: 44px; font-size: 16px; }
+body.is-touch .rb .rb-settings input[type=color] { width: 48px; height: 44px; }
+/* portrait tablets: one pane at a time, filling the space */
+body.pv-on .rb { flex-direction: column; }
+body.pv-on .rb .rb-blocks, body.pv-on .rb .rb-view { flex: 1 1 auto; min-height: 0; }
+body.pv-on.pv-code .rb .rb-view, body.pv-on.pv-robot .rb .rb-blocks { display: none; }
+/* short landscape screens (Fire 8): a little less padding so the robot gets the room */
+@media (orientation: landscape) and (max-height: 620px) {
+  .rb .rb-view { gap: 6px; }
+  .rb .rb-settings { gap: 6px 12px; }
 }

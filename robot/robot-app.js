@@ -98,6 +98,9 @@ export function mount(root, host) {
   let changeTimer = 0;
   const keys = new Set(), mouse = { x: 5, y: 5 };
   let askCb = null;
+  // portrait tablets show Code or the Robot (CodeJump's Code / Run switch)
+  const panes = () => { if (window.cjPanes) window.cjPanes([['code', 'Code', 'i-code'], ['robot', 'Robot', 'i-robot']]); };
+  panes();
 
   const status = (msg, kind) => { const s = $('rbStatus'); s.textContent = msg || ''; s.className = 'rb-status' + (kind ? ' ' + kind : ''); };
   const changed = () => { clearTimeout(changeTimer); changeTimer = setTimeout(() => { if (alive && host.onChange) host.onChange(); }, 250); };
@@ -282,6 +285,7 @@ export function mount(root, host) {
     ready,
     getProject,
     setProject(p) {
+      panes();
       proj = Object.assign({}, DEF, p || {}); proj.name = cleanName(proj.name) || DEF.name;
       setStamp = { t: Number(proj.st) || 0, cid: String(proj.scid || '') };
       if (runner) runner.stop(true);
@@ -290,7 +294,7 @@ export function mount(root, host) {
       showSettings();
       if (!raf && view) raf = requestAnimationFrame(tick); // reopening after pause() must restart the loop, or Run does nothing
     },
-    resume() { if (view) { view.start(); view.resize(); } if (ws) Blockly.svgResize(ws); if (!raf) raf = requestAnimationFrame(tick); },
+    resume() { panes(); if (view) { view.start(); view.resize(); } if (ws) Blockly.svgResize(ws); if (!raf) raf = requestAnimationFrame(tick); },
     pause() { if (runner) runner.stop(true); cancelAsk(); if (view) view.stop(); cancelAnimationFrame(raf); raf = 0; },
     destroy() {
       alive = false; ro.disconnect(); cancelAnimationFrame(raf);

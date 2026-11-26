@@ -811,7 +811,7 @@ body.robot-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-sta
 body.robot-mode #robot-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #robot-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
 .lab-fail>div{max-width:560px;line-height:1.45}.lab-fail p{margin:0 0 14px}.lab-fail b{color:#f5c76b}.lab-fail .lab-retry{font:inherit;font-size:16px;padding:9px 22px;border-radius:999px;border:0;background:#ae853e;color:#141018;cursor:pointer}.lab-fail small{display:block;margin-top:14px;font-size:12px;font-weight:600;color:#8d8799;word-break:break-word}
-@media(max-width:820px){body.robot-mode #cwrap{overflow:auto;}body.robot-mode #robot-ui{min-height:700px;}}
+@media(max-width:820px){body.robot-mode:not(.pv-on) #cwrap{overflow:auto;}body.robot-mode:not(.pv-on) #robot-ui{min-height:700px;}} /* portrait tablets: one pane at a time instead (robot-app.css) */
 /* ── AI Lab (ai/ai-app.js + ai-app.css, lazy-loaded) ── */
 #web-ui{display:none;}
 body.web-mode #btn-build,body.web-mode #btn-play,body.web-mode #btn-code,
@@ -892,7 +892,7 @@ body.craft-mode #t-cave,body.craft-mode #t-mute,body.craft-mode #t-hand,body.cra
 body.craft-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.craft-mode #craft-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #craft-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
-@media(max-width:820px){body.craft-mode #cwrap{overflow:auto;}body.craft-mode #craft-ui{min-height:900px;}}
+@media(max-width:820px){body.craft-mode:not(.pv-on) #cwrap{overflow:auto;}body.craft-mode:not(.pv-on) #craft-ui{min-height:900px;}} /* portrait tablets: one pane at a time instead (craft-app.css) */
 body.threed-mode #btn-build,body.threed-mode #btn-play,body.threed-mode #btn-code,
 body.threed-mode #t-paint,body.threed-mode #t-fill,body.threed-mode #t-erase,body.threed-mode #t-undo,
 body.threed-mode #t-redo,body.threed-mode #t-clear,body.threed-mode #t-testpage,body.threed-mode #theme-sel,
@@ -904,7 +904,7 @@ body.threed-mode #t-cave,body.threed-mode #t-mute,body.threed-mode #t-hand{displ
 body.threed-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.threed-mode #world-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #world-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:#ddd;font-family:var(--font);font-weight:800;font-size:17px;text-align:center;padding:20px;}
-@media(max-width:820px){body.threed-mode #cwrap{overflow:auto;}body.threed-mode #world-ui{min-height:660px;}body.threed-mode #rotate-hint{display:none !important;}}
+@media(max-width:820px){body.threed-mode:not(.pv-on) #cwrap{overflow:auto;}body.threed-mode:not(.pv-on) #world-ui{min-height:660px;}body.threed-mode #rotate-hint{display:none !important;}} /* portrait tablets: one pane at a time instead (world-app.css) */
 @media(max-width:1100px){body.ks1-mode #stage-right{width:360px;}}
 /* Narrow / portrait tablets & phones: stack the stage on top, blocks fill the rest */
 @media(max-width:820px){

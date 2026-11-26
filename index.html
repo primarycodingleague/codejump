@@ -1690,6 +1690,69 @@ body.a11y-reduce *{animation:none!important;transition:none!important;scroll-beh
 /* ── M12: visible keyboard focus everywhere (was missing) ── */
 button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:focus-visible,.pal-item:focus-visible,[tabindex]:focus-visible{outline:3px solid #9cd2ff;outline-offset:2px;border-radius:4px;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
+/* ══ TABLETS (26 Nov 2026) — placed last so it wins. Charlie: "on tablets it feels clanky; things don't resize properly".
+   body.is-touch = a touch screen (set from IS_TOUCH); short = a landscape screen under 620px tall (the Fire 8 in Chrome is ~540);
+   body.pv-on = portrait and ≤900px wide in a lab that has panes: ONE pane at a time (body.pv-<id>), chosen in the #pv-bar at
+   the bottom (labs say which panes they have with window.cjPanes(list); see "Code / Run switch" in the script). ══ */
+/* finger-sized controls: nothing smaller than ~44px, and portrait never shrinks them */
+body.is-touch #toolbar .tbtn,body.is-touch #toolbar .mode-btn{min-height:44px;min-width:44px;padding:8px 12px;font-size:13px;justify-content:center;}
+body.is-touch #toolbar .app-title{height:36px;}
+body.is-touch #cloud-close,body.is-touch #help-close,body.is-touch #d-close,body.is-touch #wn-close,body.is-touch #promo-close,body.is-touch #lg-close,body.is-touch #ls-close,body.is-touch #lp-close,body.is-touch #cmd-close,body.is-touch #ttm-close,body.is-touch #mbsend-close{min-width:44px;min-height:44px;}
+body.is-touch #sh-close,body.is-touch #c-bk{min-height:44px;min-width:88px;display:inline-flex;align-items:center;justify-content:center;}
+body.is-touch .help-tab{min-height:44px;padding:10px 16px;}
+body.is-touch .blocklyTreeRow{height:auto!important;min-height:44px;line-height:44px!important;padding:0 12px!important;}
+body.is-touch .blocklyTreeLabel{font-size:14px!important;}
+body.is-touch .cp-run,body.is-touch #turtle-bar button{min-height:44px;}
+body.is-touch #turtle-speed{min-height:36px;}
+body.is-touch .sprite-info input,body.is-touch .sprite-info select{min-height:36px;}
+/* the top bar is ONE row on touch screens; when it doesn't fit it scrolls, and a fade shows there is more */
+body.is-touch #toolbar{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+body.is-touch #toolbar>*{flex:0 0 auto;}
+body.is-touch #toolbar::-webkit-scrollbar{height:4px;}
+body.is-touch #toolbar::-webkit-scrollbar-thumb{background:rgba(174,133,62,.6);border-radius:2px;}
+#toolbar.more-r{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent);}
+#toolbar.more-l{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 48px),transparent);}
+#toolbar.more-l.more-r{-webkit-mask-image:linear-gradient(to right,transparent,#000 48px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(to right,transparent,#000 48px,#000 calc(100% - 48px),transparent);}
+/* things that only showed on hover show on touch screens */
+@media (hover:none){.sprite-card .sp-del{display:flex!important;opacity:1!important;}}
+/* the "turn your phone sideways" nudge is for phones only: tablets have a portrait layout */
+@media(min-width:600px){#rotate-hint{display:none!important;}}
+/* every pop-up fits the screen and scrolls when it doesn't */
+#share-box,#help-box,.ks-box{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;}
+#ks-modal,#pt-modal{overflow-y:auto;}
+/* short landscape screens (Fire 8 tablet, phones sideways) */
+@media (orientation:landscape) and (max-height:620px){
+  #ks-modal,#pt-modal{align-items:flex-start;padding:10px;}
+  .ks-box{padding:16px 18px;}
+  .ks-box h2{margin-bottom:6px;}
+  #pt-modal .ks-opt{padding:10px 10px;}
+  .home-logo.hm-logo .home-logomark{width:clamp(150px,20vw,220px);}
+  .hm-hero{padding-top:14px!important;padding-bottom:14px!important;}
+  #toolbar{min-height:0;padding-top:3px;padding-bottom:3px;}
+  body.is-touch #toolbar .tbtn,body.is-touch #toolbar .mode-btn{min-height:40px;min-width:40px;padding:6px 10px;}
+  body.is-touch #toolbar .app-title{height:30px;}
+  .wn-box{padding:18px!important;}
+}
+/* ── Code / Run switch (portrait tablets): one pane at a time, chosen at the bottom ── */
+#pv-bar{display:none;}
+body.pv-on #pv-bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;height:58px;background:#101013;border-top:2px solid var(--gold);padding:6px 8px calc(6px + env(safe-area-inset-bottom));gap:8px;}
+#pv-bar button{flex:1;border:2px solid #3a3a42;background:#222226;color:#ddd;border-radius:12px;font-family:var(--font);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;}
+#pv-bar button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#000;}
+#pv-bar button .ic{width:20px;height:20px;}
+body.pv-on #app{padding-bottom:58px;padding-bottom:calc(58px + env(safe-area-inset-bottom));}
+body.pv-on #collab-bar{bottom:68px!important;}
+body.pv-on #resume-pill{bottom:70px!important;}
+/* the Stage and Turtle Labs' panes */
+body.pv-on.stage-mode:not(.ks1-mode) #cwrap{flex-direction:column;overflow:hidden!important;}
+body.pv-on.stage-mode:not(.ks1-mode) #code-panel{flex:1 1 auto!important;height:auto!important;min-height:0!important;}
+body.pv-on.pv-code.stage-mode:not(.ks1-mode) #stage-right{display:none!important;}
+body.pv-on.pv-run.stage-mode:not(.ks1-mode) #code-panel{display:none!important;}
+body.pv-on.pv-run.stage-mode:not(.ks1-mode) #stage-right{flex:1 1 auto;min-height:0;}
+body.pv-on.turtle-mode #cwrap,body.pv-on.turtle-mode #turtle-ui{flex-direction:column;overflow:hidden;}
+body.pv-on.turtle-mode #turtle-left{width:100%;flex:1 1 auto;}
+body.pv-on.pv-code.turtle-mode #turtle-right{display:none!important;}
+body.pv-on.pv-run.turtle-mode #turtle-left{display:none!important;}
+body.pv-on.pv-run.turtle-mode #turtle-right{width:100%;flex:1 1 auto;}
 </style>
 </head>
 <body>
@@ -2521,6 +2584,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
 
 <!-- ══ APP ════════════════════════════════════════════════════════════════ -->
 <div id="app" class="hide">
+  <nav id="pv-bar" aria-label="Show"></nav>
   <div id="toolbar">
     <svg class="app-title" id="home-btn" title="Back to Home" viewBox="22 4 156 96" role="img" aria-label="CodeJump — back to home">
       <rect x="66" y="8"  width="68" height="10" rx="2" fill="#ae853e"/>
@@ -2603,7 +2667,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
       <div id="turtle-ui">
         <div id="turtle-left">
           <div id="turtle-bar">
-            <button id="tt-run"><svg class="ic"><use href="#i-play"></use></svg> Run</button>
+            <button id="tt-run" data-pv-go="run"><svg class="ic"><use href="#i-play"></use></svg> Run</button>
             <button id="tt-stop"><svg class="ic"><use href="#i-stop"></use></svg> Stop</button>
             <button id="tt-clear"><svg class="ic"><use href="#i-broom"></use></svg> Clear</button>
             <button id="tt-cmds"><svg class="ic"><use href="#i-book"></use></svg> Commands</button>
@@ -2674,7 +2738,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,[role="button"]:fo
 <!-- ══ DESIGNER ═══════════════════════════════════════════════════════════ -->
 <div id="cloud-modal" class="hide">
   <div class="cloud-box">
- <button id="cloud-close" title="Close" aria-label="Close"></button>
+ <button id="cloud-close" title="Close" aria-label="Close"><svg class="ic"><use href="#i-x"></use></svg></button>
     <div id="cloud-body"></div>
   </div>
 </div>
@@ -10072,6 +10136,50 @@ window.addEventListener('keyup',e=>keys[e.code]=false);
 // ── On-screen touch controls ────────────────────────────────────────
 const IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 if(IS_TOUCH)document.body.classList.add('is-touch');
+// ── Tablets (26 Nov 2026): the top bar shows when it scrolls; canvases fit whenever their space changes (not only on a window
+// resize: a lab that opened while hidden kept its laptop size); and the Code / Run switch for portrait tablets. ──
+(function(){
+  const tb=document.getElementById('toolbar');
+  const fade=()=>{if(!tb)return;const more=tb.scrollWidth>tb.clientWidth+2;tb.classList.toggle('more-r',more&&tb.scrollLeft+tb.clientWidth<tb.scrollWidth-2);tb.classList.toggle('more-l',more&&tb.scrollLeft>2);};
+  if(tb){tb.addEventListener('scroll',fade,{passive:true});window.addEventListener('resize',fade);}
+  let rq=0;const fit=()=>{if(rq)return;rq=requestAnimationFrame(()=>{rq=0;try{resize();}catch(e){}fade();});};
+  if(window.ResizeObserver){const ro=new ResizeObserver(fit);const cw=document.getElementById('cwrap');if(cw)ro.observe(cw);if(tb)ro.observe(tb);}
+  fade();
+})();
+// Code / Run switch: on a portrait tablet (≤900px wide) a lab shows ONE pane at a time — Code or Run (or a lab's own panes,
+// e.g. the App Lab's Parts / Phone / Settings) — chosen in the bar at the bottom. The Stage and Turtle Labs' panes are below;
+// the other labs call window.cjPanes([[id, label, iconId], …]) when they open or change mode, and style body.pv-on.pv-<id>.
+// A button with data-pv-go="<id>" (Run, Test it!) switches to that pane after it's pressed.
+const pvMQ=window.matchMedia?matchMedia('(orientation: portrait) and (max-width: 900px)'):{matches:false,addEventListener(){}};
+const pvLab={},pvCur={};
+function pvPanes(){
+  const home=document.getElementById('home');if(home&&!home.classList.contains('hide'))return null;
+  const app=document.getElementById('app');if(app&&app.classList.contains('hide'))return null;
+  if(projectType==='stage'&&keyStage!=='ks1'&&document.body.classList.contains('stage-mode'))return [['code','Code','i-code'],['run','Stage','i-play']];
+  if(projectType==='turtle'&&document.body.classList.contains('turtle-mode'))return [['code','Code','i-code'],['run','Turtle','i-turtle']];
+  return pvLab[projectType]||null;
+}
+let pvKey='';
+function pvUpdate(){
+  const B=document.body,list=pvMQ.matches?pvPanes():null,bar=document.getElementById('pv-bar');
+  let want=[];
+  if(list){pvKey=projectType+':'+list.map(x=>x[0]).join(',');let cur=pvCur[pvKey];if(!list.some(x=>x[0]===cur))cur=pvCur[pvKey]=list[0][0];want=['pv-on','pv-'+cur];
+    const html=list.map(x=>`<button type="button" data-pv="${x[0]}" aria-pressed="${x[0]===cur}"><svg class="ic"><use href="#${x[2]||'i-code'}"></use></svg>${cesc(x[1])}</button>`).join('');
+    if(bar&&bar.innerHTML!==html)bar.innerHTML=html;}
+  const have=[...B.classList].filter(c=>c.indexOf('pv-')===0);
+  if(have.join(' ')===want.join(' '))return;
+  have.forEach(c=>B.classList.remove(c));want.forEach(c=>B.classList.add(c));
+  setTimeout(()=>window.dispatchEvent(new Event('resize')),0); // canvases and block editors re-measure
+}
+function cjPane(id){if(!pvKey)return;pvCur[pvKey]=id;pvUpdate();}
+window.cjPanes=function(list){pvLab[projectType]=Array.isArray(list)&&list.length>1?list:null;pvUpdate();};
+window.cjPane=cjPane;
+document.getElementById('pv-bar').addEventListener('click',e=>{const b=e.target.closest('[data-pv]');if(b)cjPane(b.dataset.pv);});
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-pv-go]');if(t&&document.body.classList.contains('pv-on'))setTimeout(()=>cjPane(t.dataset.pvGo),0);},true);
+pvMQ.addEventListener('change',pvUpdate);
+new MutationObserver(pvUpdate).observe(document.body,{attributes:true,attributeFilter:['class']});
+{const h=document.getElementById('home'),a=document.getElementById('app');[h,a].forEach(x=>x&&new MutationObserver(pvUpdate).observe(x,{attributes:true,attributeFilter:['class']}));}
+pvUpdate();
 function actKeyCodes(act){
   if(act==='left') return [KC[gameConfig.moveLeft]];
   if(act==='right')return [KC[gameConfig.moveRight]];

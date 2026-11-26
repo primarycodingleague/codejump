@@ -825,7 +825,7 @@ body.web-mode #t-cave,body.web-mode #t-mute,body.web-mode #t-hand,body.web-mode 
 body.web-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.web-mode #web-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #web-loading{padding:40px;text-align:center;color:#bbb;font-family:var(--font);}
-@media(max-width:900px){body.web-mode #cwrap{overflow:auto;}body.web-mode #web-ui{min-height:1100px;}}
+@media(max-width:900px) and (orientation:landscape){body.web-mode #cwrap{overflow:auto;}body.web-mode #web-ui{min-height:1100px;}} /* portrait tablets: one pane at a time (web-app.css), so no tall page */
 #applab-ui{display:none;}
 body.applab-mode #btn-build,body.applab-mode #btn-play,body.applab-mode #btn-code,
 body.applab-mode #t-paint,body.applab-mode #t-fill,body.applab-mode #t-erase,body.applab-mode #t-undo,
@@ -838,7 +838,7 @@ body.applab-mode #t-cave,body.applab-mode #t-mute,body.applab-mode #t-hand,body.
 body.applab-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.applab-mode #applab-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #applab-loading{padding:40px;text-align:center;color:#bbb;font-family:var(--font);}
-@media(max-width:900px){body.applab-mode #cwrap{overflow:auto;}body.applab-mode #applab-ui{min-height:1200px;}}
+@media(max-width:900px) and (orientation:landscape){body.applab-mode #cwrap{overflow:auto;}body.applab-mode #applab-ui{min-height:1200px;}} /* portrait tablets: one pane at a time (app-app.css) */
 #bricklab-ui{display:none;}
 body.bricklab-mode #btn-build,body.bricklab-mode #btn-play,body.bricklab-mode #btn-code,
 body.bricklab-mode #t-paint,body.bricklab-mode #t-fill,body.bricklab-mode #t-erase,body.bricklab-mode #t-undo,
@@ -851,7 +851,7 @@ body.bricklab-mode #t-cave,body.bricklab-mode #t-mute,body.bricklab-mode #t-hand
 body.bricklab-mode #cwrap{display:flex;align-items:stretch;justify-content:flex-start;padding:10px;background:#1e1e1e;}
 body.bricklab-mode #bricklab-ui{display:block;flex:1 1 auto;min-width:0;min-height:0;}
 #bricklab-loading{padding:40px;text-align:center;color:#bbb;font-family:var(--font);}
-@media(max-width:900px){body.bricklab-mode #cwrap{overflow:auto;}body.bricklab-mode #bricklab-ui{min-height:1000px;}}
+@media(max-width:900px) and (orientation:landscape){body.bricklab-mode #cwrap{overflow:auto;}body.bricklab-mode #bricklab-ui{min-height:1000px;}} /* portrait tablets: one pane at a time (brick-app.css) */
 #ai-ui{display:none;}
 body.ai-mode #btn-build,body.ai-mode #btn-play,body.ai-mode #btn-code,
 body.ai-mode #t-paint,body.ai-mode #t-fill,body.ai-mode #t-erase,body.ai-mode #t-undo,

@@ -27,7 +27,7 @@ const TEMPLATE = `
 <div class="bk">
   <div class="bk-bar">
     <input class="bk-title" id="bkTitle" maxlength="40" aria-label="Project name" spellcheck="false">
-    <button class="bk-btn run" id="bkRun">${ICON.play}<span>Run</span></button>
+    <button class="bk-btn run" id="bkRun" data-pv-go="hub">${ICON.play}<span>Run</span></button>
     <span class="bk-status" id="bkStatus"></span>
     <span class="bk-sp"></span>
     <button class="bk-btn icon" id="bkUndo" title="Undo (Ctrl+Z)" aria-label="Undo">${ICON.undo}</button>
@@ -161,7 +161,7 @@ export function mount(root, host) {
 
   // ── Blockly ──
   load(host.project);
-  const touchy = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  const touchy = document.body.classList.contains('is-touch') || (window.matchMedia && matchMedia('(pointer: coarse)').matches);
   ws = Blockly.inject($('bkBlocks'), {
     toolbox: BL.toolbox(), renderer: 'zelos', theme: BL.appTheme(Blockly), scrollbars: true, trashcan: true, media: window.CJ_BLOCKLY_MEDIA || 'https://unpkg.com/blockly@10.4.3/media/',
     zoom: { controls: true, wheel: true, startScale: touchy ? 0.85 : 0.8, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 },
@@ -170,7 +170,11 @@ export function mount(root, host) {
   try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
   ws.addChangeListener(e => { if (quiet || e.isUiEvent) return; clearTimeout(saveT); saveT = setTimeout(saveBlocks, 300); });
   let saveT = 0;
-  load(proj); panel(); bar();
+  load(proj); panel(); bar(); panes();
+  // portrait tablets: one pane at a time, Code or Hub (CodeJump's switch at the bottom; brick-app.css shows the chosen one)
+  function panes() { if (window.cjPanes && root.isConnected && document.body.classList.contains('bricklab-mode')) window.cjPanes([['code', 'Code', 'i-code'], ['hub', 'Hub', 'i-bricklab']]); }
+  const onWinResize = () => { if (ws) Blockly.svgResize(ws); };
+  window.addEventListener('resize', onWinResize);
   const ro = new ResizeObserver(() => { if (ws) Blockly.svgResize(ws); }); ro.observe(root); ro.observe($('bkBlocks'));
   requestAnimationFrame(() => { if (ws) Blockly.svgResize(ws); });
   // a hidden tab or a closed page must not leave motors running
@@ -183,9 +187,9 @@ export function mount(root, host) {
   return {
     getProject,
     setProject(p) { runner.stop(); bar(); load(p); panel(); },
-    resume() { if (ws) setTimeout(() => Blockly.svgResize(ws), 0); panel(); },
+    resume() { panes(); if (ws) setTimeout(() => Blockly.svgResize(ws), 0); panel(); },
     pause() { runner.stop(); bar(); saveBlocks(); },
-    destroy() { destroyed = true; runner.stop(); if (hub) hub.disconnect(); for (const f of offHub) f(); ro.disconnect(); document.removeEventListener('visibilitychange', offPage); window.removeEventListener('pagehide', bye); if (ws) ws.dispose(); root.innerHTML = ''; },
+    destroy() { destroyed = true; runner.stop(); if (hub) hub.disconnect(); for (const f of offHub) f(); ro.disconnect(); document.removeEventListener('visibilitychange', offPage); window.removeEventListener('pagehide', bye); window.removeEventListener('resize', onWinResize); if (ws) ws.dispose(); root.innerHTML = ''; },
     // live collaboration: the code and the project's name are shared; each pupil's own hub (or pretend hub) stays on their own device
     liveParts() { saveBlocks(); return JSON.parse(JSON.stringify({ code: { blocks: proj.blocks }, info: { title: proj.title } })); },
     liveSet(part, v) {

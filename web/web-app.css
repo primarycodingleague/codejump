@@ -51,7 +51,7 @@
 
 /* add tiles */
 .wl-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.wl-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; background: var(--wl-panel2); border: 1px solid var(--wl-line); border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; text-align: center; touch-action: none; }
+.wl-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; background: var(--wl-panel2); border: 1px solid var(--wl-line); border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; text-align: center; touch-action: manipulation; }
 .wl-tile:hover { border-color: var(--wl-gold); }
 .wl-tile .ic { width: 26px; height: 26px; color: var(--wl-gold2); }
 
@@ -155,3 +155,30 @@
 .wl-pos .wl-field input { width: 100%; }
 .wl-seg button .ic { width: 16px; height: 16px; vertical-align: -3px; }
 .wl-field input[type=number] { background: #18181c; border: 1px solid var(--wl-line); border-radius: 8px; padding: 6px 8px; color: var(--wl-text); font-weight: 600; }
+
+/* portrait tablets: one pane at a time, chosen in CodeJump's switch at the bottom (body.pv-on + body.pv-<pane>; panes() in web-app.js).
+   Design: Page (the canvas) / Add (blocks, pages, style) / Settings (the inspector). Code: Code / Pages. Preview: just the site. */
+@media (max-width: 900px) { .wl.preview .wl-main { grid-template-rows: minmax(0, 1fr); } }
+body.pv-on .wl-main, body.pv-on .wl.code .wl-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+body.pv-on .wl-left { max-height: none; border: 0; }
+body.pv-on .wl-right { border: 0; }
+body.pv-on.pv-page .wl-left, body.pv-on.pv-page .wl-right, body.pv-on.pv-add .wl-centre, body.pv-on.pv-add .wl-right,
+body.pv-on.pv-settings .wl-left, body.pv-on.pv-settings .wl-centre, body.pv-on.pv-code .wl-left, body.pv-on.pv-pages .wl-centre { display: none; }
+body.pv-on.pv-settings .wl-right { display: block; }
+body.pv-on .wl-tiles { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+body.pv-on .wl-stage, body.pv-on .wl-preview { padding: 10px; }
+
+/* touch screens (CodeJump sets body.is-touch): finger-sized controls */
+body.is-touch .wl-btn, body.is-touch .wl-tab, body.is-touch .wl-side-tab, body.is-touch .wl-seg button, body.is-touch .wl-mini,
+body.is-touch .wl-goals .wl-fold, body.is-touch .wl-page button.name { min-height: 44px; min-width: 44px; }
+body.is-touch .wl-btn.icon { justify-content: center; }
+body.is-touch .wl-title, body.is-touch .wl-field input[type=text], body.is-touch .wl-field input:not([type]), body.is-touch .wl-field select,
+body.is-touch .wl input.wl-in, body.is-touch .wl-field input[type=number] { min-height: 44px; font-size: 15px; }
+body.is-touch .wl-tbar button { min-width: 44px; height: 44px; }
+body.is-touch .wl-colour input[type=color] { width: 52px; height: 44px; }
+body.is-touch .wl-tile { min-height: 64px; font-size: 13px; }
+body.is-touch .wl-set { min-height: 52px; }
+body.is-touch .wl-hint { font-size: 13px; }
+body.is-touch .wl details summary { padding: 12px 10px; font-size: 13px; }
+body.is-touch .wl-tpl button { min-height: 56px; }
+body.is-touch .wl-pics { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }

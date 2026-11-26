@@ -33,13 +33,13 @@ const TEMPLATE = `
       <button class="al-tab" role="tab" data-tab="design" aria-selected="true">${ICON.design} Design</button>
       <button class="al-tab" role="tab" data-tab="code" aria-selected="false">${ICON.code} Code</button>
     </div>
-    <button class="al-btn run" id="alRun" title="Try your app">${ICON.play}<span>Run</span></button>
+    <button class="al-btn run" id="alRun" title="Try your app" data-pv-go="phone">${ICON.play}<span>Run</span></button>
     <span class="al-sp"></span>
     <button class="al-btn icon" id="alUndo" title="Undo (Ctrl+Z)" aria-label="Undo">${ICON.undo}</button>
     <button class="al-btn icon" id="alRedo" title="Redo (Ctrl+Y)" aria-label="Redo">${ICON.redo}</button>
-    <button class="al-btn" id="alCheck" title="Look for things to fix">${ICON.check}<span class="lbl">Check my app</span></button>
-    <button class="al-btn" id="alStarters" title="Start again from a ready-made app">${ICON.sparkle}<span class="lbl">Starter apps</span></button>
-    <button class="al-btn gold" id="alPhone" title="Make a link that opens your app on a phone">${ICON.phone}<span class="lbl">Put it on my phone</span></button>
+    <button class="al-btn" id="alCheck" title="Look for things to fix" aria-label="Check my app">${ICON.check}<span class="lbl">Check my app</span></button>
+    <button class="al-btn" id="alStarters" title="Start again from a ready-made app" aria-label="Starter apps">${ICON.sparkle}<span class="lbl">Starter apps</span></button>
+    <button class="al-btn gold" id="alPhone" title="Make a link that opens your app on a phone" aria-label="Put it on my phone">${ICON.phone}<span class="lbl">Put it on my phone</span></button>
   </div>
   <div class="al-goals" id="alGoals" hidden></div>
   <div class="al-main">
@@ -61,6 +61,7 @@ export function mount(root, host) {
   const toast = m => { if (host.toast) host.toast(m); else { const t = document.createElement('div'); t.className = 'al-toast'; t.textContent = m; al.appendChild(t); setTimeout(() => t.remove(), 2200); } };
   const confirm = async m => host.confirm ? !!(await host.confirm(m)) : window.confirm(m);
   const Blockly = window.Blockly;
+  const touch = () => document.body.classList.contains('is-touch'), pvOn = () => document.body.classList.contains('pv-on');
 
   let proj, screen, sel = null, tab = 'design', ws = null, runner = null, destroyed = false, quiet = false, wsQuiet = false;
   let undo = [], redo = [], lastSnap = '', goalsWereDone = false;
@@ -106,9 +107,9 @@ export function mount(root, host) {
   function left() {
     const L = $('alLeft');
     if (tab === 'code') { L.innerHTML = ''; return; }
-    L.innerHTML = `<div class="al-side"><h3>Add a part</h3><p class="al-hint">Drag a part onto the phone, or tap it to add it.</p>
-      <div class="al-tiles">${M.PART_KEYS.map(t => `<button class="al-tile" data-add="${t}" title="${esc(M.PARTS[t][0])}">${ICON[M.PARTS[t][1]]}<span>${esc(M.PARTS[t][0])}</span></button>`).join('')}</div>
-      <h3>Screens</h3><ul class="al-screens">${proj.app.order.map((id, i) => `<li><button class="al-scr${id === screen ? ' on' : ''}" data-scr="${id}">${ICON.screen}<span>${esc(proj['s' + id].name)}</span><small>${i === 0 ? 'START' : proj['s' + id].parts.length + ' parts'}</small></button></li>`).join('')}</ul>
+    L.innerHTML = `<div class="al-side"><h3>Add a part</h3><p class="al-hint">${pvOn() ? 'Tap a part to add it to the phone.' : touch() ? 'Tap a part to add it, or slide it sideways onto the phone.' : 'Drag a part onto the phone, or tap it to add it.'}</p>
+      <div class="al-tiles">${M.PART_KEYS.map(t => `<button class="al-tile" data-add="${t}"${pvOn() ? ' data-pv-go="phone"' : ''} title="${esc(M.PARTS[t][0])}">${ICON[M.PARTS[t][1]]}<span>${esc(M.PARTS[t][0])}</span></button>`).join('')}</div>
+      <h3>Screens</h3><ul class="al-screens">${proj.app.order.map((id, i) => `<li><button class="al-scr${id === screen ? ' on' : ''}" data-scr="${id}" data-pv-go="phone">${ICON.screen}<span>${esc(proj['s' + id].name)}</span><small>${i === 0 ? 'START' : proj['s' + id].parts.length + ' parts'}</small></button></li>`).join('')}</ul>
       <button class="al-btn wide" id="alAddScreen"${proj.app.order.length >= M.LIMITS.screens ? ' disabled' : ''}>${ICON.plus} Add a screen</button>
       <p class="al-hint">Your app starts on the first screen. Use a <b>go to</b> block to move between screens.</p></div>`;
     L.querySelectorAll('[data-add]').forEach(b => tileDrag(b, b.dataset.add));
@@ -120,8 +121,11 @@ export function mount(root, host) {
   let scale = 1;
   function fitPhone() {
     const stage = tab === 'code' ? $('alRight') : $('alStage'), fr = $('alPhoneFrame');
-    const availH = Math.max(200, (tab === 'code' ? stage.clientHeight - 70 : stage.clientHeight - 56)), availW = Math.max(160, stage.clientWidth - 40);
-    scale = Math.min(1.2, availH / (M.PHONE.h + 28), availW / (M.PHONE.w + 28));
+    // the room the phone has: its box minus padding and whatever else is in it (the hint under it, or the heading and hint on the right)
+    let other = 0; for (const c of stage.children) if (!c.contains(fr) && c.offsetParent !== null) { const cs = getComputedStyle(c); other += c.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom); }
+    const cs = getComputedStyle(stage), pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + (parseFloat(cs.rowGap) || 0) * Math.max(0, stage.children.length - 1);
+    const availH = Math.max(160, stage.clientHeight - pad - other - 4), availW = Math.max(140, stage.clientWidth - 32);
+    scale = Math.max(0.2, Math.min(1.2, availH / (M.PHONE.h + 24), availW / (M.PHONE.w + 24)));
     fr.style.width = (M.PHONE.w + 24) * scale + 'px'; fr.style.height = (M.PHONE.h + 24) * scale + 'px';
     const h = $('alHost'); h.style.transform = `scale(${scale})`; h.style.left = 12 * scale + 'px'; h.style.top = 12 * scale + 'px';
     placeSel();
@@ -134,7 +138,7 @@ export function mount(root, host) {
     const s = R.drawScreen($('alHost'), proj, screen, { edit: true });
     s.classList.toggle('al-designing', tab === 'design');
     if (tab === 'design') { const box = document.createElement('div'); box.className = 'al-sel'; box.id = 'alSel'; box.innerHTML = '<i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i><i data-h="e"></i><i data-h="s"></i>'; s.appendChild(box); }
-    $('alHint').innerHTML = tab === 'design' ? (scr().parts.length ? 'Drag parts to move them. Drag the corners to resize. Tap the background to change the screen.' : 'This screen is empty. Drag a part onto it from the left.') : '';
+    $('alHint').innerHTML = tab === 'design' ? (scr().parts.length ? (touch() ? 'Slide parts to move them. Pull the round handles to resize. Tap the background to change the screen.' : 'Drag parts to move them. Drag the corners to resize. Tap the background to change the screen.') : (touch() ? 'This screen is empty. Tap a part in ' + (pvOn() ? 'Parts' : 'the list') + ' to add it.' : 'This screen is empty. Drag a part onto it from the left.')) : '';
     fitPhone();
   }
   function placeSel() {
@@ -175,16 +179,33 @@ export function mount(root, host) {
   $('alHost').addEventListener('pointerup', endDrag); $('alHost').addEventListener('pointercancel', endDrag);
   function status(m) { const h = $('alHint'); if (h && m) h.textContent = m; }
 
-  // a palette tile: tap to add, or drag onto the phone
+  // a palette tile: tap to add, or drag onto the phone. The palette must still scroll by touch (touch-action: pan-y), so on a
+  // touch screen a drag starts after a sideways slide, or after pressing and holding; an up/down swipe scrolls the list.
   function tileDrag(btn, t) {
     let d = null;
-    btn.addEventListener('pointerdown', e => { if (e.button !== 0) return; d = { x: e.clientX, y: e.clientY, ghost: null }; btn.setPointerCapture(e.pointerId); });
+    const ghost = (e) => { d.ghost = document.createElement('div'); d.ghost.className = 'al-ghost'; d.ghost.innerHTML = ICON[M.PARTS[t][1]] + esc(M.PARTS[t][0]); document.body.appendChild(d.ghost); d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; };
+    btn.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return; d = { x: e.clientX, y: e.clientY, ghost: null, touch: e.pointerType !== 'mouse' };
+      try { btn.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
+      if (d.touch) { const me = d, ev = { clientX: e.clientX, clientY: e.clientY }; me.hold = setTimeout(() => { if (d === me && !me.ghost && !pvOn()) { ghost(ev); btn.classList.add('al-held'); } }, 380); }
+    });
     btn.addEventListener('pointermove', e => {
       if (!d) return;
-      if (!d.ghost && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) { d.ghost = document.createElement('div'); d.ghost.className = 'al-ghost'; d.ghost.innerHTML = ICON[M.PARTS[t][1]] + esc(M.PARTS[t][0]); document.body.appendChild(d.ghost); }
+      const dx = Math.abs(e.clientX - d.x), dy = Math.abs(e.clientY - d.y);
+      if (!d.ghost) {
+        if (d.touch && dy > 8 && dy >= dx) { clearTimeout(d.hold); return; } // a swipe up or down: the list scrolls
+        if (dx > 8 || (!d.touch && Math.hypot(dx, dy) > 6)) { clearTimeout(d.hold); if (!pvOn()) ghost(e); }
+      }
       if (d.ghost) { d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; }
     });
-    const end = e => { if (!d) return; const was = d; d = null; if (was.ghost) { was.ghost.remove(); const pt = toPhone(e); if (pt.inside) addPart(t, pt); } else if (e.type === 'pointerup') addPart(t); };
+    // once a drag has started, the finger moves the part, not the list
+    btn.addEventListener('touchmove', e => { if (d && d.ghost && e.cancelable) e.preventDefault(); }, { passive: false });
+    const end = e => {
+      if (!d) return; const was = d; d = null; clearTimeout(was.hold); btn.classList.remove('al-held');
+      const moved = Math.hypot(e.clientX - was.x, e.clientY - was.y) > 10;
+      if (was.ghost) { was.ghost.remove(); const pt = toPhone(e); if (pt.inside) addPart(t, pt); else if (!moved && e.type === 'pointerup') addPart(t); }
+      else if (e.type === 'pointerup' && !moved) addPart(t);
+    };
     btn.addEventListener('pointerup', end); btn.addEventListener('pointercancel', end);
     btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addPart(t); } });
   }
@@ -243,7 +264,7 @@ export function mount(root, host) {
       <h3>Place</h3><div class="al-pos">${[['x', 'Across'], ['y', 'Down'], ['w', 'Width'], ['h', 'Height']].map(([k, n]) => field(n, `<input type="number" data-numin="${k}" value="${p[k]}">`)).join('')}</div>
       <div class="al-acts"><button class="al-btn" data-act="centre">Centre it</button><button class="al-btn icon" data-act="fwd" title="Bring forward">${ICON.up}</button><button class="al-btn icon" data-act="back" title="Send back">${ICON.down}</button></div>
       <h3>Part</h3><div class="al-acts"><button class="al-btn" data-act="dup" title="Copy (Ctrl+D)">${ICON.copy} Copy</button><button class="al-btn danger" data-act="del" title="Delete">${ICON.trash} Delete</button></div>
-      <button class="al-btn gold wide" data-act="code">${ICON.code} ${['textbox', 'slider', 'switch'].includes(p.t) ? 'Code: when it changes' : 'Code: when it’s pressed'}</button>`;
+      <button class="al-btn gold wide" data-act="code" data-pv-go="code">${ICON.code} ${['textbox', 'slider', 'switch'].includes(p.t) ? 'Code: when it changes' : 'Code: when it’s pressed'}</button>`;
     Rt.innerHTML = h;
     const redraw = () => { phone(); };
     Rt.querySelector('[data-name]').onchange = e => { const v = e.target.value.replace(/[^\w]/g, '').slice(0, 24); const taken = M.allParts(proj).some(q => q.id !== p.id && q.name.toLowerCase() === v.toLowerCase()); if (!v || taken) { toast(taken ? 'Another part already has that name.' : 'Use letters and numbers only.'); e.target.value = p.name; return; } p.name = v; changed(true); right(); refreshFields(); };
@@ -284,10 +305,10 @@ export function mount(root, host) {
   // ── Code: Blockly ──
   function ensureWs() {
     if (ws || !Blockly) return;
-    const touchy = matchMedia && matchMedia('(pointer: coarse)').matches;
+    const touchy = touch() || (window.matchMedia && matchMedia('(pointer: coarse)').matches);
     ws = Blockly.inject($('alBlocks'), {
       toolbox: BL.toolbox(), renderer: 'zelos', theme: BL.appTheme(Blockly), scrollbars: true, trashcan: true, media: window.CJ_BLOCKLY_MEDIA || 'https://unpkg.com/blockly@10.4.3/media/',
-      zoom: { controls: true, wheel: true, startScale: $('alBlocks').clientWidth < 760 ? 0.58 : touchy ? 0.7 : 0.72, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 }, // smaller screens (iPads) start further out so both columns show
+      zoom: { controls: true, wheel: true, startScale: touchy ? 0.85 : $('alBlocks').clientWidth < 760 ? 0.58 : 0.72, maxScale: 2.5, minScale: 0.35, scaleSpeed: 1.1 }, // finger-sized blocks on touch screens; small laptop windows start further out so both columns show
       grid: { spacing: 24, length: 3, colour: 'rgba(255,255,255,0.08)', snap: true }
     });
     try { ws.connectionChecker.doTypeChecks = () => true; } catch (e) { /* older Blockly */ }
@@ -332,10 +353,10 @@ export function mount(root, host) {
     const snapP = M.cleanProject(JSON.parse(JSON.stringify(proj)));
     runner = R.createRunner($('alHost'), snapP, { onScript: id => { if (ws && tab === 'code' && id) { try { ws.highlightBlock(id); setTimeout(() => { try { ws.highlightBlock(null); } catch (e) { /* gone */ } }, 500); } catch (e) { /* no block */ } } },
       onScreen: id => { if (tab === 'design' && id !== screen) { screen = id; left(); } }, store: memStore });
-    runner.start(); bar(); fitPhone();
+    runner.start(); bar(); panes(); fitPhone();
     $('alHint').textContent = 'Your app is running. Tap it to try it. Press Stop to change it.';
   }
-  function stopRun() { if (!runner) return; runner.stop(); runner = null; if (proj) { bar(); phone(); } }
+  function stopRun() { if (!runner) return; runner.stop(); runner = null; if (proj) { bar(); panes(); phone(); } }
   $('alRun').onclick = () => { if (runner && runner.running()) stopRun(); else startRun(); };
 
   // ── pop-ups ──
@@ -351,7 +372,7 @@ export function mount(root, host) {
     p => p.querySelectorAll('[data-starter]').forEach(b => b.onclick = async () => {
       if (!first && !(await confirm('Start a new app? The one you have open will be replaced.'))) return;
       const keepGoals = proj.goals; load(M.newProject(b.dataset.starter)); if (keepGoals) proj.goals = keepGoals; closePop(); render(); changed(true); if (host.onChange) host.onChange();
-      toast(b.dataset.starter === 'blank' ? 'An empty app. Drag parts onto the phone!' : 'Press Run to try it, then open Code to see how it works.');
+      toast(b.dataset.starter === 'blank' ? touch() ? 'An empty app. Tap a part to put it on the phone!' : 'An empty app. Drag parts onto the phone!' : 'Press Run to try it, then open Code to see how it works.');
     }));
   }
   function check() {
@@ -394,12 +415,19 @@ export function mount(root, host) {
     if (done && !goalsWereDone && host.onGoalsDone) host.onGoalsDone(); goalsWereDone = done;
   }
 
+  // portrait tablets: one pane at a time (CodeJump's switch at the bottom; app-app.css shows the chosen one). Design: Parts /
+  // Phone / Settings; Code: Code / Phone; while the app runs in Design, just the phone.
+  function panes() {
+    if (!window.cjPanes || !root.isConnected || !document.body.classList.contains('applab-mode')) return;
+    const r = runner && runner.running();
+    window.cjPanes(tab === 'code' ? [['code', 'Code', 'i-code'], ['phone', 'Phone', 'i-applab']] : r ? null : [['parts', 'Parts', 'i-plus'], ['phone', 'Phone', 'i-applab'], ['settings', 'Settings', 'i-gear']]);
+  }
   function render() {
     if (destroyed) return;
     if (!proj['s' + screen]) screen = proj.app.order[0];
     if (sel && !selPart()) sel = null;
     $('alStage').hidden = tab !== 'design'; $('alBlocks').hidden = tab !== 'code';
-    bar(); left(); right(); phone(); goals();
+    panes(); bar(); left(); right(); phone(); goals();
     if (tab === 'code') { ensureWs(); if (ws) setTimeout(() => { Blockly.svgResize(ws); fitPhone(); }, 0); }
   }
 
@@ -424,7 +452,7 @@ export function mount(root, host) {
     else if (e.key === 'Escape') { sel = null; render(); }
   }
   document.addEventListener('keydown', onKey);
-  const ro = new ResizeObserver(() => { fitPhone(); if (ws && tab === 'code') Blockly.svgResize(ws); }); ro.observe(root);
+  const ro = new ResizeObserver(() => { fitPhone(); if (ws && tab === 'code') Blockly.svgResize(ws); }); ro.observe(root); ro.observe($('alStage')); ro.observe($('alRight')); ro.observe($('alBlocks')); // panes shown / hidden on a portrait tablet change these, not root
 
   load(host.project, !host.project);
   render();

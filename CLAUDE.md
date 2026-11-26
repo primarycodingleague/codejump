@@ -31,6 +31,25 @@ now the separate repo `primarycodingleague/codejump-old-address`, which redirect
 CodeJump is a single-file browser game (level editor + playable platformer) for primary
 children, by Primary Coding League in partnership with Primary Coding Clubs.
 
+## Tablets (26 Nov 2026, branch `claude/tablet`) — Charlie: "works really well on laptops, but on tablets it feels a bit clanky… things don't resize properly"
+- **Charlie's choices:** portrait tablets get a **Code / Run switch** (one pane at a time), not stacked panes; all three phases at once.
+- **Host:** `body.is-touch` → controls ≥44px. Short landscape = `@media (orientation:landscape) and (max-height:620px)` (Fire 8 is
+  ~962×540 after the address bar). Portrait ≤900px wide + a lab that declared panes → `body.pv-on` + `body.pv-<id>` and the
+  `#pv-bar` (58px, fixed bottom; #app, #toast, #collab-bar, #resume-pill lifted above it). Labs call
+  `window.cjPanes([[id,label,iconId],…])` on open/resume/sub-mode change (`null` = no switch) and hide their own panes with
+  `body.pv-on.pv-<id>` CSS; `data-pv-go="<id>"` on a button switches pane after the press (Run buttons in a Code pane);
+  `window.cjPane(id)` switches from code. The host fires a window `resize` after switching; a ResizeObserver on #cwrap resizes.
+- **Panes:** Stage Code/Stage · Turtle Code/Turtle · Robot Code/Robot · 3D World Code/World · Build Lab Code/World (none for a
+  no-code world) · Train Code/Track · AI Code it step Code/Run (other steps none) · Critter Build Critter/Parts/Settings (tap a
+  part to add it) · Web Design Page/Add/Settings, Code tab Code/Pages · App Design Parts/Phone/Settings, Code Code/Phone (running
+  = phone only) · Brick Code/Hub. Platformer keeps its own Build/Play/Code.
+- **Lab fixes:** robot canvas sized from its box (was a feedback loop on iPad); 3D World pinch zoom (needs maxTouchPoints ≥2,
+  so tests emulate 5) + engine DPR capped at 2; Build Lab touch hints (tap build / press and hold break), chat clear of the
+  crosshair, scrolling block bar; AI pads scale with container queries; Train dock under the board; App Lab palette `pan-y`
+  (drag starts on a sideways slide or a hold), blocks scale 0.85 on touch; Critter rotate hint hidden.
+- **Tests:** tests/tablet-lib.mjs (`runTablet(SCREENS)`, profiles ipadL 1024×700, ipadP 768×950, fireL 962×540, fireP 601×900;
+  `TABLET=<profile>` filters) + tablet.test.mjs (host screens) + tablet-labs-{a,b,c}.test.mjs. Not yet tried on a real device.
+
 ## Brick Lab project type — `projectType==='bricklab'` (24 Nov 2026, branch `claude/brick-lab`; Phase 1 = WeDo 2.0) — Charlie: "a workspace for coding LEGO® Education robotics kits over Web Bluetooth"
 - **Charlie's choices:** name **Brick Lab** (Charlie first said "CodeJump Lab"; changed after hearing every tile is "… Lab"); KS2+KS3
   (hidden for KS1); "Try without a hub" pretend hub for pupils; motor power mapped like Scratch (1–100 → 30–100, 0 = off); live

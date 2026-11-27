@@ -393,7 +393,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   is the `media` every Blockly inject uses. `vendor/` is in the offline list and an unpkg failure no longer stops the iPad download.
   Keep `vendor/blockly/` in step with the unpkg version. Test: tests/lab-fail.test.mjs.
 
-## Print Lab — `projectType==='print3d'` (14 Oct 2026, CJ_VERSION 2026.10.14; on branch `claude/vibrant-cori-tho25y`) — Charlie: "a whole separate lab that is for designing 3D prints"
+## Print Lab — `projectType==='print3d'` (14 Oct 2026; ported, redesigned and given live collaboration 26–27 Nov 2026; LIVE on main since 27 Nov 2026, CJ_VERSION 2026.11.27) — Charlie: "a whole separate lab that is for designing 3D prints"
 - **Hands-on shapes only (no coding), KS2 + KS3** (Charlie's choices). Our own design studio — never use the Tinkercad or Autodesk names.
 - **Model `print/print-model.js` (no DOM; Node-testable):** project `{v:1, title, plate:{w,d}, objs}` in mm, Z up, plate centre 0,0.
   obj `{id, kind, hole, color, x, y, z(bottom), w, d, h, rx, ry, rz (deg; Manifold order x→y→z), flip (bits 1 x/2 y/4 z), text?, wall?}`;

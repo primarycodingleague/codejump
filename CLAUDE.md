@@ -421,7 +421,7 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
 - **Host glue (mirrors the Build Lab):** `print3dBase/loadPrint3DLab/p3dData/p3dApp/p3dCurrent/startNewPrint3D/enterPrint3DUI/
   exitPrint3DUI`, `body.print3d-mode`, `#print3d-ui`, payload `print3d`, `#pt-modal` tile `data-pt="print3d"` (KS1 hidden), home tile
   `data-start="print3d"` (`home/print3d.jpg`, a real render), icon `#i-print3d`, `PRINT3D_HELP`, Teacher Guide section, thumbnail badge,
-  `LS_TYPE`/`LS_LAB_ORDER`, Share hides Collaborate. Offline list includes `print/`. Test: `tests/print.test.mjs` (57 checks).
+  `LS_TYPE`/`LS_LAB_ORDER`, Share offers Collaborate (26 Nov). Offline list includes `print/`. Test: `tests/print.test.mjs` (57 checks).
 - **More (14 Oct 2026, Charlie picked all four):** shapes rounded (`round` mm; flat bottom: hull of top spheres + bottom discs, built at
   real size), halfcyl, arrow, plus; parts kinds `gear` (`teeth` 6–60, unit cache key `gear|n`, axle hole) and `hinge` (built at real size:
   two leaves + knuckles + pin with `GAP` 0.5 mm all round → 2 separate pieces, print-in-place); `KINDS[i][5]` = 'part'|'hidden' (not in
@@ -438,6 +438,21 @@ children, by Primary Coding League in partnership with Primary Coding Clubs.
   challenge…", rule rows). **Lessons:** `print-keyring` (Years 3–4) + `print-phone-stand` (Years 5–6), slides, starters from
   `lessons/builds/print-*.mjs`; the Lesson card sits bottom-right in print3d-mode (`.pl-empty` hint moved to the bottom). Tests: 88 checks.
 - **Ideas not done:** a workplane on a face, lettering on curved faces, more parts (snap fit, threads), a printable "fit test" card.
+- **Redesign + tablets + live (26 Nov 2026, branch `claude/print-lab`)** — Charlie: "add the print lab in and get that looking really good".
+  Left panel = design name + tabs Shapes · Parts · Challenges · Examples (`.pl-tab`/`.pl-tabp`, `setTab`, remembered in localStorage
+  `cj-print-tab`; tiles are cards, holes striped; examples/challenges are `.pl-card2` cards, examples with rendered pictures `ex-<id>`).
+  One tool row (`.pl-tools` scrolls with a fade when narrow; container queries on `.pl-main` drop labels) + gold `#plPrintBtn`. Our own
+  line icons (`SPRITE`, `#pli-*`, `pi()`). View: CSS gradient backdrop (renderer alpha), PCF shadows from a key light, a rounded
+  graphite bed with a light sheet, 10/50 mm grid, gold plate edge, mm numbers + X/Y arrows on the rim (`flatLabel`), icon camera
+  segment, size chip. Inspector = `.pl-sec` cards (shape picture header, Solid/Hole, colours, Position/Size/Turn with unit suffixes,
+  Flip). Tablets: handles 1.4× on touch, a second finger no longer clears the selection, `cjPanes` Design/Shapes/Settings (tap a
+  tile/example/challenge → Design), short landscape fits without page scroll. Test: tests/tablet-labs-print.test.mjs (77).
+  **Live collaboration:** `LIVE_LABS.print3d`; parts `design` {objs, rev, gone} + `info` {title, plate, brief}; `liveSet` merges a
+  partner's design shape by shape (`merge3`: base = last agreed copy, `gone` = their deleted ids, `goneAt` keeps our fresh
+  deletions), sends the merge back when it kept local work (rev bump), rewrites undo history (`liveHistory`) so Undo is per pupil,
+  ids made in a room are random (`liveIds`), nothing is sent mid-drag. labs-collab `LABS=print3d` (11 checks). **To do in
+  codejump-cloud:** add 'print3d' to the worker's lp lab list (as v19 did for 'web'); until then edits pass between people in the
+  room but a late joiner only gets the room's first copy.
 
 ## Next lesson button (16 Oct 2026, CJ_VERSION 2026.10.16; LIVE on main since 16 Oct 2026) — Charlie: "when a student completes a lesson they need a button that says next lesson"
 - Lesson card `#lg-go` ("Next lesson: <title>") shows on the last step and once `lessonDone()` runs (Finish on the last step, every goal

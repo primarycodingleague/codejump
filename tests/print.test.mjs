@@ -283,6 +283,7 @@ try {
   // examples
   page.once('dialog', d => d.accept());
   await page.evaluate(() => { window._cjc = window.cjConfirm; window.cjConfirm = () => Promise.resolve(true); });
+  await page.click('.pl-tab[data-tab="examples"]'); // Shapes · Parts · Challenges · Examples are tabs
   await page.click('[data-ex="keyring"]'); await page.waitForFunction(() => p3dApp._proj().title === 'Name keyring');
   ok((await p3()).objs.some(o => o.kind === 'text'), 'Examples open a ready-made design');
 
@@ -290,8 +291,10 @@ try {
   // parts, drawing, measuring, lining up, challenges
   await page.evaluate(() => startNewPrint3D('ks2'));
   await page.waitForFunction(() => p3dApp._model() && p3dApp._proj().objs.length === 0);
+  await page.click('.pl-tab[data-tab="parts"]'); // Shapes · Parts · Challenges · Examples are tabs
   await page.click('[data-part="hinge"]');
   ok((await p3()).objs.length === 1 && (await p3()).objs[0].kind === 'hinge', 'tapping a part adds it');
+  await page.click('.pl-tab[data-tab="shapes"]'); // Shapes · Parts · Challenges · Examples are tabs
   await page.click('#plDraw');
   const cv = await page.locator('#plDrawCv').boundingBox();
   for (const [x, y] of [[0.2, 0.9], [0.8, 0.9], [0.5, 0.2]]) await page.mouse.click(cv.x + cv.width * x, cv.y + cv.height * y);
@@ -315,6 +318,7 @@ try {
   await page.click('#plPrintBtn');
   ok(await page.locator('.pl-facts', { hasText: 'of plastic' }).count() === 1 && await page.locator('.pl-facts', { hasText: 'min' }).count() === 1, 'Check & print says roughly how much plastic and how long');
   await page.click('#plMClose');
+  await page.click('.pl-tab[data-tab="briefs"]'); // Shapes · Parts · Challenges · Examples are tabs
   await page.click('[data-brief="badge"]');
   await page.waitForFunction(() => p3dApp._proj().brief && !document.getElementById('plBrief').hidden);
   ok(await page.locator('#plBrief li').count() === 6 && (await p3()).objs.length === 0, 'a ready-made challenge opens on a clear plate with its checklist');

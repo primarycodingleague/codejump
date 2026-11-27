@@ -19,6 +19,7 @@ const ic = id => '<svg class="ic"><use href="#' + id + '"></use></svg>';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
 const r1 = v => Math.round(v * 10) / 10;
+const TOUCH = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0) && !(window.matchMedia && matchMedia('(pointer: fine)').matches && !matchMedia('(any-pointer: coarse)').matches);
 const SNAPS = [['0.1', 0.1], ['0.5', 0.5], ['1', 1], ['2', 2], ['5', 5], ['10', 10]];
 const KEYS = [
   ['Delete', 'Delete the selected shapes'], ['Ctrl + D', 'Duplicate'], ['Ctrl + C / V', 'Copy and paste'], ['Ctrl + G', 'Group'],
@@ -27,53 +28,106 @@ const KEYS = [
   ['Ctrl + A', 'Select everything'], ['M', 'Measure between two points'], ['Esc', 'Select nothing'], ['F', 'Look at the selection (or everything)']
 ];
 
+const pi = id => '<svg class="ic"><use href="#pli-' + id + '"></use></svg>';
+// Our own line icons (stroke = currentColor), so the tools look the same everywhere.
+const SPRITE = `<svg class="pl-sprite" aria-hidden="true" focusable="false"><defs>
+<symbol id="pli-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+<symbol id="pli-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+<symbol id="pli-dup" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/><path d="M14 11.5v5M11.5 14h5"/></symbol>
+<symbol id="pli-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4.5h6V7"/></symbol>
+<symbol id="pli-group" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" stroke-dasharray="3 2.6"/><rect x="6.5" y="6.5" width="6.5" height="6.5" rx="1.5"/><circle cx="15" cy="15" r="3.3"/></symbol>
+<symbol id="pli-ungroup" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><circle cx="17" cy="17" r="4"/><path d="M14 4h6v6M4 14v6h6" stroke-dasharray="2.4 2.2"/></symbol>
+<symbol id="pli-drop" viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M3.5 19.5h17"/></symbol>
+<symbol id="pli-ruler" viewBox="0 0 24 24"><path d="m3.5 16.5 13-13 4 4-13 13z"/><path d="m7.5 12.5 2 2M10.5 9.5l1.5 1.5M13.5 6.5l2 2"/></symbol>
+<symbol id="pli-keys" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M8 14h8"/></symbol>
+<symbol id="pli-magnet" viewBox="0 0 24 24"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0z"/><path d="M5 8h4M15 8h4"/></symbol>
+<symbol id="pli-print" viewBox="0 0 24 24"><path d="M6 9V3.5h12V9"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/><path d="M17.5 12h.01"/></symbol>
+<symbol id="pli-pen" viewBox="0 0 24 24"><path d="M4 20l1-4.5L16 4.5a2.1 2.1 0 0 1 3 3L8 18.5z"/><path d="m14 6.5 3 3"/></symbol>
+<symbol id="pli-cube" viewBox="0 0 24 24"><path d="M12 2.8 20 7v10l-8 4.2L4 17V7z"/><path d="M4 7l8 4.2L20 7M12 11.2v10"/></symbol>
+<symbol id="pli-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/><circle cx="12" cy="12" r="6.5"/></symbol>
+<symbol id="pli-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></symbol>
+<symbol id="pli-star" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
+<symbol id="pli-home" viewBox="0 0 24 24"><path d="M12 3.5 19.5 7.5v9L12 20.5l-7.5-4v-9z"/><path d="M4.5 7.5 12 11.5l7.5-4M12 11.5v9"/></symbol>
+<symbol id="pli-top" viewBox="0 0 24 24"><path d="M12 3.5 19.5 7.5 12 11.5 4.5 7.5z" fill="currentColor" fill-opacity=".55"/><path d="M4.5 7.5v9l7.5 4 7.5-4v-9M12 11.5v9"/></symbol>
+<symbol id="pli-front" viewBox="0 0 24 24"><path d="M4.5 7.5 12 11.5v9l-7.5-4z" fill="currentColor" fill-opacity=".55"/><path d="M12 3.5 19.5 7.5v9L12 20.5l-7.5-4v-9zM4.5 7.5 12 11.5l7.5-4"/></symbol>
+<symbol id="pli-side" viewBox="0 0 24 24"><path d="M19.5 7.5 12 11.5v9l7.5-4z" fill="currentColor" fill-opacity=".55"/><path d="M12 3.5 19.5 7.5v9L12 20.5l-7.5-4v-9zM4.5 7.5 12 11.5"/></symbol>
+<symbol id="pli-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="pli-size" viewBox="0 0 24 24"><path d="M4 20 20 4M4 20v-6M4 20h6M20 4v6M20 4h-6"/></symbol>
+<symbol id="pli-tap" viewBox="0 0 24 24"><path d="M9 11V5.5a1.8 1.8 0 0 1 3.6 0V11"/><path d="M12.6 10.2a1.8 1.8 0 0 1 3.6 0v1a1.8 1.8 0 0 1 3.3 1V16a6 6 0 0 1-6 6h-1.2a6 6 0 0 1-4.6-2.2L4.3 15.6a1.8 1.8 0 0 1 2.8-2.3L9 15"/></symbol>
+<symbol id="pli-flipx" viewBox="0 0 24 24"><path d="M12 3v18" stroke-dasharray="2.5 2.5"/><path d="M9 7 4 17h5zM15 7l5 10h-5z"/></symbol>
+<symbol id="pli-flipy" viewBox="0 0 24 24"><path d="M3 12h18" stroke-dasharray="2.5 2.5"/><path d="M7 9 17 4v5zM7 15l10 5v-5z"/></symbol>
+<symbol id="pli-flipz" viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 1-7.4 5"/><path d="M4 4.5v4.8h4.8"/></symbol>
+</defs></svg>`;
+
 const TEMPLATE = `
 <div class="pl">
-  <aside class="pl-shapes" aria-label="Shapes">
-    <h3>Shapes</h3>
-    <p class="pl-hint">Drag one onto the plate, or tap it.</p>
-    <div class="pl-grid" id="plGrid"></div>
-    <button type="button" class="pl-drawbtn" id="plDraw" title="Draw an outline and turn it into a 3D shape">${ic('i-pen')} Draw a shape</button>
-    <h3>Holes</h3>
-    <div class="pl-grid" id="plHoles"></div>
-    <h3>Parts</h3>
-    <div class="pl-grid" id="plParts"></div>
-    <h3>Challenges</h3>
-    <div class="pl-ex" id="plBriefs"></div>
-    <h3>Examples</h3>
-    <div class="pl-ex" id="plEx"></div>
+  ${SPRITE}
+  <aside class="pl-shapes" aria-label="Shapes, parts and ideas">
+    <label class="pl-name" title="The name of your design"><span class="pl-namel">My design</span><span class="pl-namef"><input id="plTitle" class="pl-title" maxlength="60" placeholder="Name your design" aria-label="Design name" autocomplete="off">${pi('pen')}</span></label>
+    <div class="pl-tabs" role="tablist" aria-label="What to add">
+      <button type="button" role="tab" class="pl-tab" data-tab="shapes">${pi('cube')}<span>Shapes</span></button>
+      <button type="button" role="tab" class="pl-tab" data-tab="parts">${pi('gear')}<span>Parts</span></button>
+      <button type="button" role="tab" class="pl-tab" data-tab="briefs">${pi('flag')}<span>Challenges</span></button>
+      <button type="button" role="tab" class="pl-tab" data-tab="examples">${pi('star')}<span>Examples</span></button>
+    </div>
+    <div class="pl-tabp" data-tabp="shapes" role="tabpanel">
+      <p class="pl-hint">Drag a shape onto the plate, or tap it.</p>
+      <div class="pl-grid" id="plGrid"></div>
+      <div class="pl-subh"><b>Holes</b><span>cut gaps in shapes</span></div>
+      <div class="pl-grid" id="plHoles"></div>
+      <button type="button" class="pl-drawbtn" id="plDraw" title="Draw an outline and turn it into a 3D shape">${pi('pen')} Draw a shape</button>
+    </div>
+    <div class="pl-tabp" data-tabp="parts" role="tabpanel" hidden>
+      <p class="pl-hint">Ready-made parts that work: loops, pegs, lids, gears and hinges.</p>
+      <div class="pl-grid pl-grid2" id="plParts"></div>
+    </div>
+    <div class="pl-tabp" data-tabp="briefs" role="tabpanel" hidden>
+      <p class="pl-hint">A challenge gives you a design brief. Its checklist ticks itself as you design.</p>
+      <div class="pl-ex" id="plBriefs"></div>
+    </div>
+    <div class="pl-tabp" data-tabp="examples" role="tabpanel" hidden>
+      <p class="pl-hint">Open one to see how it’s made, then change it.</p>
+      <div class="pl-ex" id="plEx"></div>
+    </div>
   </aside>
   <section class="pl-main">
     <div class="pl-bar">
-      <input id="plTitle" class="pl-title" maxlength="60" placeholder="Name your design" aria-label="Design name" autocomplete="off">
-      <span class="pl-sep"></span>
-      <button type="button" id="plUndo" title="Undo (Ctrl+Z)">${ic('i-undo')}<span>Undo</span></button>
-      <button type="button" id="plRedo" title="Redo (Ctrl+Y)">${ic('i-redo')}<span>Redo</span></button>
-      <span class="pl-sep"></span>
-      <button type="button" id="plDup" title="Duplicate (Ctrl+D)">Duplicate</button>
-      <button type="button" id="plDel" title="Delete (Delete key)">${ic('i-trash')}<span>Delete</span></button>
-      <button type="button" id="plGroup" title="Group: holes cut the shapes they're grouped with (Ctrl+G)">Group</button>
-      <button type="button" id="plUngroup" title="Take a group apart again (Ctrl+Shift+G)">Ungroup</button>
-      <button type="button" id="plDrop" title="Drop onto the plate (D)">Drop to plate</button>
-      <span class="pl-sep"></span>
-      <label class="pl-snap" title="Shapes move and size in steps of this many millimetres">Snap <select id="plSnap"></select> mm</label>
-      <button type="button" id="plMeasure" title="Measure: click two points to see how far apart they are (M)">${ic('i-ruler')}<span>Measure</span></button>
-      <button type="button" id="plKeys" title="Keyboard shortcuts">Keys</button>
-      <button type="button" class="pl-go" id="plPrintBtn" title="Check your design and download it for the 3D printer">${ic('i-save')}<span>Check &amp; print</span></button>
+      <div class="pl-tools" id="plTools">
+        <div class="pl-tgrp">
+          <button type="button" class="pl-tb" id="plUndo" title="Undo (Ctrl+Z)">${pi('undo')}<span>Undo</span></button>
+          <button type="button" class="pl-tb" id="plRedo" title="Redo (Ctrl+Y)">${pi('redo')}<span>Redo</span></button>
+        </div>
+        <div class="pl-tgrp">
+          <button type="button" class="pl-tb" id="plDup" title="Duplicate (Ctrl+D)">${pi('dup')}<span>Duplicate</span></button>
+          <button type="button" class="pl-tb" id="plDel" title="Delete (Delete key)">${pi('trash')}<span>Delete</span></button>
+        </div>
+        <div class="pl-tgrp">
+          <button type="button" class="pl-tb" id="plGroup" title="Group: holes cut the shapes they’re grouped with (Ctrl+G)">${pi('group')}<span>Group</span></button>
+          <button type="button" class="pl-tb" id="plUngroup" title="Take a group apart again (Ctrl+Shift+G)">${pi('ungroup')}<span>Ungroup</span></button>
+        </div>
+        <div class="pl-tgrp">
+          <button type="button" class="pl-tb" id="plDrop" title="Drop onto the plate (D)">${pi('drop')}<span>Drop</span></button>
+          <button type="button" class="pl-tb" id="plMeasure" title="Measure: click two points to see how far apart they are (M)">${pi('ruler')}<span>Measure</span></button>
+        </div>
+        <label class="pl-snap" title="Snap: shapes move and size in steps of this many millimetres">${pi('magnet')}<span class="pl-snapl">Snap</span><select id="plSnap" aria-label="Snap step in millimetres"></select><span class="pl-snapu">mm</span></label>
+        <button type="button" class="pl-tb pl-tb-ic" id="plKeys" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">${pi('keys')}</button>
+      </div>
+      <button type="button" class="pl-go" id="plPrintBtn" title="Check your design and download it for the 3D printer">${pi('print')}<span>Check &amp; print</span></button>
     </div>
     <div class="pl-stage" id="plStage">
       <canvas id="plCanvas" tabindex="0" aria-label="The build plate. Drag a shape to move it; drag the white handles to size it, the arrow to lift it and the curved arrows to turn it. Drag empty space to look around, scroll or pinch to zoom."></canvas>
-      <div class="pl-loading" id="plLoading">Getting the Print Lab ready…</div>
-      <div class="pl-empty" id="plEmpty" hidden>Drag a shape onto the build plate to start.</div>
+      <div class="pl-loading" id="plLoading"><span class="pl-spin"></span>Getting the Print Lab ready…</div>
+      <div class="pl-empty" id="plEmpty" hidden><span class="pl-emptyic">${pi('tap')}</span><span><b>Drag a shape onto the build plate to start.</b><small class="pl-emptys">Or tap one in the Shapes panel.</small><small class="pl-emptyp">Or tap <b>Shapes</b> at the bottom and pick one.</small></span></div>
       <div class="pl-tip" id="plTip" hidden></div>
       <div class="pl-mlabel" id="plMLabel" hidden></div>
       <div class="pl-brief" id="plBrief" hidden></div>
       <div class="pl-views" role="group" aria-label="Camera">
-        <button type="button" data-view="home" title="Look from the front corner">Home</button>
-        <button type="button" data-view="top" title="Look from above">Top</button>
-        <button type="button" data-view="front" title="Look from the front">Front</button>
-        <button type="button" data-view="side" title="Look from the side">Side</button>
-        <button type="button" data-view="fit" title="Fit the selection (or everything) in view (F)">Fit</button>
+        <button type="button" data-view="home" title="Home: look from the front corner" aria-label="Home view">${pi('home')}</button>
+        <button type="button" data-view="top" title="Look from above" aria-label="Top view">${pi('top')}</button>
+        <button type="button" data-view="front" title="Look from the front" aria-label="Front view">${pi('front')}</button>
+        <button type="button" data-view="side" title="Look from the side" aria-label="Side view">${pi('side')}</button>
+        <span class="pl-vsep"></span>
+        <button type="button" data-view="fit" title="Fit the selection (or everything) in view (F)" aria-label="Fit in view">${pi('fit')}</button>
       </div>
       <div class="pl-size" id="plSize"></div>
     </div>
@@ -102,19 +156,25 @@ export function mount(root, host) {
 
   /* ------------------------------------------------------------ three.js */
   const canvas = $('plCanvas'), stage = $('plStage');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const scene = new THREE.Scene(); scene.background = new THREE.Color('#1b2230');
+  renderer.setClearColor(0x000000, 0); // the soft backdrop is the stage's CSS gradient
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+  const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 1, 1, 5000);
   const controls = new THREE.OrbitControls(camera, canvas);
   controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
   controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
   controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 20; controls.maxDistance = 1500;
   controls.addEventListener('change', () => { needs = true; });
-  scene.add(new THREE.HemisphereLight('#ffffff', '#8090a8', 1.6));
-  const sun = new THREE.DirectionalLight('#ffffff', 1.9); sun.position.set(-120, 300, 180); scene.add(sun);
-  const sun2 = new THREE.DirectionalLight('#cfe0ff', 0.6); sun2.position.set(200, 120, -200); scene.add(sun2);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#6b7482', 1.35));
+  // the key light is nearly overhead, so every shape sits on a soft shadow of its own
+  const sun = new THREE.DirectionalLight('#fff7ea', 1.9); sun.position.set(-150, 300, -40); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.35; sun.shadow.radius = 5;
+  scene.add(sun, sun.target);
+  const sun2 = new THREE.DirectionalLight('#d6e4ff', 0.55); sun2.position.set(220, 140, -180); scene.add(sun2);
+  const rim = new THREE.DirectionalLight('#ffffff', 0.35); rim.position.set(60, 90, 260); scene.add(rim);
   const world = new THREE.Group(); world.rotation.x = -Math.PI / 2; scene.add(world);
   const plateGrp = new THREE.Group(); world.add(plateGrp);
   const objGrp = new THREE.Group(); world.add(objGrp);
@@ -131,18 +191,54 @@ export function mount(root, host) {
   const selMat = new THREE.LineBasicMaterial({ color: '#4fb3ff' });
   const holeEdgeMat = new THREE.LineBasicMaterial({ color: '#e8eef6', transparent: true, opacity: 0.7 });
 
+  // A label drawn on a little canvas and laid flat on the bed (millimetre numbers, X / Y).
+  function flatLabel(text, h, col, bold) {
+    const c = document.createElement('canvas'), g = c.getContext('2d'), fs = 64;
+    g.font = (bold ? '900 ' : '800 ') + fs + 'px Montserrat, sans-serif';
+    const w = Math.ceil(g.measureText(text).width) + 16; c.width = w; c.height = fs + 16;
+    g.font = (bold ? '900 ' : '800 ') + fs + 'px Montserrat, sans-serif'; g.fillStyle = col; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, w / 2, c.height / 2 + 3);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(h * w / c.height, h), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
+    m.renderOrder = 1; return m;
+  }
+  function roundRect(W, D, r) {
+    const sh = new THREE.Shape(), x = -W / 2, y = -D / 2;
+    sh.moveTo(x + r, y); sh.lineTo(x + W - r, y); sh.quadraticCurveTo(x + W, y, x + W, y + r); sh.lineTo(x + W, y + D - r);
+    sh.quadraticCurveTo(x + W, y + D, x + W - r, y + D); sh.lineTo(x + r, y + D); sh.quadraticCurveTo(x, y + D, x, y + D - r);
+    sh.lineTo(x, y + r); sh.quadraticCurveTo(x, y, x + r, y); return sh;
+  }
   function buildPlate() {
+    plateGrp.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.map) o.material.map.dispose(); });
     plateGrp.clear();
-    const W = proj.plate.w, D = proj.plate.d;
-    const base = new THREE.Mesh(new THREE.BoxGeometry(W + 6, D + 6, 2), new THREE.MeshStandardMaterial({ color: '#2d6fb8', roughness: 0.8 }));
-    base.position.set(0, 0, -2.2); plateGrp.add(base);
-    const top = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshStandardMaterial({ color: '#e9eff7', roughness: 0.9 }));
-    top.position.z = -0.05; top.userData.plate = true; plateGrp.add(top);
+    const W = proj.plate.w, D = proj.plate.d, RIM = Math.max(12, Math.min(W, D) * 0.07);
+    // the printer bed: a dark rounded slab with a light sheet on top
+    const bed = new THREE.Mesh(new THREE.ExtrudeGeometry(roundRect(W + RIM * 2, D + RIM * 2, RIM * 0.8), { depth: 5, bevelEnabled: true, bevelThickness: 0.8, bevelSize: 0.8, bevelSegments: 2, curveSegments: 10 }),
+      new THREE.MeshStandardMaterial({ color: '#2b3038', roughness: 0.55, metalness: 0.15 }));
+    bed.position.z = -6.6; bed.receiveShadow = true; plateGrp.add(bed);
+    const sheet = new THREE.Mesh(new THREE.BoxGeometry(W, D, 1), new THREE.MeshStandardMaterial({ color: '#f1f3f6', roughness: 0.85 }));
+    sheet.position.z = -0.55; sheet.receiveShadow = true; sheet.userData.plate = true; plateGrp.add(sheet);
     const minor = [], major = [];
-    for (let x = -Math.floor(W / 2 / 10) * 10; x <= W / 2; x += 10) (x % 50 ? minor : major).push(x, -D / 2, 0, x, D / 2, 0);
-    for (let y = -Math.floor(D / 2 / 10) * 10; y <= D / 2; y += 10) (y % 50 ? minor : major).push(-W / 2, y, 0, W / 2, y, 0);
+    for (let x = -Math.floor(W / 2 / 10) * 10; x <= W / 2; x += 10) if (Math.abs(x) < W / 2 - 0.01) (x % 50 ? minor : major).push(x, -D / 2, 0, x, D / 2, 0);
+    for (let y = -Math.floor(D / 2 / 10) * 10; y <= D / 2; y += 10) if (Math.abs(y) < D / 2 - 0.01) (y % 50 ? minor : major).push(-W / 2, y, 0, W / 2, y, 0);
     const lines = (arr, col, op) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op })); l.position.z = 0.04; return l; };
-    plateGrp.add(lines(minor, '#9db4cf', 0.55), lines(major, '#5f82ad', 0.8));
+    plateGrp.add(lines(minor, '#b9c4d2', 0.75), lines(major, '#7f93ab', 0.95));
+    const edge = [-W / 2, -D / 2, 0, W / 2, -D / 2, 0, W / 2, -D / 2, 0, W / 2, D / 2, 0, W / 2, D / 2, 0, -W / 2, D / 2, 0, -W / 2, D / 2, 0, -W / 2, -D / 2, 0];
+    plateGrp.add(lines(edge, '#ae853e', 1));
+    // millimetre numbers along the front and left edges (the same numbers as X and Y in the panel)
+    const lz = 0.15, lh = Math.min(5.5, RIM * 0.42);
+    for (let x = -Math.floor(W / 2 / 50) * 50; x <= W / 2; x += 50) { const l = flatLabel(String(x), lh, '#c9d1dc'); l.position.set(x, -D / 2 - RIM * 0.5, lz); plateGrp.add(l); }
+    for (let y = -Math.floor(D / 2 / 50) * 50; y <= D / 2; y += 50) { if (!y) continue; const l = flatLabel(String(y), lh, '#c9d1dc'); l.position.set(-W / 2 - RIM * 0.5, y, lz); plateGrp.add(l); }
+    // where X and Y point: a small red and green arrow at the front left corner
+    const ax = (dir, col, txt) => {
+      const g = new THREE.Group(), L = RIM * 1.6, mat = new THREE.MeshBasicMaterial({ color: col });
+      const shaft = new THREE.Mesh(new THREE.BoxGeometry(L, 1.1, 0.3), mat); shaft.position.x = L / 2; g.add(shaft);
+      const head = new THREE.Mesh(new THREE.ConeGeometry(1.9, 4, 3).rotateZ(-Math.PI / 2), mat); head.position.x = L + 1.6; head.scale.z = 0.15; g.add(head);
+      const t = flatLabel(txt, lh * 1.1, col, true); t.position.set(L + 6, 0, 0); if (dir) t.rotation.z = -Math.PI / 2; g.add(t);
+      g.rotation.z = dir ? Math.PI / 2 : 0; g.position.set(-W / 2 - RIM * 0.5, -D / 2 - RIM * 0.5, lz); return g;
+    };
+    plateGrp.add(ax(0, '#ff6b5e', 'X'), ax(1, '#59d17a', 'Y'));
+    const S = Math.max(W, D) / 2 + 60, sc = sun.shadow.camera; sc.left = -S; sc.right = S; sc.top = S; sc.bottom = -S; sc.near = 10; sc.far = 900; sc.updateProjectionMatrix();
     needs = true;
   }
 
@@ -160,7 +256,7 @@ export function mount(root, host) {
     for (const p of model.pieces(o)) {
       const geo = geomOf(model.meshOf(p.m));
       const mesh = new THREE.Mesh(geo, o.hole ? holeMat : matOf(p.color)); mesh.userData.id = o.id;
-      if (o.hole) mesh.renderOrder = 2;
+      if (o.hole) mesh.renderOrder = 2; else { mesh.castShadow = true; mesh.receiveShadow = true; }
       grp.add(mesh);
       const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 28), o.hole ? holeEdgeMat : edgeMat); edges.userData.skip = true;
       grp.add(edges);
@@ -238,7 +334,7 @@ export function mount(root, host) {
     const F = frameOf(o);
     for (const m of handles) {
       const u = m.userData.h, base = at(F, ...u.local);
-      const k = camera.position.distanceTo(toT(base)) * 0.0068;
+      const k = camera.position.distanceTo(toT(base)) * (TOUCH ? 0.0095 : 0.0068); // bigger on touch screens, for fingers
       let p = base;
       if (u.kind === 'lift') p = [base[0], base[1], base[2] + 7 * k];
       if (u.kind === 'rot') { const q = u.push; p = at(F, u.local[0] + q[0] * 6 * k, u.local[1] + q[1] * 6 * k, u.local[2] + q[2] * 6 * k); }
@@ -263,7 +359,8 @@ export function mount(root, host) {
     if (!b || v !== 'fit') b = b && v === 'fit' ? b : { min: [-proj.plate.w / 2, -proj.plate.d / 2, 0], max: [proj.plate.w / 2, proj.plate.d / 2, b ? Math.max(20, b.max[2]) : 20] };
     const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2];
     const r = Math.max(15, Math.hypot(b.max[0] - b.min[0], b.max[1] - b.min[1], b.max[2] - b.min[2]) / 2);
-    const dist = r / Math.sin(camera.fov * Math.PI / 360) * (v === 'fit' ? 1.35 : 1.0);
+    const vf = camera.fov * Math.PI / 360, half = Math.min(vf, Math.atan(Math.tan(vf) * (camera.aspect || 1))); // tall, narrow views fit the width too
+    const dist = r / Math.sin(half) * (v === 'fit' ? 1.35 : 1.0);
     const dir = v === 'top' ? [0, -0.0001, 1] : v === 'front' ? [0, -1, 0.12] : v === 'side' ? [1, 0, 0.12] : [-0.55, -1, 0.85];
     const L = Math.hypot(...dir), T = toT(c);
     controls.target.copy(T);
@@ -274,7 +371,7 @@ export function mount(root, host) {
 
   /* ------------------------------------------------------------ editing */
   function snapshot() { undo.push(JSON.stringify(proj)); if (undo.length > 80) undo.shift(); redo = []; }
-  function commit() { sync(); changed(); }
+  function commit() { liveIds(); sync(); changed(); }
   function doUndo() { if (!undo.length) return; redo.push(JSON.stringify(proj)); proj = JSON.parse(undo.pop()); afterLoad(); changed(); }
   function doRedo() { if (!redo.length) return; undo.push(JSON.stringify(proj)); proj = JSON.parse(redo.pop()); afterLoad(); changed(); }
   function afterLoad() { $('plTitle').value = proj.title || ''; buildPlate(); sync(); }
@@ -364,7 +461,7 @@ export function mount(root, host) {
   function shapePics() {
     // Each shape drawn once with its real geometry, as a little picture for the panel.
     const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    pr.setSize(72, 72); pr.setPixelRatio(1); pr.outputColorSpace = THREE.SRGBColorSpace;
+    pr.setSize(112, 112); pr.setPixelRatio(1); pr.outputColorSpace = THREE.SRGBColorSpace;
     const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#fff', '#8090a8', 1.7)); const l = new THREE.DirectionalLight('#fff', 1.8); l.position.set(-1, 3, 2); sc.add(l);
     const cam = new THREE.PerspectiveCamera(30, 1, 1, 1000); const wg = new THREE.Group(); wg.rotation.x = -Math.PI / 2; sc.add(wg);
     const pics = {};
@@ -372,7 +469,7 @@ export function mount(root, host) {
       wg.clear(); if (!Array.isArray(os)) os = [os];
       const b = { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
       for (const o of os) {
-        for (const p of model.pieces(o)) { const g = geomOf(model.meshOf(p.m)); wg.add(new THREE.Mesh(g, o.hole ? new THREE.MeshStandardMaterial({ color: '#c8d3e0', transparent: true, opacity: 0.6, flatShading: true }) : matOf(p.color))); }
+        for (const p of model.pieces(o)) { const g = geomOf(model.meshOf(p.m)); wg.add(new THREE.Mesh(g, o.hole ? new THREE.MeshStandardMaterial({ color: '#b4bdc9', transparent: true, opacity: 0.75, flatShading: true }) : matOf(p.color))); }
         const q = model.bounds(o); if (q) for (let i = 0; i < 3; i++) { b.min[i] = Math.min(b.min[i], q.min[i]); b.max[i] = Math.max(b.max[i], q.max[i]); }
       }
       const c = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2];
@@ -386,22 +483,42 @@ export function mount(root, host) {
     for (const k of PM.SHAPE_KINDS) { try { draw(PM.makeObj(k, { color: COL[k], text: 'Abc' }), k); } catch (e) { /* no picture */ } }
     for (const k of ['box', 'cylinder']) { try { draw(PM.makeObj(k, { hole: true }), 'hole-' + k); } catch (e) { /* no picture */ } }
     for (const [id] of PM.PARTS) { try { draw(PM.partObjs(id, PM.newProject()), 'part-' + id); } catch (e) { /* no picture */ } }
+    for (const [id] of PM.EXAMPLES) { try { draw(PM.exampleProject(id).objs.filter(o => !o.hole), 'ex-' + id); } catch (e) { /* no picture */ } }
     pr.dispose(); try { pr.forceContextLoss(); } catch (e) { /* fine */ }
     return pics;
   }
+  let PICS = {};
   function shapePanel() {
-    let pics = {}; try { pics = shapePics(); } catch (e) { /* pictures are a nicety */ }
-    const tile = (kind, label, hole) => `<button type="button" class="pl-tile${hole ? ' hole' : ''}" data-kind="${kind}"${hole ? ' data-hole="1"' : ''} title="${esc(label)}"><img alt="" src="${pics[(hole ? 'hole-' : '') + kind] || ''}"><span>${esc(label)}</span></button>`;
+    try { PICS = shapePics(); } catch (e) { PICS = {}; } // pictures are a nicety
+    const pics = PICS;
+    const tile = (kind, label, hole) => `<button type="button" class="pl-tile${hole ? ' hole' : ''}" data-kind="${kind}"${hole ? ' data-hole="1"' : ''} title="${esc(label)}"><span class="pl-pic"><img alt="" src="${pics[(hole ? 'hole-' : '') + kind] || ''}"></span><span class="pl-tl">${esc(label)}</span></button>`;
     $('plGrid').innerHTML = PM.SHAPE_KINDS.map(k => tile(k, PM.KIND[k][1], false)).join('');
     $('plHoles').innerHTML = tile('box', 'Hole box', true) + tile('cylinder', 'Hole cylinder', true);
-    $('plParts').innerHTML = PM.PARTS.map(([id, label, tipText]) => `<button type="button" class="pl-tile" data-part="${id}" title="${esc(tipText)}"><img alt="" src="${pics['part-' + id] || ''}"><span>${esc(label)}</span></button>`).join('');
-    $('plBriefs').innerHTML = PM.BRIEFS.map(b => `<button type="button" data-brief="${b.id}" title="${esc(b.text)}">${esc(b.title)}</button>`).join('') + `<button type="button" class="pl-mkbrief" id="plMakeBrief" title="Write your own challenge (teachers: set it, then give the project to your class)">Make a challenge…</button>`;
-    root.querySelectorAll('[data-brief]').forEach(b => b.onclick = () => openBrief(b.dataset.brief));
+    $('plParts').innerHTML = PM.PARTS.map(([id, label, tipText]) => `<button type="button" class="pl-tile" data-part="${id}" title="${esc(tipText)}"><span class="pl-pic"><img alt="" src="${pics['part-' + id] || ''}"></span><span class="pl-tl">${esc(label)}</span></button>`).join('');
+    $('plBriefs').innerHTML = PM.BRIEFS.map(b => `<button type="button" class="pl-card2" data-brief="${b.id}" title="${esc(b.text)}"><span class="pl-c2ic">${pi('flag')}</span><span class="pl-c2t"><b>${esc(b.title)}</b><small>${esc(b.text)}</small></span></button>`).join('') +
+      `<button type="button" class="pl-card2 pl-mkbrief" id="plMakeBrief" title="Write your own challenge (teachers: set it, then give the project to your class)"><span class="pl-c2ic">${pi('pen')}</span><span class="pl-c2t"><b>Make a challenge…</b><small>Write your own brief and rules.</small></span></button>`;
+    root.querySelectorAll('[data-brief]').forEach(b => b.onclick = () => { openBrief(b.dataset.brief); });
     $('plMakeBrief').onclick = editBrief;
-    $('plEx').innerHTML = PM.EXAMPLES.map(e => `<button type="button" data-ex="${e[0]}" title="${esc(e[2])}">${esc(e[1])}</button>`).join('');
+    $('plEx').innerHTML = PM.EXAMPLES.map(e => `<button type="button" class="pl-card2 pl-excard" data-ex="${e[0]}" title="${esc(e[2])}"><span class="pl-pic"><img alt="" src="${pics['ex-' + e[0]] || ''}"></span><span class="pl-c2t"><b>${esc(e[1])}</b><small>${esc(e[2])}</small></span></button>`).join('');
     root.querySelectorAll('.pl-tile').forEach(b => b.addEventListener('pointerdown', ev => tileDown(ev, b)));
     root.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => openExample(b.dataset.ex));
   }
+  // portrait tablets show one pane at a time: after adding something, show the build plate
+  const toDesign = () => { if (document.body.classList.contains('pv-on') && window.cjPane) window.cjPane('design'); };
+  const panes = () => { if (alive && window.cjPanes) window.cjPanes([['design', 'Design', 'i-print3d'], ['shapes', 'Shapes', 'i-plus'], ['settings', 'Settings', 'i-gear']]); };
+  /* tabs: Shapes · Parts · Challenges · Examples */
+  let tab = 'shapes'; try { tab = localStorage.getItem('cj-print-tab') || 'shapes'; } catch (e) { /* private window */ }
+  function setTab(t) {
+    if (!root.querySelector('[data-tabp="' + t + '"]')) t = 'shapes';
+    tab = t; try { localStorage.setItem('cj-print-tab', t); } catch (e) { /* fine */ }
+    root.querySelectorAll('.pl-tab').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+    root.querySelectorAll('.pl-tabp').forEach(p => { p.hidden = p.dataset.tabp !== t; });
+  }
+  root.querySelectorAll('.pl-tab').forEach(b => {
+    b.onclick = () => setTab(b.dataset.tab);
+    b.onkeydown = e => { if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return; const all = [...root.querySelectorAll('.pl-tab')], i = all.indexOf(b), n = all[(i + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length]; setTab(n.dataset.tab); n.focus(); e.preventDefault(); };
+  });
+  setTab(tab);
   let ghost = null;
   function tileDown(ev, b) {
     if (ev.button !== 0 && ev.pointerType === 'mouse') return;
@@ -415,7 +532,7 @@ export function mount(root, host) {
     const up = e => {
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
       if (ghost) { ghost.remove(); ghost = null; }
-      if (!moved) { if (part) addPart(part); else addShape(kind, hole); return; }
+      if (!moved) { if (part) addPart(part); else addShape(kind, hole); toDesign(); return; }
       const r = canvas.getBoundingClientRect();
       if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
       const spot = dropSpot(e.clientX, e.clientY); if (spot) { if (part) addPart(part, spot); else addShape(kind, hole, spot); }
@@ -431,7 +548,7 @@ export function mount(root, host) {
   async function openExample(id) {
     if (proj.objs.length && !(await ask('Open the example? It replaces what’s on your build plate (you can press Undo to get it back).'))) return;
     const p = PM.exampleProject(id); if (!p) return;
-    snapshot(); p.plate = proj.plate; proj = PM.cleanProject(p); sel = []; afterLoad(); setView('home'); changed();
+    snapshot(); p.plate = proj.plate; proj = PM.cleanProject(p); sel = []; afterLoad(); toDesign(); setView('home'); changed();
   }
 
   /* ------------------------------------------------------------ picking + dragging */
@@ -497,7 +614,7 @@ export function mount(root, host) {
   }
   function endDrag(cancel, ev) {
     const d = drag; drag = null; controls.enabled = true; tip(null);
-    if (d.kind === 'empty') { if (d.measure) { if (!d.moved && ev) measurePoint(ev.clientX, ev.clientY); return; } if (!d.moved && !(ev && (ev.shiftKey || ev.ctrlKey))) select([]); return; }
+    if (d.kind === 'empty') { if (cancel) return; /* a second finger (pinch) never clears the selection */ if (d.measure) { if (!d.moved && ev) measurePoint(ev.clientX, ev.clientY); return; } if (!d.moved && !(ev && (ev.shiftKey || ev.ctrlKey))) select([]); return; }
     if (!d.moved) return;
     if (cancel) { doUndo(); redo.pop(); return; }
     for (const v of views.values()) v.grp.position.set(0, 0, 0);
@@ -613,38 +730,46 @@ export function mount(root, host) {
     $('plSize').textContent = b ? 'Whole design: ' + mm(b.max[0] - b.min[0]) + ' × ' + mm(b.max[1] - b.min[1]) + ' × ' + mm(b.max[2] - Math.min(0, b.min[2])) + ' mm' : '';
   }
   const NUMS = [['x', 'X'], ['y', 'Y'], ['z', 'Up'], ['w', 'Width'], ['d', 'Depth'], ['h', 'Height'], ['rx', 'Tip'], ['ry', 'Roll'], ['rz', 'Turn']];
+  const sec = (title, body, cls) => `<section class="pl-sec${cls ? ' ' + cls : ''}">${title ? `<h4 class="pl-sech">${title}</h4>` : ''}${body}</section>`;
   function inspector() {
     const box = $('plInsp');
     if (!sel.length) {
-      box.innerHTML = `<h3>Nothing selected</h3><p class="pl-hint">Tap a shape to change it. Shift-click to pick more than one.</p>
-        <label class="pl-row">Build plate <select id="plPlate">${PM.PLATES.map(p => `<option value="${p[0]}"${proj.plate.w === p[2] ? ' selected' : ''}>${esc(p[1])}</option>`).join('')}${PM.PLATES.some(p => p[2] === proj.plate.w) ? '' : `<option selected>${proj.plate.w} × ${proj.plate.d} mm</option>`}</select></label>
-        <div class="pl-learn"><b>How it works</b><ul><li>Everything is measured in <b>millimetres</b> (10 mm = 1 cm). Each square on the plate is 10 mm.</li><li>Make a shape a <b>hole</b>, put it where you want a gap, then select both and press <b>Group</b> — the hole cuts it out.</li><li>The printer builds from the plate up, so everything needs to rest on the plate or on another part.</li></ul></div>`;
+      const known = PM.PLATES.some(p => p[2] === proj.plate.w);
+      box.innerHTML = sec('', `<div class="pl-ihead"><span class="pl-iic pl-iic-none">${pi('tap')}</span><div><h3>Nothing selected</h3><small>Tap a shape to change it.</small></div></div><p class="pl-hint pl-nomob">Shift-click to pick more than one.</p>`) +
+        sec('Build plate', `<label class="pl-field"><span class="sr-only">Build plate</span><select id="plPlate">${PM.PLATES.map(p => `<option value="${p[0]}"${proj.plate.w === p[2] ? ' selected' : ''}>${esc(p[1])}</option>`).join('')}${known ? '' : `<option selected>${proj.plate.w} × ${proj.plate.d} mm</option>`}</select></label><p class="pl-hint">${proj.plate.w} × ${proj.plate.d} mm. Pick the size of your school’s printer.</p>`) +
+        sec('How it works', `<ol class="pl-steps"><li><span>1</span><div>Everything is measured in <b>millimetres</b> (10 mm = 1 cm). Each square on the plate is 10 mm.</div></li><li><span>2</span><div>Make a shape a <b>hole</b>, put it where you want a gap, then select both and press <b>Group</b>. The hole cuts it out.</div></li><li><span>3</span><div>The printer builds from the plate up, so everything needs to rest on the plate or on another part.</div></li></ol>`, 'pl-learn');
       $('plPlate').onchange = e => { const p = PM.PLATES.find(x => x[0] === e.target.value); if (!p) return; snapshot(); proj.plate = { w: p[2], d: p[3] }; buildPlate(); commit(); };
       return;
     }
     const objs = sel.map(byId).filter(Boolean), o = objs[0], one = objs.length === 1;
     const label = one ? (o.kind === 'group' ? 'Group' : (PM.KIND[o.kind] || [0, 'Shape'])[1]) : objs.length + ' shapes';
     const allHole = objs.every(x => x.hole), allSolid = objs.every(x => !x.hole);
-    let h = `<h3>${esc(label)}${one && o.hole ? ' <span class="pl-tag">hole</span>' : ''}</h3>
-      <div class="pl-seg" role="group" aria-label="Solid or hole"><button type="button" data-hole="0" class="${allSolid ? 'on' : ''}">Solid</button><button type="button" data-hole="1" class="${allHole ? 'on' : ''}">Hole</button></div>`;
-    if (!allHole) h += `<div class="pl-cols">${PM.COLOURS.map(c => `<button type="button" class="pl-col${objs.every(x => x.color === c) ? ' on' : ''}" data-col="${c}" style="--c:${c}" title="${c}" aria-label="Colour ${c}"></button>`).join('')}<label class="pl-colpick" title="Any colour"><input type="color" id="plColour" value="${o.color}"></label></div>`;
+    const pic = one && o.kind !== 'group' && PICS[(o.hole && PICS['hole-' + o.kind] ? 'hole-' : '') + o.kind];
+    const sub = one ? (o.hole ? 'Hole' : 'Solid') + ' · ' + r1(o.w) + ' × ' + r1(o.d) + ' × ' + r1(o.h) + ' mm' : 'Picked together';
+    let h = sec('', `<div class="pl-ihead"><span class="pl-iic${one && o.hole ? ' hole' : ''}">${pic ? `<img alt="" src="${pic}">` : pi(one ? 'group' : 'dup')}</span><div><h3>${esc(label)}${one && o.hole ? ' <span class="pl-tag">hole</span>' : ''}</h3><small>${esc(sub)}</small></div></div>
+      <div class="pl-seg" role="group" aria-label="Solid or hole"><button type="button" data-hole="0" class="${allSolid ? 'on' : ''}">Solid</button><button type="button" data-hole="1" class="${allHole ? 'on hole' : ''}">Hole</button></div>`);
+    if (!allHole) h += sec('Colour', `<div class="pl-cols">${PM.COLOURS.map(c => `<button type="button" class="pl-col${objs.every(x => x.color === c) ? ' on' : ''}" data-col="${c}" style="--c:${c}" title="${c}" aria-label="Colour ${c}"></button>`).join('')}<label class="pl-colpick" title="Any colour"><input type="color" id="plColour" value="${o.color}" aria-label="Any colour"></label></div>`);
     if (one) {
-      if (o.kind === 'text') h += `<label class="pl-row pl-text">Text <input id="plText" maxlength="${PM.LIMITS.text}" value="${esc(o.text || '')}" autocomplete="off"></label>`;
-      if (o.kind === 'tube') h += `<label class="pl-row">Wall (mm) <input type="number" id="plWall" step="0.5" min="0.4" value="${o.wall}"></label>`;
-      if (o.kind === 'rounded') h += `<label class="pl-row">Roundness (mm) <input type="number" id="plRound" step="0.5" min="0" value="${o.round}"></label>`;
-      if (o.kind === 'gear') h += `<label class="pl-row">Teeth <input type="number" id="plTeeth" step="1" min="6" max="60" value="${o.teeth}"></label><p class="pl-hint">Two gears mesh when their teeth are the same size: keep width ÷ teeth the same (e.g. 30 mm with 12 teeth and 60 mm with 24).</p>`;
-      if (o.kind === 'hinge') h += `<p class="pl-hint">This hinge prints already joined. Keep the gaps: don’t make it much smaller than 30 × 15 × 5 mm.</p>`;
-      if (o.kind === 'sketch') h += `<div class="pl-acts"><button type="button" id="plEditDraw">${ic('i-pen')} Change the drawing</button></div>`;
-      h += '<div class="pl-nums">' + NUMS.map(([f, l], i) => (i % 3 === 0 ? `<div class="pl-numh">${['Position (mm)', 'Size (mm)', 'Turn (degrees)'][i / 3]}</div>` : '') +
-        `<label>${l}<input type="number" data-f="${f}" step="${f[0] === 'r' ? 15 : snap}" value="${r1(o[f])}"></label>`).join('') + '</div>';
-      h += `<label class="pl-check"><input type="checkbox" id="plKeep"> Keep its shape when I change the size</label>`;
+      let extra = '';
+      const fld = (lab, id, attrs, val, unit) => `<label class="pl-row">${lab}<span class="pl-nf pl-nfw"><input type="number" id="${id}" ${attrs} value="${val}">${unit ? `<i>${unit}</i>` : ''}</span></label>`;
+      if (o.kind === 'text') extra += `<label class="pl-row pl-text">Text <input id="plText" maxlength="${PM.LIMITS.text}" value="${esc(o.text || '')}" autocomplete="off"></label>`;
+      if (o.kind === 'tube') extra += fld('Wall', 'plWall', 'step="0.5" min="0.4"', o.wall, 'mm');
+      if (o.kind === 'rounded') extra += fld('Roundness', 'plRound', 'step="0.5" min="0"', o.round, 'mm');
+      if (o.kind === 'gear') extra += fld('Teeth', 'plTeeth', 'step="1" min="6" max="60"', o.teeth, '') + `<p class="pl-hint">Two gears mesh when their teeth are the same size: keep width ÷ teeth the same (e.g. 30 mm with 12 teeth and 60 mm with 24).</p>`;
+      if (o.kind === 'hinge') extra += `<p class="pl-hint">This hinge prints already joined. Keep the gaps: don’t make it much smaller than 30 × 15 × 5 mm.</p>`;
+      if (o.kind === 'sketch') extra += `<div class="pl-acts"><button type="button" id="plEditDraw">${pi('pen')} Change the drawing</button></div>`;
+      if (extra) h += sec('Settings', extra);
+      const nums = (from, unit, cls) => `<div class="pl-nums">` + NUMS.slice(from, from + 3).map(([f, l]) => `<label class="pl-num"><span class="pl-nl${cls ? ' ' + cls + f : ''}">${l}</span><span class="pl-nf"><input type="number" data-f="${f}" step="${f[0] === 'r' ? 15 : snap}" value="${r1(o[f])}"><i>${unit}</i></span></label>`).join('') + '</div>';
+      h += sec('Position', nums(0, 'mm', 'ax-'));
+      h += sec('Size', nums(3, 'mm') + `<label class="pl-check"><input type="checkbox" id="plKeep"> Keep its shape when I change the size</label>`);
+      h += sec('Turn', nums(6, '°'));
     }
-    h += `<div class="pl-acts"><button type="button" data-act="mx" title="Flip left to right">Flip ↔</button><button type="button" data-act="my" title="Flip front to back">Flip ↕</button><button type="button" data-act="mz" title="Turn upside down">Upside down</button></div>`;
-    if (one && o.kind === 'group') h += `<p class="pl-hint">Holes in a group cut the shapes. To change one part, press <b>Ungroup</b>.</p>`;
-    if (one && o.hole) h += `<p class="pl-hint">A hole on its own isn’t printed. Put it where you want the gap, select it and the shape, then press <b>Group</b>.</p>`;
+    h += sec('Flip', `<div class="pl-acts pl-flips"><button type="button" data-act="mx" title="Flip left to right">${pi('flipx')}<span>Flip ↔</span></button><button type="button" data-act="my" title="Flip front to back">${pi('flipy')}<span>Flip ↕</span></button><button type="button" data-act="mz" title="Turn upside down">${pi('flipz')}<span>Upside down</span></button></div>`);
+    if (one && o.kind === 'group') h += `<p class="pl-note">Holes in a group cut the shapes. To change one part, press <b>Ungroup</b>.</p>`;
+    if (one && o.hole) h += `<p class="pl-note">A hole on its own isn’t printed. Put it where you want the gap, select it and the shape, then press <b>Group</b>.</p>`;
     if (!one) {
-      h += `<div class="pl-numh">Line them up</div><div class="pl-align">${[['0', 'min', 'Left'], ['0', 'mid', 'Centre'], ['0', 'max', 'Right'], ['1', 'min', 'Front'], ['1', 'mid', 'Middle'], ['1', 'max', 'Back'], ['2', 'min', 'Bottom'], ['2', 'mid', 'Halfway'], ['2', 'max', 'Top']].map(([a, w, l]) => `<button type="button" data-al="${a}${w}" title="Line up their ${l.toLowerCase()} edges">${l}</button>`).join('')}</div>`;
-      h += `<p class="pl-hint">Press <b>Group</b> to join them into one — any holes cut the shapes.</p>`;
+      h += sec('Line them up', `<div class="pl-align">${[['0', 'min', 'Left'], ['0', 'mid', 'Centre'], ['0', 'max', 'Right'], ['1', 'min', 'Front'], ['1', 'mid', 'Middle'], ['1', 'max', 'Back'], ['2', 'min', 'Bottom'], ['2', 'mid', 'Halfway'], ['2', 'max', 'Top']].map(([a, w, l]) => `<button type="button" data-al="${a}${w}" title="Line up their ${l.toLowerCase()} edges">${l}</button>`).join('')}</div>`);
+      h += `<p class="pl-note">Press <b>Group</b> to join them into one — any holes cut the shapes.</p>`;
     }
     box.innerHTML = h;
     box.querySelectorAll('[data-hole]').forEach(b => b.onclick = () => setField(sel, 'hole', b.dataset.hole === '1'));
@@ -825,8 +950,8 @@ export function mount(root, host) {
   }
   async function openBrief(id) {
     const b = PM.BRIEFS.find(x => x.id === id); if (!b) return;
-    if (proj.objs.length && !(await ask('Start “' + b.title + '” on a clear build plate? Choose No to keep your design and add the challenge to it.'))) { snapshot(); proj.brief = PM.cleanBrief(b); briefDone = false; commit(); return; }
-    snapshot(); const p = PM.briefProject(id); p.plate = proj.plate; proj = p; sel = []; briefDone = false; afterLoad(); setView('home'); changed();
+    if (proj.objs.length && !(await ask('Start “' + b.title + '” on a clear build plate? Choose No to keep your design and add the challenge to it.'))) { snapshot(); proj.brief = PM.cleanBrief(b); briefDone = false; commit(); toDesign(); return; }
+    snapshot(); const p = PM.briefProject(id); p.plate = proj.plate; proj = p; sel = []; briefDone = false; afterLoad(); toDesign(); setView('home'); changed();
   }
   function editBrief() {
     const b = proj.brief ? clone(proj.brief) : { title: '', text: '', rules: [{ k: 'ready' }] };
@@ -887,6 +1012,8 @@ export function mount(root, host) {
   $('plModal').addEventListener('pointerdown', e => { if (e.target === $('plModal')) closeModal(); });
   $('plTitle').onchange = () => { snapshot(); proj.title = $('plTitle').value.slice(0, 60); changed(); };
   root.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
+  const tools = $('plTools'), fade = () => { const more = tools.scrollWidth > tools.clientWidth + 2; tools.classList.toggle('more-r', more && tools.scrollLeft + tools.clientWidth < tools.scrollWidth - 2); tools.classList.toggle('more-l', more && tools.scrollLeft > 2); };
+  tools.addEventListener('scroll', fade, { passive: true }); new ResizeObserver(fade).observe(tools);
   const ro = new ResizeObserver(resize); ro.observe(stage);
 
   function tick() {
@@ -914,15 +1041,95 @@ export function mount(root, host) {
   ready.catch(e => { console.warn(e); if (host.failed) host.failed(e); else $('plLoading').textContent = 'The Print Lab could not start. Try again, or refresh the page.'; });
   $('plTitle').value = proj.title || '';
   raf = requestAnimationFrame(tick);
+  panes();
+
+  /* ------------------------------------------------------------ live collaboration (CodeJump's live rooms)
+   * Two parts: `design` {objs, rev} and `info` {title, plate, brief}. CodeJump sends a part when liveParts() changes and hands
+   * a partner's newer copy to liveSet(). A partner's design is merged shape by shape with ours (what changed since we last
+   * agreed wins; theirs wins when we both changed the same shape), so two pupils can work at the same time. Selection, camera,
+   * snap and the open tab stay on each screen; Undo stays per pupil (a partner's shapes are written into our history, so
+   * Undo only takes back our own steps). Nothing is sent while a handle or shape is being dragged (it goes on release). */
+  let liveSeen = false, liveBase = null, liveCache = null, liveRev = 0;
+  const liveKnown = new Set();
+  // shapes made while in a room get ids nobody else can have picked at the same moment
+  function liveIds() {
+    if (!liveSeen) return;
+    const ren = o => { if (!liveKnown.has(o.id)) { const n = 'o' + Math.random().toString(36).slice(2, 9) + (Date.now() % 1000).toString(36); sel = sel.map(x => x === o.id ? n : x); o.id = n; liveKnown.add(n); } (o.children || []).forEach(ren); };
+    proj.objs.forEach(ren);
+  }
+  // Shape by shape: a shape only one side changed keeps that change; both changed it = theirs (the newer copy). A shape missing
+  // from theirs is kept unless they say it's gone (deleted); one missing from ours that we deleted a moment ago stays deleted
+  // (their copy was sent before ours arrived). Shapes that now sit inside a group aren't kept loose as well.
+  let livePresent = new Set(); const goneAt = new Map();
+  function merge3(base, ours, theirs, theirGone) {
+    const B = new Map((base || []).map(o => [o.id, JSON.stringify(o)])), T = new Set(theirs.map(o => o.id)), O = new Map(ours.map(o => [o.id, o])), TG = new Set(theirGone || []), now = Date.now(), out = [];
+    for (const t of theirs) {
+      const b = B.get(t.id), o = O.get(t.id), tj = JSON.stringify(t);
+      if (!o) { const g = goneAt.get(t.id); if (g && now - g < 8000 && (b === undefined || tj === b)) continue; out.push(t); continue; }
+      const oj = JSON.stringify(o);
+      out.push(b !== undefined && oj !== b && tj === b ? o : t); // only we changed it: keep ours
+    }
+    for (const o of ours) if (!T.has(o.id)) { const b = B.get(o.id); if (TG.has(o.id) && b !== undefined && JSON.stringify(o) === b) continue; out.push(o); }
+    const inside = new Set(); for (const o of out) if (o.children) PM.allIds(o.children, inside);
+    return out.filter(o => !inside.has(o.id));
+  }
+  // a partner's change goes into every undo / redo step too, so Undo never takes back their work
+  function liveHistory(before, after, info) {
+    const bm = new Map(before.map(o => [o.id, JSON.stringify(o)])), am = new Map(after.map(o => [o.id, o])), touched = new Set();
+    for (const [id, j] of bm) if (!am.has(id) || JSON.stringify(am.get(id)) !== j) touched.add(id);
+    for (const id of am.keys()) if (!bm.has(id)) touched.add(id);
+    const fix = st => { const p = JSON.parse(st);
+      if (touched.size) { p.objs = p.objs.filter(o => !touched.has(o.id)); for (const id of touched) if (am.has(id)) p.objs.push(clone(am.get(id))); }
+      if (info) { p.title = info.title; p.plate = info.plate; if (info.brief) p.brief = info.brief; else delete p.brief; }
+      return JSON.stringify(p); };
+    undo = undo.map(fix); redo = redo.map(fix);
+  }
+  const liveNow = () => ({ design: { objs: proj.objs, rev: liveRev }, info: { title: proj.title || '', plate: proj.plate, brief: proj.brief || null } });
 
   return {
+    liveParts() {
+      if (!liveSeen) { liveSeen = true; for (const id of PM.allIds(proj.objs)) liveKnown.add(id); }
+      if (drag && drag.moved && liveCache) return clone(liveCache); // mid-drag: the shapes go when you let go
+      const present = PM.allIds(proj.objs), now = Date.now();
+      for (const id of livePresent) if (!present.has(id)) goneAt.set(id, now);
+      for (const id of present) goneAt.delete(id);
+      livePresent = present;
+      const parts = clone(liveNow()); parts.design.gone = [...liveKnown].filter(id => !present.has(id)).slice(-400);
+      liveCache = parts; liveBase = clone(parts.design.objs);
+      return clone(parts);
+    },
+    liveSet(part, v) {
+      if (!v || typeof v !== 'object') return;
+      if (part === 'info') {
+        const c = PM.cleanProject({ title: v.title, plate: v.plate, brief: v.brief, objs: [] }), plateWas = JSON.stringify(proj.plate);
+        proj.title = c.title; proj.plate = c.plate; if (c.brief) proj.brief = c.brief; else delete proj.brief;
+        liveHistory([], [], { title: proj.title, plate: proj.plate, brief: proj.brief });
+        if (document.activeElement !== $('plTitle')) $('plTitle').value = proj.title || '';
+        if (plateWas !== JSON.stringify(proj.plate)) buildPlate();
+        briefDone = false; sync(); return;
+      }
+      if (part !== 'design' || !Array.isArray(v.objs)) return;
+      const theirs = PM.cleanProject({ plate: proj.plate, objs: v.objs }).objs, before = proj.objs;
+      const merged = merge3(liveBase, proj.objs, theirs, Array.isArray(v.gone) ? v.gone : []);
+      for (const id of PM.allIds(theirs)) liveKnown.add(id);
+      livePresent = PM.allIds(merged); // a partner's deletions aren't ours
+      if (Array.isArray(v.gone)) for (const id of v.gone) if (typeof id === 'string' && !livePresent.has(id)) liveKnown.add(id);
+      proj.objs = merged; liveRev = Math.max(liveRev, Number(v.rev) || 0);
+      liveHistory(before, merged, null); liveBase = clone(theirs);
+      if (measure) drawMeasure();
+      sync();
+      // we kept some of our own work too: send the merged design back (after CodeJump has noted this one), so both settle on it
+      if (JSON.stringify(merged) !== JSON.stringify(theirs)) setTimeout(() => { if (!alive) return; liveRev++; if (host.onChange) host.onChange(); }, 0);
+    },
+    liveBusy() { return !!drag || !!ghost; },
+
     getProject() { return clone(proj); },
     setProject(p) {
-      proj = PM.cleanProject(p || null); undo = []; redo = []; sel = []; briefDone = false; if (measure) setMeasure(false);
+      proj = PM.cleanProject(p || null); undo = []; redo = []; sel = []; briefDone = false; if (measure) setMeasure(false); panes();
       if (model) { afterLoad(); setView('home'); } else $('plTitle').value = proj.title || '';
       if (!raf) raf = requestAnimationFrame(tick);
     },
-    resume() { resize(); needs = true; if (!raf) raf = requestAnimationFrame(tick); },
+    resume() { panes(); resize(); needs = true; if (!raf) raf = requestAnimationFrame(tick); },
     pause() { cancelAnimationFrame(raf); raf = 0; if (drag) endDrag(true); },
     destroy() {
       alive = false; cancelAnimationFrame(raf); raf = 0; ro.disconnect(); document.removeEventListener('keydown', onKey);

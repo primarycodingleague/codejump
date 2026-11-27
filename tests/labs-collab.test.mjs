@@ -43,12 +43,12 @@ async function person(uid) {
   return page;
 }
 const wf = (pg, fn, arg, t = 30000) => pg.waitForFunction(fn, arg, { timeout: t, polling: 150 }).then(() => true, () => false);
-const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp', applab: 'appLabApp', bricklab: 'brickLabApp' };
-const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb', applab: 'startNewAppLab', bricklab: 'startNewBrickLab' };
+const APP = { craft: 'craftApp', critter: 'critterApp', ai: 'aiApp', train: 'trainApp', web: 'webApp', applab: 'appLabApp', bricklab: 'brickLabApp', print3d: 'p3dApp' };
+const START = { craft: 'startNewCraft', critter: 'startNewCritter', ai: 'startNewAI', train: 'startNewTrain', web: 'startNewWeb', applab: 'startNewAppLab', bricklab: 'startNewBrickLab', print3d: 'startNewPrint3D' };
 const ready = (pg, lab) => wf(pg, ([lab, app]) => projectType === lab && eval(app) && (!eval(app)._ws || eval(app)._ws()) && labLive.base, [lab, APP[lab]], 45000);
 try {
   const A = await person('a'), B = await person('b'), C = await person('c');
-  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web,applab,bricklab').split(',')) {
+  for (const lab of (process.env.LABS || 'craft,critter,ai,train,web,applab,bricklab,print3d').split(',')) {
     newRoom();
     for (const p of [A, B, C]) await p.evaluate(() => { try { collabDisconnect(true); } catch (e) { /* not in one */ } });
     await A.evaluate(f => window[f]('ks2'), START[lab]);
@@ -131,6 +131,35 @@ try {
       ok(await wf(A, () => brickLabApp.getProject().title === 'Crane'), 'bricklab: Ben’s name for the project reaches Ana');
       await C.evaluate(r => collabConnect(r), 'room-bricklab');
       ok(await ready(C, lab) && await wf(C, () => brickLabApp.getProject().title === 'Crane' && brickLabApp._ws().getAllBlocks(false).some(b => b.type === 'br_light_off')), 'bricklab: Cara joins late and gets the code and the name');
+    }
+    if (lab === 'print3d') {
+      const objs = pg => pg.evaluate(() => p3dApp._proj().objs.map(o => ({ id: o.id, kind: o.kind, x: o.x, y: o.y, color: o.color })));
+      // count what each screen sends from now on, to show nobody bounces a partner's change back
+      for (const pg of [A, B]) await pg.evaluate(() => { const o = window.collabSend; window.__p3Sent = 0; window.collabSend = function (m) { if (m && m.op && m.op.k === 'lp') window.__p3Sent++; return o.apply(this, arguments); }; });
+      await A.evaluate(() => { p3dApp._add('box'); });
+      const box = (await objs(A))[0];
+      ok(box && await wf(B, id => p3dApp._proj().objs.some(o => o.id === id && o.kind === 'box'), box.id), 'print3d: a box Ana adds appears on Ben’s plate');
+      await sleep(700);
+      ok(await B.evaluate(() => window.__p3Sent) === 0, 'print3d: Ben doesn’t send Ana’s box back out');
+      ok(await B.evaluate(() => p3dApp._sel().length === 0), 'print3d: Ana’s selection stays on her screen');
+      await B.evaluate(id => { p3dApp._select([id]); }, box.id);
+      await B.fill('#plInsp [data-f="x"]', '-40'); await B.press('#plInsp [data-f="x"]', 'Enter'); await B.evaluate(() => document.activeElement.blur());
+      ok(await wf(A, id => { const o = p3dApp._proj().objs.find(x => x.id === id); return o && o.x === -40; }, box.id), 'print3d: Ben moves it and it moves on Ana’s plate too');
+      await sleep(700);
+      const sentA = await A.evaluate(() => window.__p3Sent);
+      ok(sentA >= 1 && sentA <= 2, 'print3d: Ana only sent her own change (' + sentA + ' message' + (sentA === 1 ? '' : 's') + '), not Ben’s move back');
+      // both at once, on different shapes: neither is lost
+      await Promise.all([A.evaluate(() => { p3dApp._add('cylinder'); }), B.evaluate(() => { p3dApp._add('sphere'); })]);
+      const both = () => { const k = p3dApp._proj().objs.map(o => o.kind); return k.includes('box') && k.includes('cylinder') && k.includes('sphere') && k.length === 3; };
+      ok(await wf(A, both) && await wf(B, both), 'print3d: Ana and Ben add shapes at the same moment and both stay');
+      // Undo is per pupil: Ben's Undo takes back his ball, not Ana's cylinder
+      await B.evaluate(() => { p3dApp._undo(); });
+      const undone = () => { const k = p3dApp._proj().objs.map(o => o.kind); return k.includes('cylinder') && !k.includes('sphere') && k.length === 2; };
+      ok(await wf(B, undone) && await wf(A, undone), 'print3d: Ben’s Undo takes back only his own shape, for both of them');
+      await A.evaluate(() => { p3dApp._proj().title = 'Robot friend'; const t = document.getElementById('plTitle'); t.value = 'Robot friend'; t.dispatchEvent(new Event('change')); t.blur(); });
+      ok(await wf(B, () => p3dApp._proj().title === 'Robot friend' && document.getElementById('plTitle').value === 'Robot friend'), 'print3d: the design’s name Ana types reaches Ben');
+      await C.evaluate(r => collabConnect(r), 'room-print3d');
+      ok(await ready(C, lab) && await wf(C, id => { const p = p3dApp._proj(), o = p.objs.find(x => x.id === id); return p.title === 'Robot friend' && o && o.x === -40 && p.objs.length === 2; }, box.id), 'print3d: Cara joins late and gets the latest design');
     }
     if (lab === 'applab') {
       await A.evaluate(() => document.querySelector('.al-starter[data-starter="kind"]').click());
